@@ -107,6 +107,18 @@ button { font-family: inherit; }
 .btn.outline { background: transparent; color: var(--mar-profundo); border: 1.5px solid var(--linha); }
 .btn.sol { background: var(--por-do-sol); }
 
+/* ---- inputs ---- */
+.input {
+  width: 100%;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--raio-sm);
+  padding: 13px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--texto);
+}
+
 /* ---- pílulas (filtros) ---- */
 .pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .pills::-webkit-scrollbar { display: none; }

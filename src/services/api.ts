@@ -26,4 +26,22 @@ export const mockApi: EcosurfApi = {
   },
 }
 
-export const api: EcosurfApi = mockApi
+/** Há backend configurado? (lê env sem importar o SDK — não bloteia o bundle) */
+export function temBackend(): boolean {
+  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+}
+
+let real: EcosurfApi | null = null
+async function impl(): Promise<EcosurfApi> {
+  if (!temBackend()) return mockApi
+  if (!real) real = (await import('./supabase/api')).supabaseApi // chunk separado
+  return real
+}
+
+/** Fachada: a UI e a fila offline usam isto; a troca mock↔backend é transparente. */
+export const api: EcosurfApi = {
+  async enviarFoto(f) {
+    return (await impl()).enviarFoto(f)
+  },
+}
+

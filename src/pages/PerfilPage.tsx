@@ -1,4 +1,5 @@
 import { Header } from '../components/Header'
+import { AuthCard } from '../components/AuthCard'
 import { PERFIL_DEMO } from '../data/seed'
 
 function Stat({ k, v }: { k: string; v: string | number }) {
@@ -39,6 +40,8 @@ export function PerfilPage() {
             <label className="between">Aparecer como anônimo em ameaças <input type="checkbox" /></label>
           </div>
         </div>
+
+        <AuthCard />
 
         <div className="card pad">
           <span className="eyebrow">Conta</span>
