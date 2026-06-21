@@ -4,7 +4,7 @@ import { rotuloFase } from '../lib/tide'
 
 function Mini({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
-    <div style={{ background: 'var(--areia-clara)', borderRadius: 14, padding: '10px 8px', textAlign: 'center' }}>
+    <div style={{ background: 'var(--cinza)', borderRadius: 14, padding: '10px 8px', textAlign: 'center' }}>
       <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{k}</div>
       <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>{v}</div>
       {sub && <div style={{ fontSize: 10.5, color: 'var(--muted)' }}>{sub}</div>}

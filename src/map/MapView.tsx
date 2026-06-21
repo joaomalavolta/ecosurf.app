@@ -32,14 +32,19 @@ export function MapView({ picos }: { picos: Pico[] }) {
       /* não quebra a UI se o tile falhar (3G ruim / offline) */
     })
 
+    const waves =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>' +
+      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/></svg>'
+
     const markers: maplibregl.Marker[] = []
     for (const p of picos) {
       const el = document.createElement('button')
       el.setAttribute('aria-label', p.nome)
-      el.textContent = '🌊'
+      el.innerHTML = waves
       el.style.cssText =
-        'width:40px;height:40px;border-radius:999px;border:2px solid #fff;background:var(--mar);' +
-        'color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;' +
+        'width:40px;height:40px;border-radius:999px;border:2px solid #fff;background:#1668A6;' +
+        'display:flex;align-items:center;justify-content:center;' +
         'box-shadow:0 6px 14px rgba(0,0,0,.3);cursor:pointer;'
       el.onclick = () => navigate(`/pico/${p.id}`)
       markers.push(new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map))

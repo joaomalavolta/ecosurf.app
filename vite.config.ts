@@ -17,8 +17,8 @@ export default defineConfig({
         start_url: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#F4F1EA',
-        theme_color: '#0B3A53',
+        background_color: '#EEF3F7',
+        theme_color: '#0C2A43',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2}'],

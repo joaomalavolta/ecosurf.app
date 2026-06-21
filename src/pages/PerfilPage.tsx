@@ -1,3 +1,4 @@
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { PERFIL_DEMO } from '../data/seed'
@@ -18,11 +19,15 @@ export function PerfilPage() {
       <Header title="Seu perfil" sub="Reputação e histórico na comunidade." />
       <div className="page-pad stack">
         <div className="card pad row">
-          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--mar-raso)' }} />
+          <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)' }} />
           <div>
             <b style={{ fontSize: 18 }}>{p.nome}</b>
             <div className="muted">Nível: {p.nivel}</div>
-            {p.validadoPorTelefone && <span className="tag ok" style={{ marginTop: 6 }}>✓ conta validada por telefone</span>}
+            {p.validadoPorTelefone && (
+              <span className="tag ok" style={{ marginTop: 6 }}>
+                <IconRosetteDiscountCheck size={13} stroke={2.2} /> conta validada por telefone
+              </span>
+            )}
           </div>
         </div>
 
@@ -46,9 +51,9 @@ export function PerfilPage() {
         <div className="card pad">
           <span className="eyebrow">Conta</span>
           <div className="stack" style={{ marginTop: 10 }}>
-            <div className="row">⚙️ Preferências do app</div>
-            <div className="row">🏅 Conquistas e reputação</div>
-            <div className="row">📤 Exportar meus dados (GeoJSON)</div>
+            <div className="row"><IconSettings size={20} stroke={2} /> Preferências do app</div>
+            <div className="row"><IconAward size={20} stroke={2} /> Conquistas e reputação</div>
+            <div className="row"><IconDownload size={20} stroke={2} /> Exportar meus dados (GeoJSON)</div>
           </div>
         </div>
       </div>

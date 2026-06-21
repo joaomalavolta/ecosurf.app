@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { IconRipple, IconWaveSine, IconWind, IconCamera } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
@@ -61,13 +62,13 @@ export function TideScrubTimeline({
   if (ordenadas.length === 0) {
     return (
       <div className="card pad" style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 34 }}>🌊</div>
+        <IconRipple size={36} stroke={1.6} color="var(--azul-medio)" />
         <h3 style={{ marginTop: 8 }}>Ainda sem fotos hoje</h3>
         <p className="muted">
           Esse pico ainda não acendeu hoje. Seja o primeiro a registrar a condição do mar.
         </p>
-        <Link to="/capturar" className="btn full" style={{ marginTop: 8 }}>
-          📷 Registrar agora
+        <Link to="/capturar" className="btn acento full" style={{ marginTop: 8 }}>
+          <IconCamera size={18} stroke={2} /> Registrar agora
         </Link>
       </div>
     )
@@ -114,7 +115,7 @@ export function TideScrubTimeline({
   return (
     <div className="card">
       {/* FOTO — conteúdo nobre */}
-      <div style={{ position: 'relative', aspectRatio: '4 / 3', background: 'var(--mar-profundo)' }}>
+      <div style={{ position: 'relative', aspectRatio: '4 / 3', background: 'var(--azul-abissal)' }}>
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
             key={f.id}
@@ -148,9 +149,13 @@ export function TideScrubTimeline({
         >
           <div style={{ display: 'flex', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
             <ProvenanceBadge p={f.procedencia} />
-            {f.alturaMareM != null && <span className="tag mar">🌊 {f.alturaMareM.toFixed(1)}m</span>}
+            {f.alturaMareM != null && (
+              <span className="tag mar"><IconWaveSine size={13} stroke={2.2} /> {f.alturaMareM.toFixed(1)}m</span>
+            )}
             {f.ventoTipo && (
-              <span className="tag" style={{ background: 'rgba(255,255,255,.9)', color: 'var(--mar-profundo)' }}>💨 {rotuloVento(f.ventoTipo)}</span>
+              <span className="tag" style={{ background: 'rgba(255,255,255,.9)', color: 'var(--azul-abissal)' }}>
+                <IconWind size={13} stroke={2.2} /> {rotuloVento(f.ventoTipo)}
+              </span>
             )}
           </div>
           {f.observacao && <div style={{ fontSize: 14, fontWeight: 600 }}>{f.observacao}</div>}
@@ -205,18 +210,18 @@ export function TideScrubTimeline({
           <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height={SVG_H} preserveAspectRatio="none" aria-hidden="true" style={{ display: 'block' }}>
             <defs>
               <linearGradient id="grad-mare" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#4FA3B8" stopOpacity="0.55" />
-                <stop offset="100%" stopColor="#4FA3B8" stopOpacity="0.05" />
+                <stop offset="0%" stopColor="#3F8DC7" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#3F8DC7" stopOpacity="0.05" />
               </linearGradient>
             </defs>
             <path d={area} fill="url(#grad-mare)" />
-            <path d={linha} fill="none" stroke="#1C6E8C" strokeWidth="0.7" vectorEffect="non-scaling-stroke" />
+            <path d={linha} fill="none" stroke="#1668A6" strokeWidth="0.7" vectorEffect="non-scaling-stroke" />
             <line
               x1={x(scrubHora ?? horas[ativo])}
               y1={0}
               x2={x(scrubHora ?? horas[ativo])}
               y2={VB_H}
-              stroke="#E8743B"
+              stroke="#0C2A43"
               strokeWidth="0.5"
               strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
               vectorEffect="non-scaling-stroke"
@@ -244,7 +249,7 @@ export function TideScrubTimeline({
                   height: idx === ativo ? 17 : 12,
                   borderRadius: 999,
                   border: '2px solid #fff',
-                  background: idx === ativo ? 'var(--por-do-sol)' : 'var(--mar-profundo)',
+                  background: idx === ativo ? 'var(--azul-abissal)' : 'var(--azul-medio)',
                   boxShadow: '0 2px 6px rgba(0,0,0,.28)',
                   padding: 0,
                   cursor: 'pointer',
@@ -275,7 +280,7 @@ export function TideScrubTimeline({
                   transform: 'translateX(-50%)',
                   fontSize: 9.5,
                   fontWeight: 700,
-                  color: 'var(--por-do-sol)',
+                  color: 'var(--verde)',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -291,7 +296,7 @@ export function TideScrubTimeline({
                 top: 0,
                 left: `${(scrubHora / 24) * 100}%`,
                 transform: 'translateX(-50%)',
-                background: 'var(--mar-profundo)',
+                background: 'var(--azul-abissal)',
                 color: '#fff',
                 fontSize: 10.5,
                 fontWeight: 700,

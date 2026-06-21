@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { IconWifiOff } from '@tabler/icons-react'
 import { useUploads } from '../offline/useUploads'
 
 /** Estado de rede + fila de upload sempre visível quando relevante. */
@@ -33,15 +34,20 @@ export function UploadStatusBar() {
         width: '100%',
         maxWidth: 'var(--largura-app)',
         zIndex: 60,
-        background: online ? 'var(--mar-profundo)' : '#7a3b12',
+        background: online ? 'var(--azul-abissal)' : 'var(--perigo)',
         color: '#fff',
         fontSize: 12.5,
         fontWeight: 600,
         padding: 'calc(env(safe-area-inset-top,0px) + 6px) 14px 6px',
         textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
       }}
     >
-      {!online && '⚡ Sem conexão · '}
+      {!online && <IconWifiOff size={14} stroke={2.2} />}
+      {!online && 'Sem conexão · '}
       {enviando > 0 && `enviando ${enviando} foto(s)… `}
       {naFila > 0 && `${naFila} na fila`}
       {online && naFila === 0 && enviando > 0 && 'sincronizando…'}

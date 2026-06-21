@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "@tabler/icons-react": "^3.44.0",
     "framer-motion": "^11.11.0",
     "idb": "^8.0.3",
     "maplibre-gl": "^4.7.1",

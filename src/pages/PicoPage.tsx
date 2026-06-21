@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { IconCamera, IconAlertTriangle } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
 import { TideScrubTimeline } from '../components/TideScrubTimeline'
@@ -79,7 +80,7 @@ export function PicoPage() {
             {ameacasDoPico(pico.id).length === 0 && <p className="muted">Sem alertas ativos neste pico.</p>}
             {ameacasDoPico(pico.id).map((a) => (
               <div key={a.id} className="row">
-                <span className="tag alerta">⚠ {a.status}</span>
+                <span className="tag alerta"><IconAlertTriangle size={13} stroke={2.2} /> {a.status}</span>
                 <span style={{ fontSize: 14 }}>{a.titulo}</span>
               </div>
             ))}
@@ -87,13 +88,13 @@ export function PicoPage() {
         </div>
 
         {pico.visibilidade !== 'publico' && (
-          <div className="card pad" style={{ borderLeft: '4px solid var(--por-do-sol)' }}>
+          <div className="card pad" style={{ borderLeft: '4px solid var(--perigo)' }}>
             <b>Pico em abafamento</b>
             <p className="muted">A comunidade local optou por não broadcastar a atividade deste pico.</p>
           </div>
         )}
 
-        <Link to="/capturar" className="btn full">📷 Registrar agora neste pico</Link>
+        <Link to="/capturar" className="btn full"><IconCamera size={18} stroke={2} /> Registrar agora neste pico</Link>
       </div>
     </div>
   )

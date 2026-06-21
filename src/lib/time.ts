@@ -18,7 +18,7 @@ export function rotuloFrescor(f: Frescor): string {
 }
 
 export function corFrescor(f: Frescor): string {
-  return { 'ao-vivo': '#2E7D52', recente: '#1C6E8C', esfriando: '#B07A1E', historico: '#6E665A' }[f]
+  return { 'ao-vivo': '#1F6557', recente: '#1668A6', esfriando: '#6E6AA6', historico: '#5A6B79' }[f]
 }
 
 export function horaCurta(iso: string): string {

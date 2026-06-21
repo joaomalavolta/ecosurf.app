@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { IconStar, IconRipple, IconMapPin } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { SpotCard } from '../components/SpotCard'
 import { favoritos, listarPicos } from '../services/picos'
@@ -42,9 +43,9 @@ export function RadarPage() {
       <Header title="Ecosurf" sub="O mar de hoje, pela lente de quem está lá. Litoral Sul de SP." />
       <div className="page-pad stack">
         <div className="pills" role="tablist" aria-label="Filtro do radar">
-          <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}>⭐ Favoritos</Pill>
-          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}>🌊 Melhores agora</Pill>
-          <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}>📍 Todos</Pill>
+          <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
+          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores agora</Pill>
+          <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
         </div>
 
         {picos.map((p) => (

@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  IconX,
+  IconCamera,
+  IconMapPin,
+  IconRipple,
+  IconAlertTriangle,
+  IconTrash,
+  IconFlask2,
+  IconArrowUp,
+} from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
 
 type Etapa = 'inicio' | 'camera' | 'classificar'
@@ -80,20 +90,20 @@ export function CapturePage() {
   return (
     <div style={{ position: 'fixed', inset: 0, maxWidth: 'var(--largura-app)', margin: '0 auto', background: '#04141d', color: '#fff', display: 'flex', flexDirection: 'column', zIndex: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'calc(env(safe-area-inset-top,0px) + 14px) 16px 12px' }}>
-        <button onClick={() => navigate(-1)} aria-label="Fechar" style={{ background: 'none', border: 0, color: '#fff', fontSize: 22 }}>✕</button>
+        <button onClick={() => navigate(-1)} aria-label="Fechar" style={{ background: 'none', border: 0, color: '#fff', display: 'flex', cursor: 'pointer' }}><IconX size={24} stroke={2} /></button>
         <b>Registrar</b>
-        <span style={{ width: 22 }} />
+        <span style={{ width: 24 }} />
       </div>
 
       {etapa === 'inicio' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 24 }}>
-          <div style={{ fontSize: 56 }}>📷</div>
+          <IconCamera size={56} stroke={1.5} />
           <h2 style={{ color: '#fff', marginTop: 12 }}>A foto primeiro</h2>
           <p style={{ color: 'rgba(255,255,255,.75)', maxWidth: 280 }}>
             Aponte e registre o mar agora. Você diz o que é (report, ameaça, lixo…) depois — enquanto a foto sobe.
           </p>
-          <button className="btn sol full" style={{ marginTop: 20, maxWidth: 320 }} onClick={abrirCamera}>
-            Abrir câmera
+          <button className="btn acento full" style={{ marginTop: 20, maxWidth: 320 }} onClick={abrirCamera}>
+            <IconCamera size={18} stroke={2} /> Abrir câmera
           </button>
         </div>
       )}
@@ -108,7 +118,7 @@ export function CapturePage() {
               </div>
             )}
             <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}>📍 Praia do Sonho · dentro do pico</span>
+              <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}><IconMapPin size={13} stroke={2.2} /> Praia do Sonho · dentro do pico</span>
             </div>
           </div>
           <div style={{ padding: '20px 0 calc(env(safe-area-inset-bottom,0px) + 24px)', display: 'flex', justifyContent: 'center' }}>
@@ -119,22 +129,22 @@ export function CapturePage() {
 
       {etapa === 'classificar' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
-          <div style={{ height: 200, borderRadius: 18, background: 'linear-gradient(155deg,#8cdcf6,#4FA3B8)', marginBottom: 8 }} />
-          <span className="tag ok">⬆ subindo em background</span>
+          <div style={{ height: 200, borderRadius: 18, background: 'linear-gradient(155deg,#9fc6e3,#3F8DC7)', marginBottom: 8 }} />
+          <span className="tag ok"><IconArrowUp size={13} stroke={2.2} /> subindo em background</span>
           <h2 style={{ color: '#fff', marginTop: 16 }}>O que você registrou?</h2>
           <div className="stack" style={{ marginTop: 10 }}>
             {([
-              ['report', '🌊', 'Report do mar', 'Condição de surf agora'],
-              ['ameaca', '⚠️', 'Ameaça costeira', 'Poluição, erosão, obra, esgoto'],
-              ['lixo', '🧴', 'Lixo na praia', 'Resíduo para mutirão/ciência'],
-              ['ciencia', '✨', 'Ciência cidadã', 'Água, fauna, microplástico'],
-            ] as const).map(([tipo, i, t, s]) => (
+              ['report', IconRipple, 'Report do mar', 'Condição de surf agora'],
+              ['ameaca', IconAlertTriangle, 'Ameaça costeira', 'Poluição, erosão, obra, esgoto'],
+              ['lixo', IconTrash, 'Lixo na praia', 'Resíduo para mutirão/ciência'],
+              ['ciencia', IconFlask2, 'Ciência cidadã', 'Água, fauna, microplástico'],
+            ] as const).map(([tipo, Icon, t, s]) => (
               <button
                 key={t}
                 onClick={() => classificar(tipo)}
                 style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 16, padding: 14, color: '#fff', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer' }}
               >
-                <span style={{ fontSize: 24 }}>{i}</span>
+                <Icon size={24} stroke={2} />
                 <span>
                   <b>{t}</b>
                   <div style={{ color: 'rgba(255,255,255,.7)', fontSize: 13 }}>{s}</div>

@@ -1,28 +1,30 @@
 :root {
-  /* Paleta enraizada no território — não SaaS.
-     Areia, mar de fim de tarde, mata atlântica, pôr-do-sol para alerta. */
-  --mar-profundo: #0B3A53;   /* azul de fim de tarde no mar */
-  --mar: #1C6E8C;            /* água */
-  --mar-raso: #4FA3B8;       /* água rasa / espuma esverdeada */
-  --mata: #2E5E4E;           /* mata atlântica */
-  --mata-clara: #5C8A6F;
-  --areia: #EAD9B8;          /* areia seca */
-  --areia-clara: #F2E9D6;
-  --maresia: #F5F1E8;        /* off-white quente (fundo) */
-  --casca: #FFFFFF;          /* superfície de card */
-  --por-do-sol: #E8743B;     /* acento quente — alerta/ameaça */
-  --coral: #C2452D;          /* perigo */
-  --texto: #2A2620;          /* quase-preto quente */
-  --muted: #6E665A;          /* cinza quente (não slate) */
-  --linha: #E3D9C6;          /* divisórias */
-  --ok: #2E7D52;
+  /* Paleta fria: azuis, cinzas claros, branco e verdes.
+     Sem cor quente — perigo é sinalizado por índigo saturado + ícone + rótulo. */
+  --azul-abissal: #0C2A43; /* fundo escuro / texto forte / headers */
+  --azul: #1668A6;         /* primário */
+  --azul-medio: #3F8DC7;
+  --azul-claro: #CFE2F1;
+  --verde: #2C7A6B;        /* natureza / ok / ação positiva */
+  --verde-claro: #CDE7DD;
+
+  --branco: #FFFFFF;
+  --nevoa: #EEF3F7;        /* fundo do app */
+  --cinza: #E3EAF1;        /* superfícies sutis / pílulas */
+  --cinza-borda: #DCE5EC;
+  --texto: #14202A;        /* quase-preto frio */
+  --muted: #5A6B79;        /* cinza frio */
+
+  --perigo: #3835A6;       /* índigo de alerta (a única cor "que salta") */
+  --perigo-bg: #E4E3F6;
+  --ok: #1F6557;
 
   --raio: 22px;
   --raio-sm: 14px;
-  --sombra: 0 10px 30px rgba(43, 38, 30, 0.12);
-  --sombra-sm: 0 6px 18px rgba(43, 38, 30, 0.10);
+  --sombra: 0 10px 30px rgba(12, 42, 67, 0.12);
+  --sombra-sm: 0 6px 18px rgba(12, 42, 67, 0.10);
 
-  --fonte-titulo: 'Fraunces', Georgia, serif;
+  --fonte-titulo: 'Space Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   --fonte-corpo: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
   --largura-app: 480px;
@@ -37,14 +39,14 @@ body {
   margin: 0;
   font-family: var(--fonte-corpo);
   color: var(--texto);
-  background: #ded3bd; /* fundo fora do app, no desktop */
+  background: #c9d6df; /* fora do app, no desktop */
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
   font-family: var(--fonte-titulo);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   margin: 0;
 }
 
@@ -56,8 +58,8 @@ button { font-family: inherit; }
   max-width: var(--largura-app);
   margin: 0 auto;
   min-height: 100dvh;
-  background: var(--maresia);
-  box-shadow: 0 0 60px rgba(11, 58, 83, 0.18);
+  background: var(--nevoa);
+  box-shadow: 0 0 60px rgba(12, 42, 67, 0.18);
   overflow: hidden;
 }
 
@@ -68,20 +70,20 @@ button { font-family: inherit; }
 
 .page-pad { padding: 16px; }
 
-/* ---- header com lugar ---- */
+/* ---- header ---- */
 .header {
   background:
-    radial-gradient(120% 90% at 80% -10%, rgba(232, 116, 59, 0.30), transparent 55%),
-    linear-gradient(160deg, var(--mar-profundo), var(--mar) 70%, var(--mata));
+    radial-gradient(120% 90% at 82% -10%, rgba(63, 141, 199, 0.45), transparent 55%),
+    linear-gradient(160deg, var(--azul-abissal), var(--azul) 68%, var(--verde));
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
 }
-.header h1 { font-size: 26px; line-height: 1.05; }
+.header h1 { font-size: 25px; line-height: 1.06; }
 .header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.9); margin-top: 6px; line-height: 1.4; }
 
 /* ---- cards ---- */
 .card {
-  background: var(--casca);
+  background: var(--branco);
   border-radius: var(--raio);
   box-shadow: var(--sombra-sm);
   overflow: hidden;
@@ -96,21 +98,44 @@ button { font-family: inherit; }
 
 /* ---- botões ---- */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 0; border-radius: var(--raio-sm);
   min-height: 50px; padding: 0 18px;
-  background: var(--mar); color: #fff;
+  background: var(--azul); color: #fff;
   font-size: 15px; font-weight: 600; cursor: pointer;
 }
 .btn:active { transform: translateY(1px); }
 .btn.full { width: 100%; }
-.btn.outline { background: transparent; color: var(--mar-profundo); border: 1.5px solid var(--linha); }
-.btn.sol { background: var(--por-do-sol); }
+.btn.outline { background: transparent; color: var(--azul-abissal); border: 1.5px solid var(--cinza-borda); }
+.btn.acento { background: var(--verde); } /* CTA de registro */
+
+/* ---- pílulas (filtros) ---- */
+.pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.pills::-webkit-scrollbar { display: none; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap; border: 0; cursor: pointer;
+  border-radius: 999px; padding: 9px 14px;
+  background: var(--cinza); color: var(--texto);
+  font-size: 13px; font-weight: 600;
+}
+.pill.active { background: var(--azul-abissal); color: #fff; }
+
+/* ---- tags / selos ---- */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 999px; padding: 4px 10px;
+  font-size: 11.5px; font-weight: 700;
+}
+.tag.cinza { background: var(--cinza); color: var(--muted); }
+.tag.alerta { background: var(--perigo-bg); color: var(--perigo); }
+.tag.ok { background: var(--verde-claro); color: var(--ok); }
+.tag.mar { background: var(--azul-claro); color: var(--azul-abissal); }
 
 /* ---- inputs ---- */
 .input {
   width: 100%;
-  border: 1.5px solid var(--linha);
+  border: 1.5px solid var(--cinza-borda);
   border-radius: var(--raio-sm);
   padding: 13px 14px;
   font-size: 15px;
@@ -119,30 +144,11 @@ button { font-family: inherit; }
   color: var(--texto);
 }
 
-/* ---- pílulas (filtros) ---- */
-.pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
-.pills::-webkit-scrollbar { display: none; }
-.pill {
-  white-space: nowrap; border: 0; cursor: pointer;
-  border-radius: 999px; padding: 9px 14px;
-  background: var(--areia-clara); color: var(--texto);
-  font-size: 13px; font-weight: 600;
-}
-.pill.active { background: var(--mar-profundo); color: #fff; }
-
-/* ---- tags / selos ---- */
-.tag {
-  display: inline-flex; align-items: center; gap: 5px;
-  border-radius: 999px; padding: 4px 10px;
-  font-size: 11.5px; font-weight: 700;
-}
-.tag.areia { background: var(--areia); color: #6b4f1d; }
-.tag.alerta { background: #FBE3D5; color: var(--coral); }
-.tag.ok { background: #DCEBDD; color: var(--ok); }
-.tag.mar { background: #D9EEF2; color: var(--mar-profundo); }
+/* alinhamento de ícones inline */
+.ic { display: inline-flex; align-items: center; vertical-align: middle; }
 
 /* acessibilidade: foco visível */
-:focus-visible { outline: 3px solid var(--por-do-sol); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; border-radius: 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

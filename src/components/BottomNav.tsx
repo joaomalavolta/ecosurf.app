@@ -1,15 +1,26 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import {
+  IconRipple,
+  IconMap2,
+  IconHeartHandshake,
+  IconUser,
+  IconCamera,
+  type IconProps,
+} from '@tabler/icons-react'
+import type { ComponentType } from 'react'
 
-const itens = [
-  { to: '/', icon: '🌊', label: 'Radar', end: true },
-  { to: '/mapa', icon: '🗺️', label: 'Mapa', end: false },
-  { to: '/acoes', icon: '🤝', label: 'Ações', end: false },
-  { to: '/perfil', icon: '👤', label: 'Perfil', end: false },
+type Item = { to: string; Icon: ComponentType<IconProps>; label: string; end: boolean }
+
+const itens: Item[] = [
+  { to: '/', Icon: IconRipple, label: 'Radar', end: true },
+  { to: '/mapa', Icon: IconMap2, label: 'Mapa', end: false },
+  { to: '/acoes', Icon: IconHeartHandshake, label: 'Ações', end: false },
+  { to: '/perfil', Icon: IconUser, label: 'Perfil', end: false },
 ]
 
 /**
- * Caminho C: Radar como espinha, captura no CENTRO (a foto é o conteúdo nobre,
- * merece o lugar nobre). O botão central abre a câmera direto (2 toques).
+ * Caminho C: Radar como espinha, captura no CENTRO (a foto é o conteúdo nobre).
+ * O botão central abre a câmera direto (2 toques).
  */
 export function BottomNav() {
   const navigate = useNavigate()
@@ -25,9 +36,9 @@ export function BottomNav() {
         maxWidth: 'var(--largura-app)',
         height: 'calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        background: 'rgba(245,241,232,0.96)',
+        background: 'rgba(238,243,247,0.96)',
         backdropFilter: 'blur(10px)',
-        borderTop: '1px solid var(--linha)',
+        borderTop: '1px solid var(--cinza-borda)',
         display: 'grid',
         gridTemplateColumns: 'repeat(5,1fr)',
         alignItems: 'center',
@@ -48,15 +59,17 @@ export function BottomNav() {
             height: 60,
             marginTop: -28,
             borderRadius: 999,
-            border: '4px solid var(--maresia)',
-            background: 'var(--por-do-sol)',
+            border: '4px solid var(--nevoa)',
+            background: 'var(--azul)',
             color: '#fff',
-            fontSize: 26,
-            boxShadow: '0 8px 18px rgba(232,116,59,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 18px rgba(22,104,166,0.45)',
             cursor: 'pointer',
           }}
         >
-          📷
+          <IconCamera size={26} stroke={2} />
         </button>
       </div>
 
@@ -67,7 +80,7 @@ export function BottomNav() {
   )
 }
 
-function NavItem({ to, icon, label, end }: { to: string; icon: string; label: string; end: boolean }) {
+function NavItem({ to, Icon, label, end }: Item) {
   return (
     <NavLink
       to={to}
@@ -76,14 +89,14 @@ function NavItem({ to, icon, label, end }: { to: string; icon: string; label: st
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 2,
+        gap: 3,
         textDecoration: 'none',
         fontSize: 11,
         fontWeight: 700,
-        color: isActive ? 'var(--mar-profundo)' : 'var(--muted)',
+        color: isActive ? 'var(--azul-abissal)' : 'var(--muted)',
       })}
     >
-      <span style={{ fontSize: 20 }} aria-hidden="true">{icon}</span>
+      <Icon size={22} stroke={2} aria-hidden />
       {label}
     </NavLink>
   )

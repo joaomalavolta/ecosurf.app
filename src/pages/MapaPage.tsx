@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { listarPicos } from '../services/picos'
 
@@ -11,9 +12,9 @@ export function MapaPage() {
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>
         <div className="card pad" style={{ padding: 12 }}>
           <div
-            style={{ background: 'var(--areia-clara)', borderRadius: 12, padding: 11, color: 'var(--muted)', fontSize: 13 }}
+            style={{ background: 'var(--cinza)', borderRadius: 12, padding: 11, color: 'var(--muted)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
           >
-            🔎 Buscar praia, pico ou ameaça
+            <IconSearch size={16} stroke={2} /> Buscar praia, pico ou ameaça
           </div>
           <div className="pills" style={{ marginTop: 10 }}>
             <span className="pill active">Tudo</span>
@@ -28,9 +29,9 @@ export function MapaPage() {
       <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
         <div className="card pad row">
           <div
-            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--areia)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flex: '0 0 auto' }}
+            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--azul-abissal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
           >
-            🌊
+            <IconRipple size={26} stroke={2} />
           </div>
           <div style={{ flex: 1 }}>
             <b>Praia do Sonho</b>
