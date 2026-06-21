@@ -48,10 +48,12 @@ export function TideScrubTimeline({
   const horas = useMemo(() => ordenadas.map((f) => horaDoDia(f.capturadaEm)), [ordenadas])
   const [ativo, setAtivo] = useState(0)
   const [dir, setDir] = useState(0)
+  const [scrubHora, setScrubHora] = useState<number | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const arrastando = useRef(false)
 
   const { min, max } = useMemo(() => {
+    if (curva.length === 0) return { min: 0, max: 1 }
     const alts = curva.map((p) => p.alturaM)
     return { min: Math.min(...alts), max: Math.max(...alts) }
   }, [curva])
@@ -86,6 +88,7 @@ export function TideScrubTimeline({
     const r = el.getBoundingClientRect()
     const frac = Math.min(1, Math.max(0, (clientX - r.left) / r.width))
     const h = frac * 24
+    setScrubHora(h) // handle desliza contínuo com o dedo
     let best = 0
     let bd = Infinity
     horas.forEach((fh, idx) => {
@@ -97,6 +100,12 @@ export function TideScrubTimeline({
     })
     setDir(best > ativo ? 1 : best < ativo ? -1 : 0)
     setAtivo(best)
+  }
+
+  function fmtHora(h: number): string {
+    const hh = Math.floor(h)
+    const mm = Math.round((h - hh) * 60)
+    return `${String(hh).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`
   }
 
   const f = ordenadas[ativo]
@@ -167,10 +176,12 @@ export function TideScrubTimeline({
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight') {
               setDir(1)
+              setScrubHora(null)
               setAtivo((a) => Math.min(ordenadas.length - 1, a + 1))
             }
             if (e.key === 'ArrowLeft') {
               setDir(-1)
+              setScrubHora(null)
               setAtivo((a) => Math.max(0, a - 1))
             }
           }}
@@ -183,9 +194,11 @@ export function TideScrubTimeline({
           }}
           onPointerUp={() => {
             arrastando.current = false
+            setScrubHora(null) // encaixa na foto mais próxima
           }}
           onPointerCancel={() => {
             arrastando.current = false
+            setScrubHora(null)
           }}
           style={{ position: 'relative', paddingTop: 16, paddingBottom: 16, touchAction: 'none', cursor: 'ew-resize', userSelect: 'none' }}
         >
@@ -199,13 +212,13 @@ export function TideScrubTimeline({
             <path d={area} fill="url(#grad-mare)" />
             <path d={linha} fill="none" stroke="#1C6E8C" strokeWidth="0.7" vectorEffect="non-scaling-stroke" />
             <line
-              x1={x(horas[ativo])}
+              x1={x(scrubHora ?? horas[ativo])}
               y1={0}
-              x2={x(horas[ativo])}
+              x2={x(scrubHora ?? horas[ativo])}
               y2={VB_H}
               stroke="#E8743B"
               strokeWidth="0.5"
-              strokeDasharray="1.4 1.4"
+              strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
               vectorEffect="non-scaling-stroke"
             />
           </svg>
@@ -251,23 +264,46 @@ export function TideScrubTimeline({
           ))}
 
           {/* eventos de vento sobre a curva */}
-          {eventos.map((ev) => (
+          {scrubHora == null &&
+            eventos.map((ev) => (
+              <span
+                key={ev.rotulo}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: `${(ev.hora / 24) * 100}%`,
+                  transform: 'translateX(-50%)',
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  color: 'var(--por-do-sol)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                ↡ {ev.rotulo}
+              </span>
+            ))}
+
+          {/* leitura contínua sob o dedo */}
+          {scrubHora != null && (
             <span
-              key={ev.rotulo}
               style={{
                 position: 'absolute',
                 top: 0,
-                left: `${(ev.hora / 24) * 100}%`,
+                left: `${(scrubHora / 24) * 100}%`,
                 transform: 'translateX(-50%)',
-                fontSize: 9.5,
+                background: 'var(--mar-profundo)',
+                color: '#fff',
+                fontSize: 10.5,
                 fontWeight: 700,
-                color: 'var(--por-do-sol)',
+                padding: '2px 7px',
+                borderRadius: 8,
                 whiteSpace: 'nowrap',
+                pointerEvents: 'none',
               }}
             >
-              ↡ {ev.rotulo}
+              {fmtHora(scrubHora)} · {alturaNaHora(curva, scrubHora).toFixed(1)}m
             </span>
-          ))}
+          )}
         </div>
       </div>
     </div>

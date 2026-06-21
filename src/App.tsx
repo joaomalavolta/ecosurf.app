@@ -1,6 +1,8 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
+import { UploadStatusBar } from './components/UploadStatusBar'
+import { iniciarSincronizacao } from './offline/uploadQueue'
 import { RadarPage } from './pages/RadarPage'
 import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
@@ -15,8 +17,13 @@ export default function App() {
   const { pathname } = useLocation()
   const semNav = pathname === '/capturar'
 
+  useEffect(() => {
+    iniciarSincronizacao()
+  }, [])
+
   return (
     <div className="app-shell">
+      <UploadStatusBar />
       <Routes>
         <Route path="/" element={<RadarPage />} />
         <Route

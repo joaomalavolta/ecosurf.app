@@ -58,13 +58,13 @@ maré do instante.
 
 | Tema | Estado | Próximo passo |
 |---|---|---|
-| **Maré** | modelo senoidal mock | harmônicas da DHN por estação de referência |
-| **Procedência da foto** | só selo na UI | geofence + EXIF + câmera in-app no upload |
-| **Backend / auth** | inexistente | Postgres+PostGIS (ou Supabase p/ validar) + login por telefone |
-| **Pipeline de mídia** | gradiente placeholder | resize client-side → WebP/AVIF → CDN + fila offline |
-| **Offline-first** | manifest only | Service Worker (Workbox) + IndexedDB + Background Sync |
-| **Localização de pico sensível** | flag `visibilidade` | fuzzing por célula H3 antes de expor no mapa |
-| **Tiles do mapa** | OpenFreeMap (rede) | PMTiles (Planetiler → R2/Bunny), cache offline do litoral |
+| **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
+| **Maré** | ✅ provider plugável (`services/tide/`) com modelo senoidal | implementar `dhnTideProvider` (estação + harmônicas) |
+| **Backend / auth** | ✅ schema PostGIS + RLS + contrato tipado (`supabase/`, `services/api.ts`) | provisionar + adaptador Supabase + auth por telefone |
+| **Procedência da foto** | selo na UI + flag `geofence_ok` no schema | validar geofence/EXIF no servidor (anti-foto-antiga) |
+| **Pipeline de mídia** | captura → WebP no cliente → fila | resize/thumbnail → Storage/CDN + URL assinada |
+| **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
+| **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
 
 ## Tensões éticas (decidir antes de escalar)
 

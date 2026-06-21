@@ -6,18 +6,23 @@ import { TideScrubTimeline } from '../components/TideScrubTimeline'
 import { obterPico, ameacasDoPico } from '../services/picos'
 import { buscarForecast } from '../services/forecast'
 import { feedDoDia, eventosVentoDoDia } from '../data/mockFeed'
-import { curvaMareDia, rotuloFase } from '../lib/tide'
+import { rotuloFase } from '../lib/tide'
+import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
-import type { Forecast } from '../types/domain'
+import type { Forecast, PontoMare } from '../types/domain'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
   const pico = obterPico(picoId)
   const [fc, setFc] = useState<Forecast | null>(null)
+  const [curva, setCurva] = useState<PontoMare[]>([])
 
   useEffect(() => {
     let vivo = true
-    if (pico) buscarForecast(pico).then((f) => vivo && setFc(f))
+    if (pico) {
+      buscarForecast(pico).then((f) => vivo && setFc(f))
+      tideProvider.curvaDoDia(pico, new Date()).then((c) => vivo && setCurva(c))
+    }
     return () => {
       vivo = false
     }
@@ -35,7 +40,6 @@ export function PicoPage() {
   }
 
   const feed = feedDoDia(pico.id)
-  const curva = curvaMareDia()
 
   return (
     <div className="page">

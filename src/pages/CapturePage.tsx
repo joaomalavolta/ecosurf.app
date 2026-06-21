@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { enfileirar, definirTipo } from '../offline/uploadQueue'
 
 type Etapa = 'inicio' | 'camera' | 'classificar'
 
@@ -14,6 +15,7 @@ export function CapturePage() {
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
 
   async function abrirCamera() {
@@ -44,9 +46,35 @@ export function CapturePage() {
     }
   }, [])
 
-  function disparar() {
+  async function disparar() {
+    const v = videoRef.current
+    let blob: Blob | undefined
+    if (v && v.videoWidth > 0) {
+      const c = document.createElement('canvas')
+      c.width = v.videoWidth
+      c.height = v.videoHeight
+      c.getContext('2d')?.drawImage(v, 0, 0)
+      blob = await new Promise<Blob | undefined>((res) => c.toBlob((b) => res(b ?? undefined), 'image/webp', 0.8))
+    }
     streamRef.current?.getTracks().forEach((t) => t.stop())
+
+    // Upload otimista: a foto entra na fila offline AGORA, sobe quando der.
+    const id = crypto.randomUUID()
+    uploadId.current = id
+    await enfileirar({
+      id,
+      picoId: 'praia-do-sonho',
+      capturadaEm: new Date().toISOString(),
+      blob,
+      procedencia: blob ? 'no-local' : 'galeria',
+      geofenceOk: true,
+    })
     setEtapa('classificar')
+  }
+
+  async function classificar(tipo: 'report' | 'ameaca' | 'lixo' | 'ciencia') {
+    if (uploadId.current) await definirTipo(uploadId.current, tipo)
+    navigate('/pico/praia-do-sonho')
   }
 
   return (
@@ -95,15 +123,15 @@ export function CapturePage() {
           <span className="tag ok">⬆ subindo em background</span>
           <h2 style={{ color: '#fff', marginTop: 16 }}>O que você registrou?</h2>
           <div className="stack" style={{ marginTop: 10 }}>
-            {[
-              ['🌊', 'Report do mar', 'Condição de surf agora'],
-              ['⚠️', 'Ameaça costeira', 'Poluição, erosão, obra, esgoto'],
-              ['🧴', 'Lixo na praia', 'Resíduo para mutirão/ciência'],
-              ['✨', 'Ciência cidadã', 'Água, fauna, microplástico'],
-            ].map(([i, t, s]) => (
+            {([
+              ['report', '🌊', 'Report do mar', 'Condição de surf agora'],
+              ['ameaca', '⚠️', 'Ameaça costeira', 'Poluição, erosão, obra, esgoto'],
+              ['lixo', '🧴', 'Lixo na praia', 'Resíduo para mutirão/ciência'],
+              ['ciencia', '✨', 'Ciência cidadã', 'Água, fauna, microplástico'],
+            ] as const).map(([tipo, i, t, s]) => (
               <button
                 key={t}
-                onClick={() => navigate('/pico/praia-do-sonho')}
+                onClick={() => classificar(tipo)}
                 style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 16, padding: 14, color: '#fff', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer' }}
               >
                 <span style={{ fontSize: 24 }}>{i}</span>
