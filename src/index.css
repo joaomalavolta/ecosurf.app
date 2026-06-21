@@ -1,0 +1,137 @@
+:root {
+  /* Paleta enraizada no território — não SaaS.
+     Areia, mar de fim de tarde, mata atlântica, pôr-do-sol para alerta. */
+  --mar-profundo: #0B3A53;   /* azul de fim de tarde no mar */
+  --mar: #1C6E8C;            /* água */
+  --mar-raso: #4FA3B8;       /* água rasa / espuma esverdeada */
+  --mata: #2E5E4E;           /* mata atlântica */
+  --mata-clara: #5C8A6F;
+  --areia: #EAD9B8;          /* areia seca */
+  --areia-clara: #F2E9D6;
+  --maresia: #F5F1E8;        /* off-white quente (fundo) */
+  --casca: #FFFFFF;          /* superfície de card */
+  --por-do-sol: #E8743B;     /* acento quente — alerta/ameaça */
+  --coral: #C2452D;          /* perigo */
+  --texto: #2A2620;          /* quase-preto quente */
+  --muted: #6E665A;          /* cinza quente (não slate) */
+  --linha: #E3D9C6;          /* divisórias */
+  --ok: #2E7D52;
+
+  --raio: 22px;
+  --raio-sm: 14px;
+  --sombra: 0 10px 30px rgba(43, 38, 30, 0.12);
+  --sombra-sm: 0 6px 18px rgba(43, 38, 30, 0.10);
+
+  --fonte-titulo: 'Fraunces', Georgia, serif;
+  --fonte-corpo: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  --largura-app: 480px;
+  --altura-nav: 76px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--fonte-corpo);
+  color: var(--texto);
+  background: #ded3bd; /* fundo fora do app, no desktop */
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+button { font-family: inherit; }
+
+/* ---- shell do app (mobile-first, centralizado no desktop) ---- */
+.app-shell {
+  position: relative;
+  max-width: var(--largura-app);
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--maresia);
+  box-shadow: 0 0 60px rgba(11, 58, 83, 0.18);
+  overflow: hidden;
+}
+
+.page {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px) + 12px);
+}
+
+.page-pad { padding: 16px; }
+
+/* ---- header com lugar ---- */
+.header {
+  background:
+    radial-gradient(120% 90% at 80% -10%, rgba(232, 116, 59, 0.30), transparent 55%),
+    linear-gradient(160deg, var(--mar-profundo), var(--mar) 70%, var(--mata));
+  color: #fff;
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
+}
+.header h1 { font-size: 26px; line-height: 1.05; }
+.header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.9); margin-top: 6px; line-height: 1.4; }
+
+/* ---- cards ---- */
+.card {
+  background: var(--casca);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-sm);
+  overflow: hidden;
+}
+.card.pad { padding: 16px; }
+.stack > * + * { margin-top: 12px; }
+
+.row { display: flex; gap: 12px; align-items: center; }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.muted { color: var(--muted); font-size: 13px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+/* ---- botões ---- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: var(--raio-sm);
+  min-height: 50px; padding: 0 18px;
+  background: var(--mar); color: #fff;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.btn:active { transform: translateY(1px); }
+.btn.full { width: 100%; }
+.btn.outline { background: transparent; color: var(--mar-profundo); border: 1.5px solid var(--linha); }
+.btn.sol { background: var(--por-do-sol); }
+
+/* ---- pílulas (filtros) ---- */
+.pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.pills::-webkit-scrollbar { display: none; }
+.pill {
+  white-space: nowrap; border: 0; cursor: pointer;
+  border-radius: 999px; padding: 9px 14px;
+  background: var(--areia-clara); color: var(--texto);
+  font-size: 13px; font-weight: 600;
+}
+.pill.active { background: var(--mar-profundo); color: #fff; }
+
+/* ---- tags / selos ---- */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 999px; padding: 4px 10px;
+  font-size: 11.5px; font-weight: 700;
+}
+.tag.areia { background: var(--areia); color: #6b4f1d; }
+.tag.alerta { background: #FBE3D5; color: var(--coral); }
+.tag.ok { background: #DCEBDD; color: var(--ok); }
+.tag.mar { background: #D9EEF2; color: var(--mar-profundo); }
+
+/* acessibilidade: foco visível */
+:focus-visible { outline: 3px solid var(--por-do-sol); outline-offset: 2px; border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
