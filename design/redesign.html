@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ecosurf · Redesign — Ocean Tech Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<style>
+:root{
+  --deep:#03161F; --deep2:#062734; --petrol:#0A3A4C; --surface:#0A2A37; --surface2:#0E3A4A;
+  --radar:#2E9BD6; --turq:#1FE3C8; --aqua:#5FE3AE;
+  --foam:#EAF8F9; --mist:#9CBAC5; --amber:#F4C36B; --coral:#FF8C76; --ink:#04181F;
+  --glass:rgba(255,255,255,.055); --glass2:rgba(255,255,255,.10); --stroke:rgba(255,255,255,.12);
+  --grad-ocean:linear-gradient(150deg,#0A3A4C 0%,#0E5C70 52%,#15A597 100%);
+  --grad-deep:linear-gradient(180deg,#0B2C3A,#072330);
+  --r:24px; --r-sm:16px;
+  --ff:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--ff); color:var(--foam); -webkit-font-smoothing:antialiased;
+  background:var(--deep); min-height:100vh; overflow-x:hidden;
+}
+.i{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;line-height:1}
+h1,h2,h3,h4{margin:0;font-weight:800;letter-spacing:-.02em}
+img{display:block}
+
+/* ---------- STAGE / CANVAS ---------- */
+.stage{position:relative;padding:46px 26px 70px;min-height:100vh;isolation:isolate}
+.stage::before{ /* foto de onda no topo + profundidade oceânica */
+  content:"";position:absolute;inset:0;z-index:-2;
+  background:
+    radial-gradient(1100px 520px at 78% -8%, rgba(31,227,200,.16), transparent 60%),
+    radial-gradient(900px 600px at 8% 8%, rgba(46,155,214,.18), transparent 55%),
+    linear-gradient(180deg, rgba(3,22,31,.62), rgba(3,22,31,.93) 62%, var(--deep)),
+    url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1600&q=80&auto=format&fit=crop') center top/cover no-repeat,
+    var(--deep);
+}
+.stage::after{ /* grão/vinheta sutil */
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 0%, transparent 60%, rgba(0,0,0,.35));
+}
+
+/* ---------- HERO ---------- */
+.hero{max-width:1180px;margin:0 auto 40px;text-align:center}
+.brand{display:inline-flex;align-items:center;gap:14px;justify-content:center}
+.brand svg{filter:drop-shadow(0 6px 18px rgba(31,227,200,.45))}
+.brand .word{font-size:40px;font-weight:800;letter-spacing:-.03em}
+.brand .word b{color:var(--turq);font-weight:800}
+.kicker{margin-top:14px;font-size:12.5px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:var(--turq)}
+.tagline{margin:12px auto 0;max-width:640px;font-size:16px;line-height:1.55;color:#CFE6EC;font-weight:500}
+.palette{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+.sw{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--stroke);
+  border-radius:999px;padding:7px 12px 7px 8px;font-size:11.5px;font-weight:600;color:#CFE6EC;backdrop-filter:blur(6px)}
+.sw i{width:16px;height:16px;border-radius:999px;display:block}
+
+/* ---------- DECK ---------- */
+.deck{display:flex;gap:46px;justify-content:center;align-items:flex-start;flex-wrap:wrap;max-width:1900px;margin:0 auto}
+.frame{width:336px}
+.frame .cap{display:flex;align-items:center;gap:9px;margin:0 6px 14px;color:#BFD8DF}
+.frame .cap .n{font-size:12px;font-weight:800;color:var(--turq);letter-spacing:.04em}
+.frame .cap .t{font-size:15px;font-weight:700;color:var(--foam)}
+.frame:nth-child(even){margin-top:34px}
+
+/* ---------- DEVICE ---------- */
+.device{position:relative;height:728px;border-radius:46px;padding:9px;
+  background:linear-gradient(160deg,#16323e,#0a2029);
+  box-shadow:0 50px 90px -30px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.04);}
+.screen{position:relative;height:100%;border-radius:38px;overflow:hidden;background:var(--surface);
+  display:flex;flex-direction:column}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:26px;
+  background:#000;border-radius:999px;z-index:60}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 0;font-size:12.5px;font-weight:700;color:var(--foam);z-index:40}
+.statusbar .r{display:flex;gap:6px;align-items:center;opacity:.9}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ---------- COMMON UI ---------- */
+.pad{padding:14px 16px}
+.stack>*+*{margin-top:12px}
+.row{display:flex;gap:10px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.muted{color:var(--mist);font-size:12.5px;line-height:1.45}
+.eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.header{background:var(--grad-ocean);padding:18px 18px 20px;position:relative;overflow:hidden}
+.header::after{content:"";position:absolute;right:-30px;top:-40px;width:160px;height:160px;border-radius:999px;
+  background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+.header h1{font-size:23px}
+.avatar{width:42px;height:42px;border-radius:999px;border:2px solid rgba(255,255,255,.5);background:var(--radar) center/cover;flex:0 0 auto}
+.iconbtn{width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;position:relative}
+.dotred{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:999px;background:var(--coral);border:2px solid #0e5c70}
+
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:999px;padding:8px 13px;
+  background:var(--glass);border:1px solid var(--stroke);color:#CFE6EC;font-size:12px;font-weight:600}
+.chip.on{background:var(--turq);border-color:transparent;color:var(--ink);font-weight:700}
+
+.card{background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;backdrop-filter:blur(10px)}
+.card.p{padding:14px}
+.cover{position:relative;height:132px;background:var(--grad-deep) center/cover;overflow:hidden}
+.cover .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,22,31,.05),rgba(3,22,31,.78))}
+.cover .top{position:absolute;top:11px;left:11px;right:11px;display:flex;justify-content:space-between;align-items:flex-start}
+.cover .bot{position:absolute;left:13px;right:13px;bottom:11px}
+
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;letter-spacing:.01em}
+.b-good{background:rgba(95,227,174,.16);color:var(--aqua)}
+.b-info{background:rgba(31,227,200,.15);color:var(--turq)}
+.b-warn{background:rgba(244,195,107,.16);color:var(--amber)}
+.b-alert{background:rgba(255,140,118,.16);color:var(--coral)}
+.b-glass{background:rgba(4,20,27,.55);color:#fff;backdrop-filter:blur(6px)}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.metric{background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:14px;padding:9px 6px;text-align:center}
+.metric .k{font-size:9.5px;font-weight:700;color:var(--mist);text-transform:uppercase;letter-spacing:.06em}
+.metric .v{font-size:15px;font-weight:800;margin-top:3px;color:var(--foam)}
+.metric .s{font-size:9.5px;color:var(--mist);margin-top:1px}
+.metric i{color:var(--turq);font-size:14px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;
+  height:46px;padding:0 18px;background:var(--turq);color:var(--ink);font-family:inherit;font-size:14px;font-weight:800;
+  box-shadow:0 10px 24px -8px rgba(31,227,200,.7);cursor:pointer}
+.btn.full{width:100%}
+.btn.ghost{background:transparent;border:1.5px solid var(--stroke);color:var(--foam);box-shadow:none}
+.btn.sm{height:40px;font-size:13px;border-radius:12px}
+
+.insight{display:flex;align-items:center;gap:8px;background:rgba(31,227,200,.10);border:1px solid rgba(31,227,200,.22);
+  border-radius:12px;padding:9px 11px;font-size:12px;font-weight:600;color:#D5F6F0}
+.insight i{color:var(--turq);font-size:15px}
+
+.stackav{display:flex;align-items:center}
+.stackav span{width:24px;height:24px;border-radius:999px;border:2px solid var(--surface);background:var(--radar) center/cover;margin-left:-8px}
+.stackav span:first-child{margin-left:0}
+
+/* listas (ações) */
+.listitem{display:flex;gap:11px;align-items:center;background:var(--glass);border:1px solid var(--stroke);border-radius:18px;padding:11px}
+.ico{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+
+/* ---------- MAP ---------- */
+.map{position:relative;flex:1;overflow:hidden;background:
+  radial-gradient(120% 90% at 20% 12%, #0f4a5c, transparent 45%),
+  radial-gradient(120% 90% at 85% 80%, #0c3c4d, transparent 50%),
+  linear-gradient(180deg,#0c3a4a,#072430)}
+.coast{position:absolute;inset:0;opacity:.5}
+.pin{position:absolute;width:40px;height:40px;border-radius:999px 999px 999px 4px;transform:translate(-50%,-50%) rotate(45deg);
+  border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 20px rgba(0,0,0,.4)}
+.pin i{transform:rotate(-45deg);color:#04181f;font-size:18px}
+.cluster{position:absolute;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:999px;background:rgba(11,44,58,.85);
+  border:2px solid var(--turq);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;backdrop-filter:blur(4px)}
+.sheet{position:absolute;left:12px;right:12px;bottom:84px;border-radius:22px;padding:12px;
+  background:rgba(8,32,42,.82);border:1px solid var(--stroke);backdrop-filter:blur(16px);box-shadow:0 24px 50px -16px rgba(0,0,0,.7)}
+.grip{width:36px;height:4px;border-radius:999px;background:rgba(255,255,255,.25);margin:0 auto 11px}
+.thumb{width:50px;height:50px;border-radius:14px;background:var(--grad-deep) center/cover;flex:0 0 auto}
+
+/* ---------- CAMERA (registrar) ---------- */
+.cam{position:relative;flex:1;display:flex;flex-direction:column;color:#fff;
+  background:linear-gradient(180deg,rgba(3,18,26,.4),rgba(3,18,26,.92)),
+  url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=900&q=80&auto=format&fit=crop') center/cover}
+.cam .top{display:flex;justify-content:space-between;align-items:center;padding:14px 18px}
+.geo{display:inline-flex;align-items:center;gap:6px;background:rgba(4,20,27,.6);border:1px solid var(--stroke);
+  border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;color:#D5F6F0;backdrop-filter:blur(6px)}
+.geo .dot{width:7px;height:7px;border-radius:999px;background:var(--aqua);box-shadow:0 0 0 4px rgba(95,227,174,.25)}
+.stepper{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto}
+.step{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:rgba(255,255,255,.55)}
+.step .num{width:22px;height:22px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:11px}
+.step.on{color:#fff}.step.on .num{background:var(--turq);border-color:transparent;color:var(--ink)}
+.step .ln{width:18px;height:1.5px;background:rgba(255,255,255,.25)}
+.shutter{width:74px;height:74px;border-radius:999px;background:#fff;border:4px solid rgba(255,255,255,.35);margin:0 auto;
+  box-shadow:0 0 0 8px rgba(31,227,200,.18),0 14px 30px rgba(0,0,0,.5);position:relative}
+.shutter::after{content:"";position:absolute;inset:7px;border-radius:999px;background:var(--turq)}
+
+/* ---------- BOTTOM NAV ---------- */
+.nav{position:relative;height:74px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  background:rgba(7,28,37,.82);border-top:1px solid var(--stroke);backdrop-filter:blur(16px);z-index:40}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--mist);text-decoration:none}
+.nav a .i{font-size:21px}
+.nav a.on{color:var(--turq)}
+.fab{display:flex;justify-content:center}
+.fab button{width:60px;height:60px;margin-top:-30px;border-radius:22px;border:0;cursor:pointer;
+  background:linear-gradient(150deg,var(--turq),#15A597);color:var(--ink);font-size:26px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 28px -6px rgba(31,227,200,.8),0 0 0 6px var(--surface)}
+
+.foot{max-width:1180px;margin:64px auto 0;text-align:center;color:#7FA0AC;font-size:12px;line-height:1.7}
+.foot b{color:#BFD8DF}
+@media(max-width:760px){.stage{padding:30px 14px 50px}.brand .word{font-size:30px}.frame{width:330px}}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <header class="hero">
+    <div class="brand">
+      <svg width="58" height="40" viewBox="0 0 58 40" fill="none">
+        <path d="M3 24c4 0 5-13 11-13s7 18 12 18 6-23 13-23 6 16 11 16" stroke="#1FE3C8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="word">eco<b>surf</b></span>
+    </div>
+    <div class="kicker">Redesign · Ocean Tech Premium</div>
+    <p class="tagline">O surf por quem surfa — e o oceano por quem o protege. Radar de surf, cartografia costeira, ciência cidadã e mobilização da comunidade, num só app.</p>
+    <div class="palette">
+      <span class="sw"><i style="background:#03161F"></i> Oceano profundo</span>
+      <span class="sw"><i style="background:#0A3A4C"></i> Petróleo</span>
+      <span class="sw"><i style="background:#2E9BD6"></i> Azul radar</span>
+      <span class="sw"><i style="background:#1FE3C8"></i> Turquesa</span>
+      <span class="sw"><i style="background:#5FE3AE"></i> Verde água</span>
+      <span class="sw"><i style="background:#EAF8F9"></i> Branco espuma</span>
+    </div>
+  </header>
+
+  <main class="deck" id="deck"></main>
+
+  <footer class="foot">
+    <b>Ecosurf · sistema visual de redesign</b> — mockup de alta fidelidade, 5 telas, mobile-first.<br>
+    Fonte Plus Jakarta Sans · ícones Tabler · imagens ilustrativas (Unsplash). Estrutura funcional preservada: Radar · Mapa · Registrar · Ações · Perfil.
+  </footer>
+</div>
+
+<script>
+const IMG={
+  beachAir:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700&q=80&auto=format&fit=crop',
+  surf:'https://images.unsplash.com/photo-1509914398892-963f53e6e2f1?w=700&q=80&auto=format&fit=crop',
+  coast:'https://images.unsplash.com/photo-1520454974749-611b7248ffdb?w=700&q=80&auto=format&fit=crop',
+  wave:'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=700&q=80&auto=format&fit=crop',
+  cleanup:'https://images.unsplash.com/photo-1618477462146-aa3d4d6f6f0a?w=700&q=80&auto=format&fit=crop',
+  av1:'https://randomuser.me/api/portraits/women/68.jpg',
+  av2:'https://randomuser.me/api/portraits/women/44.jpg',
+  av3:'https://randomuser.me/api/portraits/men/32.jpg',
+  av4:'https://randomuser.me/api/portraits/men/75.jpg'
+};
+const ic=(n,s)=>`<i class="i ti ti-${n}"${s?` style="font-size:${s}px"`:''}></i>`;
+const cover=(url)=>`background-image:linear-gradient(180deg,rgba(3,22,31,.05),rgba(3,22,31,.78)),url('${url}')`;
+const bg=(url)=>`background-image:url('${url}')`;
+
+function statusbar(style){return `<div class="statusbar"${style?` style="${style}"`:''}><span>6:42</span>
+  <span class="r">${ic('wifi',15)} ${ic('battery-3',16)}</span></div>`}
+
+function nav(active){
+  const items=[['Radar','radar-2'],['Mapa','map-2'],['__','camera'],['Ações','windmill'],['Perfil','user']];
+  return `<div class="nav">`+items.map(it=>{
+    if(it[0]==='__')return `<div class="fab"><button>${ic('camera',26)}</button></div>`;
+    return `<a class="${it[0]===active?'on':''}"><span class="i">${ic(it[1],21)}</span>${it[0]}</a>`;
+  }).join('')+`</div>`;
+}
+
+function metrics(o,p,v,vs,m,ms){return `<div class="metrics">
+  <div class="metric"><div class="k">${ic('ripple')} Onda</div><div class="v">${o}</div><div class="s">SE</div></div>
+  <div class="metric"><div class="k">${ic('wave-sine')} Período</div><div class="v">${p}</div><div class="s">limpo</div></div>
+  <div class="metric"><div class="k">${ic('wind')} Vento</div><div class="v">${v}</div><div class="s">${vs}</div></div>
+  <div class="metric"><div class="k">${ic('ripple')} Maré</div><div class="v">${m}</div><div class="s">${ms}</div></div></div>`}
+
+/* swell sparkline */
+function spark(){
+  let d='M0 26';for(let i=0;i<=48;i++){const x=i/48*100;const y=24-16*Math.pow(Math.sin(i/48*Math.PI),0.8)*(0.6+0.4*Math.sin(i/7));d+=` L${x.toFixed(1)} ${Math.max(4,y).toFixed(1)}`}
+  return `<svg viewBox="0 0 100 30" width="100%" height="34" preserveAspectRatio="none" style="display:block">
+    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1FE3C8" stop-opacity=".5"/><stop offset="1" stop-color="#1FE3C8" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L100 30 L0 30 Z" fill="url(#sg)"/><path d="${d}" fill="none" stroke="#1FE3C8" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>`}
+
+const screens=[
+/* ---------------- 1 · RADAR ---------------- */
+['Radar',()=>`<div class="header">
+  <div class="between">
+    <div class="row"><div class="avatar" style="${bg(IMG.av2)}"></div>
+      <div><div class="muted" style="color:rgba(255,255,255,.85)">Bom dia, Ana ${ic('sun',13)}</div>
+      <h1 style="font-size:20px">O mar de hoje</h1></div></div>
+    <div class="iconbtn">${ic('bell',18)}<span class="dotred"></span></div>
+  </div>
+  <div class="row" style="margin-top:12px;font-size:12px;color:rgba(255,255,255,.85);font-weight:600">${ic('map-pin',14)} Litoral Sul · SP &nbsp;·&nbsp; 5 picos no radar</div>
+</div>
+<div class="body">
+  <div class="pad stack" style="overflow:hidden">
+    <div class="chips"><span class="chip on">${ic('star',14)} Favoritos</span><span class="chip">${ic('ripple',14)} Melhores agora</span><span class="chip">${ic('map-pin',14)} Todos</span></div>
+
+    <div class="card">
+      <div class="cover" style="${cover(IMG.beachAir)}">
+        <div class="ov"></div>
+        <div class="top"><span class="badge b-good">${ic('circle-filled',9)} Clássico</span><span class="iconbtn" style="width:34px;height:34px;background:rgba(4,20,27,.45)">${ic('heart',16)}</span></div>
+        <div class="bot between" style="align-items:flex-end">
+          <div><h3 style="font-size:19px">Praia do Sonho</h3><div class="muted" style="color:#D7EAF0">Itanhaém · SP &nbsp;·&nbsp; 2,1 km</div></div>
+          <span class="badge b-glass">${ic('temperature',12)} 24°</span>
+        </div>
+      </div>
+      <div class="p stack">
+        <div class="insight">${ic('clock-hour-8')} Melhor janela hoje: <b style="color:#fff">6h–9h</b>, com terral</div>
+        ${metrics('1,1m','10s','9km/h','terral','0,9m','enchendo')}
+      </div>
+    </div>
+
+    <div class="card p">
+      <div class="between">
+        <div class="row"><div class="thumb" style="${cover(IMG.surf)}"></div>
+          <div><h3 style="font-size:15px">Maresias</h3><div class="muted">São Sebastião · SP</div></div></div>
+        <span class="badge b-warn">${ic('wind',11)} Mexido</span>
+      </div>
+      ${spark()}
+      <div class="between" style="margin-top:2px">
+        <span class="muted">${ic('ripple',13)} 1,6m · 8s</span><span class="muted">${ic('wind',13)} maral 22km/h</span><span class="muted">${ic('ripple',13)} maré cheia</span>
+      </div>
+    </div>
+  </div>
+</div>${nav('Radar')}`],
+
+/* ---------------- 2 · MAPA ---------------- */
+['Mapa',()=>`<div class="map">
+  <svg class="coast" viewBox="0 0 336 600" preserveAspectRatio="none">
+    <path d="M-10 120 C90 150 120 60 200 90 S330 120 360 70 L380 620 -20 620 Z" fill="rgba(8,40,52,.5)"/>
+    <path d="M-10 300 C70 330 140 270 220 320 S330 360 360 320" fill="none" stroke="rgba(31,227,200,.25)" stroke-width="2" stroke-dasharray="2 7"/>
+  </svg>
+
+  <div style="position:absolute;top:0;left:0;right:0;padding:14px 14px 0;z-index:20">
+    ${statusbar('padding:0;margin-bottom:10px')}
+    <div class="card p" style="padding:11px">
+      <div class="row" style="color:var(--mist);font-size:13px">${ic('search',17)} Buscar praia, pico ou ameaça…</div>
+    </div>
+    <div class="chips" style="margin-top:10px;overflow:visible;flex-wrap:wrap">
+      <span class="chip on">Tudo</span><span class="chip">${ic('ripple',13)} Picos</span><span class="chip">${ic('alert-triangle',13)} Ameaças</span><span class="chip">${ic('windmill',13)} Mutirões</span>
+    </div>
+  </div>
+
+  <div class="pin" style="left:26%;top:42%;background:var(--turq)"><i>${ic('ripple')}</i></div>
+  <div class="pin" style="left:62%;top:36%;background:var(--turq)"><i>${ic('ripple')}</i></div>
+  <div class="pin" style="left:46%;top:58%;background:var(--coral)"><i>${ic('alert-triangle')}</i></div>
+  <div class="pin" style="left:72%;top:62%;background:var(--aqua)"><i>${ic('windmill')}</i></div>
+  <div class="cluster" style="left:34%;top:70%">8</div>
+
+  <div class="sheet">
+    <div class="grip"></div>
+    <div class="row">
+      <div class="thumb" style="${cover(IMG.beachAir)}"></div>
+      <div style="flex:1">
+        <div class="between"><h3 style="font-size:16px">Praia do Sonho</h3><span class="badge b-good">Clássico</span></div>
+        <div class="muted" style="margin-top:2px">Itanhaém · SP &nbsp;·&nbsp; radar ativo</div>
+        <div class="row" style="margin-top:6px"><span class="muted">${ic('ripple',13)} 1,1m</span><span class="muted">${ic('wind',13)} terral</span><span class="muted">${ic('ripple',13)} enchendo</span></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn sm full">${ic('arrow-right',16)} Abrir pico</button><button class="btn ghost sm full">${ic('camera',16)} Registrar</button></div>
+  </div>
+</div>${nav('Mapa')}`],
+
+/* ---------------- 3 · REGISTRAR ---------------- */
+['Registrar',()=>`<div class="cam">
+  <div class="top">
+    <span class="iconbtn" style="background:rgba(4,20,27,.5)">${ic('x',19)}</span>
+    <span class="geo"><span class="dot"></span> Praia do Sonho · dentro do pico</span>
+    <span class="iconbtn" style="background:rgba(4,20,27,.5)">${ic('bolt',18)}</span>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center">
+    <div style="width:78%;aspect-ratio:1;border:2px dashed rgba(255,255,255,.35);border-radius:28px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);text-align:center;font-size:12.5px;font-weight:600">
+      <div>${ic('viewfinder',30)}<div style="margin-top:8px">Enquadre o mar<br>a foto vem primeiro</div></div>
+    </div>
+  </div>
+
+  <div style="padding:0 16px 18px">
+    <div class="stepper" style="margin-bottom:16px">
+      <div class="step on"><span class="num">1</span> Foto</div><span class="ln"></span>
+      <div class="step"><span class="num">2</span> Classificar</div><span class="ln"></span>
+      <div class="step"><span class="num">3</span> Enviar</div>
+    </div>
+    <div class="chips" style="justify-content:center;margin-bottom:18px;flex-wrap:wrap">
+      <span class="chip on">${ic('ripple',13)} Mar</span><span class="chip">${ic('alert-triangle',13)} Ameaça</span>
+      <span class="chip">${ic('trash',13)} Lixo</span><span class="chip">${ic('mountain',13)} Erosão</span><span class="chip">${ic('fish',13)} Fauna</span>
+    </div>
+    <div class="shutter"></div>
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.75);font-weight:600">Procedência garantida: câmera + GPS no local ${ic('shield-check',13)}</div>
+  </div>
+</div>`],
+
+/* ---------------- 4 · AÇÕES ---------------- */
+['Ações',()=>`<div class="header">
+  <div class="eyebrow" style="color:rgba(255,255,255,.8)">Comunidade</div>
+  <h1>Ações</h1>
+  <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.88);font-weight:500">Defenda a costa. Mobilize. Gere dado.</p>
+</div>
+<div class="body"><div class="pad stack" style="overflow:hidden">
+  <button class="btn full" style="height:52px">${ic('camera',19)} Registrar agora — 2 toques</button>
+
+  <div class="between"><h3 style="font-size:15px">${ic('windmill',16)} Mutirões</h3><span class="muted" style="color:var(--turq);font-weight:700">Ver todos</span></div>
+  <div class="card">
+    <div class="cover" style="height:96px;${cover(IMG.cleanup)}"><div class="ov"></div>
+      <div class="bot between" style="align-items:center"><div><b style="font-size:15px">Limpeza Praia do Sonho</b><div class="muted" style="color:#D7EAF0">${ic('calendar',12)} Sáb 27 jun · 8h–11h</div></div>
+      <span class="badge b-good">Abertas</span></div>
+    </div>
+    <div class="p between">
+      <div class="row"><div class="stackav"><span style="${bg(IMG.av2)}"></span><span style="${bg(IMG.av3)}"></span><span style="${bg(IMG.av4)}"></span></div><span class="muted">+31 inscritos</span></div>
+      <button class="btn sm">Participar</button>
+    </div>
+  </div>
+
+  <div class="listitem"><div class="ico" style="color:var(--coral)">${ic('alert-triangle',20)}</div>
+    <div style="flex:1"><b style="font-size:14px">Resíduos no canto sul</b><div class="muted">Itanhaém/SP · recorrente</div></div>
+    <span class="badge b-alert">Ameaça</span></div>
+  <div class="listitem"><div class="ico" style="color:var(--coral)">${ic('mountain',20)}</div>
+    <div style="flex:1"><b style="font-size:14px">Erosão na duna frontal</b><div class="muted">Peruíbe/SP · em observação</div></div>
+    <span class="badge b-warn">Atenção</span></div>
+
+  <div class="between" style="margin-top:2px"><h3 style="font-size:15px">${ic('flask',16)} Ciência cidadã</h3></div>
+  <div class="row" style="gap:8px">
+    <div class="listitem" style="flex:1;flex-direction:column;align-items:flex-start;gap:7px"><div class="ico" style="color:var(--turq)">${ic('droplet',19)}</div><b style="font-size:12.5px">Qualidade da água</b></div>
+    <div class="listitem" style="flex:1;flex-direction:column;align-items:flex-start;gap:7px"><div class="ico" style="color:var(--aqua)">${ic('fish',19)}</div><b style="font-size:12.5px">Fauna observada</b></div>
+  </div>
+</div></div>${nav('Ações')}`],
+
+/* ---------------- 5 · PERFIL ---------------- */
+['Perfil',()=>`<div class="header" style="padding-bottom:26px">
+  <div class="between"><div class="eyebrow" style="color:rgba(255,255,255,.8)">Seu perfil</div><span class="iconbtn" style="width:36px;height:36px">${ic('settings',17)}</span></div>
+  <div class="row" style="margin-top:14px">
+    <div class="avatar" style="width:66px;height:66px;border-radius:22px;${bg(IMG.av1)}"></div>
+    <div><h1 style="font-size:20px">Ana Marés</h1>
+      <div class="muted" style="color:rgba(255,255,255,.85);margin-top:2px">${ic('award',13)} Sentinela do litoral</div>
+      <span class="badge b-good" style="margin-top:7px">${ic('rosette-discount-check',12)} conta validada</span></div>
+  </div>
+</div>
+<div class="body"><div class="pad stack" style="overflow:hidden;margin-top:-18px">
+  <div class="card p" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center">
+    <div><div class="v" style="font-size:21px;font-weight:800">42</div><div class="muted">Registros</div></div>
+    <div style="border-left:1px solid var(--stroke);border-right:1px solid var(--stroke)"><div class="v" style="font-size:21px;font-weight:800">7</div><div class="muted">Mutirões</div></div>
+    <div><div class="v" style="font-size:21px;font-weight:800;color:var(--turq)">96%</div><div class="muted">Precisão</div></div>
+  </div>
+
+  <div class="card p stack">
+    <span class="eyebrow">Histórico de contribuições</span>
+    <div class="row"><div class="ico" style="width:34px;height:34px;color:var(--turq)">${ic('photo',17)}</div><div style="flex:1"><b style="font-size:13px">Foto · Praia do Sonho</b><div class="muted">hoje, 06:48 · no local</div></div></div>
+    <div class="row"><div class="ico" style="width:34px;height:34px;color:var(--aqua)">${ic('windmill',17)}</div><div style="flex:1"><b style="font-size:13px">Mutirão · Pescadores</b><div class="muted">sáb · 8h–11h</div></div></div>
+  </div>
+
+  <div class="card p stack">
+    <span class="eyebrow">Privacidade & LGPD</span>
+    <label class="between" style="font-size:13px">Borrar rostos nas fotos <span style="width:38px;height:22px;border-radius:999px;background:var(--turq);position:relative"><span style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:999px;background:#fff"></span></span></label>
+    <label class="between" style="font-size:13px">Localização exata oculta <span style="width:38px;height:22px;border-radius:999px;background:var(--turq);position:relative"><span style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:999px;background:#fff"></span></span></label>
+    <label class="between" style="font-size:13px;color:var(--mist)">Anônimo em ameaças <span style="width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.14);position:relative"><span style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:999px;background:#fff"></span></span></label>
+  </div>
+</div></div>${nav('Perfil')}`]
+];
+
+document.getElementById('deck').innerHTML=screens.map(([name,fn],i)=>`
+  <section class="frame">
+    <div class="cap"><span class="n">0${i+1}</span><span class="t">${name}</span></div>
+    <div class="device"><div class="screen"><div class="island"></div>${name==='Mapa'||name==='Registrar'?'':statusbar()}${fn()}</div></div>
+  </section>`).join('');
+</script>
+</body>
+</html>
