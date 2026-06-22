@@ -1,8 +1,12 @@
 # Backend do Ecosurf (Supabase / PostgreSQL + PostGIS)
 
-> Ainda **não provisionado**. Estas migrations e este guia deixam o backend
-> pronto para subir num comando. Enquanto não houver `VITE_SUPABASE_URL`, o
-> app roda com dados-semente e fila de upload em mock (sem perder funcionalidade).
+> **Provisionado** em `ecosurf-app` (org joaomalavolta, região sa-east-1),
+> projeto ref `mdgttlgtrrmkmqttrxdq` · URL `https://mdgttlgtrrmkmqttrxdq.supabase.co`.
+> Migrations 0001–0006 aplicadas, bucket `fotos` criado, RLS sem lints.
+> Falta só ligar um provedor de SMS para o login por telefone (ver abaixo).
+>
+> As chaves vão em `.env` (não versionado) — ver `.env.example`. A anon/publishable
+> key é de cliente (pode aparecer no front), mas mantemos fora do repo por higiene.
 
 ## Provisionar
 

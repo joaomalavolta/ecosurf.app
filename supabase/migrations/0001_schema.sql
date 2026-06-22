@@ -1,7 +1,7 @@
 -- Ecosurf — schema base (PostgreSQL + PostGIS)
 -- Reflete src/types/domain.ts. Pico é permanente; feed é do dia; foto é nobre.
 
-create extension if not exists postgis;
+create extension if not exists postgis with schema extensions;
 
 -- Regiões de surf (curadas, cruzam municípios)
 create table regioes_surf (
@@ -26,7 +26,7 @@ create table picos (
   nome                text not null,
   praia               text not null,
   regiao_surf_id      text references regioes_surf(id),
-  geom                geometry(Point, 4326) not null,
+  geom                extensions.geometry(Point, 4326) not null,
   municipio           text,                              -- DERIVADO (PostGIS + malha IBGE)
   uf                  char(2),                           -- DERIVADO
   orientacao_praia_deg int  not null default 0,
@@ -76,8 +76,8 @@ create table ameacas (
   status         text not null default 'identificado'
                    check (status in ('identificado','em-observacao','recorrente','resolvido')),
   pico_id        text references picos(id) on delete set null,
-  geom           geometry(Point, 4326),             -- precisão fina (RESTRITA)
-  geom_aprox     geometry(Point, 4326),             -- grosseira (pública)
+  geom           extensions.geometry(Point, 4326),  -- precisão fina (RESTRITA)
+  geom_aprox     extensions.geometry(Point, 4326),  -- grosseira (pública)
   municipio      text,
   uf             char(2),
   precisao       text not null default 'aproximada' check (precisao in ('exata','aproximada')),
@@ -93,7 +93,7 @@ create index ameacas_geom_aprox_idx on ameacas using gist (geom_aprox);
 --
 --   create table malha_municipios (
 --     cd_mun text primary key, nm_mun text, sigla_uf char(2),
---     geom geometry(MultiPolygon, 4326)
+--     geom extensions.geometry(MultiPolygon, 4326)
 --   );
 --   create index on malha_municipios using gist (geom);
 --
