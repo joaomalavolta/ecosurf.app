@@ -19,7 +19,7 @@ export async function ehModerador(): Promise<boolean> {
   const u = data.session?.user
   if (!u) return false
   const { data: perfil } = await sb().from('perfis').select('papel').eq('id', u.id).single()
-  return perfil?.papel === 'moderador' || perfil?.papel === 'admin'
+  return ['moderator', 'admin', 'super_admin'].includes(perfil?.papel ?? '')
 }
 
 export interface DenunciaItem {

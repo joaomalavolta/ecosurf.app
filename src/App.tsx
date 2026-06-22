@@ -15,6 +15,10 @@ import { ModeracaoPage } from './pages/ModeracaoPage'
 // (entrada diária), para o app abrir leve no 3G da praia.
 const MapaPage = lazy(() => import('./pages/MapaPage').then((m) => ({ default: m.MapaPage })))
 
+// Painel admin: isolado do app público (fora do app-shell e do onboarding) e
+// fora do bundle principal — só carrega quando alguém abre /admin.
+const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })))
+
 export default function App() {
   const { pathname } = useLocation()
   const semNav = pathname === '/capturar'
@@ -22,6 +26,14 @@ export default function App() {
   useEffect(() => {
     iniciarSincronizacao()
   }, [])
+
+  if (pathname.startsWith('/admin')) {
+    return (
+      <Suspense fallback={<div className="admin" style={{ display: 'grid', placeItems: 'center' }}><p className="muted">Carregando painel…</p></div>}>
+        <AdminPage />
+      </Suspense>
+    )
+  }
 
   return (
     <OnboardingProvider>
