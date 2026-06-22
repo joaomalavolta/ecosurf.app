@@ -1,4 +1,4 @@
-import type { Pico, RegiaoSurf, Ameaca } from '../types/domain'
+import type { Pico, RegiaoSurf, Ameaca, Mutirao } from '../types/domain'
 
 /**
  * Seed do litoral de largada: Itanhaém / Litoral Sul de SP.
@@ -114,11 +114,48 @@ export const ameacasSeed: Ameaca[] = [
   },
 ]
 
-export const PERFIL_DEMO = {
-  nome: 'João Malavolta',
-  nivel: 'Sentinela do litoral',
-  validadoPorTelefone: true,
-  picos: 18,
-  mutiroes: 29,
-  precisao: 91,
-}
+export const mutiroesSeed: Mutirao[] = [
+  {
+    id: 'limpeza-praia-do-sonho',
+    titulo: 'Limpeza Praia do Sonho',
+    picoId: 'praia-do-sonho',
+    municipio: 'Itanhaém',
+    uf: 'SP',
+    quando: '2026-06-27T08:00:00-03:00',
+    horario: '8h às 11h',
+    organizador: 'Coletivo Sentinela do Litoral',
+    inscritos: 31,
+    status: 'agendado',
+    lat: -24.1735,
+    lng: -46.7625,
+    descricao: 'Mutirão de limpeza no canto sul, foco nos resíduos pós-ressaca.',
+  },
+  {
+    id: 'mutirao-pescadores',
+    titulo: 'Mutirão Praia dos Pescadores',
+    picoId: 'praia-dos-pescadores',
+    municipio: 'Itanhaém',
+    uf: 'SP',
+    quando: '2026-06-27T08:00:00-03:00',
+    horario: '8h às 11h',
+    inscritos: 46,
+    status: 'agendado',
+    lat: -24.1882,
+    lng: -46.7889,
+    descricao: 'Limpeza da faixa de areia e da foz, com pesagem dos resíduos.',
+  },
+  {
+    id: 'restinga-viva',
+    titulo: 'Restinga Viva',
+    municipio: 'Peruíbe',
+    uf: 'SP',
+    quando: '2026-06-28T08:30:00-03:00',
+    horario: 'domingo de manhã',
+    organizador: 'Restinga Viva',
+    vagas: 22,
+    status: 'agendado',
+    lat: -24.3201,
+    lng: -46.9988,
+    descricao: 'Recuperação da duna frontal e plantio de restinga (APP).',
+  },
+]

@@ -25,7 +25,7 @@ function Linha({
   Icon,
   titulo,
   texto,
-  cor = 'var(--azul-abissal)',
+  cor = 'var(--turq)',
   to,
 }: {
   Icon: ComponentType<IconProps>

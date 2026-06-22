@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
-import { carregarPicos, carregarAmeacas } from '../services/picos'
-import type { Ameaca, Pico } from '../types/domain'
+import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/picos'
+import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
 type Filtro = 'tudo' | 'picos' | 'ameacas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
 
   useEffect(() => {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarMutiroes().then((m) => vivo && setMutiroes(m))
     return () => {
       vivo = false
     }
@@ -23,10 +25,15 @@ export function MapaPage() {
 
   const verPicos = filtro === 'tudo' || filtro === 'picos'
   const verAmeacas = filtro === 'tudo' || filtro === 'ameacas'
+  const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
 
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
-      <MapView picos={verPicos ? picos : []} ameacas={verAmeacas ? ameacas : []} />
+      <MapView
+        picos={verPicos ? picos : []}
+        ameacas={verAmeacas ? ameacas : []}
+        mutiroes={verMutiroes ? mutiroes : []}
+      />
 
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>
         <div className="card pad" style={{ padding: 12 }}>
@@ -47,16 +54,15 @@ export function MapaPage() {
       <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
         <div className="card pad row">
           <div
-            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--azul-abissal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
+            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
           >
             <IconRipple size={26} stroke={2} />
           </div>
           <div style={{ flex: 1 }}>
-            <b>Praia do Sonho</b>
-            <div className="muted">Itanhaém/SP · radar ativo</div>
+            <b>Explore o litoral</b>
+            <div className="muted">Toque num pico para ver a previsão e a timeline do dia.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <Link to="/pico/praia-do-sonho" className="btn" style={{ minHeight: 42 }}>Abrir</Link>
-              <Link to="/capturar" className="btn outline" style={{ minHeight: 42 }}>Registrar</Link>
+              <Link to="/capturar" className="btn" style={{ minHeight: 42 }}>Registrar uma condição</Link>
             </div>
           </div>
         </div>

@@ -64,7 +64,7 @@ maré do instante.
 | **Contribuição identificada** | ✅ **sem anônimo** — RLS exige usuário não-anônimo; login por **e-mail (magic link, já funciona)** ou telefone | ligar SMS p/ telefone |
 | **Anti-fake (servidor)** | ✅ trigger valida **geofence (≤500m)** + timestamp e define a procedência (cliente não decide); testado | ler EXIF; ajustar raio por pico |
 | **Moderação** | ✅ denúncia de foto + **ocultar** por moderador/admin (papel no perfil); feed esconde oculta; `/moderacao` | atribuir moderadores por região; notificação |
-| **Mapa** | ✅ picos (azul) + ameaças (índigo) filtráveis | mutirões; clusterização |
+| **Mapa** | ✅ picos (azul) + ameaças (índigo) + **mutirões (verde)** filtráveis, com **clusterização** nativa (aglomera de longe, abre em pins ao aproximar; clique no cluster aproxima) | mutirões geridos pelo organizador; H3 fuzzing de pico sensível |
 | **Auth / upload** | ✅ `autor_id` + Storage + **resize ≤1600px WebP** + **coords p/ geofence**; nome no feed | thumbnails |
 | **Pipeline de mídia** | ✅ resize client-side (≤1600px WebP) → Storage (URL assinada) | thumbnails + CDN |
 | **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |

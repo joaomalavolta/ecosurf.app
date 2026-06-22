@@ -1,7 +1,7 @@
-import { picosSeed, regioesSeed, ameacasSeed } from '../data/seed'
-import type { Pico, RegiaoSurf, Ameaca } from '../types/domain'
+import { picosSeed, regioesSeed, ameacasSeed, mutiroesSeed } from '../data/seed'
+import type { Pico, RegiaoSurf, Ameaca, Mutirao } from '../types/domain'
 import { temBackend } from './api'
-import { restPicos, restAmeacas } from './supabase/rest'
+import { restPicos, restAmeacas, restMutiroes } from './supabase/rest'
 
 /**
  * Acesso a dados. Com backend, lê do Supabase (REST, sem SDK); senão usa o
@@ -39,6 +39,18 @@ export async function carregarAmeacas(): Promise<Ameaca[]> {
     }
   }
   return ameacasSeed
+}
+
+export async function carregarMutiroes(): Promise<Mutirao[]> {
+  if (temBackend()) {
+    try {
+      const ms = await restMutiroes()
+      if (ms.length) return ms
+    } catch {
+      /* fallback offline */
+    }
+  }
+  return mutiroesSeed
 }
 
 export function listarRegioes(): RegiaoSurf[] {
