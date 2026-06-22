@@ -1,12 +1,24 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
-import { listarPicos } from '../services/picos'
+import { carregarPicos } from '../services/picos'
+import type { Pico } from '../types/domain'
 
 export function MapaPage() {
+  const [picos, setPicos] = useState<Pico[]>([])
+
+  useEffect(() => {
+    let vivo = true
+    carregarPicos().then((p) => vivo && setPicos(p))
+    return () => {
+      vivo = false
+    }
+  }, [])
+
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
-      <MapView picos={listarPicos()} />
+      <MapView picos={picos} />
 
       {/* busca + filtros do território */}
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>

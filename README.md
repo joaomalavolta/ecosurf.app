@@ -60,11 +60,28 @@ maré do instante.
 |---|---|---|
 | **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
 | **Maré** | ✅ provider plugável (`services/tide/`) com modelo senoidal | implementar `dhnTideProvider` (estação + harmônicas) |
-| **Backend / auth** | ✅ schema PostGIS + RLS + contrato tipado (`supabase/`, `services/api.ts`) | provisionar + adaptador Supabase + auth por telefone |
+| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0008; picos/ameaças **lidos ao vivo** via REST (anon, RLS verificada) | ler o feed de fotos do dia do banco (hoje a timeline é demo) |
+| **Auth / upload** | ✅ código pronto: sessão anônima + `autor_id` + Storage; fila offline | **ligar o provider Anonymous no painel** (e SMS p/ telefone) |
 | **Procedência da foto** | selo na UI + flag `geofence_ok` no schema | validar geofence/EXIF no servidor (anti-foto-antiga) |
 | **Pipeline de mídia** | captura → WebP no cliente → fila | resize/thumbnail → Storage/CDN + URL assinada |
 | **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
 | **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
+
+## Deploy (Vercel)
+
+1. Conectar o repo no Vercel (preset Vite detectado automaticamente; `vercel.json`
+   já faz o rewrite SPA para `/pico/:id` funcionar em refresh/deep-link).
+2. Setar as env vars no projeto Vercel:
+   - `VITE_SUPABASE_URL=https://mdgttlgtrrmkmqttrxdq.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY=<publishable key>` (de cliente; pode ir no front)
+3. Deploy. Sem as envs, o app cai no seed/mock (continua funcionando).
+
+## Toggles que dependem do painel Supabase
+
+- **Auth → Anonymous**: ligar para o upload de foto persistir (a sessão anônima
+  carimba `autor_id`, exigido pela RLS). Enquanto desligado, a foto fica na fila.
+- **Auth → Phone (SMS)**: requer um provedor (Twilio/MessageBird/Vonage) com
+  credencial — login por telefone "de verdade".
 
 ## Tensões éticas (decidir antes de escalar)
 

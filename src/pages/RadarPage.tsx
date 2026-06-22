@@ -2,21 +2,27 @@ import { useEffect, useMemo, useState } from 'react'
 import { IconStar, IconRipple, IconMapPin } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { SpotCard } from '../components/SpotCard'
-import { favoritos, listarPicos } from '../services/picos'
+import { carregarPicos, ehFavorito } from '../services/picos'
 import { buscarForecast } from '../services/forecast'
 import { nota } from '../lib/surf'
-import type { Forecast } from '../types/domain'
+import { temBackend } from '../services/api'
+import type { Forecast, Pico } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos'
 
 export function RadarPage() {
   const [filtro, setFiltro] = useState<Filtro>('favoritos')
+  const [picosTodos, setPicosTodos] = useState<Pico[]>([])
   const [fc, setFc] = useState<Record<string, Forecast>>({})
 
   useEffect(() => {
     let vivo = true
-    Promise.all(listarPicos().map(async (p) => [p.id, await buscarForecast(p)] as const)).then((es) => {
-      if (vivo) setFc(Object.fromEntries(es))
+    carregarPicos().then((ps) => {
+      if (!vivo) return
+      setPicosTodos(ps)
+      Promise.all(ps.map(async (p) => [p.id, await buscarForecast(p)] as const)).then((es) => {
+        if (vivo) setFc(Object.fromEntries(es))
+      })
     })
     return () => {
       vivo = false
@@ -24,10 +30,12 @@ export function RadarPage() {
   }, [])
 
   const picos = useMemo(() => {
-    if (filtro === 'favoritos') return favoritos()
-    const todos = listarPicos()
+    if (filtro === 'favoritos') {
+      const favs = picosTodos.filter((p) => ehFavorito(p.id))
+      return favs.length ? favs : picosTodos
+    }
     if (filtro === 'melhores') {
-      return [...todos].sort((a, b) => {
+      return [...picosTodos].sort((a, b) => {
         const fa = fc[a.id]
         const fb = fc[b.id]
         const na = fa ? nota(fa.ondaM, fa.periodoS, fa.vento.tipo) : 0
@@ -35,8 +43,8 @@ export function RadarPage() {
         return nb - na
       })
     }
-    return todos
-  }, [filtro, fc])
+    return picosTodos
+  }, [filtro, fc, picosTodos])
 
   return (
     <div className="page">
@@ -48,12 +56,14 @@ export function RadarPage() {
           <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
         </div>
 
+        {picosTodos.length === 0 && <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>}
+
         {picos.map((p) => (
           <SpotCard key={p.id} pico={p} forecast={fc[p.id]} />
         ))}
 
         <p className="muted" style={{ textAlign: 'center', padding: '4px 16px' }}>
-          Previsão via Open-Meteo · maré ainda em modelo (trocar por DHN).
+          Previsão via Open-Meteo · picos {temBackend() ? 'do Supabase' : 'do seed local'} · maré em modelo (DHN a fazer).
         </p>
       </div>
     </div>

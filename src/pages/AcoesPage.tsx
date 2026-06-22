@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { ComponentType, ReactNode } from 'react'
 import {
@@ -13,7 +14,8 @@ import {
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { listarAmeacas } from '../services/picos'
+import { carregarAmeacas } from '../services/picos'
+import type { Ameaca } from '../types/domain'
 
 /**
  * Hub único — Ameaças, Mutirões, Limpeza e Ciência são SEÇÕES de uma página
@@ -64,7 +66,14 @@ function Secao({ titulo, children }: { titulo: ReactNode; children: ReactNode })
 }
 
 export function AcoesPage() {
-  const ameacas = listarAmeacas()
+  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  useEffect(() => {
+    let vivo = true
+    carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    return () => {
+      vivo = false
+    }
+  }, [])
   return (
     <div className="page">
       <Header title="Ações" sub="Registrar, defender a costa, mobilizar e gerar dado." />

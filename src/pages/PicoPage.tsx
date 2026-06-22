@@ -4,32 +4,48 @@ import { IconCamera, IconAlertTriangle } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
 import { TideScrubTimeline } from '../components/TideScrubTimeline'
-import { obterPico, ameacasDoPico } from '../services/picos'
+import { carregarPico, carregarAmeacas } from '../services/picos'
 import { buscarForecast } from '../services/forecast'
 import { feedDoDia, eventosVentoDoDia } from '../data/mockFeed'
 import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
-import type { Forecast, PontoMare } from '../types/domain'
+import type { Ameaca, Forecast, Pico, PontoMare } from '../types/domain'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
-  const pico = obterPico(picoId)
+  const [pico, setPico] = useState<Pico | null | undefined>(undefined) // undefined = carregando
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
+  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
 
   useEffect(() => {
     let vivo = true
-    if (pico) {
-      buscarForecast(pico).then((f) => vivo && setFc(f))
-      tideProvider.curvaDoDia(pico, new Date()).then((c) => vivo && setCurva(c))
-    }
+    carregarPico(picoId).then((p) => vivo && setPico(p ?? null))
+    carregarAmeacas().then((a) => vivo && setAmeacas(a.filter((x) => x.picoId === picoId)))
     return () => {
       vivo = false
     }
   }, [picoId])
 
-  if (!pico) {
+  useEffect(() => {
+    if (!pico) return
+    let vivo = true
+    buscarForecast(pico).then((f) => vivo && setFc(f))
+    tideProvider.curvaDoDia(pico, new Date()).then((c) => vivo && setCurva(c))
+    return () => {
+      vivo = false
+    }
+  }, [pico])
+
+  if (pico === undefined) {
+    return (
+      <div className="page">
+        <Header title="Carregando…" sub="Buscando o pico." />
+      </div>
+    )
+  }
+  if (pico === null) {
     return (
       <div className="page">
         <Header title="Pico não encontrado" />
@@ -44,10 +60,7 @@ export function PicoPage() {
 
   return (
     <div className="page">
-      <Header
-        title={pico.nome}
-        sub={`${pico.praia} · ${pico.municipio}/${pico.uf}`}
-      >
+      <Header title={pico.nome} sub={`${pico.praia} · ${pico.municipio}/${pico.uf}`}>
         {fc && (
           <div className="tag" style={{ marginTop: 10, background: 'rgba(255,255,255,.18)', color: '#fff' }}>
             {rotularCondicao(fc.ondaM, fc.vento.tipo)} · {rotuloFase(fc.mare.fase)}
@@ -77,8 +90,8 @@ export function PicoPage() {
         <div className="card pad">
           <span className="eyebrow">Contexto do oceano</span>
           <div className="stack" style={{ marginTop: 10 }}>
-            {ameacasDoPico(pico.id).length === 0 && <p className="muted">Sem alertas ativos neste pico.</p>}
-            {ameacasDoPico(pico.id).map((a) => (
+            {ameacas.length === 0 && <p className="muted">Sem alertas ativos neste pico.</p>}
+            {ameacas.map((a) => (
               <div key={a.id} className="row">
                 <span className="tag alerta"><IconAlertTriangle size={13} stroke={2.2} /> {a.status}</span>
                 <span style={{ fontSize: 14 }}>{a.titulo}</span>

@@ -2,12 +2,22 @@ import { sb } from './client'
 import type { EcosurfApi, NovaFoto } from '../api'
 
 /**
- * Implementação real do contrato sobre Supabase (Storage + Postgres/PostGIS).
- * ⚠️ Dormente: só roda com VITE_SUPABASE_URL setada; precisa de projeto
- * provisionado para ser verificada de ponta a ponta.
+ * Garante uma sessão para carimbar autor_id (a RLS exige auth.uid() = autor_id).
+ * Sem sessão, entra anônimo — requer o provider "Anonymous" ligado no painel.
+ * Se não estiver ligado, o upload falha e a fila offline retém para retry.
  */
+async function garantirUsuario(): Promise<string> {
+  const { data: s } = await sb().auth.getSession()
+  if (s.session?.user) return s.session.user.id
+  const { data, error } = await sb().auth.signInAnonymously()
+  if (error || !data.user) throw error ?? new Error('sem sessão')
+  return data.user.id
+}
+
+/** Implementação real do contrato sobre Supabase (Auth + Storage + Postgres). */
 export const supabaseApi: EcosurfApi = {
   async enviarFoto(f: NovaFoto) {
+    const autorId = await garantirUsuario()
     const path = `${f.picoId}/${f.id}.webp`
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
@@ -21,6 +31,7 @@ export const supabaseApi: EcosurfApi = {
       .insert({
         id: f.id,
         pico_id: f.picoId,
+        autor_id: autorId,
         capturada_em: f.capturadaEm,
         storage_path: f.blob ? path : null,
         procedencia: f.procedencia,
