@@ -16,6 +16,31 @@ async function rest<T>(path: string): Promise<T> {
   return (await r.json()) as T
 }
 
+/**
+ * Papel do usuário logado SEM carregar o SDK: lê o uid da sessão que o
+ * supabase-js persiste no localStorage e consulta perfis via PostgREST.
+ * Mantém o Radar leve (o painel admin é que carrega o SDK, sob demanda).
+ */
+export async function restMeuPapel(): Promise<string> {
+  try {
+    const ref = new URL(BASE).hostname.split('.')[0]
+    const raw = localStorage.getItem(`sb-${ref}-auth-token`)
+    if (!raw) return 'user'
+    const ses = JSON.parse(raw)
+    const uid: string | undefined = ses?.user?.id ?? ses?.currentSession?.user?.id
+    const tok: string | undefined = ses?.access_token ?? ses?.currentSession?.access_token
+    if (!uid) return 'user'
+    const r = await fetch(`${BASE}/rest/v1/perfis?select=papel&id=eq.${encodeURIComponent(uid)}`, {
+      headers: { apikey: KEY, Authorization: `Bearer ${tok ?? KEY}` },
+    })
+    if (!r.ok) return 'user'
+    const rows = (await r.json()) as { papel: string }[]
+    return rows[0]?.papel ?? 'user'
+  } catch {
+    return 'user'
+  }
+}
+
 interface PicoRow {
   id: string
   nome: string
