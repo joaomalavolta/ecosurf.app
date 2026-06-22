@@ -13,8 +13,14 @@ export function Header({
   children?: ReactNode
 }) {
   return (
-    <header className="header">
-      {brand ? <Brand height={30} /> : <h1>{title}</h1>}
+    <header className="header" style={brand ? { textAlign: 'center' } : undefined}>
+      {brand ? (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Brand height={34} />
+        </div>
+      ) : (
+        <h1>{title}</h1>
+      )}
       {sub && <div className="sub">{sub}</div>}
       {children}
     </header>
