@@ -16,22 +16,45 @@ async function rest<T>(path: string): Promise<T> {
   return (await r.json()) as T
 }
 
+/** Extrai o `sub` (uid) de um JWT sem libs — fallback caso a sessão não traga user.id. */
+function jwtSub(token?: string): string | undefined {
+  if (!token) return undefined
+  try {
+    let b = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    b += '='.repeat((4 - (b.length % 4)) % 4)
+    return JSON.parse(atob(b))?.sub
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Papel do usuário logado SEM carregar o SDK: lê o uid da sessão que o
  * supabase-js persiste no localStorage e consulta perfis via PostgREST.
  * Mantém o Radar leve (o painel admin é que carrega o SDK, sob demanda).
+ * Usa a chave anon na leitura (papel é público) — assim não falha se o
+ * access_token persistido estiver expirado.
  */
 export async function restMeuPapel(): Promise<string> {
   try {
-    const ref = new URL(BASE).hostname.split('.')[0]
-    const raw = localStorage.getItem(`sb-${ref}-auth-token`)
+    let raw = localStorage.getItem(`sb-${new URL(BASE).hostname.split('.')[0]}-auth-token`)
+    if (!raw) {
+      // fallback: varre as chaves (cobre variações de ref/projeto)
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          raw = localStorage.getItem(k)
+          break
+        }
+      }
+    }
     if (!raw) return 'user'
-    const ses = JSON.parse(raw)
-    const uid: string | undefined = ses?.user?.id ?? ses?.currentSession?.user?.id
-    const tok: string | undefined = ses?.access_token ?? ses?.currentSession?.access_token
+    const parsed = JSON.parse(raw)
+    const ses = parsed?.currentSession ?? parsed
+    const uid: string | undefined = ses?.user?.id ?? jwtSub(ses?.access_token)
     if (!uid) return 'user'
     const r = await fetch(`${BASE}/rest/v1/perfis?select=papel&id=eq.${encodeURIComponent(uid)}`, {
-      headers: { apikey: KEY, Authorization: `Bearer ${tok ?? KEY}` },
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
     })
     if (!r.ok) return 'user'
     const rows = (await r.json()) as { papel: string }[]
