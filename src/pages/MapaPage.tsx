@@ -53,7 +53,7 @@ export function MapaPage() {
           </div>
           <div style={{ flex: 1 }}>
             <b>Praia do Sonho</b>
-            <div className="muted">Itanhaém/SP · radar ativo · 1 alerta ambiental</div>
+            <div className="muted">Itanhaém/SP · radar ativo</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               <Link to="/pico/praia-do-sonho" className="btn" style={{ minHeight: 42 }}>Abrir</Link>
               <Link to="/capturar" className="btn outline" style={{ minHeight: 42 }}>Registrar</Link>
