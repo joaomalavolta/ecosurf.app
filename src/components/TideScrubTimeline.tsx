@@ -1,10 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconRipple, IconWaveSine, IconWind, IconCamera } from '@tabler/icons-react'
+import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
+import { denunciarFoto } from '../services/moderacao'
 import { Photo } from './Photo'
 import { ProvenanceBadge } from './ProvenanceBadge'
 
@@ -50,6 +51,16 @@ export function TideScrubTimeline({
   const [ativo, setAtivo] = useState(0)
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
+  const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
+
+  async function denunciar(id: string) {
+    try {
+      await denunciarFoto(id)
+      setDenunciadas((d) => ({ ...d, [id]: true }))
+    } catch {
+      /* precisa estar logado; silencioso no scaffold */
+    }
+  }
   const trackRef = useRef<HTMLDivElement>(null)
   const arrastando = useRef(false)
 
@@ -158,7 +169,20 @@ export function TideScrubTimeline({
               </span>
             )}
           </div>
-          {f.observacao && <div style={{ fontSize: 14, fontWeight: 600 }}>{f.observacao}</div>}
+          <div className="between">
+            {f.observacao ? <div style={{ fontSize: 14, fontWeight: 600 }}>{f.observacao}</div> : <span />}
+            {denunciadas[f.id] ? (
+              <span style={{ fontSize: 11, opacity: 0.8 }}>denunciada</span>
+            ) : (
+              <button
+                onClick={() => denunciar(f.id)}
+                aria-label="Denunciar foto"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 9px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+              >
+                <IconFlag size={12} stroke={2} /> denunciar
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

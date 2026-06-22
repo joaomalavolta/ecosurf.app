@@ -1,7 +1,10 @@
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck } from '@tabler/icons-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
+import { ehModerador } from '../services/moderacao'
 import { PERFIL_DEMO } from '../data/seed'
 
 function Stat({ k, v }: { k: string; v: string | number }) {
@@ -15,6 +18,14 @@ function Stat({ k, v }: { k: string; v: string | number }) {
 
 export function PerfilPage() {
   const p = PERFIL_DEMO
+  const [mod, setMod] = useState(false)
+  useEffect(() => {
+    let vivo = true
+    ehModerador().then((m) => vivo && setMod(m))
+    return () => {
+      vivo = false
+    }
+  }, [])
   return (
     <div className="page">
       <Header title="Seu perfil" sub="Reputação e histórico na comunidade." />
@@ -57,6 +68,11 @@ export function PerfilPage() {
             <div className="row"><IconSettings size={20} stroke={2} /> Preferências do app</div>
             <div className="row"><IconAward size={20} stroke={2} /> Conquistas e reputação</div>
             <div className="row"><IconDownload size={20} stroke={2} /> Exportar meus dados (GeoJSON)</div>
+            {mod && (
+              <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--azul-abissal)', fontWeight: 600 }}>
+                <IconShieldCheck size={20} stroke={2} /> Moderação da região
+              </Link>
+            )}
           </div>
         </div>
       </div>

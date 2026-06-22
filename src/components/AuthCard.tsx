@@ -2,38 +2,42 @@ import { useState } from 'react'
 import { temBackend } from '../services/api'
 
 /**
- * Login leve por telefone (OTP). O fluxo está pronto; quando houver backend
- * provisionado ele funciona de verdade, senão roda em demonstração.
- * As funções de auth são carregadas sob demanda (SDK fora do bundle principal).
+ * Login leve, identificado (sem anônimo). E-mail (magic link) funciona já,
+ * sem provedor de SMS; telefone (OTP) requer SMS ligado no painel.
  */
 export function AuthCard() {
-  const [fase, setFase] = useState<'fone' | 'codigo'>('fone')
-  const [fone, setFone] = useState('')
+  const [metodo, setMetodo] = useState<'email' | 'telefone'>('email')
+  const [fase, setFase] = useState<'inicio' | 'codigo'>('inicio')
+  const [valor, setValor] = useState('')
   const [codigo, setCodigo] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
   const ativo = temBackend()
 
-  async function enviar() {
+  async function iniciar() {
     if (!ativo) {
-      setMsg('Backend não configurado — fluxo em demonstração.')
+      setMsg('Backend não configurado — demonstração.')
       return
     }
     try {
-      const { entrarComTelefone } = await import('../services/supabase/auth')
-      await entrarComTelefone(fone)
-      setFase('codigo')
-      setMsg('Código enviado por SMS.')
+      const auth = await import('../services/supabase/auth')
+      if (metodo === 'email') {
+        await auth.entrarComEmail(valor.trim())
+        setMsg('Link de acesso enviado — confira seu e-mail.')
+      } else {
+        await auth.entrarComTelefone(valor.trim())
+        setFase('codigo')
+        setMsg('Código enviado por SMS.')
+      }
     } catch {
-      setMsg('Falha ao enviar o código.')
+      setMsg('Não foi possível enviar agora.')
     }
   }
 
   async function confirmar() {
-    if (!ativo) return
     try {
       const { confirmarCodigo } = await import('../services/supabase/auth')
-      await confirmarCodigo(fone, codigo)
-      setMsg('Entrou! Bem-vindo de volta.')
+      await confirmarCodigo(valor.trim(), codigo.trim())
+      setMsg('Entrou! Bem-vindo.')
     } catch {
       setMsg('Código inválido.')
     }
@@ -41,30 +45,29 @@ export function AuthCard() {
 
   return (
     <div className="card pad">
-      <span className="eyebrow">Entrar · login leve por telefone</span>
-      <div className="stack" style={{ marginTop: 10 }}>
-        {fase === 'fone' ? (
+      <span className="eyebrow">Entrar · sem anônimo (toda contribuição é identificada)</span>
+      <div className="pills" style={{ margin: '10px 0' }}>
+        <button className={`pill ${metodo === 'email' ? 'active' : ''}`} onClick={() => { setMetodo('email'); setFase('inicio') }}>E-mail</button>
+        <button className={`pill ${metodo === 'telefone' ? 'active' : ''}`} onClick={() => { setMetodo('telefone'); setFase('inicio') }}>Telefone</button>
+      </div>
+      <div className="stack">
+        {fase === 'inicio' ? (
           <>
             <input
               className="input"
-              placeholder="+55 13 99999-9999"
-              value={fone}
-              onChange={(e) => setFone(e.target.value)}
-              inputMode="tel"
-              aria-label="Telefone"
+              placeholder={metodo === 'email' ? 'voce@email.com' : '+55 13 99999-9999'}
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              inputMode={metodo === 'email' ? 'email' : 'tel'}
+              aria-label={metodo === 'email' ? 'E-mail' : 'Telefone'}
             />
-            <button className="btn full" onClick={enviar}>Enviar código</button>
+            <button className="btn full" onClick={iniciar} disabled={!valor.trim()}>
+              {metodo === 'email' ? 'Enviar link de acesso' : 'Enviar código'}
+            </button>
           </>
         ) : (
           <>
-            <input
-              className="input"
-              placeholder="código do SMS"
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              inputMode="numeric"
-              aria-label="Código de confirmação"
-            />
+            <input className="input" placeholder="código do SMS" value={codigo} onChange={(e) => setCodigo(e.target.value)} inputMode="numeric" aria-label="Código" />
             <button className="btn full" onClick={confirmar}>Confirmar</button>
           </>
         )}

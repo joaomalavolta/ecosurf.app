@@ -11,19 +11,21 @@ export async function confirmarCodigo(phone: string, token: string): Promise<voi
   if (error) throw error
 }
 
+/** Login por e-mail (magic link) — funciona sem provedor de SMS. */
+export async function entrarComEmail(email: string): Promise<void> {
+  const { error } = await sb().auth.signInWithOtp({ email })
+  if (error) throw error
+}
+
 export async function sair(): Promise<void> {
   await sb().auth.signOut()
 }
 
-/** Define o nome de exibição do usuário (aparece no feed). Cria sessão se preciso. */
+/** Define o nome de exibição do usuário (aparece no feed). Exige sessão real. */
 export async function definirNome(nome: string): Promise<void> {
-  const { data: s } = await sb().auth.getSession()
-  let uid = s.session?.user.id
-  if (!uid) {
-    const { data, error } = await sb().auth.signInAnonymously()
-    if (error || !data.user) throw error ?? new Error('sem sessão')
-    uid = data.user.id
-  }
-  const { error } = await sb().from('perfis').update({ nome }).eq('id', uid)
+  const { data } = await sb().auth.getSession()
+  const u = data.session?.user
+  if (!u || u.is_anonymous) throw new Error('Entre primeiro (telefone ou e-mail).')
+  const { error } = await sb().from('perfis').update({ nome }).eq('id', u.id)
   if (error) throw error
 }

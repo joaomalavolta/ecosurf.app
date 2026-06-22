@@ -14,6 +14,17 @@ import { enfileirar, definirTipo } from '../offline/uploadQueue'
 
 type Etapa = 'inicio' | 'camera' | 'classificar'
 
+function obterCoords(): Promise<{ lat?: number; lng?: number }> {
+  return new Promise((res) => {
+    if (!navigator.geolocation) return res({})
+    navigator.geolocation.getCurrentPosition(
+      (p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => res({}),
+      { enableHighAccuracy: true, timeout: 4000 },
+    )
+  })
+}
+
 /**
  * Registrar em 2 toques: o botão central já trouxe o usuário aqui (toque 1).
  * "Abrir câmera" → disparo (toque 2). A CLASSIFICAÇÃO vem DEPOIS da captura,
@@ -73,6 +84,8 @@ export function CapturePage() {
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
+    const pos = await obterCoords() // GPS para o geofence (servidor valida)
+
     // Upload otimista: a foto entra na fila offline AGORA, sobe quando der.
     const id = crypto.randomUUID()
     uploadId.current = id
@@ -81,8 +94,8 @@ export function CapturePage() {
       picoId: 'praia-do-sonho',
       capturadaEm: new Date().toISOString(),
       blob,
-      procedencia: blob ? 'no-local' : 'galeria',
-      geofenceOk: true,
+      capturaLat: pos.lat,
+      capturaLng: pos.lng,
     })
     setEtapa('classificar')
   }

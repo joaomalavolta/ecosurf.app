@@ -8,6 +8,7 @@ import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
 import { PerfilPage } from './pages/PerfilPage'
 import { CapturePage } from './pages/CapturePage'
+import { ModeracaoPage } from './pages/ModeracaoPage'
 
 // O mapa carrega o MapLibre (~pesado). Fora do caminho crítico do Radar
 // (entrada diária), para o app abrir leve no 3G da praia.
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/pico/:picoId" element={<PicoPage />} />
         <Route path="/acoes" element={<AcoesPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/moderacao" element={<ModeracaoPage />} />
         <Route path="/capturar" element={<CapturePage />} />
       </Routes>
       {!semNav && <BottomNav />}

@@ -11,8 +11,8 @@ export interface UploadPendente {
   tipo?: 'report' | 'ameaca' | 'lixo' | 'ciencia'
   observacao?: string
   blob?: Blob
-  procedencia: 'no-local' | 'galeria' | 'nao-verificado'
-  geofenceOk: boolean
+  capturaLat?: number
+  capturaLng?: number
   status: 'na-fila' | 'enviando' | 'enviado' | 'falhou'
   criadoEm: number
 }

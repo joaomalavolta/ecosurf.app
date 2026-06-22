@@ -2,22 +2,22 @@ import { sb } from './client'
 import type { EcosurfApi, NovaFoto } from '../api'
 
 /**
- * Garante uma sessão para carimbar autor_id (a RLS exige auth.uid() = autor_id).
- * Sem sessão, entra anônimo — requer o provider "Anonymous" ligado no painel.
- * Se não estiver ligado, o upload falha e a fila offline retém para retry.
+ * Exige usuário IDENTIFICADO (não anônimo). Sem contribuição anônima:
+ * se não houver sessão real, falha — a UI deve pedir login (telefone/e-mail).
  */
-async function garantirUsuario(): Promise<string> {
-  const { data: s } = await sb().auth.getSession()
-  if (s.session?.user) return s.session.user.id
-  const { data, error } = await sb().auth.signInAnonymously()
-  if (error || !data.user) throw error ?? new Error('sem sessão')
-  return data.user.id
+async function usuarioAtual(): Promise<string> {
+  const { data } = await sb().auth.getSession()
+  const u = data.session?.user
+  if (!u || u.is_anonymous) {
+    throw new Error('Entre com seu telefone ou e-mail para publicar.')
+  }
+  return u.id
 }
 
-/** Implementação real do contrato sobre Supabase (Auth + Storage + Postgres). */
+/** Implementação real do contrato. Procedência/geofence são decididos no servidor. */
 export const supabaseApi: EcosurfApi = {
   async enviarFoto(f: NovaFoto) {
-    const autorId = await garantirUsuario()
+    const autorId = await usuarioAtual()
     const path = `${f.picoId}/${f.id}.webp`
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
@@ -34,9 +34,10 @@ export const supabaseApi: EcosurfApi = {
         autor_id: autorId,
         capturada_em: f.capturadaEm,
         storage_path: f.blob ? path : null,
-        procedencia: f.procedencia,
-        geofence_ok: f.geofenceOk,
         observacao: f.observacao,
+        captura_lat: f.capturaLat ?? null,
+        captura_lng: f.capturaLng ?? null,
+        // procedencia e geofence_ok são definidos pelo trigger anti-fake
       })
     if (error) throw error
     return { id: f.id }

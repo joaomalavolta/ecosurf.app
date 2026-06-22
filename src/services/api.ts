@@ -9,8 +9,9 @@ export interface NovaFoto {
   tipo?: 'report' | 'ameaca' | 'lixo' | 'ciencia'
   observacao?: string
   blob?: Blob
-  procedencia: 'no-local' | 'galeria' | 'nao-verificado'
-  geofenceOk: boolean
+  /** Coordenadas do device na captura — o servidor decide a procedência. */
+  capturaLat?: number
+  capturaLng?: number
 }
 
 export interface EcosurfApi {

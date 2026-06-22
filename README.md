@@ -60,10 +60,12 @@ maré do instante.
 |---|---|---|
 | **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
 | **Maré** | ✅ modelo harmônico (M2/S2/N2/O1/K1, curva mista); provider por estação (`dhnTideProvider`) | injetar constantes reais da DHN por pico (ETL — não há API pública grátis) |
-| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0010; picos/ameaças/**feed com autor** lidos ao vivo via REST (anon, RLS verificada) | — |
-| **Mapa** | ✅ picos (azul) + **ameaças (índigo)** como camadas, filtráveis | mutirões; clusterização |
-| **Auth / upload** | ✅ sessão anônima + `autor_id` + Storage + **resize ≤1600px WebP**; nome de exibição no feed | **ligar o provider Anonymous no painel** (e SMS p/ telefone) |
-| **Procedência da foto** | selo na UI + flag `geofence_ok` no schema | validar geofence/EXIF no servidor (anti-foto-antiga) |
+| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0012; picos/ameaças/**feed com autor** lidos ao vivo via REST (RLS verificada) | — |
+| **Contribuição identificada** | ✅ **sem anônimo** — RLS exige usuário não-anônimo; login por **e-mail (magic link, já funciona)** ou telefone | ligar SMS p/ telefone |
+| **Anti-fake (servidor)** | ✅ trigger valida **geofence (≤500m)** + timestamp e define a procedência (cliente não decide); testado | ler EXIF; ajustar raio por pico |
+| **Moderação** | ✅ denúncia de foto + **ocultar** por moderador/admin (papel no perfil); feed esconde oculta; `/moderacao` | atribuir moderadores por região; notificação |
+| **Mapa** | ✅ picos (azul) + ameaças (índigo) filtráveis | mutirões; clusterização |
+| **Auth / upload** | ✅ `autor_id` + Storage + **resize ≤1600px WebP** + **coords p/ geofence**; nome no feed | thumbnails |
 | **Pipeline de mídia** | ✅ resize client-side (≤1600px WebP) → Storage (URL assinada) | thumbnails + CDN |
 | **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
 | **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
@@ -77,12 +79,18 @@ maré do instante.
    - `VITE_SUPABASE_ANON_KEY=<publishable key>` (de cliente; pode ir no front)
 3. Deploy. Sem as envs, o app cai no seed/mock (continua funcionando).
 
+## Identidade visual
+
+- Coloque a logo em **`public/logo.svg`** (ou `public/logo.png`). Aparece no
+  header do Radar, sobre o gradiente escuro. Sem o arquivo, cai no wordmark.
+- Ícones do PWA (`icon-192/512` no manifest) ainda faltam.
+
 ## Toggles que dependem do painel Supabase
 
-- **Auth → Anonymous**: ligar para o upload de foto persistir (a sessão anônima
-  carimba `autor_id`, exigido pela RLS). Enquanto desligado, a foto fica na fila.
-- **Auth → Phone (SMS)**: requer um provedor (Twilio/MessageBird/Vonage) com
-  credencial — login por telefone "de verdade".
+- **Contribuição é identificada (sem anônimo).** Login por **e-mail (magic link)**
+  já funciona out-of-the-box. Para **telefone (SMS)**, ligar um provedor
+  (Twilio/MessageBird/Vonage) com credencial.
+- Para promover um **moderador**: `update perfis set papel='moderador' where id='<uuid>'`.
 
 ## Tensões éticas (decidir antes de escalar)
 
