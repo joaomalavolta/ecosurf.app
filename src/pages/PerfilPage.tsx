@@ -70,7 +70,7 @@ export function PerfilPage() {
             <div className="row"><IconAward size={20} stroke={2} /> Conquistas e reputação</div>
             <div className="row"><IconDownload size={20} stroke={2} /> Exportar meus dados (GeoJSON)</div>
             {mod && (
-              <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--azul-abissal)', fontWeight: 600 }}>
+              <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--turq)', fontWeight: 600 }}>
                 <IconShieldCheck size={20} stroke={2} /> Moderação da região
               </Link>
             )}

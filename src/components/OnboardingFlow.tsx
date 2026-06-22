@@ -27,7 +27,7 @@ const SHELL: React.CSSProperties = {
   zIndex: 300,
   maxWidth: 'var(--largura-app)',
   margin: '0 auto',
-  background: 'linear-gradient(160deg, var(--azul-abissal), var(--azul) 70%, var(--verde))',
+  background: 'linear-gradient(165deg, #03161F 0%, #0A3A4C 55%, #0E5C70 100%)',
   color: '#fff',
   display: 'flex',
   flexDirection: 'column',

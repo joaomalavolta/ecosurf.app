@@ -30,7 +30,7 @@ const ICONES: Record<string, string> = {
   ),
 }
 
-const COR_POR_TIPO = ['match', ['get', 'tipo'], 'ameaca', '#3835A6', 'mutirao', '#2C7A6B', '#1668A6']
+const COR_POR_TIPO = ['match', ['get', 'tipo'], 'ameaca', '#FF8C76', 'mutirao', '#5FE3AE', '#1FE3C8']
 
 const SRC = 'feicoes'
 
@@ -193,7 +193,7 @@ export function MapView({
         source: SRC,
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': ['step', ['get', 'point_count'], '#1668A6', 10, '#155C8F', 25, '#0C2A43'],
+          'circle-color': ['step', ['get', 'point_count'], '#0E5C70', 10, '#0A3A4C', 25, '#072330'],
           'circle-radius': ['step', ['get', 'point_count'], 18, 10, 22, 25, 28],
           'circle-stroke-width': 2,
           'circle-stroke-color': '#fff',

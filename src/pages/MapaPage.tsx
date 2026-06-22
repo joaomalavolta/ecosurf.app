@@ -54,7 +54,7 @@ export function MapaPage() {
       <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
         <div className="card pad row">
           <div
-            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--azul-abissal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
+            style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
           >
             <IconRipple size={26} stroke={2} />
           </div>

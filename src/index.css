@@ -1,31 +1,50 @@
 :root {
-  /* Paleta fria: azuis, cinzas claros, branco e verdes.
-     Sem cor quente — perigo é sinalizado por índigo saturado + ícone + rótulo. */
-  --azul-abissal: #0C2A43; /* fundo escuro / texto forte / headers */
-  --azul: #1668A6;         /* primário */
-  --azul-medio: #3F8DC7;
-  --azul-claro: #CFE2F1;
-  --verde: #2C7A6B;        /* natureza / ok / ação positiva */
-  --verde-claro: #CDE7DD;
+  color-scheme: dark;
 
-  --branco: #FFFFFF;
-  --nevoa: #EEF3F7;        /* fundo do app */
-  --cinza: #E3EAF1;        /* superfícies sutis / pílulas */
-  --cinza-borda: #DCE5EC;
-  --texto: #14202A;        /* quase-preto frio */
-  --muted: #5A6B79;        /* cinza frio */
+  /* ───────── Tema "Ocean Tech Premium" (dark ocean glass) ─────────
+     Superfícies de vidro translúcido sobre azul-oceano profundo; turquesa e
+     verde-água como acentos vivos. Os nomes ANTIGOS viram aliases p/ compat. */
+  --deep: #03161F;        /* azul oceano profundo — fundo do app */
+  --deep-2: #062734;
+  --petrol: #0A3A4C;      /* azul petróleo */
+  --surface: #0B2A37;     /* base de telas escuras */
+  --glass: rgba(255, 255, 255, 0.055);   /* superfície de vidro */
+  --glass-2: rgba(255, 255, 255, 0.10);
+  --stroke: rgba(255, 255, 255, 0.12);   /* borda sutil */
+  --radar: #2E9BD6;       /* azul radar */
+  --turq: #1FE3C8;        /* turquesa vibrante — primário/acento */
+  --aqua: #5FE3AE;        /* verde água — positivo/natureza */
+  --foam: #EAF8F9;        /* branco espuma — texto */
+  --mist: #9CBAC5;        /* cinza claro frio — texto secundário */
+  --amber: #F4C36B;       /* atenção */
+  --coral: #FF8C76;       /* alerta/ameaça (pontual) */
+  --ink: #04181F;         /* texto sobre turquesa/aqua */
+  --grad-ocean: linear-gradient(150deg, #0A3A4C 0%, #0E5C70 52%, #15A597 100%);
 
-  --perigo: #3835A6;       /* índigo de alerta (a única cor "que salta") */
-  --perigo-bg: #E4E3F6;
-  --ok: #1F6557;
+  /* aliases dos nomes antigos (mantêm os componentes existentes funcionando) */
+  --azul-abissal: #072330;
+  --azul: var(--turq);
+  --azul-medio: var(--radar);
+  --azul-claro: rgba(31, 227, 200, 0.16);
+  --verde: var(--aqua);
+  --verde-claro: rgba(95, 227, 174, 0.16);
+  --branco: var(--surface);
+  --nevoa: var(--deep);
+  --cinza: var(--glass);
+  --cinza-borda: var(--stroke);
+  --texto: var(--foam);
+  --muted: var(--mist);
+  --perigo: var(--coral);
+  --perigo-bg: rgba(255, 140, 118, 0.16);
+  --ok: var(--aqua);
 
   --raio: 22px;
   --raio-sm: 14px;
-  --sombra: 0 10px 30px rgba(12, 42, 67, 0.12);
-  --sombra-sm: 0 6px 18px rgba(12, 42, 67, 0.10);
+  --sombra: 0 20px 44px rgba(0, 0, 0, 0.5);
+  --sombra-sm: 0 10px 26px rgba(0, 0, 0, 0.4);
 
-  --fonte-titulo: 'Space Grotesk', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --fonte-corpo: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --fonte-titulo: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --fonte-corpo: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
   --largura-app: 480px;
   --altura-nav: 76px;
@@ -38,19 +57,20 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   font-family: var(--fonte-corpo);
-  color: var(--texto);
-  background: #c9d6df; /* fora do app, no desktop */
+  color: var(--foam);
+  background: var(--deep); /* fora do app, no desktop */
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
   font-family: var(--fonte-titulo);
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
 button { font-family: inherit; }
+input, select, textarea { accent-color: var(--turq); }
 
 /* ---- shell do app (mobile-first, centralizado no desktop) ---- */
 .app-shell {
@@ -58,8 +78,11 @@ button { font-family: inherit; }
   max-width: var(--largura-app);
   margin: 0 auto;
   min-height: 100dvh;
-  background: var(--nevoa);
-  box-shadow: 0 0 60px rgba(12, 42, 67, 0.18);
+  background:
+    radial-gradient(130% 60% at 50% -12%, rgba(31, 227, 200, 0.12), transparent 60%),
+    radial-gradient(100% 50% at 100% 100%, rgba(46, 155, 214, 0.10), transparent 55%),
+    var(--deep);
+  box-shadow: 0 0 90px rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
@@ -72,54 +95,67 @@ button { font-family: inherit; }
 
 /* ---- header ---- */
 .header {
-  background:
-    radial-gradient(120% 90% at 82% -10%, rgba(63, 141, 199, 0.45), transparent 55%),
-    linear-gradient(160deg, var(--azul-abissal), var(--azul) 68%, var(--verde));
+  position: relative;
+  overflow: hidden;
+  background: var(--grad-ocean);
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
 }
+.header::after {
+  content: "";
+  position: absolute;
+  right: -36px; top: -54px;
+  width: 184px; height: 184px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%);
+  pointer-events: none;
+}
 .header h1 { font-size: 25px; line-height: 1.06; }
-.header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.9); margin-top: 6px; line-height: 1.4; }
+.header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
 
-/* ---- cards ---- */
+/* ---- cards (vidro) ---- */
 .card {
-  background: var(--branco);
+  background: var(--glass);
+  border: 1px solid var(--stroke);
   border-radius: var(--raio);
   box-shadow: var(--sombra-sm);
   overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .card.pad { padding: 16px; }
 .stack > * + * { margin-top: 12px; }
 
 .row { display: flex; gap: 12px; align-items: center; }
 .between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.muted { color: var(--muted); font-size: 13px; }
-.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--mist); font-size: 13px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mist); }
 
 /* ---- botões ---- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 0; border-radius: var(--raio-sm);
   min-height: 50px; padding: 0 18px;
-  background: var(--azul); color: #fff;
-  font-size: 15px; font-weight: 600; cursor: pointer;
+  background: var(--turq); color: var(--ink);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 12px 26px -12px rgba(31, 227, 200, 0.75);
 }
 .btn:active { transform: translateY(1px); }
 .btn.full { width: 100%; }
-.btn.outline { background: transparent; color: var(--azul-abissal); border: 1.5px solid var(--cinza-borda); }
-.btn.acento { background: var(--verde); } /* CTA de registro */
+.btn.outline { background: transparent; color: var(--foam); border: 1.5px solid var(--stroke); box-shadow: none; }
+.btn.acento { background: var(--aqua); color: var(--ink); box-shadow: 0 12px 26px -12px rgba(95, 227, 174, 0.7); } /* CTA de registro */
 
 /* ---- pílulas (filtros) ---- */
 .pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .pills::-webkit-scrollbar { display: none; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
-  white-space: nowrap; border: 0; cursor: pointer;
+  white-space: nowrap; border: 1px solid var(--stroke); cursor: pointer;
   border-radius: 999px; padding: 9px 14px;
-  background: var(--cinza); color: var(--texto);
+  background: var(--glass); color: var(--foam);
   font-size: 13px; font-weight: 600;
 }
-.pill.active { background: var(--azul-abissal); color: #fff; }
+.pill.active { background: var(--turq); border-color: transparent; color: var(--ink); }
 
 /* ---- tags / selos ---- */
 .tag {
@@ -127,28 +163,31 @@ button { font-family: inherit; }
   border-radius: 999px; padding: 4px 10px;
   font-size: 11.5px; font-weight: 700;
 }
-.tag.cinza { background: var(--cinza); color: var(--muted); }
-.tag.alerta { background: var(--perigo-bg); color: var(--perigo); }
-.tag.ok { background: var(--verde-claro); color: var(--ok); }
-.tag.mar { background: var(--azul-claro); color: var(--azul-abissal); }
+.tag.cinza { background: var(--glass); color: var(--mist); border: 1px solid var(--stroke); }
+.tag.alerta { background: var(--perigo-bg); color: var(--coral); }
+.tag.ok { background: var(--verde-claro); color: var(--aqua); }
+.tag.mar { background: rgba(31, 227, 200, 0.15); color: var(--turq); }
 
 /* ---- inputs ---- */
 .input {
   width: 100%;
-  border: 1.5px solid var(--cinza-borda);
+  border: 1.5px solid var(--stroke);
   border-radius: var(--raio-sm);
   padding: 13px 14px;
   font-size: 15px;
   font-family: inherit;
-  background: #fff;
-  color: var(--texto);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--foam);
 }
+.input::placeholder { color: var(--mist); }
+select.input { appearance: none; -webkit-appearance: none; }
+select.input option { color: #0b1620; } /* dropdown nativo */
 
 /* alinhamento de ícones inline */
 .ic { display: inline-flex; align-items: center; vertical-align: middle; }
 
 /* acessibilidade: foco visível */
-:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--turq); outline-offset: 2px; border-radius: 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
