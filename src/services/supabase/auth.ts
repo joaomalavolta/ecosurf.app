@@ -14,3 +14,16 @@ export async function confirmarCodigo(phone: string, token: string): Promise<voi
 export async function sair(): Promise<void> {
   await sb().auth.signOut()
 }
+
+/** Define o nome de exibição do usuário (aparece no feed). Cria sessão se preciso. */
+export async function definirNome(nome: string): Promise<void> {
+  const { data: s } = await sb().auth.getSession()
+  let uid = s.session?.user.id
+  if (!uid) {
+    const { data, error } = await sb().auth.signInAnonymously()
+    if (error || !data.user) throw error ?? new Error('sem sessão')
+    uid = data.user.id
+  }
+  const { error } = await sb().from('perfis').update({ nome }).eq('id', uid)
+  if (error) throw error
+}

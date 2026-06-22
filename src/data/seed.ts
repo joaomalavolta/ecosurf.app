@@ -83,6 +83,8 @@ export const ameacasSeed: Ameaca[] = [
     municipio: 'Itanhaém',
     uf: 'SP',
     precisao: 'aproximada',
+    lat: -24.174,
+    lng: -46.762,
     descricao: 'Acúmulo recorrente após ressaca e maré de sizígia.',
   },
   {
@@ -94,6 +96,8 @@ export const ameacasSeed: Ameaca[] = [
     municipio: 'Itanhaém',
     uf: 'SP',
     precisao: 'aproximada',
+    lat: -24.188,
+    lng: -46.789,
     descricao: 'Coloração e espuma próximas à foz; investigar lançamento.',
   },
   {
@@ -104,6 +108,8 @@ export const ameacasSeed: Ameaca[] = [
     municipio: 'Peruíbe',
     uf: 'SP',
     precisao: 'aproximada',
+    lat: -24.32,
+    lng: -46.999,
     descricao: 'Recuo da linha de vegetação de restinga (APP).',
   },
 ]

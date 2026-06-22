@@ -59,11 +59,12 @@ maré do instante.
 | Tema | Estado | Próximo passo |
 |---|---|---|
 | **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
-| **Maré** | ✅ provider plugável (`services/tide/`) com modelo senoidal | implementar `dhnTideProvider` (estação + harmônicas) |
-| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0008; picos/ameaças/**feed do dia** lidos ao vivo via REST (anon, RLS verificada; feed cai no demo enquanto não há uploads) | thumbnails/resize no upload; nome do autor no feed |
-| **Auth / upload** | ✅ código pronto: sessão anônima + `autor_id` + Storage; fila offline | **ligar o provider Anonymous no painel** (e SMS p/ telefone) |
+| **Maré** | ✅ modelo harmônico (M2/S2/N2/O1/K1, curva mista); provider por estação (`dhnTideProvider`) | injetar constantes reais da DHN por pico (ETL — não há API pública grátis) |
+| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0010; picos/ameaças/**feed com autor** lidos ao vivo via REST (anon, RLS verificada) | — |
+| **Mapa** | ✅ picos (azul) + **ameaças (índigo)** como camadas, filtráveis | mutirões; clusterização |
+| **Auth / upload** | ✅ sessão anônima + `autor_id` + Storage + **resize ≤1600px WebP**; nome de exibição no feed | **ligar o provider Anonymous no painel** (e SMS p/ telefone) |
 | **Procedência da foto** | selo na UI + flag `geofence_ok` no schema | validar geofence/EXIF no servidor (anti-foto-antiga) |
-| **Pipeline de mídia** | captura → WebP no cliente → fila | resize/thumbnail → Storage/CDN + URL assinada |
+| **Pipeline de mídia** | ✅ resize client-side (≤1600px WebP) → Storage (URL assinada) | thumbnails + CDN |
 | **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
 | **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
 

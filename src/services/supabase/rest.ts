@@ -58,6 +58,8 @@ interface AmeacaRow {
   uf: string | null
   precisao: string
   descricao: string | null
+  lat: number | null
+  lng: number | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
@@ -71,6 +73,8 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     municipio: r.municipio ?? '',
     uf: r.uf ?? '',
     precisao: r.precisao as Ameaca['precisao'],
+    lat: r.lat ?? undefined,
+    lng: r.lng ?? undefined,
     descricao: r.descricao ?? undefined,
   }))
 }
@@ -84,15 +88,16 @@ export interface FotoRow {
   vento_tipo: string | null
   observacao: string | null
   procedencia: string
+  autor_nome: string | null
 }
 
-/** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"). */
+/** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
 export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
   const inicio = new Date()
   inicio.setHours(0, 0, 0, 0)
-  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia'
+  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
   return rest<FotoRow[]>(
-    `fotos?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
+    `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
       `&capturada_em=gte.${encodeURIComponent(inicio.toISOString())}&order=capturada_em.asc`,
   )
 }

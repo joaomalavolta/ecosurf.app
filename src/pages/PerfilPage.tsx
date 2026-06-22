@@ -1,6 +1,7 @@
 import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
+import { NomeCard } from '../components/NomeCard'
 import { PERFIL_DEMO } from '../data/seed'
 
 function Stat({ k, v }: { k: string; v: string | number }) {
@@ -47,6 +48,8 @@ export function PerfilPage() {
         </div>
 
         <AuthCard />
+
+        <NomeCard />
 
         <div className="card pad">
           <span className="eyebrow">Conta</span>

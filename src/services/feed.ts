@@ -19,7 +19,7 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
             id: r.id,
             picoId: r.pico_id,
             autorId: '',
-            autorNome: 'anônimo',
+            autorNome: r.autor_nome ?? 'anônimo',
             capturadaEm: r.capturada_em,
             url: r.storage_path ? await urlAssinada(r.storage_path) : undefined,
             alturaMareM: r.altura_mare_m ?? undefined,

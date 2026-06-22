@@ -119,5 +119,8 @@ export interface Ameaca {
   uf: UF;
   /** Para proteger denunciante: localização grosseira por padrão. */
   precisao: 'exata' | 'aproximada';
+  /** Coordenada GROSSEIRA (geom_aprox) — nunca a exata. */
+  lat?: number;
+  lng?: number;
   descricao?: string;
 }

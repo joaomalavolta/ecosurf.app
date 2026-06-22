@@ -60,10 +60,15 @@ export function CapturePage() {
     const v = videoRef.current
     let blob: Blob | undefined
     if (v && v.videoWidth > 0) {
+      // resize client-side: cap em 1600px, WebP — economiza dados no 3G da praia
+      const maxDim = 1600
+      const escala = Math.min(1, maxDim / Math.max(v.videoWidth, v.videoHeight))
+      const w = Math.round(v.videoWidth * escala)
+      const h = Math.round(v.videoHeight * escala)
       const c = document.createElement('canvas')
-      c.width = v.videoWidth
-      c.height = v.videoHeight
-      c.getContext('2d')?.drawImage(v, 0, 0)
+      c.width = w
+      c.height = h
+      c.getContext('2d')?.drawImage(v, 0, 0, w, h)
       blob = await new Promise<Blob | undefined>((res) => c.toBlob((b) => res(b ?? undefined), 'image/webp', 0.8))
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
