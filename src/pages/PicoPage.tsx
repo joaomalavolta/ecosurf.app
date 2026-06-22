@@ -7,7 +7,6 @@ import { TideScrubTimeline } from '../components/TideScrubTimeline'
 import { carregarPico, carregarAmeacas } from '../services/picos'
 import { carregarFeed } from '../services/feed'
 import { buscarForecast } from '../services/forecast'
-import { eventosVentoDoDia } from '../data/mockFeed'
 import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
@@ -85,7 +84,8 @@ export function PicoPage() {
             <h2 style={{ fontSize: 19 }}>Timeline do dia</h2>
             <span className="muted">{feed?.fotos.length ?? 0} fotos</span>
           </div>
-          <TideScrubTimeline fotos={feed?.fotos ?? []} curva={curva} eventos={eventosVentoDoDia} />
+          {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
+          <TideScrubTimeline fotos={feed?.fotos ?? []} curva={curva} eventos={[]} />
         </div>
 
         <div className="card pad">

@@ -1,4 +1,4 @@
-import type { Ameaca, Pico } from '../../types/domain'
+import type { Ameaca, Mutirao, Pico } from '../../types/domain'
 import { SUPABASE_URL, SUPABASE_KEY } from './config'
 
 /**
@@ -78,6 +78,46 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     lng: r.lng ?? undefined,
     descricao: r.descricao ?? undefined,
   }))
+}
+
+interface MutiraoRow {
+  id: string
+  titulo: string
+  pico_id: string | null
+  municipio: string | null
+  uf: string | null
+  quando: string
+  horario: string | null
+  organizador: string | null
+  inscritos: number | null
+  vagas: number | null
+  status: string
+  lat: number | null
+  lng: number | null
+  descricao: string | null
+}
+
+/** Mutirões públicos futuros e recentes — local EXATO (mobilização aberta). */
+export async function restMutiroes(): Promise<Mutirao[]> {
+  const rows = await rest<MutiraoRow[]>('mutiroes_publicos?select=*&order=quando')
+  return rows
+    .filter((r) => r.lat != null && r.lng != null)
+    .map((r) => ({
+      id: r.id,
+      titulo: r.titulo,
+      picoId: r.pico_id ?? undefined,
+      municipio: r.municipio ?? '',
+      uf: r.uf ?? '',
+      quando: r.quando,
+      horario: r.horario ?? undefined,
+      organizador: r.organizador ?? undefined,
+      inscritos: r.inscritos ?? undefined,
+      vagas: r.vagas ?? undefined,
+      status: r.status as Mutirao['status'],
+      lat: r.lat as number,
+      lng: r.lng as number,
+      descricao: r.descricao ?? undefined,
+    }))
 }
 
 export interface FotoRow {

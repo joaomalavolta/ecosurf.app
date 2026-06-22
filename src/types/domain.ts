@@ -124,3 +124,26 @@ export interface Ameaca {
   lng?: number;
   descricao?: string;
 }
+
+/** Mobilização da comunidade (limpeza, restinga, mutirão de praia). */
+export type StatusMutirao = 'agendado' | 'realizado' | 'cancelado';
+
+export interface Mutirao {
+  id: string;
+  titulo: string;
+  /** Local público e EXATO — diferente da ameaça, aqui a meta é juntar gente. */
+  picoId?: string;
+  municipio: string;
+  uf: UF;
+  /** Início do mutirão (ISO). */
+  quando: string;
+  /** Janela legível, ex. "8h às 11h". */
+  horario?: string;
+  organizador?: string;
+  inscritos?: number;
+  vagas?: number;
+  status: StatusMutirao;
+  lat: number;
+  lng: number;
+  descricao?: string;
+}

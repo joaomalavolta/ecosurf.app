@@ -38,9 +38,10 @@ export function BottomNav() {
         maxWidth: 'var(--largura-app)',
         height: 'calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        background: 'rgba(238,243,247,0.96)',
-        backdropFilter: 'blur(10px)',
-        borderTop: '1px solid var(--cinza-borda)',
+        background: 'var(--nav-bg)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderTop: '1px solid var(--nav-line)',
         display: 'grid',
         gridTemplateColumns: 'repeat(5,1fr)',
         alignItems: 'center',
@@ -57,17 +58,17 @@ export function BottomNav() {
           onClick={() => (onboarded ? navigate('/capturar') : abrir())}
           aria-label="Registrar agora (abre a câmera)"
           style={{
-            width: 60,
-            height: 60,
-            marginTop: -28,
-            borderRadius: 999,
-            border: '4px solid var(--nevoa)',
-            background: 'var(--azul)',
+            width: 62,
+            height: 62,
+            marginTop: -30,
+            borderRadius: 22,
+            border: '5px solid var(--bg)',
+            background: 'linear-gradient(150deg, var(--turq), var(--radar))',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 8px 18px rgba(22,104,166,0.45)',
+            boxShadow: '0 14px 28px -6px rgba(31,227,200,0.8)',
             cursor: 'pointer',
           }}
         >
@@ -95,7 +96,7 @@ function NavItem({ to, Icon, label, end }: Item) {
         textDecoration: 'none',
         fontSize: 11,
         fontWeight: 700,
-        color: isActive ? 'var(--azul-abissal)' : 'var(--muted)',
+        color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
       })}
     >
       <Icon size={22} stroke={2} aria-hidden />

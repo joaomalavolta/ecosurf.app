@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0C2A43" />
+    <meta name="theme-color" content="#0A3A4C" />
     <meta name="description" content="Ecosurf — radar de surf colaborativo e cartografia socioambiental do litoral brasileiro." />
+    <script>
+      // Aplica o tema salvo antes da pintura (evita flash). Light é o padrão.
+      try { if (localStorage.getItem('ecosurf:theme') === 'dark') document.documentElement.dataset.theme = 'dark' } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon_ecosurf.svg" />
     <link rel="apple-touch-icon" href="/atalho_icone_celular.png" />
 
@@ -24,7 +28,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <title>Ecosurf — radar de surf e território</title>

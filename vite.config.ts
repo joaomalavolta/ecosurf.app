@@ -18,8 +18,8 @@ export default defineConfig({
         start_url: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#EEF3F7',
-        theme_color: '#0C2A43',
+        background_color: '#F5FAFC',
+        theme_color: '#0A3A4C',
         icons: [
           { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'any' },
           { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'maskable' },
@@ -29,8 +29,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2}'],
         runtimeCaching: [
           {
-            // tiles do mapa: cache do litoral local do usuário
-            urlPattern: ({ url }) => url.host === 'tiles.openfreemap.org',
+            // tiles/estilo do mapa (CARTO dark-matter): cache do litoral do usuário
+            urlPattern: ({ url }) =>
+              url.host.endsWith('basemaps.cartocdn.com') || url.host === 'tiles.openfreemap.org',
             handler: 'CacheFirst',
             options: {
               cacheName: 'mapa-tiles',

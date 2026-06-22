@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
-import { carregarPicos, carregarAmeacas } from '../services/picos'
+import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/picos'
 import { useOnboarding } from '../onboarding/OnboardingContext'
-import type { Ameaca, Pico } from '../types/domain'
+import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
 type Filtro = 'tudo' | 'picos' | 'ameacas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
   const [sel, setSel] = useState<Pico | null>(null)
   const navigate = useNavigate()
@@ -20,6 +21,7 @@ export function MapaPage() {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarMutiroes().then((m) => vivo && setMutiroes(m))
     return () => {
       vivo = false
     }
@@ -27,11 +29,17 @@ export function MapaPage() {
 
   const verPicos = filtro === 'tudo' || filtro === 'picos'
   const verAmeacas = filtro === 'tudo' || filtro === 'ameacas'
+  const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
   const alertas = sel ? ameacas.filter((a) => a.picoId === sel.id).length : 0
 
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
-      <MapView picos={verPicos ? picos : []} ameacas={verAmeacas ? ameacas : []} onSelectPico={setSel} />
+      <MapView
+        picos={verPicos ? picos : []}
+        ameacas={verAmeacas ? ameacas : []}
+        mutiroes={verMutiroes ? mutiroes : []}
+        onSelectPico={setSel}
+      />
 
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>
         <div className="card pad" style={{ padding: 12 }}>
@@ -50,7 +58,7 @@ export function MapaPage() {
       <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
         {sel ? (
           <div className="card pad row">
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--azul-abissal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
               <IconRipple size={26} stroke={2} />
             </div>
             <div style={{ flex: 1 }}>
@@ -67,8 +75,14 @@ export function MapaPage() {
             </div>
           </div>
         ) : (
-          <div className="card pad" style={{ textAlign: 'center' }}>
-            <span className="muted">Toque num pico no mapa pra ver detalhes e registrar.</span>
+          <div className="card pad row">
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+              <IconRipple size={26} stroke={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <b>Explore o litoral</b>
+              <div className="muted">Toque num pico para ver detalhes e registrar a condição do dia.</div>
+            </div>
           </div>
         )}
       </div>

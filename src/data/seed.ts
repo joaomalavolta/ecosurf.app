@@ -1,4 +1,4 @@
-import type { Pico, RegiaoSurf, Ameaca } from '../types/domain'
+import type { Pico, RegiaoSurf, Ameaca, Mutirao } from '../types/domain'
 
 /**
  * Seed do litoral de largada: Itanhaém / Litoral Sul de SP.
@@ -114,11 +114,6 @@ export const ameacasSeed: Ameaca[] = [
   },
 ]
 
-export const PERFIL_DEMO = {
-  nome: 'João Malavolta',
-  nivel: 'Sentinela do litoral',
-  validadoPorTelefone: true,
-  picos: 18,
-  mutiroes: 29,
-  precisao: 91,
-}
+// Sem mutirões de exemplo — começar do zero. O backend (tabela `mutiroes`) é a
+// fonte; enquanto vazio, o app mostra a seção sem itens.
+export const mutiroesSeed: Mutirao[] = []

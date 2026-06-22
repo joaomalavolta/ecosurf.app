@@ -6,7 +6,8 @@ import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { ehModerador } from '../services/moderacao'
 import { meuStatus, permissoes } from '../services/admin'
-import { PERFIL_DEMO } from '../data/seed'
+import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
+import { ThemeToggle } from '../components/ThemeToggle'
 
 function Stat({ k, v }: { k: string; v: string | number }) {
   return (
@@ -18,13 +19,14 @@ function Stat({ k, v }: { k: string; v: string | number }) {
 }
 
 export function PerfilPage() {
-  const p = PERFIL_DEMO
+  const [perfil, setPerfil] = useState<PerfilAtual | null>(null)
   const [mod, setMod] = useState(false)
   const [painel, setPainel] = useState(false)
   useEffect(() => {
     let vivo = true
     ehModerador().then((m) => vivo && setMod(m))
     meuStatus().then((s) => vivo && setPainel(permissoes(s.papel).acessa))
+    carregarPerfilAtual().then((p) => vivo && setPerfil(p))
     return () => {
       vivo = false
     }
@@ -36,9 +38,9 @@ export function PerfilPage() {
         <div className="card pad row">
           <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)' }} />
           <div>
-            <b style={{ fontSize: 18 }}>{p.nome}</b>
-            <div className="muted">Nível: {p.nivel}</div>
-            {p.validadoPorTelefone && (
+            <b style={{ fontSize: 18 }}>{perfil?.nome ?? 'Visitante'}</b>
+            <div className="muted">{perfil ? `Nível: ${perfil.nivel}` : 'Entre para começar seu histórico.'}</div>
+            {perfil?.telefoneValidado && (
               <span className="tag ok" style={{ marginTop: 6 }}>
                 <IconRosetteDiscountCheck size={13} stroke={2.2} /> conta validada por telefone
               </span>
@@ -47,9 +49,14 @@ export function PerfilPage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-          <Stat k="Picos" v={p.picos} />
-          <Stat k="Mutirões" v={p.mutiroes} />
-          <Stat k="Precisão" v={`${p.precisao}%`} />
+          <Stat k="Picos" v={0} />
+          <Stat k="Mutirões" v={0} />
+          <Stat k="Precisão" v="—" />
+        </div>
+
+        <div className="card pad">
+          <span className="eyebrow">Aparência</span>
+          <div style={{ marginTop: 10 }}><ThemeToggle /></div>
         </div>
 
         <div className="card pad">
@@ -72,7 +79,7 @@ export function PerfilPage() {
             <div className="row"><IconAward size={20} stroke={2} /> Conquistas e reputação</div>
             <div className="row"><IconDownload size={20} stroke={2} /> Exportar meus dados (GeoJSON)</div>
             {mod && (
-              <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--azul-abissal)', fontWeight: 600 }}>
+              <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--turq)', fontWeight: 600 }}>
                 <IconShieldCheck size={20} stroke={2} /> Moderação da região
               </Link>
             )}

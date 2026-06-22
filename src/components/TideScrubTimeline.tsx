@@ -239,13 +239,13 @@ export function TideScrubTimeline({
               </linearGradient>
             </defs>
             <path d={area} fill="url(#grad-mare)" />
-            <path d={linha} fill="none" stroke="#1668A6" strokeWidth="0.7" vectorEffect="non-scaling-stroke" />
+            <path d={linha} fill="none" stroke="#2E9BD6" strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
             <line
               x1={x(scrubHora ?? horas[ativo])}
               y1={0}
               x2={x(scrubHora ?? horas[ativo])}
               y2={VB_H}
-              stroke="#0C2A43"
+              stroke="rgba(13,110,168,0.55)"
               strokeWidth="0.5"
               strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
               vectorEffect="non-scaling-stroke"
@@ -273,7 +273,7 @@ export function TideScrubTimeline({
                   height: idx === ativo ? 17 : 12,
                   borderRadius: 999,
                   border: '2px solid #fff',
-                  background: idx === ativo ? 'var(--azul-abissal)' : 'var(--azul-medio)',
+                  background: idx === ativo ? 'var(--turq)' : 'var(--azul-medio)',
                   boxShadow: '0 2px 6px rgba(0,0,0,.28)',
                   padding: 0,
                   cursor: 'pointer',
