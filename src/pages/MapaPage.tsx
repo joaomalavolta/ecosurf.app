@@ -2,20 +2,22 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
-import { carregarPicos, carregarAmeacas } from '../services/picos'
-import type { Ameaca, Pico } from '../types/domain'
+import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/picos'
+import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
 type Filtro = 'tudo' | 'picos' | 'ameacas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
 
   useEffect(() => {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarMutiroes().then((m) => vivo && setMutiroes(m))
     return () => {
       vivo = false
     }
@@ -23,10 +25,15 @@ export function MapaPage() {
 
   const verPicos = filtro === 'tudo' || filtro === 'picos'
   const verAmeacas = filtro === 'tudo' || filtro === 'ameacas'
+  const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
 
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
-      <MapView picos={verPicos ? picos : []} ameacas={verAmeacas ? ameacas : []} />
+      <MapView
+        picos={verPicos ? picos : []}
+        ameacas={verAmeacas ? ameacas : []}
+        mutiroes={verMutiroes ? mutiroes : []}
+      />
 
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>
         <div className="card pad" style={{ padding: 12 }}>
