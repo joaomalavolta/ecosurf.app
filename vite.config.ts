@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['icon.svg', 'logo.svg'],
+      includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'og.png', 'logo_ecosurf.png'],
       manifest: {
         name: 'Ecosurf',
         short_name: 'Ecosurf',
@@ -21,8 +21,9 @@ export default defineConfig({
         background_color: '#EEF3F7',
         theme_color: '#0C2A43',
         icons: [
-          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
