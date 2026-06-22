@@ -8,6 +8,7 @@ import {
   type IconProps,
 } from '@tabler/icons-react'
 import type { ComponentType } from 'react'
+import { useOnboarding } from '../onboarding/OnboardingContext'
 
 type Item = { to: string; Icon: ComponentType<IconProps>; label: string; end: boolean }
 
@@ -24,6 +25,7 @@ const itens: Item[] = [
  */
 export function BottomNav() {
   const navigate = useNavigate()
+  const { onboarded, abrir } = useOnboarding()
   return (
     <nav
       aria-label="Navegação principal"
@@ -52,7 +54,7 @@ export function BottomNav() {
       {/* slot central: captura */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <button
-          onClick={() => navigate('/capturar')}
+          onClick={() => (onboarded ? navigate('/capturar') : abrir())}
           aria-label="Registrar agora (abre a câmera)"
           style={{
             width: 60,
