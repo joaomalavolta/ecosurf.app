@@ -21,6 +21,36 @@ export async function statusPerfil(): Promise<PerfilStatus> {
   }
 }
 
+export interface PerfilAtual {
+  nome: string
+  nivel: string
+  telefoneValidado: boolean
+}
+
+/** Perfil do usuário logado (real, do Supabase). Null se não há sessão. */
+export async function carregarPerfilAtual(): Promise<PerfilAtual | null> {
+  if (!temBackend()) return null
+  try {
+    const { sb } = await import('./supabase/client')
+    const { data } = await sb().auth.getSession()
+    const u = data.session?.user
+    if (!u) return null
+    const { data: p } = await sb()
+      .from('perfis')
+      .select('nome,nivel,telefone_validado')
+      .eq('id', u.id)
+      .single()
+    if (!p) return null
+    return {
+      nome: p.nome ?? 'Surfista',
+      nivel: p.nivel ?? 'novato',
+      telefoneValidado: !!p.telefone_validado,
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Envia o código de acesso por e-mail (OTP). */
 export async function enviarCodigo(email: string): Promise<void> {
   const { sb } = await import('./supabase/client')

@@ -159,12 +159,3 @@ export const mutiroesSeed: Mutirao[] = [
     descricao: 'Recuperação da duna frontal e plantio de restinga (APP).',
   },
 ]
-
-export const PERFIL_DEMO = {
-  nome: 'João Malavolta',
-  nivel: 'Sentinela do litoral',
-  validadoPorTelefone: true,
-  picos: 18,
-  mutiroes: 29,
-  precisao: 91,
-}

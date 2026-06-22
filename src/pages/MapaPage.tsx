@@ -59,11 +59,10 @@ export function MapaPage() {
             <IconRipple size={26} stroke={2} />
           </div>
           <div style={{ flex: 1 }}>
-            <b>Praia do Sonho</b>
-            <div className="muted">Itanhaém/SP · radar ativo</div>
+            <b>Explore o litoral</b>
+            <div className="muted">Toque num pico para ver a previsão e a timeline do dia.</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <Link to="/pico/praia-do-sonho" className="btn" style={{ minHeight: 42 }}>Abrir</Link>
-              <Link to="/capturar" className="btn outline" style={{ minHeight: 42 }}>Registrar</Link>
+              <Link to="/capturar" className="btn" style={{ minHeight: 42 }}>Registrar uma condição</Link>
             </div>
           </div>
         </div>
