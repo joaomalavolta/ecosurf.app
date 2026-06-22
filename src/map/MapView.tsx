@@ -135,8 +135,9 @@ function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<
 /**
  * Mapa = território. Picos (azul), ameaças (índigo) e mutirões (verde) numa
  * fonte GeoJSON com CLUSTERIZAÇÃO nativa do MapLibre: aglomera de longe,
- * abre em pins ao aproximar. Estilo OpenFreeMap (sem chave); migrar a PMTiles
- * em produção. Ameaça entra com coordenada GROSSEIRA — protege denunciante.
+ * abre em pins ao aproximar. Estilo escuro CARTO dark-matter (sem chave);
+ * migrar a PMTiles auto-hospedado em produção. Ameaça entra com coordenada
+ * GROSSEIRA — protege denunciante.
  */
 export function MapView({
   picos,
@@ -162,7 +163,7 @@ export function MapView({
     let descartado = false
     const map = new maplibregl.Map({
       container: ref.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       center: [-46.79, -24.19],
       zoom: 10.5,
     })
@@ -296,5 +297,5 @@ export function MapView({
     if (src) src.setData(colecao({ picos, ameacas, mutiroes }))
   }, [picos, ameacas, mutiroes])
 
-  return <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#cfe3e8' }} />
+  return <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#06202B' }} />
 }

@@ -29,8 +29,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2}'],
         runtimeCaching: [
           {
-            // tiles do mapa: cache do litoral local do usuário
-            urlPattern: ({ url }) => url.host === 'tiles.openfreemap.org',
+            // tiles/estilo do mapa (CARTO dark-matter): cache do litoral do usuário
+            urlPattern: ({ url }) =>
+              url.host.endsWith('basemaps.cartocdn.com') || url.host === 'tiles.openfreemap.org',
             handler: 'CacheFirst',
             options: {
               cacheName: 'mapa-tiles',
