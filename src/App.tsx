@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { UploadStatusBar } from './components/UploadStatusBar'
+import { Onboarding } from './components/Onboarding'
 import { iniciarSincronizacao } from './offline/uploadQueue'
 import { RadarPage } from './pages/RadarPage'
 import { PicoPage } from './pages/PicoPage'
@@ -24,6 +25,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <Onboarding />
       <UploadStatusBar />
       <Routes>
         <Route path="/" element={<RadarPage />} />
