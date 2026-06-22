@@ -18,8 +18,8 @@ export default defineConfig({
         start_url: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#03161F',
-        theme_color: '#03161F',
+        background_color: '#F5FAFC',
+        theme_color: '#0A3A4C',
         icons: [
           { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'any' },
           { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'maskable' },

@@ -161,9 +161,14 @@ export function MapView({
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     let descartado = false
+    // mapa claro (positron) no tema light; escuro (dark-matter) no dark
+    const escuro = document.documentElement.dataset.theme === 'dark'
+    const estilo = escuro
+      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+      : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
     const map = new maplibregl.Map({
       container: ref.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: estilo,
       center: [-46.79, -24.19],
       zoom: 10.5,
     })
@@ -297,5 +302,5 @@ export function MapView({
     if (src) src.setData(colecao({ picos, ameacas, mutiroes }))
   }, [picos, ameacas, mutiroes])
 
-  return <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#06202B' }} />
+  return <div ref={ref} style={{ position: 'absolute', inset: 0, background: 'var(--map-bg)' }} />
 }

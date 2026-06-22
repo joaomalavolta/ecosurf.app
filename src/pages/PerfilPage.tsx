@@ -6,6 +6,7 @@ import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { ehModerador } from '../services/moderacao'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
+import { ThemeToggle } from '../components/ThemeToggle'
 
 function Stat({ k, v }: { k: string; v: string | number }) {
   return (
@@ -48,6 +49,11 @@ export function PerfilPage() {
           <Stat k="Picos" v={0} />
           <Stat k="Mutirões" v={0} />
           <Stat k="Precisão" v="—" />
+        </div>
+
+        <div className="card pad">
+          <span className="eyebrow">Aparência</span>
+          <div style={{ marginTop: 10 }}><ThemeToggle /></div>
         </div>
 
         <div className="card pad">

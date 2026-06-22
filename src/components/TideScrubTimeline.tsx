@@ -245,7 +245,7 @@ export function TideScrubTimeline({
               y1={0}
               x2={x(scrubHora ?? horas[ativo])}
               y2={VB_H}
-              stroke="rgba(234,248,249,0.6)"
+              stroke="rgba(13,110,168,0.55)"
               strokeWidth="0.5"
               strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
               vectorEffect="non-scaling-stroke"
