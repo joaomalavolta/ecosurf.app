@@ -5,12 +5,13 @@ import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
 import { TideScrubTimeline } from '../components/TideScrubTimeline'
 import { carregarPico, carregarAmeacas } from '../services/picos'
+import { carregarFeed } from '../services/feed'
 import { buscarForecast } from '../services/forecast'
-import { feedDoDia, eventosVentoDoDia } from '../data/mockFeed'
+import { eventosVentoDoDia } from '../data/mockFeed'
 import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
-import type { Ameaca, Forecast, Pico, PontoMare } from '../types/domain'
+import type { Ameaca, FeedDia, Forecast, Pico, PontoMare } from '../types/domain'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
@@ -18,11 +19,13 @@ export function PicoPage() {
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [feed, setFeed] = useState<FeedDia | null>(null)
 
   useEffect(() => {
     let vivo = true
     carregarPico(picoId).then((p) => vivo && setPico(p ?? null))
     carregarAmeacas().then((a) => vivo && setAmeacas(a.filter((x) => x.picoId === picoId)))
+    carregarFeed(picoId).then((f) => vivo && setFeed(f))
     return () => {
       vivo = false
     }
@@ -56,8 +59,6 @@ export function PicoPage() {
     )
   }
 
-  const feed = feedDoDia(pico.id)
-
   return (
     <div className="page">
       <Header title={pico.nome} sub={`${pico.praia} · ${pico.municipio}/${pico.uf}`}>
@@ -82,9 +83,9 @@ export function PicoPage() {
         <div>
           <div className="between" style={{ margin: '4px 2px 10px' }}>
             <h2 style={{ fontSize: 19 }}>Timeline do dia</h2>
-            <span className="muted">{feed.fotos.length} fotos</span>
+            <span className="muted">{feed?.fotos.length ?? 0} fotos</span>
           </div>
-          <TideScrubTimeline fotos={feed.fotos} curva={curva} eventos={eventosVentoDoDia} />
+          <TideScrubTimeline fotos={feed?.fotos ?? []} curva={curva} eventos={eventosVentoDoDia} />
         </div>
 
         <div className="card pad">

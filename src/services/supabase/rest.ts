@@ -74,3 +74,26 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     descricao: r.descricao ?? undefined,
   }))
 }
+
+export interface FotoRow {
+  id: string
+  pico_id: string
+  capturada_em: string
+  storage_path: string | null
+  altura_mare_m: number | null
+  vento_tipo: string | null
+  observacao: string | null
+  procedencia: string
+}
+
+/** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"). */
+export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
+  const inicio = new Date()
+  inicio.setHours(0, 0, 0, 0)
+  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia'
+  return rest<FotoRow[]>(
+    `fotos?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
+      `&capturada_em=gte.${encodeURIComponent(inicio.toISOString())}&order=capturada_em.asc`,
+  )
+}
+

@@ -60,7 +60,7 @@ maré do instante.
 |---|---|---|
 | **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
 | **Maré** | ✅ provider plugável (`services/tide/`) com modelo senoidal | implementar `dhnTideProvider` (estação + harmônicas) |
-| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0008; picos/ameaças **lidos ao vivo** via REST (anon, RLS verificada) | ler o feed de fotos do dia do banco (hoje a timeline é demo) |
+| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0008; picos/ameaças/**feed do dia** lidos ao vivo via REST (anon, RLS verificada; feed cai no demo enquanto não há uploads) | thumbnails/resize no upload; nome do autor no feed |
 | **Auth / upload** | ✅ código pronto: sessão anônima + `autor_id` + Storage; fila offline | **ligar o provider Anonymous no painel** (e SMS p/ telefone) |
 | **Procedência da foto** | selo na UI + flag `geofence_ok` no schema | validar geofence/EXIF no servidor (anti-foto-antiga) |
 | **Pipeline de mídia** | captura → WebP no cliente → fila | resize/thumbnail → Storage/CDN + URL assinada |
