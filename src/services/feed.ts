@@ -1,12 +1,11 @@
 import type { FeedDia, Foto } from '../types/domain'
 import { temBackend } from './api'
 import { restFotosDoDia } from './supabase/rest'
-import { feedDoDia as feedMock } from '../data/mockFeed'
 
 /**
  * Feed do dia de um pico. Com backend e fotos reais, lê do Supabase e resolve
- * URLs assinadas (bucket privado). Sem fotos ainda (ou offline), cai no demo
- * para a timeline não nascer vazia enquanto não há uploads.
+ * URLs assinadas (bucket privado). Sem fotos reais do dia (ou offline), volta
+ * VAZIO — a timeline mostra "ainda sem fotos hoje". Nada de feed simulado.
  */
 export async function carregarFeed(picoId: string): Promise<FeedDia> {
   if (temBackend()) {
@@ -35,5 +34,5 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
       /* fallback */
     }
   }
-  return feedMock(picoId)
+  return { picoId, data: new Date().toISOString().slice(0, 10), fotos: [] }
 }
