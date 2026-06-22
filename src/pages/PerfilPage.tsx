@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { ehModerador } from '../services/moderacao'
+import { meuStatus, permissoes } from '../services/admin'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
 import { ThemeToggle } from '../components/ThemeToggle'
 
@@ -20,9 +21,11 @@ function Stat({ k, v }: { k: string; v: string | number }) {
 export function PerfilPage() {
   const [perfil, setPerfil] = useState<PerfilAtual | null>(null)
   const [mod, setMod] = useState(false)
+  const [painel, setPainel] = useState(false)
   useEffect(() => {
     let vivo = true
     ehModerador().then((m) => vivo && setMod(m))
+    meuStatus().then((s) => vivo && setPainel(permissoes(s.papel).acessa))
     carregarPerfilAtual().then((p) => vivo && setPerfil(p))
     return () => {
       vivo = false
@@ -78,6 +81,11 @@ export function PerfilPage() {
             {mod && (
               <Link to="/moderacao" className="row" style={{ textDecoration: 'none', color: 'var(--turq)', fontWeight: 600 }}>
                 <IconShieldCheck size={20} stroke={2} /> Moderação da região
+              </Link>
+            )}
+            {painel && (
+              <Link to="/admin" className="row" style={{ textDecoration: 'none', color: 'var(--azul-abissal)', fontWeight: 600 }}>
+                <IconShieldLock size={20} stroke={2} /> Painel administrativo
               </Link>
             )}
           </div>

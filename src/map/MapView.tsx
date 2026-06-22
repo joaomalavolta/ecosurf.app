@@ -135,18 +135,22 @@ function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<
 /**
  * Mapa = território. Picos (azul), ameaças (índigo) e mutirões (verde) numa
  * fonte GeoJSON com CLUSTERIZAÇÃO nativa do MapLibre: aglomera de longe,
- * abre em pins ao aproximar. Estilo escuro CARTO dark-matter (sem chave);
- * migrar a PMTiles auto-hospedado em produção. Ameaça entra com coordenada
- * GROSSEIRA — protege denunciante.
+ * abre em pins ao aproximar. Estilo CARTO (positron/dark-matter, sem chave).
+ * Ameaça entra com coordenada GROSSEIRA — protege denunciante.
+ *
+ * Tocar num pico: se `onSelectPico` for passado, seleciona-o (o card embaixo
+ * reflete) e aproxima; senão, navega para a página do pico.
  */
 export function MapView({
   picos,
   ameacas = [],
   mutiroes = [],
+  onSelectPico,
 }: {
   picos: Pico[]
   ameacas?: Ameaca[]
   mutiroes?: Mutirao[]
+  onSelectPico?: (p: Pico) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -156,6 +160,8 @@ export function MapView({
   const navigate = useNavigate()
   const navRef = useRef(navigate)
   navRef.current = navigate
+  const onSelRef = useRef(onSelectPico)
+  onSelRef.current = onSelectPico
 
   // monta o mapa, carrega ícones, cria a fonte clusterizada e as camadas
   useEffect(() => {
@@ -262,13 +268,19 @@ export function MapView({
         })
       })
 
-      // clique no ponto: pico navega; ameaça/mutirão abre popup
+      // clique no ponto: pico seleciona (ou navega); ameaça/mutirão abre popup
       map.on('click', 'pontos', (e) => {
         const f = e.features?.[0]
         if (!f) return
         const p = f.properties as Record<string, unknown>
         if (p.tipo === 'pico') {
-          navRef.current(`/pico/${p.id}`)
+          const pico = dadosRef.current.picos.find((x) => x.id === p.id)
+          if (pico && onSelRef.current) {
+            onSelRef.current(pico)
+            map.flyTo({ center: [pico.lng, pico.lat], zoom: Math.max(map.getZoom(), 13), speed: 0.8 })
+          } else {
+            navRef.current(`/pico/${p.id}`)
+          }
           return
         }
         new maplibregl.Popup({ offset: 20, maxWidth: '240px' })
