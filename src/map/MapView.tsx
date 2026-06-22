@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { useNavigate } from 'react-router-dom'
 import type { Ameaca, Pico } from '../types/domain'
 
 const WAVES =
@@ -23,15 +22,23 @@ function pin(svg: string, cor: string): HTMLButtonElement {
 }
 
 /**
- * Mapa = território. Picos (azul) e ameaças (índigo) como camadas.
- * Estilo OpenFreeMap (sem chave); migrar a PMTiles auto-hospedado em produção.
- * Ameaça entra com coordenada GROSSEIRA (geom_aprox) — protege denunciante.
+ * Mapa = território. Picos (azul) e ameaças (índigo). Tocar num pico chama
+ * onSelectPico (o card embaixo reflete a seleção). Estilo OpenFreeMap.
  */
-export function MapView({ picos, ameacas = [] }: { picos: Pico[]; ameacas?: Ameaca[] }) {
+export function MapView({
+  picos,
+  ameacas = [],
+  onSelectPico,
+}: {
+  picos: Pico[]
+  ameacas?: Ameaca[]
+  onSelectPico?: (p: Pico) => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<maplibregl.Marker[]>([])
-  const navigate = useNavigate()
+  const onSelRef = useRef(onSelectPico)
+  onSelRef.current = onSelectPico
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return
@@ -59,7 +66,10 @@ export function MapView({ picos, ameacas = [] }: { picos: Pico[]; ameacas?: Amea
     for (const p of picos) {
       const el = pin(WAVES, '#1668A6')
       el.setAttribute('aria-label', p.nome)
-      el.onclick = () => navigate(`/pico/${p.id}`)
+      el.onclick = () => {
+        onSelRef.current?.(p)
+        map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 13), speed: 0.8 })
+      }
       novos.push(new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map))
     }
 
@@ -71,7 +81,7 @@ export function MapView({ picos, ameacas = [] }: { picos: Pico[]; ameacas?: Amea
     }
 
     markersRef.current = novos
-  }, [picos, ameacas, navigate])
+  }, [picos, ameacas])
 
   return <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#cfe3e8' }} />
 }
