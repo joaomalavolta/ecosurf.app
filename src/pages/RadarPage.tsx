@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { IconStar, IconRipple, IconMapPin } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { AdminShortcut } from '../components/AdminShortcut'
 import { SpotCard } from '../components/SpotCard'
 import { carregarPicos, ehFavorito } from '../services/picos'
 import { buscarForecast } from '../services/forecast'
@@ -48,7 +49,7 @@ export function RadarPage() {
 
   return (
     <div className="page">
-      <Header brand sub="o surf por quem surfa" />
+      <Header brand sub="o surf por quem surfa" action={<AdminShortcut />} />
       <div className="page-pad stack">
         <div className="pills" role="tablist" aria-label="Filtro do radar">
           <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
