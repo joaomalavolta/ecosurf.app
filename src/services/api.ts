@@ -1,3 +1,5 @@
+import { TEM_BACKEND } from './supabase/config'
+
 /**
  * Contrato da API do Ecosurf. Hoje só existe o mock; o backend real
  * (PostGIS/Supabase) implementa a mesma interface — a UI não muda.
@@ -27,9 +29,9 @@ export const mockApi: EcosurfApi = {
   },
 }
 
-/** Há backend configurado? (lê env sem importar o SDK — não bloteia o bundle) */
+/** Há backend configurado? (com a config padrão embutida, sempre sim no deploy) */
 export function temBackend(): boolean {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+  return TEM_BACKEND
 }
 
 let real: EcosurfApi | null = null

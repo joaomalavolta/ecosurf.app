@@ -1,11 +1,12 @@
 import type { Ameaca, Pico } from '../../types/domain'
+import { SUPABASE_URL, SUPABASE_KEY } from './config'
 
 /**
  * Leitura via PostgREST com fetch puro — NÃO usa o SDK, então não pesa no
  * bundle do Radar. Lê das views read-model (lat/lng já resolvidos).
  */
-const BASE = import.meta.env.VITE_SUPABASE_URL
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
+const BASE = SUPABASE_URL
+const KEY = SUPABASE_KEY
 
 async function rest<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}/rest/v1/${path}`, {
