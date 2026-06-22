@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { UploadStatusBar } from './components/UploadStatusBar'
-import { Onboarding } from './components/Onboarding'
+import { OnboardingProvider } from './onboarding/OnboardingContext'
 import { iniciarSincronizacao } from './offline/uploadQueue'
 import { RadarPage } from './pages/RadarPage'
 import { PicoPage } from './pages/PicoPage'
@@ -24,10 +24,10 @@ export default function App() {
   }, [])
 
   return (
-    <div className="app-shell">
-      <Onboarding />
-      <UploadStatusBar />
-      <Routes>
+    <OnboardingProvider>
+      <div className="app-shell">
+        <UploadStatusBar />
+        <Routes>
         <Route path="/" element={<RadarPage />} />
         <Route
           path="/mapa"
@@ -42,8 +42,9 @@ export default function App() {
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/moderacao" element={<ModeracaoPage />} />
         <Route path="/capturar" element={<CapturePage />} />
-      </Routes>
-      {!semNav && <BottomNav />}
-    </div>
+        </Routes>
+        {!semNav && <BottomNav />}
+      </div>
+    </OnboardingProvider>
   )
 }

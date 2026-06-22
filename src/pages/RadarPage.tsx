@@ -48,7 +48,7 @@ export function RadarPage() {
 
   return (
     <div className="page">
-      <Header brand sub="O mar de hoje, pela lente de quem está lá. Litoral Sul de SP." />
+      <Header brand sub="o surf por quem surfa" />
       <div className="page-pad stack">
         <div className="pills" role="tablist" aria-label="Filtro do radar">
           <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
