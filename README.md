@@ -1,0 +1,99 @@
+# Ecosurf
+
+Radar de surf colaborativo + cartografia socioambiental do litoral brasileiro.
+A foto da comunidade lê o mar do dia; o mesmo gesto documenta o conflito costeiro.
+
+> Scaffold inicial. Roda com dados-semente (Itanhaém / Litoral Sul de SP) e
+> previsão real via Open-Meteo. Backend, auth e pipeline de mídia ainda não existem.
+
+## Stack
+
+- **React + Vite + TypeScript**
+- **React Router** — rota por pico (`/pico/:id`), deep-link compartilhável
+- **MapLibre GL** — mapa = território (tiles OpenFreeMap no dev; PMTiles auto-hospedado em produção)
+- **Framer Motion** — animação que ensina (a passagem do tempo na timeline)
+- **Open-Meteo Marine** — forecast nacional, grátis, sem chave
+
+## Rodar
+
+```bash
+npm install
+npm run dev       # http://localhost:5173
+npm run build     # typecheck + build de produção
+```
+
+## Decisões de produto já tomadas
+
+1. **Radar de surf é a espinha** (hábito diário), com a missão socioambiental
+   embarcada. Navegação = *caminho C*: `Radar · Mapa · [📷 captura] · Ações · Perfil`,
+   com a câmera no centro (a foto é o conteúdo mais nobre).
+2. **Nasce nacional-pronto, lança comunidade-concentrada.** Forecast é nacional
+   (Open-Meteo); comunidade/maré/território começam no Litoral Sul de SP.
+   `regiao_surf` é entidade de 1ª classe.
+3. **Pico é permanente; feed é do dia.** A 1ª foto "acende" o pico; o feed
+   arquiva e vira histórico (base para padrão de surf e registro ambiental no tempo).
+4. **"Ativo agora" decai** ao longo do dia (`lib/time.ts`) — honestidade de leitura.
+
+## Arquitetura de dados (ver `src/types/domain.ts`)
+
+```
+RegiaoSurf (curada) ──< Pico (permanente, geometria) ──< FeedDia (efêmero) ──< Foto
+                              │                                                   └─ procedência (anti-fake) + maré sobreposta
+                              ├─ municipio/uf  → DERIVADOS via PostGIS + malha IBGE
+                              └─ visibilidade  → publico | comunidade | abafado (soberania local)
+Ameaca ──> precisao: exata | aproximada (protege denunciante)
+```
+
+A camada `src/services/` isola o acesso a dados: hoje lê do seed em memória,
+amanhã troca por API (PostGIS) ou Supabase sem tocar na UI.
+
+## A peça de assinatura
+
+`src/components/TideScrubTimeline.tsx` — a foto ocupa o topo; a **curva de maré
+do dia é a régua temporal**. Arrastar troca a foto; vento e virada de maré
+aparecem sobre a curva. Cada foto mostra hora, autor, frescor, procedência e a
+maré do instante.
+
+## Pendências conscientes (não são esquecimento)
+
+| Tema | Estado | Próximo passo |
+|---|---|---|
+| **Offline-first** | ✅ SW (Workbox) + cache de tiles/forecast/fontes + fila de upload em IndexedDB | Background Sync no SW reenviando ao backend real |
+| **Maré** | ✅ modelo harmônico (M2/S2/N2/O1/K1, curva mista); provider por estação (`dhnTideProvider`) | injetar constantes reais da DHN por pico (ETL — não há API pública grátis) |
+| **Backend** | ✅ provisionado (Supabase `ecosurf-app`); migrations 0001–0012; picos/ameaças/**feed com autor** lidos ao vivo via REST (RLS verificada) | — |
+| **Contribuição identificada** | ✅ **sem anônimo** — RLS exige usuário não-anônimo; login por **e-mail (magic link, já funciona)** ou telefone | ligar SMS p/ telefone |
+| **Anti-fake (servidor)** | ✅ trigger valida **geofence (≤500m)** + timestamp e define a procedência (cliente não decide); testado | ler EXIF; ajustar raio por pico |
+| **Moderação** | ✅ denúncia de foto + **ocultar** por moderador/admin (papel no perfil); feed esconde oculta; `/moderacao` | atribuir moderadores por região; notificação |
+| **Mapa** | ✅ picos (azul) + ameaças (índigo) filtráveis | mutirões; clusterização |
+| **Auth / upload** | ✅ `autor_id` + Storage + **resize ≤1600px WebP** + **coords p/ geofence**; nome no feed | thumbnails |
+| **Pipeline de mídia** | ✅ resize client-side (≤1600px WebP) → Storage (URL assinada) | thumbnails + CDN |
+| **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
+| **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
+
+## Deploy (Vercel)
+
+1. Conectar o repo no Vercel (preset Vite detectado automaticamente; `vercel.json`
+   já faz o rewrite SPA para `/pico/:id` funcionar em refresh/deep-link).
+2. Setar as env vars no projeto Vercel:
+   - `VITE_SUPABASE_URL=https://mdgttlgtrrmkmqttrxdq.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY=<publishable key>` (de cliente; pode ir no front)
+3. Deploy. Sem as envs, o app cai no seed/mock (continua funcionando).
+
+## Identidade visual
+
+- Coloque a logo em **`public/logo.svg`** (ou `public/logo.png`). Aparece no
+  header do Radar, sobre o gradiente escuro. Sem o arquivo, cai no wordmark.
+- Ícones do PWA (`icon-192/512` no manifest) ainda faltam.
+
+## Toggles que dependem do painel Supabase
+
+- **Contribuição é identificada (sem anônimo).** Login por **e-mail (magic link)**
+  já funciona out-of-the-box. Para **telefone (SMS)**, ligar um provedor
+  (Twilio/MessageBird/Vonage) com credencial.
+- Para promover um **moderador**: `update perfis set papel='moderador' where id='<uuid>'`.
+
+## Tensões éticas (decidir antes de escalar)
+
+- Expor coordenada exata de pico mata pico secreto → **abafamento** + geometria fuzzy.
+- Mapear conflito pode expor denunciante → **localização grosseira** e anonimato por padrão.
+- Foto identifica pessoas (LGPD) → **borrar rosto** + consentimento no envio.

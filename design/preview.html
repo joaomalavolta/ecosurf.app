@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ecosurf — prévia do design (clicável)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<style>
+:root{
+  --azul-abissal:#0C2A43;--azul:#1668A6;--azul-medio:#3F8DC7;--azul-claro:#CFE2F1;
+  --verde:#2C7A6B;--verde-claro:#CDE7DD;
+  --branco:#fff;--nevoa:#EEF3F7;--cinza:#E3EAF1;--cinza-borda:#DCE5EC;--texto:#14202A;--muted:#5A6B79;
+  --perigo:#3835A6;--perigo-bg:#E4E3F6;--ok:#1F6557;
+  --ft-tit:'Space Grotesk',system-ui,sans-serif;--ft-corpo:'Inter',system-ui,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--ft-corpo);background:#c9d6df;color:var(--texto);
+  display:flex;justify-content:center;align-items:flex-start;gap:26px;min-height:100vh;padding:26px;flex-wrap:wrap}
+h1,h2,h3{font-family:var(--ft-tit);font-weight:600;letter-spacing:-.015em;margin:0}
+.i{display:inline-flex;align-items:center;vertical-align:middle}
+.panel{background:#fff;border-radius:24px;padding:18px;box-shadow:0 12px 30px rgba(12,42,67,.16);width:260px}
+.panel h1{font-size:20px;margin-bottom:6px}
+.panel p{font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 16px}
+.nav{display:grid;gap:7px}
+.nav button{border:0;border-radius:14px;padding:11px 13px;text-align:left;font-size:14px;background:var(--cinza);color:#33424f;cursor:pointer;font-weight:600}
+.nav button.active{background:var(--azul-abissal);color:#fff}
+.legend{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.legend b{color:var(--texto)}
+.phone{width:390px;height:844px;background:var(--nevoa);border-radius:40px;overflow:hidden;position:relative;
+  box-shadow:0 30px 80px rgba(12,42,67,.34);border:1px solid #b8c7d2}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:26px;background:#020617;border-radius:0 0 18px 18px;z-index:30}
+#app{height:100%}
+.content{height:100%;overflow:auto;padding-bottom:96px}
+.pad{padding:16px}.stack>*+*{margin-top:12px}
+.header{background:radial-gradient(120% 90% at 82% -10%,rgba(63,141,199,.45),transparent 55%),linear-gradient(160deg,var(--azul-abissal),var(--azul) 68%,var(--verde));
+  color:#fff;padding:54px 18px 18px}
+.header h1{font-size:25px}.header .sub{font-size:13px;color:rgba(255,255,255,.9);margin-top:5px;line-height:1.4}
+.card{background:#fff;border-radius:22px;box-shadow:0 6px 18px rgba(12,42,67,.10);overflow:hidden}
+.card.p{padding:16px}
+.row{display:flex;gap:12px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.muted{color:var(--muted);font-size:13px}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.pills{display:flex;gap:8px;overflow:auto;margin:2px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border:0;border-radius:999px;padding:9px 14px;background:var(--cinza);color:var(--texto);font-size:13px;font-weight:600}
+.pill.active{background:var(--azul-abissal);color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;min-height:50px;padding:0 18px;background:var(--azul);color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.btn.full{width:100%}.btn.acento{background:var(--verde)}
+.btn.outline{background:transparent;color:var(--azul-abissal);border:1.5px solid var(--cinza-borda)}
+.tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:700}
+.tag.cinza{background:var(--cinza);color:var(--muted)}.tag.alerta{background:var(--perigo-bg);color:var(--perigo)}
+.tag.ok{background:var(--verde-claro);color:var(--ok)}.tag.mar{background:var(--azul-claro);color:var(--azul-abissal)}
+.mini{background:var(--cinza);border-radius:14px;padding:10px 8px;text-align:center}
+.mini .k{font-size:11px;color:var(--muted);font-weight:600}.mini .v{font-size:15px;font-weight:700;margin-top:2px}.mini .s{font-size:10.5px;color:var(--muted)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.circle{width:50px;height:50px;border-radius:16px;background:var(--cinza);color:var(--azul-abissal);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+.bottom{position:absolute;left:0;right:0;bottom:0;height:76px;background:rgba(238,243,247,.96);backdrop-filter:blur(8px);
+  border-top:1px solid var(--cinza-borda);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;z-index:20}
+.bottom a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--muted);text-decoration:none;cursor:pointer}
+.bottom a.active{color:var(--azul-abissal)}.bottom .ic{font-size:22px}
+.fab{display:flex;justify-content:center}
+.fab button{width:60px;height:60px;margin-top:-28px;border-radius:999px;border:4px solid var(--nevoa);background:var(--azul);color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(22,104,166,.45);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tidetrack{position:relative;padding:16px 0}
+.tidetrack .dot{position:absolute;border-radius:999px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.28);transform:translate(-50%,-50%)}
+.tidetrack .hl{position:absolute;bottom:0;transform:translateX(-50%);font-size:10px;color:var(--muted)}
+.tidetrack .wind{position:absolute;top:0;transform:translateX(-50%);font-size:9.5px;font-weight:700;color:var(--verde);white-space:nowrap}
+.tidetrack .bubble{position:absolute;top:0;transform:translateX(-50%);background:var(--azul-abissal);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.input{width:100%;border:1.5px solid var(--cinza-borda);border-radius:14px;padding:13px 14px;font-size:15px;font-family:inherit;background:#fff}
+.mapbg{height:100%;position:relative;background:
+  radial-gradient(circle at 18% 22%,#d3e6f6,transparent 26%),
+  radial-gradient(circle at 78% 32%,#d6ece2,transparent 22%),
+  linear-gradient(180deg,#e7f0f6,#dde9ef)}
+.marker{position:absolute;width:40px;height:40px;border-radius:999px;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 8px 16px rgba(0,0,0,.25)}
+.photo{background:linear-gradient(155deg,#9fc6e3,#3F8DC7)}
+@media(max-width:720px){body{padding:12px}.panel{width:390px;order:2}.phone{order:1}}
+</style>
+</head>
+<body>
+<aside class="panel">
+  <h1>Ecosurf · design</h1>
+  <p>Prévia clicável já no design ajustado: sem serifa (Space Grotesk + Inter), ícones monocromáticos (Tabler) e paleta fria (azuis, cinzas, branco, verdes).</p>
+  <div class="nav" id="nav"></div>
+  <div class="legend">
+    <b>O que olhar:</b><br>
+    • Captura no centro da nav (2 toques)<br>
+    • Pico → timeline na curva de maré<br>
+    • Paleta fria, sem cor quente<br>
+    • Alerta em índigo + ícone (sem vermelho)<br>
+    • Selo de procedência na foto
+  </div>
+</aside>
+<main class="phone"><div class="notch"></div><div id="app"></div></main>
+
+<script>
+function ic(name,size){return `<i class="i ti ti-${name}"${size?` style="font-size:${size}px"`:''}></i>`}
+
+/* curva de maré (mesma lógica do app) */
+function altura(h){return 0.7+0.6*Math.sin(2*Math.PI*(h-3.5)/12.42)}
+function buildTide(){
+  const pts=[];for(let h=0;h<=24;h+=0.5)pts.push([h,altura(h)]);
+  const alts=pts.map(p=>p[1]),min=Math.min(...alts),max=Math.max(...alts);
+  const X=h=>h/24*100,Y=a=>6+(1-(a-min)/((max-min)||1))*30,TOP=a=>Y(a)/44*96+16;
+  const line=pts.map((p,i)=>`${i?'L':'M'}${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join(' ');
+  const area=`${line} L100 44 L0 44 Z`;
+  const fotos=[[6.33],[9.17],[12.75],[16.33]];const ativo=1;
+  let dots='';fotos.forEach((f,i)=>{const a=altura(f[0]),act=i===ativo;
+    dots+=`<span class="dot" style="left:${X(f[0])}%;top:${TOP(a)}px;width:${act?17:12}px;height:${act?17:12}px;background:${act?'var(--azul-abissal)':'var(--azul-medio)'}"></span>`});
+  let hours='';[6,9,12,15,18].forEach(h=>hours+=`<span class="hl" style="left:${X(h)}%">${h}h</span>`);
+  const wind=`<span class="wind" style="left:${X(13)}%">↡ entrou maral</span>`;
+  const bubble=`<span class="bubble" style="left:${X(fotos[ativo][0])}%">09:17 · ${altura(9.17).toFixed(1)}m</span>`;
+  return `<div class="tidetrack">
+    <svg viewBox="0 0 100 44" width="100%" height="96" preserveAspectRatio="none" style="display:block">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3F8DC7" stop-opacity=".55"/><stop offset="100%" stop-color="#3F8DC7" stop-opacity=".05"/></linearGradient></defs>
+      <path d="${area}" fill="url(#g)"/>
+      <path d="${line}" fill="none" stroke="#1668A6" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
+      <line x1="${X(fotos[ativo][0])}" y1="0" x2="${X(fotos[ativo][0])}" y2="44" stroke="#0C2A43" stroke-width="0.5" vector-effect="non-scaling-stroke"/>
+    </svg>${dots}${hours}${wind}${bubble}</div>`;
+}
+
+function strip(o,p,v,vs,m,ms){return `<div class="grid4" style="margin-top:12px">
+  <div class="mini"><div class="k">Onda</div><div class="v">${o}</div><div class="s">SE</div></div>
+  <div class="mini"><div class="k">Período</div><div class="v">${p}</div></div>
+  <div class="mini"><div class="k">Vento</div><div class="v">${v}</div><div class="s">${vs}</div></div>
+  <div class="mini"><div class="k">Maré</div><div class="v">${m}</div><div class="s">${ms}</div></div></div>`}
+function spot(nome,praia,cond,o,p,v,vs,m,ms){return `<div class="card" onclick="go('Pico')" style="cursor:pointer">
+  <div class="photo" style="height:140px"></div>
+  <div class="pad"><div class="between"><div><h3 style="font-size:18px">${nome}</h3><div class="muted">${praia}</div></div>
+  <span class="tag mar">${cond}</span></div>${strip(o,p,v,vs,m,ms)}</div></div>`}
+function linha(icon,t,s,cor){return `<div class="card p row"><div class="circle"${cor?` style="color:${cor}"`:''}>${ic(icon,24)}</div><div><b>${t}</b><div class="muted">${s}</div></div></div>`}
+
+const screens={
+"Radar":()=>`<div class="header"><h1>Ecosurf</h1><div class="sub">O mar de hoje, pela lente de quem está lá. Litoral Sul de SP.</div></div>
+<div class="content"><div class="pad stack">
+  <div class="pills"><span class="pill active">${ic('star',15)} Favoritos</span><span class="pill">${ic('ripple',15)} Melhores agora</span><span class="pill">${ic('map-pin',15)} Todos</span></div>
+  ${spot('Praia do Sonho','Praia do Sonho · Itanhaém/SP','Clássico','1.1m','10s','terral','NO 9km/h','0.9m','enchendo')}
+  ${spot('Praia dos Pescadores','Itanhaém/SP','Boa','1.3m','9s','lateral','L 12km/h','1.1m','cheia')}
+  <p class="muted" style="text-align:center">Previsão via Open-Meteo · maré em modelo (trocar por DHN).</p>
+</div></div>${bottom('Radar')}`,
+
+"Pico":()=>`<div class="header"><h1>Praia do Sonho</h1><div class="sub">Praia do Sonho · Itanhaém/SP</div>
+  <span class="tag" style="margin-top:10px;background:rgba(255,255,255,.18);color:#fff">Clássico · maré enchendo</span></div>
+<div class="content"><div class="pad stack">
+  <div class="card p"><span class="eyebrow">Condição agora</span>${strip('1.1m','10s','terral','NO 9km/h','0.9m','enchendo')}
+    <p class="muted" style="margin-top:10px">Fonte: Open-Meteo (ao vivo).</p></div>
+  <div class="between" style="margin:2px"><h2 style="font-size:19px">Timeline do dia</h2><span class="muted">4 fotos</span></div>
+  <div class="card">
+    <div style="position:relative;aspect-ratio:4/3;background:var(--azul-abissal)">
+      <div class="photo" style="position:absolute;inset:0"></div>
+      <div style="position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between">
+        <span class="tag" style="background:rgba(12,42,67,.72);color:#fff">09:17 · Bia</span>
+        <span class="tag" style="background:rgba(255,255,255,.92);color:var(--azul)">● recente</span></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:28px 12px 12px;color:#fff;background:linear-gradient(to top,rgba(12,42,67,.88),transparent)">
+        <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+          <span class="tag ok">${ic('map-pin',13)} no local · agora</span><span class="tag mar">${ic('wave-sine',13)} 1.0m</span>
+          <span class="tag" style="background:rgba(255,255,255,.9);color:var(--azul-abissal)">${ic('wind',13)} terral</span></div>
+        <div style="font-size:14px;font-weight:600">Encheu e ficou consistente, séries certinhas.</div></div></div>
+    <div style="padding:12px 14px 16px">
+      <div class="between" style="margin-bottom:6px"><span class="eyebrow">Maré do dia · arraste para ler</span><span class="muted">2/4</span></div>
+      ${buildTide()}</div></div>
+  <div class="card p"><span class="eyebrow">Contexto do oceano</span>
+    <div class="row" style="margin-top:10px"><span class="tag alerta">${ic('alert-triangle',13)} identificado</span><span style="font-size:14px">Resíduos acumulados no canto sul</span></div></div>
+  <button class="btn full">${ic('camera',18)} Registrar agora neste pico</button>
+</div></div>${bottom('Radar')}`,
+
+"Mapa":()=>`<div class="mapbg">
+  <div style="position:absolute;top:14px;left:12px;right:12px">
+    <div class="card p" style="padding:12px"><div style="background:var(--cinza);border-radius:12px;padding:11px;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px">${ic('search',16)} Buscar praia, pico ou ameaça</div>
+    <div class="pills" style="margin-top:10px"><span class="pill active">Tudo</span><span class="pill">Picos</span><span class="pill">Ameaças</span><span class="pill">Mutirões</span></div></div></div>
+  <div class="marker" style="left:24%;top:34%;background:var(--azul)">${ic('ripple',18)}</div>
+  <div class="marker" style="left:58%;top:46%;background:var(--azul)">${ic('ripple',18)}</div>
+  <div class="marker" style="left:38%;top:62%;background:var(--perigo)">${ic('alert-triangle',16)}</div>
+  <div class="marker" style="left:68%;top:60%;background:var(--verde)">${ic('heart-handshake',16)}</div>
+  <div style="position:absolute;left:12px;right:12px;bottom:92px">
+    <div class="card p row"><div class="circle" style="background:var(--azul-claro)">${ic('ripple',26)}</div><div style="flex:1"><b>Praia do Sonho</b>
+      <div class="muted">Itanhaém/SP · radar ativo · 1 alerta</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" style="min-height:42px" onclick="go('Pico')">Abrir</button>
+      <button class="btn outline" style="min-height:42px" onclick="go('Capturar')">Registrar</button></div></div></div></div>
+  ${bottom('Mapa')}</div>`,
+
+"Capturar":()=>`<div style="position:absolute;inset:0;background:#04141d;color:#fff;display:flex;flex-direction:column;z-index:25">
+  <div class="between" style="padding:54px 16px 12px"><span onclick="go('Radar')" style="cursor:pointer;font-size:22px">${ic('x',22)}</span><b>Registrar</b><span style="width:22px"></span></div>
+  <div style="flex:1;position:relative;background:linear-gradient(165deg,#0C2A43,#04141d)">
+    <div class="photo" style="position:absolute;inset:0;opacity:.5"></div>
+    <div style="position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center">
+      <span class="tag" style="background:rgba(0,0,0,.5);color:#fff">${ic('map-pin',13)} Praia do Sonho · dentro do pico</span></div>
+    <div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;color:rgba(255,255,255,.85);font-size:13px">A foto primeiro · você classifica depois</div></div>
+  <div style="padding:22px 0 30px;display:flex;justify-content:center">
+    <button onclick="go('Pico')" style="width:76px;height:76px;border-radius:999px;border:5px solid rgba(255,255,255,.6);background:#fff;cursor:pointer"></button></div></div>`,
+
+"Ações":()=>`<div class="header"><h1>Ações</h1><div class="sub">Registrar, defender a costa, mobilizar e gerar dado.</div></div>
+<div class="content"><div class="pad stack">
+  <button class="btn acento full" style="min-height:56px;font-size:16px" onclick="go('Capturar')">${ic('camera',20)} Registrar agora — 2 toques</button>
+  <h2 style="font-size:18px;margin:8px 2px 2px;display:flex;align-items:center;gap:8px"><span style="color:var(--perigo)">${ic('alert-triangle',19)}</span> Ameaças costeiras</h2>
+  ${linha('alert-triangle','Resíduos no canto sul','Itanhaém/SP · identificado · localização aproximada','var(--perigo)')}
+  ${linha('alert-triangle','Água com alteração visual','Itanhaém/SP · em observação','var(--perigo)')}
+  <h2 style="font-size:18px;margin:8px 2px 2px;display:flex;align-items:center;gap:8px">${ic('heart-handshake',19)} Mutirões</h2>
+  ${linha('heart-handshake','Mutirão Praia dos Pescadores','Sábado · 8h–11h · 46 inscritos')}
+  ${linha('heart-handshake','Restinga Viva','Domingo · Peruíbe · 22 vagas')}
+  <h2 style="font-size:18px;margin:8px 2px 2px;display:flex;align-items:center;gap:8px">${ic('flask-2',19)} Limpeza · Ciência</h2>
+  ${linha('bolt','Modo rápido','Peso, tempo, participantes e fotos')}
+  ${linha('droplet','Qualidade visual da água','Cor, odor, espuma, turbidez, esgoto')}
+  ${linha('fish','Fauna observada','Ocorrências especiais e fauna impactada')}
+</div></div>${bottom('Ações')}`,
+
+"Perfil":()=>`<div class="header"><h1>Seu perfil</h1><div class="sub">Reputação e histórico na comunidade.</div></div>
+<div class="content"><div class="pad stack">
+  <div class="card p row"><div style="width:64px;height:64px;border-radius:22px;background:var(--azul-medio)"></div>
+    <div><b style="font-size:18px">João Malavolta</b><div class="muted">Nível: Sentinela do litoral</div>
+    <span class="tag ok" style="margin-top:6px">${ic('rosette-discount-check',13)} conta validada por telefone</span></div></div>
+  <div class="grid3"><div class="card p" style="text-align:center"><div class="muted" style="font-size:12px">Picos</div><div style="font-size:20px;font-weight:700">18</div></div>
+    <div class="card p" style="text-align:center"><div class="muted" style="font-size:12px">Mutirões</div><div style="font-size:20px;font-weight:700">29</div></div>
+    <div class="card p" style="text-align:center"><div class="muted" style="font-size:12px">Precisão</div><div style="font-size:20px;font-weight:700">91%</div></div></div>
+  <div class="card p"><span class="eyebrow">Privacidade & LGPD</span>
+    <div class="stack" style="margin-top:10px">
+      <label class="between">Borrar rostos nas minhas fotos <input type="checkbox" checked></label>
+      <label class="between">Esconder localização exata em denúncias <input type="checkbox" checked></label>
+      <label class="between">Aparecer como anônimo em ameaças <input type="checkbox"></label></div></div>
+  <div class="card p"><span class="eyebrow">Entrar · login leve por telefone</span>
+    <div class="stack" style="margin-top:10px"><input class="input" placeholder="+55 13 99999-9999"><button class="btn full">Enviar código</button></div></div>
+  <div class="card p"><span class="eyebrow">Conta</span><div class="stack" style="margin-top:10px">
+    <div class="row">${ic('settings',20)} Preferências do app</div>
+    <div class="row">${ic('award',20)} Conquistas e reputação</div>
+    <div class="row">${ic('download',20)} Exportar meus dados (GeoJSON)</div></div></div>
+</div></div>${bottom('Perfil')}`
+};
+
+function bottom(active){
+  const items=[['Radar','ripple'],['Mapa','map-2'],['__fab__',''],['Ações','heart-handshake'],['Perfil','user']];
+  return `<div class="bottom">`+items.map(it=>{
+    if(it[0]==='__fab__')return `<div class="fab"><button onclick="go('Capturar')">${ic('camera',26)}</button></div>`;
+    return `<a class="${it[0]===active?'active':''}" onclick="go('${it[0]}')"><span class="ic">${ic(it[1],22)}</span>${it[0]}</a>`;
+  }).join('')+`</div>`;
+}
+
+const nav=document.getElementById('nav'),app=document.getElementById('app');let current='Radar';
+function render(){
+  nav.innerHTML=Object.keys(screens).map(n=>`<button class="${n===current?'active':''}" onclick="go('${n}')">${n}</button>`).join('');
+  app.innerHTML=screens[current]();
+}
+function go(n){current=n;render();app.scrollTop=0}
+render();
+</script>
+</body>
+</html>

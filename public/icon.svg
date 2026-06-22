@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ecosurf">
+  <rect width="512" height="512" rx="116" fill="#0C2A43"/>
+  <circle cx="360" cy="150" r="30" fill="#2C7A6B"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M64 232 q 48 -46 96 0 t 96 0 t 96 0 t 96 0" stroke="#3F8DC7" stroke-width="26"/>
+    <path d="M64 312 q 48 -46 96 0 t 96 0 t 96 0 t 96 0" stroke="#FFFFFF" stroke-width="28"/>
+    <path d="M64 392 q 48 -46 96 0 t 96 0 t 96 0 t 96 0" stroke="#CFE2F1" stroke-width="22" opacity="0.85"/>
+  </g>
+</svg>
