@@ -1,12 +1,10 @@
 import { useState } from 'react'
 
 /**
- * Logo do Ecosurf no header (sobre o gradiente escuro — logo branca brilha).
- * Coloque o arquivo em `public/logo.svg` (ou `public/logo.png`). Enquanto não
- * existir, cai no wordmark em texto.
+ * Logo do Ecosurf no header (wordmark branco sobre o gradiente escuro).
+ * Arquivo: public/logo_ecosurf.png. Cai no wordmark em texto se faltar.
  */
-export function Brand({ height = 30 }: { height?: number }) {
-  const [src, setSrc] = useState('/logo.svg')
+export function Brand({ height = 34 }: { height?: number }) {
   const [erro, setErro] = useState(false)
 
   if (erro) {
@@ -27,10 +25,10 @@ export function Brand({ height = 30 }: { height?: number }) {
 
   return (
     <img
-      src={src}
+      src="/logo_ecosurf.png"
       alt="Ecosurf"
-      style={{ height, width: 'auto', display: 'block', maxWidth: '78%' }}
-      onError={() => (src.endsWith('.svg') ? setSrc('/logo.png') : setErro(true))}
+      style={{ height, width: 'auto', display: 'block', maxWidth: '80%' }}
+      onError={() => setErro(true)}
     />
   )
 }
