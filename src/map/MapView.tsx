@@ -5,32 +5,35 @@ import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
 import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
-const SVG = (paths: string) =>
-  '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" ' +
-  'fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-  paths +
-  '</svg>'
+const TEARDROP_SVG = (color: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 24 26">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+    <g transform="translate(6, 3.5) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      ${paths}
+    </g>
+  </svg>`
 
-/** Glyphs brancos (sobre o disco colorido). Picos, ameaças e mutirões. */
+/** Teardrops coloridos. Picos (azul), ameaças (laranja) e mutirões (verde). */
 const ICONES: Record<string, string> = {
-  'ic-pico': SVG(
+  'ic-pico': TEARDROP_SVG(
+    '#0E81A0',
     '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>' +
-      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>',
+      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>'
   ),
-  'ic-ameaca': SVG(
+  'ic-ameaca': TEARDROP_SVG(
+    '#FF6B4A',
     '<path d="M12 9v4"/>' +
       '<path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>' +
-      '<path d="M12 16h.01"/>',
+      '<path d="M12 16h.01"/>'
   ),
-  'ic-mutirao': SVG(
+  'ic-mutirao': TEARDROP_SVG(
+    '#34D399',
     '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>' +
       '<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>' +
       '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>' +
-      '<path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/>',
+      '<path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/>'
   ),
 }
-
-const COR_POR_TIPO = ['match', ['get', 'tipo'], 'ameaca', '#FF8C76', 'mutirao', '#5FE3AE', '#1FE3C8']
 
 const SRC = 'feicoes'
 
@@ -122,7 +125,7 @@ function fonteRotulo(map: maplibregl.Map): string[] {
 
 function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<void> {
   return new Promise((resolve) => {
-    const img = new Image(34, 34)
+    const img = new Image()
     img.onload = () => {
       if (!map.hasImage(nome)) map.addImage(nome, img, { pixelRatio: 2 })
       resolve()
@@ -225,18 +228,6 @@ export function MapView({
         paint: { 'text-color': '#fff' },
       })
       map.addLayer({
-        id: 'pontos',
-        type: 'circle',
-        source: SRC,
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': COR_POR_TIPO as maplibregl.ExpressionSpecification,
-          'circle-radius': 15,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#fff',
-        },
-      })
-      map.addLayer({
         id: 'pontos-icone',
         type: 'symbol',
         source: SRC,
@@ -254,6 +245,7 @@ export function MapView({
           'icon-size': 1,
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
+          'icon-anchor': 'bottom',
         },
       })
 
@@ -269,7 +261,7 @@ export function MapView({
       })
 
       // clique no ponto: pico seleciona (ou navega); ameaça/mutirão abre popup
-      map.on('click', 'pontos', (e) => {
+      map.on('click', 'pontos-icone', (e) => {
         const f = e.features?.[0]
         if (!f) return
         const p = f.properties as Record<string, unknown>
@@ -289,7 +281,7 @@ export function MapView({
           .addTo(map)
       })
 
-      for (const camada of ['clusters', 'pontos']) {
+      for (const camada of ['clusters', 'pontos-icone']) {
         map.on('mouseenter', camada, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', camada, () => (map.getCanvas().style.cursor = ''))
       }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { AccountMenu } from '../components/AccountMenu'
-import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/picos'
+import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
@@ -11,6 +11,7 @@ type Filtro = 'tudo' | 'picos' | 'ameacas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
+  const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
@@ -23,6 +24,7 @@ export function MapaPage() {
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAmeacas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
+    carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
     return () => {
       vivo = false
     }
@@ -36,7 +38,7 @@ export function MapaPage() {
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
       <MapView
-        picos={verPicos ? picos : []}
+        picos={verPicos ? picos.filter((p) => ativos.has(p.id)) : []}
         ameacas={verAmeacas ? ameacas : []}
         mutiroes={verMutiroes ? mutiroes : []}
         onSelectPico={setSel}

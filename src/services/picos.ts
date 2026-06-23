@@ -56,3 +56,14 @@ export async function carregarMutiroes(): Promise<Mutirao[]> {
 export function listarRegioes(): RegiaoSurf[] {
   return regioesSeed
 }
+
+export async function carregarPicosComRelato(): Promise<string[]> {
+  if (temBackend()) {
+    try {
+      const { restPicosComRelatoHoje } = await import('./supabase/rest')
+      return await restPicosComRelatoHoje()
+    } catch {}
+  }
+  return [] // Offline fallback
+}
+

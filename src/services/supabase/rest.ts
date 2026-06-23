@@ -191,3 +191,16 @@ export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
   )
 }
 
+export async function restPicosComRelatoHoje(): Promise<string[]> {
+  const inicio = new Date()
+  inicio.setHours(0, 0, 0, 0)
+  try {
+    const rows = await rest<{ pico_id: string }[]>(
+      `fotos_publicas?select=pico_id&capturada_em=gte.${encodeURIComponent(inicio.toISOString())}`
+    )
+    return Array.from(new Set(rows.map(r => r.pico_id)))
+  } catch {
+    return []
+  }
+}
+
