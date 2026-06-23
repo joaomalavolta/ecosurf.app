@@ -137,7 +137,7 @@ input, select, textarea { accent-color: var(--turq); }
   pointer-events: none;
 }
 
-/* header — gradiente oceânico nos dois temas */
+/* header — base */
 .header {
   position: sticky;
   top: 0;
@@ -145,7 +145,7 @@ input, select, textarea { accent-color: var(--turq); }
   background: var(--grad-ocean);
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
-  text-shadow: 0 1px 2px rgba(6, 43, 69, 0.22);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .header::after {
   content: ""; position: absolute; right: -36px; top: -54px;
@@ -156,6 +156,27 @@ input, select, textarea { accent-color: var(--turq); }
 }
 .header h1 { font-size: 25px; line-height: 1.06; }
 .header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
+
+/* header-wave — foto de onda como fundo (PicoPage, etc.) */
+.header-wave {
+  position: relative;
+  background: url('/wave-header.png') center/cover no-repeat;
+  overflow: hidden;
+}
+.header-wave::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 43, 69, 0.75) 0%,
+    rgba(6, 43, 69, 0.55) 60%,
+    rgba(6, 43, 69, 0.7) 100%
+  );
+  z-index: 0;
+}
+.header-wave::after { display: none; }
+.header-wave > * { position: relative; z-index: 1; }
 
 /* ─── Map-First Radar Layout ─── */
 .radar-map-first {

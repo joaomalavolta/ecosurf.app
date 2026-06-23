@@ -20,7 +20,10 @@ export function Header({
   const showBack = !brand && pathname !== '/'
 
   return (
-    <header className="header" style={brand ? { textAlign: 'center' } : undefined}>
+    <header
+      className={`header ${!brand ? 'header-wave' : ''}`}
+      style={brand ? { textAlign: 'center' } : undefined}
+    >
       {/* Menu de conta — sempre presente no topo direito */}
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 14, zIndex: 2 }}>
         <AccountMenu />
@@ -56,9 +59,9 @@ export function Header({
           <Brand height={34} />
         </div>
       ) : (
-        <h1>{title}</h1>
+        <h1 style={showBack ? { paddingLeft: 44 } : undefined}>{title}</h1>
       )}
-      {sub && <div className="sub">{sub}</div>}
+      {sub && <div className="sub" style={showBack ? { paddingLeft: 44 } : undefined}>{sub}</div>}
       {children}
     </header>
   )
