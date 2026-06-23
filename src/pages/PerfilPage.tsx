@@ -91,7 +91,7 @@ export function PerfilPage() {
               <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)' }} />
               <div>
                 <b style={{ fontSize: 18 }}>{perfil.nome || 'Usuário Ecosurf'}</b>
-                <div className="muted">Nível: {perfil.nivel || '1 - Gota d\\'Água'}</div>
+                <div className="muted">Nível: {perfil.nivel || "1 - Gota d'Água"}</div>
                 {perfil.telefoneValidado && (
                   <span className="tag ok" style={{ marginTop: 6 }}>
                     <IconRosetteDiscountCheck size={13} stroke={2.2} /> conta validada por telefone
