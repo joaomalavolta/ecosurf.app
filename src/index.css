@@ -182,7 +182,6 @@ input, select, textarea { accent-color: var(--turq); }
   padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 14px;
   background: url('/wave-header.png') center/cover no-repeat, var(--azul-abissal);
   color: #fff;
-  overflow: hidden;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .radar-toolbar::before {

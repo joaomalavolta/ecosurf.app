@@ -189,7 +189,7 @@ export function MapView({
     if (!ref.current || mapRef.current) return
     let descartado = false
 
-    // Estilo satélite híbrido: raster ESRI + labels vetoriais CARTO
+    // Estilo satélite puro (sem labels de terceiros)
     const estiloSatelite: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
@@ -202,16 +202,6 @@ export function MapView({
           maxzoom: 19,
           attribution: '&copy; Esri, Maxar, Earthstar'
         },
-        'carto-labels': {
-          type: 'raster',
-          tiles: [
-            'https://a.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}@2x.png',
-            'https://b.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}@2x.png',
-          ],
-          tileSize: 256,
-          maxzoom: 19,
-          attribution: '&copy; CARTO, &copy; OpenStreetMap'
-        }
       },
       layers: [
         {
@@ -221,13 +211,6 @@ export function MapView({
           minzoom: 0,
           maxzoom: 19,
         },
-        {
-          id: 'labels',
-          type: 'raster',
-          source: 'carto-labels',
-          minzoom: 0,
-          maxzoom: 19,
-        }
       ],
       glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
     }
@@ -322,6 +305,27 @@ export function MapView({
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
           'icon-anchor': 'center',
+        },
+      })
+
+      // Labels dos picos — nome do local abaixo do pin
+      map.addLayer({
+        id: 'pico-labels',
+        type: 'symbol',
+        source: SRC,
+        filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'tipo'], 'pico']],
+        layout: {
+          'text-field': ['get', 'titulo'],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 12,
+          'text-offset': [0, 2],
+          'text-anchor': 'top',
+          'text-max-width': 10,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(6, 43, 69, 0.85)',
+          'text-halo-width': 1.5,
         },
       })
 
