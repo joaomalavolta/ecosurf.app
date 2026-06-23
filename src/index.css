@@ -158,25 +158,25 @@ input, select, textarea { accent-color: var(--turq); }
 .header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
 
 /* header-wave — foto de onda como fundo (PicoPage, etc.) */
-.header-wave {
+.header.header-wave {
   position: relative;
   background: url('/wave-header.png') center/cover no-repeat;
   overflow: hidden;
 }
-.header-wave::before {
+.header.header-wave::before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(6, 43, 69, 0.75) 0%,
-    rgba(6, 43, 69, 0.55) 60%,
-    rgba(6, 43, 69, 0.7) 100%
+    rgba(6, 43, 69, 0.78) 0%,
+    rgba(6, 43, 69, 0.5) 50%,
+    rgba(6, 43, 69, 0.72) 100%
   );
   z-index: 0;
 }
-.header-wave::after { display: none; }
-.header-wave > * { position: relative; z-index: 1; }
+.header.header-wave::after { display: none; }
+.header.header-wave > * { position: relative; z-index: 1; }
 
 /* ─── Map-First Radar Layout ─── */
 .radar-map-first {
