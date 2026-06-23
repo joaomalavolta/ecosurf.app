@@ -180,10 +180,20 @@ input, select, textarea { accent-color: var(--turq); }
   align-items: center;
   justify-content: space-between;
   padding: calc(env(safe-area-inset-top, 0px) + 8px) 14px 8px;
-  background: var(--azul-abissal);
+  background: url('/wave-header.png') center/cover no-repeat, var(--azul-abissal);
   color: #fff;
   min-height: 48px;
+  overflow: hidden;
 }
+.radar-toolbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 43, 69, 0.72);
+  z-index: 0;
+  pointer-events: none;
+}
+.radar-toolbar > * { position: relative; z-index: 1; }
 
 .radar-map-container {
   position: relative;
