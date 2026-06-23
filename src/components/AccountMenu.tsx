@@ -226,7 +226,21 @@ export function AccountMenu() {
               </div>
             </div>
           ) : (
-            <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--line)' }}>
+            <button
+              onClick={() => ir('/perfil')}
+              style={{
+                width: '100%',
+                padding: '16px 16px 12px',
+                borderBottom: '1px solid var(--line)',
+                background: 'none',
+                border: 'none',
+                borderBottom: '1px solid var(--line)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontFamily: 'inherit',
+                display: 'block'
+              }}
+            >
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div
                   style={{
@@ -244,11 +258,11 @@ export function AccountMenu() {
                   <IconUserCircle size={24} stroke={1.5} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>Visitante</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>Entre para contribuir</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Visitante</div>
+                  <div style={{ fontSize: 12, color: 'var(--primary)', marginTop: 2, fontWeight: 600 }}>Entre para contribuir</div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
 
           {/* Itens */}

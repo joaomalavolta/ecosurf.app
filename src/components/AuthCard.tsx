@@ -22,7 +22,8 @@ export function AuthCard() {
       const auth = await import('../services/supabase/auth')
       if (metodo === 'email') {
         await auth.entrarComEmail(valor.trim())
-        setMsg('Link de acesso enviado — confira seu e-mail.')
+        setFase('codigo')
+        setMsg('Enviamos um link e um código numérico para seu e-mail.')
       } else {
         await auth.entrarComTelefone(valor.trim())
         setFase('codigo')
