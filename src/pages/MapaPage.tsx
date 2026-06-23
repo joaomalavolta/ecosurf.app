@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { IconSearch, IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
+import { AccountMenu } from '../components/AccountMenu'
 import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/picos'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 import type { Ameaca, Mutirao, Pico } from '../types/domain'
@@ -41,8 +42,8 @@ export function MapaPage() {
         onSelectPico={setSel}
       />
 
-      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12 }}>
-        <div className="card pad" style={{ padding: 12 }}>
+      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        <div className="card pad" style={{ padding: 12, flex: 1, minWidth: 0 }}>
           <div style={{ background: 'var(--cinza)', borderRadius: 12, padding: 11, color: 'var(--muted)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
             <IconSearch size={16} stroke={2} /> Buscar praia, pico ou ameaça
           </div>
@@ -53,6 +54,7 @@ export function MapaPage() {
             <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
           </div>
         </div>
+        <AccountMenu />
       </div>
 
       <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
