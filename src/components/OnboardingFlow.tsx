@@ -82,7 +82,7 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
 
   return (
     <div className="onboarding-shell">
-      <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 210, margin: '64px auto 32px', display: 'block' }} />
+      <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 280, margin: '15vh auto 32px', display: 'block' }} />
       {etapa === 'boas-vindas' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }} />
@@ -91,7 +91,7 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
               Aqui o mar é observado por quem vive sintonizado com ele. Para contribuir e registrar a condição dos picos e proteger os ecossistemas de surf, você faz cadastro rápido. Junte-se a nós e faça a diferença!
             </p>
             <div className="stack" style={{ marginTop: 32 }}>
-              <button className="btn acento full" style={{ minHeight: 48, fontSize: 15 }} onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
+              <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
               <button onClick={onExplorar} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.9)', fontSize: 14, cursor: 'pointer', padding: 12, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
                 Explorar primeiro
               </button>
@@ -105,11 +105,11 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
           <IconMail size={36} stroke={1.8} />
           <h2 style={{ marginTop: 12 }}>Seu e-mail</h2>
           <p style={{ color: 'rgba(255,255,255,.8)', marginTop: 8, lineHeight: 1.5 }}>
-            Enviamos um código de acesso. Sem senha.
+            Enviaremos um código de acesso.
           </p>
           <div className="stack" style={{ marginTop: 16 }}>
             <input className="input" type="email" inputMode="email" placeholder="voce@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <button className="btn acento full" disabled={!email.includes('@') || carregando} onClick={() => acao(() => enviarCodigo(email), () => { setMsg('Código enviado — confira o e-mail.'); setEtapa('codigo') })}>
+            <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} disabled={!email.includes('@') || carregando} onClick={() => acao(() => enviarCodigo(email), () => { setMsg('Código enviado — confira o e-mail.'); setEtapa('codigo') })}>
               {carregando ? 'Enviando…' : 'Enviar código'}
             </button>
             {msg && <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 13 }}>{msg}</p>}
@@ -123,8 +123,8 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
           <h2 style={{ marginTop: 12 }}>Código do e-mail</h2>
           <p style={{ color: 'rgba(255,255,255,.8)', marginTop: 8 }}>Enviado para {email}.</p>
           <div className="stack" style={{ marginTop: 16 }}>
-            <input className="input" inputMode="numeric" placeholder="000000" value={codigo} onChange={(e) => setCodigo(e.target.value)} style={{ letterSpacing: 4, fontWeight: 700 }} />
-            <button className="btn acento full" disabled={codigo.trim().length < 6 || carregando} onClick={() => acao(() => confirmarCodigo(email, codigo), () => setEtapa('perfil'))}>
+            <input className="input" type="text" inputMode="numeric" placeholder="0 0 0 0 0 0" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+            <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} disabled={codigo.length < 6 || carregando} onClick={() => acao(() => confirmarCodigo(email, codigo), () => setEtapa('perfil'))}>
               {carregando ? 'Confirmando…' : 'Confirmar'}
             </button>
             <button onClick={() => acao(() => enviarCodigo(email), () => setMsg('Reenviado.'))} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.8)', fontSize: 13, cursor: 'pointer' }}>
