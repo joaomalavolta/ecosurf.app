@@ -21,18 +21,7 @@ async function resizeAvatar(file: File): Promise<Blob> {
   return await new Promise<Blob>((res) => c.toBlob((b) => res(b as Blob), 'image/webp', 0.85))
 }
 
-const SHELL: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 300,
-  maxWidth: 'var(--largura-app)',
-  margin: '0 auto',
-  color: '#fff',
-  display: 'flex',
-  flexDirection: 'column',
-  padding: 'calc(env(safe-area-inset-top,0px) + 40px) 22px calc(env(safe-area-inset-bottom,0px) + 24px)',
-  overflowY: 'auto',
-}
+
 
 export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => void; onExplorar: () => void }) {
   const [etapa, setEtapa] = useState<Etapa>('boas-vindas')
@@ -91,10 +80,8 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
   const cpfOk = cpfValido(cpf)
   const perfilOk = nome.trim().length > 1 && cpfOk && cidade.trim().length > 1
 
-  const bgStyle = { background: 'linear-gradient(to bottom, rgba(4,20,29,0.1) 0%, rgba(4,20,29,0.7) 40%, rgba(4,20,29,1) 100%), url(/bg_onda.png) center/cover no-repeat' }
-
   return (
-    <div style={{ ...SHELL, ...bgStyle }}>
+    <div className="onboarding-shell">
       <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 210, margin: '64px auto 32px', display: 'block' }} />
       {etapa === 'boas-vindas' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
