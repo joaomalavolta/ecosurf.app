@@ -54,6 +54,10 @@ export function PerfilPage() {
           <Stat k="Precisão" v="—" />
         </div>
 
+        <AuthCard />
+
+        <NomeCard />
+
         <div className="card pad">
           <span className="eyebrow">Aparência</span>
           <div style={{ marginTop: 10 }}><ThemeToggle /></div>
@@ -67,10 +71,6 @@ export function PerfilPage() {
             <label className="between">Aparecer como anônimo em ameaças <input type="checkbox" /></label>
           </div>
         </div>
-
-        <AuthCard />
-
-        <NomeCard />
 
         <div className="card pad">
           <span className="eyebrow">Conta</span>

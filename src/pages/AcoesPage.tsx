@@ -35,14 +35,17 @@ function Linha({
   to?: string
 }) {
   const inner = (
-    <div className="card pad row">
+    <div className="card pad row" style={!to ? { opacity: 0.7, cursor: 'default' } : undefined}>
       <div
         style={{ width: 50, height: 50, borderRadius: 16, background: 'var(--cinza)', color: cor, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
       >
         <Icon size={24} stroke={2} />
       </div>
-      <div>
-        <b>{titulo}</b>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <b>{titulo}</b>
+          {!to && <span className="tag cinza" style={{ fontSize: 10, padding: '2px 6px' }}>Em breve</span>}
+        </div>
         <div className="muted">{texto}</div>
       </div>
     </div>

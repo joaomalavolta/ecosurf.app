@@ -49,8 +49,8 @@ export function CapturePage() {
       streamRef.current = stream
       setEtapa('camera')
     } catch {
-      // sem câmera (ex.: desktop/preview) → segue o fluxo com placeholder
-      setErro('Câmera indisponível neste dispositivo — seguindo em modo demonstração.')
+      window.alert('Não foi possível acessar a câmera. Verifique as permissões do seu navegador.')
+      setErro('Câmera indisponível neste dispositivo ou permissão negada.')
       setEtapa('camera')
     }
   }
@@ -131,8 +131,10 @@ export function CapturePage() {
           <div style={{ flex: 1, position: 'relative', background: '#000' }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {erro && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, color: 'rgba(255,255,255,.8)', background: 'linear-gradient(160deg,#0b3a53,#04141d)' }}>
-                {erro}
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, color: 'rgba(255,255,255,.8)', background: 'linear-gradient(160deg,#0b3a53,#04141d)', zIndex: 10 }}>
+                <IconAlertTriangle size={48} stroke={1.5} style={{ marginBottom: 16, color: 'var(--perigo)' }} />
+                <p>{erro}</p>
+                <button onClick={() => setEtapa('inicio')} className="btn outline" style={{ marginTop: 24, borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>Tentar novamente</button>
               </div>
             )}
             <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
