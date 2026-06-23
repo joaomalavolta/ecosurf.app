@@ -105,15 +105,15 @@ export interface EventoVento {
   rotulo: string;
 }
 
-/** Pressão socioambiental sobre a costa. */
-export type CategoriaAmeaca = 'poluicao' | 'agua' | 'erosao' | 'privatizacao' | 'obra' | 'outro';
-export type StatusAmeaca = 'identificado' | 'em-observacao' | 'recorrente' | 'resolvido';
+/** Alerta socioambiental sobre a costa. */
+export type CategoriaAlerta = 'esgoto' | 'lixo' | 'erosao' | 'privatizacao' | 'obra' | 'poluicao' | 'outro';
+export type StatusAlerta = 'identificado' | 'em-observacao' | 'recorrente' | 'resolvido';
 
-export interface Ameaca {
+export interface Alerta {
   id: string;
   titulo: string;
-  categoria: CategoriaAmeaca;
-  status: StatusAmeaca;
+  categoria: CategoriaAlerta;
+  status: StatusAlerta;
   picoId?: string;
   municipio: string;
   uf: UF;
@@ -124,6 +124,13 @@ export interface Ameaca {
   lng?: number;
   descricao?: string;
 }
+
+/** @deprecated Use Alerta */
+export type Ameaca = Alerta;
+/** @deprecated Use CategoriaAlerta */
+export type CategoriaAmeaca = CategoriaAlerta;
+/** @deprecated Use StatusAlerta */
+export type StatusAmeaca = StatusAlerta;
 
 /** Mobilização da comunidade (limpeza, restinga, mutirão de praia). */
 export type StatusMutirao = 'agendado' | 'realizado' | 'cancelado';

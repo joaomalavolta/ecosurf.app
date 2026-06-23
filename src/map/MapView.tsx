@@ -3,47 +3,49 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
-import type { Ameaca, Mutirao, Pico } from '../types/domain'
+import type { Alerta, Mutirao, Pico } from '../types/domain'
 
-const TEARDROP_SVG = (color: string, colorDark: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="52" viewBox="-4 -2 32 34">
+/* ─── Pins circulares flat (estilo Zurrb) ─── */
+const CIRCLE_PIN = (bg: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
     <defs>
-      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#04181F" flood-opacity="0.35"/>
+      <filter id="sh" x="-20%" y="-10%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.4"/>
       </filter>
-      <linearGradient id="g-${color.replace('#','')}" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="${color}"/>
-        <stop offset="100%" stop-color="${colorDark}"/>
-      </linearGradient>
     </defs>
-    <path filter="url(#shadow)" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#g-${color.replace('#','')})" stroke="#fff" stroke-width="1.8"/>
-    <g transform="translate(6, 3.5) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="22" cy="22" r="18" fill="${bg}" stroke="#fff" stroke-width="2.5" filter="url(#sh)"/>
+    <g transform="translate(10, 10) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
       ${paths}
     </g>
   </svg>`
 
-/** Teardrops coloridos. Picos (azul), ameaças (laranja) e mutirões (verde). */
+/** Ícones por categoria — círculos coloridos com ícones brancos */
 const ICONES: Record<string, string> = {
-  'ic-pico': TEARDROP_SVG(
-    '#1ECBC3',
+  // Pico — azul, onda
+  'ic-pico': CIRCLE_PIN(
     '#0D6EA8',
-    '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>' +
-      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>'
+    '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>' +
+      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>'
   ),
-  'ic-ameaca': TEARDROP_SVG(
-    '#FF8C76',
-    '#E86F61',
-    '<path d="M12 9v4"/>' +
-      '<path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>' +
-      '<path d="M12 16h.01"/>'
-  ),
-  'ic-mutirao': TEARDROP_SVG(
-    '#5FE3AE',
-    '#1C8A63',
+  // Mutirão — laranja, pessoas
+  'ic-mutirao': CIRCLE_PIN(
+    '#FF8C42',
     '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>' +
-      '<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>' +
+      '<path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>' +
       '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>' +
-      '<path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/>'
+      '<path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'
+  ),
+  // Esgoto — cinza, droplet
+  'ic-esgoto': CIRCLE_PIN(
+    '#7B8794',
+    '<path d="M12 3c-3.2 4.5-6 7.5-6 10.5a6 6 0 0 0 12 0c0-3-2.8-6-6-10.5z"/>'
+  ),
+  // Lixo — vermelho, garrafa
+  'ic-lixo': CIRCLE_PIN(
+    '#E84855',
+    '<path d="M10 5h4"/><path d="M10 5v-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/>' +
+      '<rect x="8" y="5" width="8" height="14" rx="1.5"/>' +
+      '<path d="M11 8v6"/><path d="M13 8v6"/>'
   ),
 }
 
@@ -51,11 +53,11 @@ const SRC = 'feicoes'
 
 interface Dados {
   picos: Pico[]
-  ameacas: Ameaca[]
+  alertas: Alerta[]
   mutiroes: Mutirao[]
 }
 
-function colecao({ picos, ameacas, mutiroes }: Dados): FeatureCollection<Point> {
+function colecao({ picos, alertas, mutiroes }: Dados): FeatureCollection<Point> {
   const features: FeatureCollection<Point>['features'] = []
   for (const p of picos) {
     features.push({
@@ -64,13 +66,15 @@ function colecao({ picos, ameacas, mutiroes }: Dados): FeatureCollection<Point> 
       properties: { tipo: 'pico', id: p.id, titulo: p.nome },
     })
   }
-  for (const a of ameacas) {
+  for (const a of alertas) {
     if (a.lat == null || a.lng == null) continue
+    // Subcategorizar alertas: esgoto e lixo têm pins diferentes
+    const sub = (a.categoria === 'esgoto' || a.categoria === 'lixo') ? a.categoria : 'esgoto'
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
       properties: {
-        tipo: 'ameaca',
+        tipo: sub,
         id: a.id,
         titulo: a.titulo,
         status: a.status,
@@ -103,11 +107,11 @@ function colecao({ picos, ameacas, mutiroes }: Dados): FeatureCollection<Point> 
 const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string)
 
-/** Conteúdo do popup para ameaça/mutirão (pico navega; não abre popup). */
+/** Conteúdo do popup para alerta/mutirão (pico navega; não abre popup). */
 function popupHtml(p: Record<string, unknown>): string {
   const local = `${esc(p.municipio)}/${esc(p.uf)}`
   let meta = ''
-  if (p.tipo === 'ameaca') {
+  if (p.tipo === 'esgoto' || p.tipo === 'lixo') {
     meta = `${esc(p.status)} · ${local} · local ${esc(p.precisao)}`
   } else {
     const quando = p.horario ? esc(p.horario) : ''
@@ -148,24 +152,22 @@ function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<
 }
 
 /**
- * Mapa = território. Picos (azul), ameaças (índigo) e mutirões (verde) numa
- * fonte GeoJSON com CLUSTERIZAÇÃO nativa do MapLibre: aglomera de longe,
- * abre em pins ao aproximar. Estilo CARTO (positron/dark-matter, sem chave).
- * Ameaça entra com coordenada GROSSEIRA — protege denunciante.
- *
- * Tocar num pico: se `onSelectPico` for passado, seleciona-o (o card embaixo
- * reflete) e aproxima; senão, navega para a página do pico.
+ * Mapa satélite híbrido (ESRI World Imagery + labels CARTO).
+ * Pins circulares coloridos por categoria:
+ *   Pico (azul), Mutirão (laranja), Esgoto (cinza), Lixo (vermelho).
+ * Clusterização nativa do MapLibre.
+ * Tocar num pico: seleciona (onSelectPico) ou navega para a página.
  */
 export function MapView({
   picos,
-  ameacas = [],
+  alertas = [],
   mutiroes = [],
   onSelectPico,
   className,
   style,
 }: {
   picos: Pico[]
-  ameacas?: Ameaca[]
+  alertas?: Alerta[]
   mutiroes?: Mutirao[]
   onSelectPico?: (p: Pico) => void
   className?: string
@@ -174,8 +176,8 @@ export function MapView({
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const prontoRef = useRef(false)
-  const dadosRef = useRef<Dados>({ picos, ameacas, mutiroes })
-  dadosRef.current = { picos, ameacas, mutiroes }
+  const dadosRef = useRef<Dados>({ picos, alertas, mutiroes })
+  dadosRef.current = { picos, alertas, mutiroes }
   const navigate = useNavigate()
   const navRef = useRef(navigate)
   navRef.current = navigate
@@ -186,14 +188,53 @@ export function MapView({
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     let descartado = false
-    // mapa claro (positron) no tema light; escuro (dark-matter) no dark
-    const escuro = document.documentElement.dataset.theme === 'dark'
-    const estilo = escuro
-      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-      : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+
+    // Estilo satélite híbrido: raster ESRI + labels vetoriais CARTO
+    const estiloSatelite: maplibregl.StyleSpecification = {
+      version: 8,
+      sources: {
+        'esri-satellite': {
+          type: 'raster',
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: '&copy; Esri, Maxar, Earthstar'
+        },
+        'carto-labels': {
+          type: 'raster',
+          tiles: [
+            'https://a.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}@2x.png',
+            'https://b.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}@2x.png',
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: '&copy; CARTO, &copy; OpenStreetMap'
+        }
+      },
+      layers: [
+        {
+          id: 'satellite',
+          type: 'raster',
+          source: 'esri-satellite',
+          minzoom: 0,
+          maxzoom: 19,
+        },
+        {
+          id: 'labels',
+          type: 'raster',
+          source: 'carto-labels',
+          minzoom: 0,
+          maxzoom: 19,
+        }
+      ],
+      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+    }
+
     const map = new maplibregl.Map({
       container: ref.current,
-      style: estilo,
+      style: estiloSatelite,
       center: [-46.79, -24.19],
       zoom: 10.5,
     })
@@ -223,16 +264,17 @@ export function MapView({
         clusterMaxZoom: 13,
       })
 
+      // Clusters — brancos com borda e número escuro (estilo Zurrb)
       map.addLayer({
         id: 'clusters-glow',
         type: 'circle',
         source: SRC,
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': ['step', ['get', 'point_count'], '#1ECBC3', 10, '#0D6EA8', 25, '#062B45'],
-          'circle-radius': ['step', ['get', 'point_count'], 34, 10, 42, 25, 50],
-          'circle-opacity': 0.35,
-          'circle-blur': 0.5,
+          'circle-color': '#ffffff',
+          'circle-radius': ['step', ['get', 'point_count'], 28, 10, 34, 25, 40],
+          'circle-opacity': 0.25,
+          'circle-blur': 0.4,
         },
       })
       map.addLayer({
@@ -241,10 +283,10 @@ export function MapView({
         source: SRC,
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': ['step', ['get', 'point_count'], '#1ECBC3', 10, '#0D6EA8', 25, '#062B45'],
-          'circle-radius': ['step', ['get', 'point_count'], 22, 10, 28, 25, 34],
-          'circle-stroke-width': 3,
-          'circle-stroke-color': '#fff',
+          'circle-color': '#ffffff',
+          'circle-radius': ['step', ['get', 'point_count'], 20, 10, 24, 25, 30],
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': 'rgba(13, 110, 168, 0.6)',
         },
       })
       map.addLayer({
@@ -254,12 +296,12 @@ export function MapView({
         filter: ['has', 'point_count'],
         layout: {
           'text-field': ['get', 'point_count_abbreviated'],
-          'text-font': fonteRotulo(map),
-          'text-size': ['step', ['get', 'point_count'], 15, 10, 18, 25, 22],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': ['step', ['get', 'point_count'], 14, 10, 16, 25, 20],
           'text-allow-overlap': true,
         },
         paint: {
-          'text-color': ['step', ['get', 'point_count'], '#062B45', 10, '#ffffff', 25, '#ffffff'],
+          'text-color': '#0D6EA8',
         },
       })
       map.addLayer({
@@ -271,16 +313,15 @@ export function MapView({
           'icon-image': [
             'match',
             ['get', 'tipo'],
-            'ameaca',
-            'ic-ameaca',
-            'mutirao',
-            'ic-mutirao',
-            'ic-pico',
+            'esgoto', 'ic-esgoto',
+            'lixo', 'ic-lixo',
+            'mutirao', 'ic-mutirao',
+            'ic-pico', // default: pico
           ],
           'icon-size': 1,
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
-          'icon-anchor': 'bottom',
+          'icon-anchor': 'center',
         },
       })
 
@@ -295,7 +336,7 @@ export function MapView({
         })
       })
 
-      // clique no ponto: pico seleciona (ou navega); ameaça/mutirão abre popup
+      // clique no ponto: pico seleciona (ou navega); alerta/mutirão abre popup
       map.on('click', 'pontos-icone', (e) => {
         const f = e.features?.[0]
         if (!f) return
@@ -338,8 +379,8 @@ export function MapView({
     const map = mapRef.current
     if (!map || !prontoRef.current) return
     const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
-    if (src) src.setData(colecao({ picos, ameacas, mutiroes }))
-  }, [picos, ameacas, mutiroes])
+    if (src) src.setData(colecao({ picos, alertas, mutiroes }))
+  }, [picos, alertas, mutiroes])
 
-  return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: 'var(--map-bg)', ...style }} />
+  return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: '#0a1929', ...style }} />
 }

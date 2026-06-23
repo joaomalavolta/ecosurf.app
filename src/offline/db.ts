@@ -8,7 +8,7 @@ export interface UploadPendente {
   id: string
   picoId: string
   capturadaEm: string
-  tipo?: 'report' | 'ameaca' | 'lixo' | 'ciencia'
+  tipo?: 'report' | 'alerta' | 'lixo'
   observacao?: string
   blob?: Blob
   capturaLat?: number

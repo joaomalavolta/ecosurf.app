@@ -10,7 +10,7 @@ import { buscarForecast } from '../services/forecast'
 import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
-import type { Ameaca, FeedDia, Forecast, Foto, Pico, PontoMare } from '../types/domain'
+import type { Alerta, FeedDia, Forecast, Foto, Pico, PontoMare } from '../types/domain'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
@@ -18,7 +18,7 @@ export function PicoPage() {
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
   const [curvasMultiDia, setCurvasMultiDia] = useState<Record<string, PontoMare[]>>({})
-  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [alertas, setAlertas] = useState<Alerta[]>([])
   const [feed, setFeed] = useState<FeedDia | null>(null)
   const [fotosOtimistas, setFotosOtimistas] = useState<Foto[]>([])
 
@@ -28,7 +28,7 @@ export function PicoPage() {
       const p = await carregarPico(picoId)
       if (vivo) setPico(p ?? null)
       const a = await carregarAmeacas()
-      if (vivo) setAmeacas(a.filter((x) => x.picoId === picoId))
+      if (vivo) setAlertas(a.filter((x) => x.picoId === picoId))
       const f = await carregarFeed(picoId)
       if (vivo) setFeed(f)
     }
@@ -40,7 +40,7 @@ export function PicoPage() {
       const p = await pendentes()
       
       if (vivo) {
-        const filaDoPico = p.filter(x => x.picoId === picoId && x.tipo !== 'ameaca')
+        const filaDoPico = p.filter(x => x.picoId === picoId && x.tipo !== 'alerta')
         const otimistas = await Promise.all(filaDoPico.map(async x => {
           let url = undefined
           if (x.blob) {
@@ -160,8 +160,8 @@ export function PicoPage() {
         <div className="card pad">
           <span className="eyebrow">Contexto do oceano</span>
           <div className="stack" style={{ marginTop: 10 }}>
-            {ameacas.length === 0 && <p className="muted">Sem alertas ativos neste pico.</p>}
-            {ameacas.map((a) => (
+            {alertas.length === 0 && <p className="muted">Sem alertas ativos neste pico.</p>}
+            {alertas.map((a) => (
               <div key={a.id} className="row">
                 <span className="tag alerta"><IconAlertTriangle size={13} stroke={2.2} /> {a.status}</span>
                 <span style={{ fontSize: 14 }}>{a.titulo}</span>

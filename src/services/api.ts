@@ -8,7 +8,7 @@ export interface NovaFoto {
   id: string
   picoId: string
   capturadaEm: string
-  tipo?: 'report' | 'ameaca' | 'lixo' | 'ciencia'
+  tipo?: 'report' | 'alerta' | 'lixo'
   observacao?: string
   blob?: Blob
   /** Coordenadas do device na captura — o servidor decide a procedência. */

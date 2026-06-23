@@ -10,7 +10,7 @@ import { buscarForecast } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
 import { MapView } from '../map/MapView'
-import type { Ameaca, Forecast, Mutirao, Pico, Foto } from '../types/domain'
+import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos'
 
@@ -32,7 +32,7 @@ export function RadarPage() {
   const [feed, setFeed] = useState<Foto[]>([])
   const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
   const [listaPicosAberta, setListaPicosAberta] = useState(false)
-  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [selPico, setSelPico] = useState<Pico | null>(null)
@@ -57,7 +57,7 @@ export function RadarPage() {
         if (vivo) setCurtidasMap(Object.fromEntries(likes))
       } catch {}
     })
-    carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
     return () => { vivo = false }
@@ -128,7 +128,7 @@ export function RadarPage() {
           <Suspense fallback={<div style={{ background: 'var(--map-bg)', width: '100%', height: '100%' }} />}>
             <MapView
               picos={picosAtivos}
-              ameacas={ameacas}
+              alertas={alertas}
               mutiroes={mutiroes}
               onSelectPico={handleSelectPico}
             />

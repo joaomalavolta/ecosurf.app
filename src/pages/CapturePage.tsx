@@ -7,7 +7,6 @@ import {
   IconRipple,
   IconAlertTriangle,
   IconTrash,
-  IconFlask2,
   IconArrowUp,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
@@ -200,7 +199,7 @@ export function CapturePage() {
     }
   }
 
-  async function classificar(tipo: 'report' | 'ameaca' | 'lixo' | 'ciencia') {
+  async function classificar(tipo: 'report' | 'alerta' | 'lixo') {
     if (uploadId.current) await definirTipo(uploadId.current, tipo)
     
     // navigate to the same pico we just sent the photo to
@@ -232,7 +231,7 @@ export function CapturePage() {
           <IconCamera size={56} stroke={1.5} />
           <h2 style={{ color: '#fff', marginTop: 12 }}>A foto primeiro</h2>
           <p style={{ color: 'rgba(255,255,255,.75)', maxWidth: 280 }}>
-            Aponte e registre o mar agora. Você diz o que é (report, ameaça, lixo…) depois — enquanto a foto sobe.
+            Aponte e registre o mar agora. Você diz o que é (report, alerta, lixo…) depois — enquanto a foto sobe.
           </p>
           <button className="btn acento full" style={{ marginTop: 20, maxWidth: 320 }} onClick={abrirCamera}>
             <IconCamera size={18} stroke={2} /> Abrir câmera
@@ -342,9 +341,8 @@ export function CapturePage() {
           <div className="stack" style={{ marginTop: 10 }}>
             {([
               ['report', IconRipple, 'Report do mar', 'Condição de surf agora'],
-              ['ameaca', IconAlertTriangle, 'Ameaça costeira', 'Poluição, erosão, obra, esgoto'],
-              ['lixo', IconTrash, 'Lixo na praia', 'Resíduo para mutirão/ciência'],
-              ['ciencia', IconFlask2, 'Ciência cidadã', 'Água, fauna, microplástico'],
+              ['alerta', IconAlertTriangle, 'Alerta ambiental', 'Esgoto, erosão, obra, poluição'],
+              ['lixo', IconTrash, 'Lixo na praia', 'Resíduo na praia ou no mar'],
             ] as const).map(([tipo, Icon, t, s]) => (
               <button
                 key={t}

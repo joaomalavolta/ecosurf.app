@@ -90,7 +90,7 @@ export const ameacasSeed: Ameaca[] = [
   {
     id: 'agua-alterada-pescadores',
     titulo: 'Água com alteração visual',
-    categoria: 'agua',
+    categoria: 'esgoto',
     status: 'em-observacao',
     picoId: 'praia-dos-pescadores',
     municipio: 'Itanhaém',

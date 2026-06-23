@@ -5,14 +5,14 @@ import { MapView } from '../map/MapView'
 import { AccountMenu } from '../components/AccountMenu'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { useOnboarding } from '../onboarding/OnboardingContext'
-import type { Ameaca, Mutirao, Pico } from '../types/domain'
+import type { Alerta, Mutirao, Pico } from '../types/domain'
 
-type Filtro = 'tudo' | 'picos' | 'ameacas' | 'mutiroes'
+type Filtro = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
-  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
   const [sel, setSel] = useState<Pico | null>(null)
@@ -22,7 +22,7 @@ export function MapaPage() {
   useEffect(() => {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
-    carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
     return () => {
@@ -31,15 +31,15 @@ export function MapaPage() {
   }, [])
 
   const verPicos = filtro === 'tudo' || filtro === 'picos'
-  const verAmeacas = filtro === 'tudo' || filtro === 'ameacas'
+  const verAlertas = filtro === 'tudo' || filtro === 'alertas'
   const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
-  const alertas = sel ? ameacas.filter((a) => a.picoId === sel.id).length : 0
+  const numAlertas = sel ? alertas.filter((a) => a.picoId === sel.id).length : 0
 
   return (
     <div style={{ position: 'relative', height: '100dvh' }}>
       <MapView
         picos={verPicos ? picos.filter((p) => ativos.has(p.id)) : []}
-        ameacas={verAmeacas ? ameacas : []}
+        alertas={verAlertas ? alertas : []}
         mutiroes={verMutiroes ? mutiroes : []}
         onSelectPico={setSel}
       />
@@ -47,12 +47,12 @@ export function MapaPage() {
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 12px)', left: 12, right: 12, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
         <div className="card pad" style={{ padding: 12, flex: 1, minWidth: 0 }}>
           <div style={{ background: 'var(--cinza)', borderRadius: 12, padding: 11, color: 'var(--muted)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <IconSearch size={16} stroke={2} /> Buscar praia, pico ou ameaça
+            <IconSearch size={16} stroke={2} /> Buscar praia, pico ou alerta
           </div>
           <div className="pills" style={{ marginTop: 10 }}>
             <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
             <Pill on={filtro === 'picos'} onClick={() => setFiltro('picos')}>Picos</Pill>
-            <Pill on={filtro === 'ameacas'} onClick={() => setFiltro('ameacas')}>Ameaças</Pill>
+            <Pill on={filtro === 'alertas'} onClick={() => setFiltro('alertas')}>Alertas</Pill>
             <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
           </div>
         </div>
@@ -73,7 +73,7 @@ export function MapaPage() {
               </div>
               <div className="muted" style={{ marginTop: 2 }}>
                 {sel.municipio} · {sel.uf}
-                {alertas > 0 ? ` · ${alertas} alerta${alertas > 1 ? 's' : ''}` : ''}
+                {numAlertas > 0 ? ` · ${numAlertas} alerta${numAlertas > 1 ? 's' : ''}` : ''}
               </div>
             </div>
           </div>
