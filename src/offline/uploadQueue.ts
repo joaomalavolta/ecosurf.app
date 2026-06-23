@@ -11,6 +11,13 @@ function emitir() {
   bus.dispatchEvent(new Event('mudou'))
 }
 
+/** Erros que indicam falta de autenticação — não adianta retentar. */
+function ehErroDeAuth(msg: string): boolean {
+  const termos = ['login', 'sessão', 'telefone', 'e-mail', 'publicar', 'anônim', 'auth', 'jwt', 'token']
+  const lower = msg.toLowerCase()
+  return termos.some((t) => lower.includes(t))
+}
+
 /** Enfileira um upload (status inicial: na-fila) e tenta subir. */
 export async function enfileirar(u: Omit<UploadPendente, 'status' | 'criadoEm'>): Promise<void> {
   const reg: UploadPendente = { ...u, status: 'na-fila', criadoEm: Date.now() }
@@ -40,6 +47,16 @@ export async function pendentes(): Promise<UploadPendente[]> {
   return (await d.getAll('uploads')).sort((a, b) => a.criadoEm - b.criadoEm)
 }
 
+/** Remove da fila itens bloqueados (erro de auth) para o usuário poder recomeçar. */
+export async function limparBloqueados(): Promise<void> {
+  const d = await db()
+  const todos = await d.getAll('uploads')
+  for (const u of todos) {
+    if (u.status === 'bloqueado') await d.delete('uploads', u.id)
+  }
+  emitir()
+}
+
 let rodando = false
 export async function flush(): Promise<void> {
   if (rodando || !navigator.onLine) return
@@ -51,13 +68,23 @@ export async function flush(): Promise<void> {
     )
     for (const u of fila) {
       u.status = 'enviando'
+      u.erro = undefined
       await d.put('uploads', u)
       emitir()
       try {
         await api.enviarFoto(u)
         u.status = 'enviado'
-      } catch {
-        u.status = 'falhou'
+        u.erro = undefined
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Erro desconhecido'
+        if (ehErroDeAuth(msg)) {
+          // Erro de autenticação: não retentar (bloqueado até login)
+          u.status = 'bloqueado'
+          u.erro = msg
+        } else {
+          u.status = 'falhou'
+          u.erro = msg
+        }
       }
       await d.put('uploads', u)
       emitir()
@@ -79,3 +106,4 @@ export function iniciarSincronizacao(): void {
       .catch(() => {})
   }
 }
+

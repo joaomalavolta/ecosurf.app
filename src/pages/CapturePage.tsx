@@ -11,6 +11,7 @@ import {
   IconArrowUp,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
+import { statusPerfil } from '../services/perfil'
 
 type Etapa = 'inicio' | 'camera' | 'classificar'
 
@@ -38,6 +39,23 @@ export function CapturePage() {
   const streamRef = useRef<MediaStream | null>(null)
   const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
+  const [carregando, setCarregando] = useState(true)
+
+  useEffect(() => {
+    let vivo = true
+    statusPerfil().then((s) => {
+      if (!vivo) return
+      if (!s.sessao) {
+        window.alert('Faça login para poder registrar as condições do mar e ameaças.')
+        navigate('/perfil', { replace: true })
+      } else {
+        setCarregando(false)
+      }
+    })
+    return () => {
+      vivo = false
+    }
+  }, [navigate])
 
   async function abrirCamera() {
     setErro(null)
@@ -103,6 +121,10 @@ export function CapturePage() {
   async function classificar(tipo: 'report' | 'ameaca' | 'lixo' | 'ciencia') {
     if (uploadId.current) await definirTipo(uploadId.current, tipo)
     navigate('/pico/praia-do-sonho')
+  }
+
+  if (carregando) {
+    return <div style={{ position: 'fixed', inset: 0, background: '#04141d', zIndex: 100 }} />
   }
 
   return (

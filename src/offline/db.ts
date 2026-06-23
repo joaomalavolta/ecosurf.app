@@ -13,7 +13,8 @@ export interface UploadPendente {
   blob?: Blob
   capturaLat?: number
   capturaLng?: number
-  status: 'na-fila' | 'enviando' | 'enviado' | 'falhou'
+  status: 'na-fila' | 'enviando' | 'enviado' | 'falhou' | 'bloqueado'
+  erro?: string
   criadoEm: number
 }
 
