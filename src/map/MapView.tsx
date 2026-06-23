@@ -220,14 +220,26 @@ export function MapView({
       })
 
       map.addLayer({
+        id: 'clusters-glow',
+        type: 'circle',
+        source: SRC,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': ['step', ['get', 'point_count'], '#1ECBC3', 10, '#0D6EA8', 25, '#062B45'],
+          'circle-radius': ['step', ['get', 'point_count'], 34, 10, 42, 25, 50],
+          'circle-opacity': 0.35,
+          'circle-blur': 0.5,
+        },
+      })
+      map.addLayer({
         id: 'clusters',
         type: 'circle',
         source: SRC,
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': ['step', ['get', 'point_count'], '#0E5C70', 10, '#0A3A4C', 25, '#072330'],
-          'circle-radius': ['step', ['get', 'point_count'], 18, 10, 22, 25, 28],
-          'circle-stroke-width': 2,
+          'circle-color': ['step', ['get', 'point_count'], '#1ECBC3', 10, '#0D6EA8', 25, '#062B45'],
+          'circle-radius': ['step', ['get', 'point_count'], 22, 10, 28, 25, 34],
+          'circle-stroke-width': 3,
           'circle-stroke-color': '#fff',
         },
       })
@@ -239,10 +251,12 @@ export function MapView({
         layout: {
           'text-field': ['get', 'point_count_abbreviated'],
           'text-font': fonteRotulo(map),
-          'text-size': 13,
+          'text-size': ['step', ['get', 'point_count'], 15, 10, 18, 25, 22],
           'text-allow-overlap': true,
         },
-        paint: { 'text-color': '#fff' },
+        paint: {
+          'text-color': ['step', ['get', 'point_count'], '#062B45', 10, '#ffffff', 25, '#ffffff'],
+        },
       })
       map.addLayer({
         id: 'pontos-icone',
