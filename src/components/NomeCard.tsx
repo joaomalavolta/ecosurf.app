@@ -43,9 +43,13 @@ export function NomeCard({ defaultNome = '' }: { defaultNome?: string }) {
           <button className="btn full" onClick={salvar} disabled={!nome.trim()}>
             Salvar nome
           </button>
+        ) : salvoComo ? (
+          <div className="muted" style={{ textAlign: 'center', fontSize: 13, padding: '6px 0' }}>
+            ✓ Nome salvo como <b>{salvoComo}</b>
+          </div>
         ) : (
-          <button className="btn full" disabled style={{ opacity: 0.7 }}>
-            Editar nome acima
+          <button className="btn full" disabled style={{ opacity: 0.5 }}>
+            Digite seu nome acima
           </button>
         )}
         {msg && <p className="muted">{msg}</p>}

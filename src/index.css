@@ -102,7 +102,7 @@ input, select, textarea { accent-color: var(--turq); }
   min-height: 100dvh;
   background: var(--shell-bg);
   box-shadow: 0 0 70px rgba(9, 34, 51, 0.14);
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .page { min-height: 100dvh; padding-bottom: calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px) + 12px); }

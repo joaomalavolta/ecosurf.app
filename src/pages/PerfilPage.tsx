@@ -74,7 +74,7 @@ export function PerfilPage() {
       
       const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl
       
-      await sb().from('perfis').update({ avatar_url: url }).eq('id', u.id)
+      await sb().from('perfis').update({ foto_url: url }).eq('id', u.id)
       
       setPerfil(p => p ? { ...p, avatarUrl: url } : p)
       alert('Avatar atualizado com sucesso!')

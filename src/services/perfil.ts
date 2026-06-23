@@ -38,7 +38,7 @@ export async function carregarPerfilAtual(): Promise<PerfilAtual | null> {
     if (!u) return null
     const { data: p } = await sb()
       .from('perfis')
-      .select('nome,nivel,telefone_validado,avatar_url')
+      .select('nome,nivel,telefone_validado,foto_url')
       .eq('id', u.id)
       .single()
     if (!p) return null
@@ -46,7 +46,7 @@ export async function carregarPerfilAtual(): Promise<PerfilAtual | null> {
       nome: p.nome ?? 'Surfista',
       nivel: p.nivel ?? 'novato',
       telefoneValidado: !!p.telefone_validado,
-      avatarUrl: p.avatar_url ?? undefined,
+      avatarUrl: p.foto_url ?? undefined,
     }
   } catch {
     return null
