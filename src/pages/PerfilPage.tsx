@@ -68,7 +68,6 @@ export function PerfilPage() {
           <div className="stack" style={{ marginTop: 10 }}>
             <label className="between">Borrar rostos nas minhas fotos <input type="checkbox" defaultChecked /></label>
             <label className="between">Esconder localização exata em denúncias <input type="checkbox" defaultChecked /></label>
-            <label className="between">Aparecer como anônimo em ameaças <input type="checkbox" /></label>
           </div>
         </div>
 
