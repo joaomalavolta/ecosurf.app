@@ -231,7 +231,6 @@ export function AccountMenu() {
               style={{
                 width: '100%',
                 padding: '16px 16px 12px',
-                borderBottom: '1px solid var(--line)',
                 background: 'none',
                 border: 'none',
                 borderBottom: '1px solid var(--line)',
