@@ -23,8 +23,8 @@ async function resizeAvatar(file: File): Promise<Blob> {
 
 
 
-export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => void; onExplorar: () => void }) {
-  const [etapa, setEtapa] = useState<Etapa>('boas-vindas')
+export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vindas' }: { onConcluir: () => void; onExplorar: () => void; etapaInicial?: 'boas-vindas' | 'email' }) {
+  const [etapa, setEtapa] = useState<Etapa>(etapaInicial)
   const [email, setEmail] = useState('')
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
@@ -84,7 +84,7 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
     <div className="onboarding-shell">
       {(etapa === 'email' || etapa === 'codigo') && (
         <button 
-          onClick={() => setEtapa(etapa === 'codigo' ? 'email' : 'boas-vindas')}
+          onClick={() => etapa === 'codigo' ? setEtapa('email') : (etapaInicial === 'email' ? onExplorar() : setEtapa('boas-vindas'))}
           style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 24px)', left: 20, zIndex: 10, background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }}
           aria-label="Voltar"
         >

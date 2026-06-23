@@ -21,7 +21,7 @@ function grava(k: string) {
 
 interface Ctx {
   onboarded: boolean
-  abrir: () => void
+  abrir: (etapa?: 'boas-vindas' | 'email') => void
 }
 const C = createContext<Ctx>({ onboarded: false, abrir: () => {} })
 export const useOnboarding = () => useContext(C)
@@ -33,16 +33,18 @@ export const useOnboarding = () => useContext(C)
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [onboarded, setOnboarded] = useState(() => ler(ONBOARDED))
   const [aberto, setAberto] = useState(false)
+  const [etapa, setEtapa] = useState<'boas-vindas' | 'email'>('boas-vindas')
 
   useEffect(() => {
     if (!ler(ONBOARDED) && !ler(VISTO)) setAberto(true) // primeira visita
   }, [])
 
   return (
-    <C.Provider value={{ onboarded, abrir: () => setAberto(true) }}>
+    <C.Provider value={{ onboarded, abrir: (e = 'boas-vindas') => { setEtapa(e); setAberto(true) } }}>
       {children}
       {aberto && (
         <OnboardingFlow
+          etapaInicial={etapa}
           onConcluir={() => {
             grava(ONBOARDED)
             grava(VISTO)
