@@ -29,8 +29,8 @@ export function AuthCard() {
         setFase('codigo')
         setMsg('Código enviado por SMS.')
       }
-    } catch {
-      setMsg('Não foi possível enviar agora.')
+    } catch (e: any) {
+      setMsg(e?.message || 'Não foi possível enviar agora.')
     }
   }
 
@@ -75,8 +75,8 @@ export function AuthCard() {
               inputMode={metodo === 'email' ? 'email' : 'tel'}
               aria-label={metodo === 'email' ? 'E-mail' : 'Telefone'}
             />
-            <button className="btn full" onClick={iniciar} disabled={!valor.trim()}>
-              {metodo === 'email' ? 'Enviar link de acesso' : 'Enviar código'}
+            <button className="btn full" onClick={iniciar} disabled={metodo === 'email' ? !valor.includes('@') : valor.trim().length < 8}>
+              {metodo === 'email' ? 'Enviar código de acesso' : 'Enviar código'}
             </button>
           </>
         ) : (

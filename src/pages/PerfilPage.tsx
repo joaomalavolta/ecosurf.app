@@ -68,7 +68,7 @@ export function PerfilPage() {
 
   return (
     <div className="page">
-      <Header title="Seu perfil" sub={perfil ? "Reputação e histórico na comunidade." : "Faça parte da proteção costeira."} />
+      <Header title="Seu perfil" sub={perfil ? "Reputação e histórico na comunidade." : "Faça parte do monitoramento das ondas e da proteção dos ambientes de surf."} />
       <div className="page-pad stack">
         
         {/* VIEW DO VISITANTE */}
