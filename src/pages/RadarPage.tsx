@@ -17,6 +17,7 @@ export function RadarPage() {
   const [picosTodos, setPicosTodos] = useState<Pico[]>([])
   const [fc, setFc] = useState<Record<string, Forecast>>({})
   const [feed, setFeed] = useState<Foto[]>([])
+  const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
 
   useEffect(() => {
     let vivo = true
@@ -27,8 +28,14 @@ export function RadarPage() {
         if (vivo) setFc(Object.fromEntries(es))
       })
     })
-    carregarFeedGlobal(15).then((fs) => {
-      if (vivo) setFeed(fs)
+    carregarFeedGlobal(50).then(async (fs) => {
+      if (!vivo) return
+      setFeed(fs)
+      try {
+        const { getCurtidas } = await import('../services/supabase/rest')
+        const likes = await Promise.all(fs.map(async f => [f.id, await getCurtidas(f.id)] as const))
+        if (vivo) setCurtidasMap(Object.fromEntries(likes))
+      } catch {}
     })
     return () => {
       vivo = false
@@ -41,16 +48,19 @@ export function RadarPage() {
       return favs.length ? favs : picosTodos
     }
     if (filtro === 'melhores') {
-      return [...picosTodos].sort((a, b) => {
-        const fa = fc[a.id]
-        const fb = fc[b.id]
-        const na = fa ? nota(fa.ondaM, fa.periodoS, fa.vento.tipo) : 0
-        const nb = fb ? nota(fb.ondaM, fb.periodoS, fb.vento.tipo) : 0
-        return nb - na
-      })
+      return []
     }
     return picosTodos
   }, [filtro, fc, picosTodos])
+
+  const melhoresOndas = useMemo(() => {
+    return [...feed].sort((a, b) => {
+      const cA = curtidasMap[a.id] || 0
+      const cB = curtidasMap[b.id] || 0
+      if (cA === cB) return new Date(b.capturadaEm).getTime() - new Date(a.capturadaEm).getTime()
+      return cB - cA
+    })
+  }, [feed, curtidasMap])
 
   return (
     <div className="page">
@@ -78,15 +88,35 @@ export function RadarPage() {
       <div className="page-pad stack">
         <div className="pills" role="tablist" aria-label="Filtro do radar">
           <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
-          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores agora</Pill>
+          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores ondas</Pill>
           <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
         </div>
 
-        {picosTodos.length === 0 && <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>}
-
-        {picos.map((p) => (
-          <SpotCard key={p.id} pico={p} forecast={fc[p.id]} />
-        ))}
+        {filtro === 'melhores' ? (
+          melhoresOndas.length === 0 ? <p className="muted" style={{ textAlign: 'center' }}>Carregando ondas...</p> :
+          melhoresOndas.map(f => {
+            const pico = picosTodos.find(p => p.id === f.picoId)
+            return (
+              <a href={`/pico/${f.picoId}`} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
+                <img src={f.url} alt="Onda" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
+                <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 16 }}>{pico?.nome || f.picoId}</div>
+                    <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Por {f.autorNome}</div>
+                  </div>
+                  <div className="badge b-good" style={{ fontSize: 15, padding: '4px 10px' }}>🤙 {curtidasMap[f.id] || 0}</div>
+                </div>
+              </a>
+            )
+          })
+        ) : (
+          <>
+            {picosTodos.length === 0 && <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>}
+            {picos.map((p) => (
+              <SpotCard key={p.id} pico={p} forecast={fc[p.id]} />
+            ))}
+          </>
+        )}
 
         <p className="muted" style={{ textAlign: 'center', padding: '4px 16px' }}>
           Previsão via Open-Meteo · picos {temBackend() ? 'do Supabase' : 'do seed local'} · maré em modelo (DHN a fazer).
