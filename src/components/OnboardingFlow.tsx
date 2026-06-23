@@ -27,7 +27,6 @@ const SHELL: React.CSSProperties = {
   zIndex: 300,
   maxWidth: 'var(--largura-app)',
   margin: '0 auto',
-  background: 'linear-gradient(165deg, #03161F 0%, #0A3A4C 55%, #0E5C70 100%)',
   color: '#fff',
   display: 'flex',
   flexDirection: 'column',
@@ -92,24 +91,29 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
   const cpfOk = cpfValido(cpf)
   const perfilOk = nome.trim().length > 1 && cpfOk && cidade.trim().length > 1
 
+  const isHome = etapa === 'boas-vindas'
+  const bgStyle = isHome 
+    ? { background: 'linear-gradient(to bottom, rgba(4,20,29,0.1) 0%, rgba(4,20,29,0.6) 50%, rgba(4,20,29,1) 100%), url(/bg_onda.png) center/cover no-repeat' }
+    : { background: 'linear-gradient(165deg, #03161F 0%, #0A3A4C 55%, #0E5C70 100%)' }
+
   return (
-    <div style={SHELL}>
+    <div style={{ ...SHELL, ...bgStyle }}>
       {etapa === 'boas-vindas' && (
-        <div style={{ margin: 'auto 0' }}>
-          <IconRipple size={44} stroke={1.6} />
-          <h1 style={{ fontFamily: 'var(--fonte-titulo)', fontSize: 30, lineHeight: 1.05, marginTop: 14 }}>
-            Bem-vindo ao Ecosurf
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,.88)', marginTop: 12, lineHeight: 1.5 }}>
-            Aqui o mar é lido por quem está nele. Para contribuir — registrar a condição dos
-            picos e defender o litoral — a gente pede um cadastro rápido (toda contribuição é
-            identificada, sem anônimo).
-          </p>
-          <div className="stack" style={{ marginTop: 24 }}>
-            <button className="btn acento full" onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
-            <button onClick={onExplorar} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.8)', fontSize: 14, cursor: 'pointer' }}>
-              Explorar primeiro
-            </button>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1 }} />
+          <div>
+            <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 190, marginBottom: 16 }} />
+            <p style={{ color: 'rgba(255,255,255,.9)', lineHeight: 1.5, fontSize: 16, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+              Aqui o mar é lido por quem está nele. Para contribuir — registrar a condição dos
+              picos e defender o litoral — a gente pede um cadastro rápido (toda contribuição é
+              identificada, sem anônimo).
+            </p>
+            <div className="stack" style={{ marginTop: 32 }}>
+              <button className="btn acento full" style={{ minHeight: 48, fontSize: 15 }} onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
+              <button onClick={onExplorar} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.9)', fontSize: 14, cursor: 'pointer', padding: 12, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                Explorar primeiro
+              </button>
+            </div>
           </div>
         </div>
       )}
