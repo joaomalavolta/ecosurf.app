@@ -13,7 +13,7 @@ import {
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { statusPerfil } from '../services/perfil'
 
-type Etapa = 'inicio' | 'camera' | 'classificar'
+type Etapa = 'inicio' | 'camera' | 'selecionar-pico' | 'classificar'
 
 function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   return new Promise((res) => {
@@ -52,6 +52,12 @@ export function CapturePage() {
   const navigate = useNavigate()
   const [carregando, setCarregando] = useState(true)
   const picoSelecionado = new URLSearchParams(window.location.search).get('pico')
+  // Estado para seleção/criação de pico
+  const [picosDisponiveis, setPicosDisponiveis] = useState<Array<{id: string, nome: string}>>([])
+  const [blobCapturado, setBlobCapturado] = useState<Blob | undefined>()
+  const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number}>({})
+  const [novoPicoNome, setNovoPicoNome] = useState('')
+  const [buscaPico, setBuscaPico] = useState('')
 
   useEffect(() => {
     let vivo = true
@@ -125,43 +131,73 @@ export function CapturePage() {
         const d = haversineKm(pos.lat, pos.lng, p.lat, p.lng)
         if (d < minD) { minD = d; melhorPico = p.id }
       }
-      // Só atribui automaticamente se estiver a menos de 2km do pico mais próximo
       if (melhorPico && minD < 2) {
         finalPicoId = melhorPico
+      } else {
+        // Longe de picos — mostrar seletor
+        setBlobCapturado(blob)
+        setPosCapturada(pos)
+        setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
+        setEtapa('selecionar-pico')
+        return
       }
     }
     if (!finalPicoId) {
-      // Sem GPS ou longe demais — pedir seleção manual
       const { carregarPicos } = await import('../services/picos')
       const picos = await carregarPicos()
-      const escolha = window.prompt(
-        'Não conseguimos detectar o pico pelo GPS.\nDigite o nome ou parte do nome da praia:',
-        ''
-      )
-      if (escolha) {
-        const normalizado = escolha.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        const match = picos.find(p => 
-          p.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizado) ||
-          p.praia.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizado)
-        )
-        finalPicoId = match?.id ?? picos[0]?.id ?? 'praia-do-sonho'
-      } else {
-        finalPicoId = picos[0]?.id ?? 'praia-do-sonho'
-      }
+      setBlobCapturado(blob)
+      setPosCapturada(pos)
+      setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
+      setEtapa('selecionar-pico')
+      return
     }
+    await finalizarUpload(finalPicoId, blob, pos)
+  }
 
-    // Upload otimista: a foto entra na fila offline AGORA, sobe quando der.
+  async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}) {
     const id = crypto.randomUUID()
     uploadId.current = id
     await enfileirar({
       id,
-      picoId: finalPicoId,
+      picoId,
       capturadaEm: new Date().toISOString(),
       blob,
-      capturaLat: pos.lat,
-      capturaLng: pos.lng,
+      capturaLat: pos?.lat,
+      capturaLng: pos?.lng,
     })
     setEtapa('classificar')
+  }
+
+  async function selecionarPicoExistente(picoId: string) {
+    await finalizarUpload(picoId, blobCapturado, posCapturada)
+  }
+
+  async function criarNovoPico() {
+    if (!novoPicoNome.trim()) return
+    try {
+      const { restInserirPico } = await import('../services/supabase/rest')
+      // Geocodificação reversa para preencher município/UF
+      let municipio = ''
+      let uf = 'SP'
+      if (posCapturada.lat && posCapturada.lng) {
+        try {
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${posCapturada.lat}&lon=${posCapturada.lng}&format=json&zoom=10`)
+          const geo = await geoRes.json()
+          municipio = geo.address?.city || geo.address?.town || geo.address?.village || geo.address?.municipality || ''
+          uf = geo.address?.state_code?.toUpperCase() || geo.address?.['ISO3166-2-lvl4']?.split('-')[1] || 'SP'
+        } catch { /* fallback silencioso */ }
+      }
+      const picoId = await restInserirPico({
+        nome: novoPicoNome.trim(),
+        lat: posCapturada.lat ?? 0,
+        lng: posCapturada.lng ?? 0,
+        municipio,
+        uf,
+      })
+      await finalizarUpload(picoId, blobCapturado, posCapturada)
+    } catch (e: any) {
+      alert('Erro ao criar pico: ' + (e?.message || 'tente novamente'))
+    }
   }
 
   async function classificar(tipo: 'report' | 'ameaca' | 'lixo' | 'ciencia') {
@@ -216,13 +252,69 @@ export function CapturePage() {
               </div>
             )}
             <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}><IconMapPin size={13} stroke={2.2} /> Praia do Sonho · dentro do pico</span>
+              <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}><IconMapPin size={13} stroke={2.2} /> Detectando localização…</span>
             </div>
           </div>
           <div style={{ padding: '20px 0 calc(env(safe-area-inset-bottom,0px) + 24px)', display: 'flex', justifyContent: 'center' }}>
             <button onClick={disparar} aria-label="Tirar foto" style={{ width: 76, height: 76, borderRadius: 999, border: '5px solid rgba(255,255,255,.6)', background: '#fff', cursor: 'pointer' }} />
           </div>
         </>
+      )}
+
+      {etapa === 'selecionar-pico' && (
+        <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
+          <IconMapPin size={40} stroke={1.5} style={{ margin: '0 auto', display: 'block', color: 'var(--turq)' }} />
+          <h2 style={{ color: '#fff', marginTop: 12, textAlign: 'center' }}>Qual é o pico?</h2>
+          <p style={{ color: 'rgba(255,255,255,.65)', textAlign: 'center', fontSize: 13 }}>
+            Não encontramos um pico próximo. Selecione um existente ou cadastre um novo.
+          </p>
+
+          {/* Busca */}
+          <input
+            className="input"
+            placeholder="Buscar pico..."
+            value={buscaPico}
+            onChange={(e) => setBuscaPico(e.target.value)}
+            style={{ marginTop: 16, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+          />
+
+          {/* Lista filtrada */}
+          <div style={{ maxHeight: 200, overflow: 'auto', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {picosDisponiveis
+              .filter(p => !buscaPico || p.nome.toLowerCase().includes(buscaPico.toLowerCase()))
+              .map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => selecionarPicoExistente(p.id)}
+                  style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 12, padding: '10px 14px', color: '#fff', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit' }}
+                >
+                  <IconMapPin size={14} stroke={2} style={{ marginRight: 6, verticalAlign: -2 }} />
+                  {p.nome}
+                </button>
+              ))}
+          </div>
+
+          {/* Cadastrar novo pico */}
+          <div style={{ marginTop: 20, padding: 16, background: 'rgba(30,203,195,.1)', borderRadius: 16, border: '1px solid rgba(30,203,195,.25)' }}>
+            <b style={{ fontSize: 14 }}>🏖️ Novo pico</b>
+            <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 4 }}>Não encontrou? Cadastre a praia e ela fica disponível para todos.</p>
+            <input
+              className="input"
+              placeholder="Nome da praia (ex: Praia do Tombo)"
+              value={novoPicoNome}
+              onChange={(e) => setNovoPicoNome(e.target.value)}
+              style={{ marginTop: 10, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+            />
+            <button
+              className="btn acento full"
+              onClick={criarNovoPico}
+              disabled={!novoPicoNome.trim()}
+              style={{ marginTop: 10 }}
+            >
+              Criar pico e enviar foto
+            </button>
+          </div>
+        </div>
       )}
 
       {etapa === 'classificar' && (

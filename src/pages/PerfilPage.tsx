@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow, IconCamera } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow, IconCamera, IconPhoto } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -25,6 +25,8 @@ export function PerfilPage() {
   const [painel, setPainel] = useState(false)
   const [borrarFotos, setBorrarFotos] = useState(() => localStorage.getItem('borrarRostos') !== 'false')
   const [loading, setLoading] = useState(true)
+  const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null}>>([])
+  const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let vivo = true
@@ -34,10 +36,46 @@ export function PerfilPage() {
         setPainel(permissoes(s.papel).acessa)
         setPerfil(p)
         setLoading(false)
+        // Carregar fotos do usuário
+        if (p) {
+          import('../services/supabase/rest').then(({ restMinhasFotos }) =>
+            restMinhasFotos().then(fotos => {
+              if (vivo) setMinhasFotos(fotos)
+            })
+          ).catch(() => {})
+        }
       }
     })
     return () => { vivo = false }
   }, [])
+
+  // Carregar URLs assinadas das fotos
+  useEffect(() => {
+    if (minhasFotos.length === 0) return
+    let vivo = true
+    import('../services/supabase/storage').then(({ urlAssinada }) => {
+      Promise.all(
+        minhasFotos
+          .filter(f => f.storage_path && !fotosUrls[f.id])
+          .map(async f => {
+            try {
+              const url = await urlAssinada(f.storage_path!)
+              return [f.id, url] as const
+            } catch {
+              return null
+            }
+          })
+      ).then(results => {
+        if (!vivo) return
+        const urls: Record<string, string> = { ...fotosUrls }
+        for (const r of results) {
+          if (r && r[1]) urls[r[0]] = r[1]
+        }
+        setFotosUrls(urls)
+      })
+    }).catch(() => {})
+    return () => { vivo = false }
+  }, [minhasFotos])
 
   function toggleBorrar() {
     const val = !borrarFotos
@@ -167,12 +205,44 @@ export function PerfilPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-              <Stat icon={IconMapPin} k="Picos" v={0} />
-              <Stat icon={IconUsers} k="Mutirões" v={0} />
+              <Stat icon={IconMapPin} k="Picos" v={new Set(minhasFotos.map(f => f.pico_id)).size} />
+              <Stat icon={IconPhoto} k="Fotos" v={minhasFotos.length} />
               <Stat icon={IconTargetArrow} k="Precisão" v="—" />
             </div>
 
             <NomeCard defaultNome={perfil.nome || ''} />
+
+            {/* Minhas publicações */}
+            <div className="card pad">
+              <span className="eyebrow"><IconPhoto size={14} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />Minhas publicações ({minhasFotos.length})</span>
+              {minhasFotos.length === 0 ? (
+                <p className="muted" style={{ marginTop: 10, textAlign: 'center' }}>Você ainda não publicou nenhuma foto. Vá até um pico e registre as ondas!</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginTop: 10 }}>
+                  {minhasFotos.map((f) => {
+                    const thumb = fotosUrls[f.id]
+                    return (
+                      <a
+                        key={f.id}
+                        href={`/pico/${f.pico_id}`}
+                        style={{ display: 'block', aspectRatio: '1', borderRadius: 12, overflow: 'hidden', background: 'var(--cinza)', position: 'relative' }}
+                      >
+                        {thumb ? (
+                          <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+                            <IconCamera size={20} />
+                          </div>
+                        )}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 4px 4px', background: 'linear-gradient(transparent, rgba(0,0,0,.6))', color: '#fff', fontSize: 10, textAlign: 'center' }}>
+                          {new Date(f.capturada_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
 
             <div className="card pad">
               <span className="eyebrow">Aparência</span>

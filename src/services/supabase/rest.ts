@@ -227,3 +227,81 @@ export async function curtirFoto(fotoId: string): Promise<void> {
   const { error } = await sb().from('curtidas').insert({ foto_id: fotoId, autor_id: u.id })
   if (error && !error.message.includes('unique constraint')) throw error
 }
+
+/** Padroniza nome em Title Case: "praia dos pescadores" → "Praia dos Pescadores" */
+function titleCase(s: string): string {
+  return s.trim().replace(/\s+/g, ' ').split(' ').map(w =>
+    w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ')
+}
+
+/** Gera um slug a partir do nome: "Praia dos Pescadores" → "praia-dos-pescadores" */
+function slug(nome: string): string {
+  return nome.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+/** Insere um novo pico no Supabase (autenticado). */
+export async function restInserirPico(dados: {
+  nome: string
+  lat: number
+  lng: number
+  municipio: string
+  uf: string
+}): Promise<string> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const nome = titleCase(dados.nome)
+  const id = slug(nome)
+  const body = {
+    id,
+    nome,
+    praia: nome,
+    geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
+    municipio: titleCase(dados.municipio),
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    orientacao_praia_deg: 180,
+    fundo: 'areia',
+    visibilidade: 'publico',
+  }
+  const r = await fetch(`${BASE}/rest/v1/picos`, {
+    method: 'POST',
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!r.ok) {
+    const msg = await r.text()
+    if (msg.includes('duplicate key')) return id // já existe, usa o existente
+    throw new Error(`Erro ao criar pico: ${msg}`)
+  }
+  return id
+}
+
+export interface MinhaFotoRow {
+  id: string
+  pico_id: string
+  capturada_em: string
+  storage_path: string | null
+  pico_nome?: string
+}
+
+/** Todas as fotos do usuário logado (desde sempre), ordenadas por mais recente. */
+export async function restMinhasFotos(): Promise<MinhaFotoRow[]> {
+  if (!TEM_BACKEND) return []
+  try {
+    const { sb } = await import('./client')
+    const { data: sess } = await sb().auth.getSession()
+    const u = sess.session?.user
+    if (!u) return []
+    return rest<MinhaFotoRow[]>(
+      `fotos?select=id,pico_id,capturada_em,storage_path&autor_id=eq.${u.id}&order=capturada_em.desc&limit=100`
+    )
+  } catch {
+    return []
+  }
+}
