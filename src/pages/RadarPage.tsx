@@ -109,11 +109,16 @@ export function RadarPage() {
 
   return (
     <div className="radar-map-first">
-      {/* ─── TOOLBAR COMPACTA ─── */}
+      {/* ─── HEADER RADAR ─── */}
       <header className="radar-toolbar">
-        <Brand height={24} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 10px)', right: 14, zIndex: 2 }}>
           <AccountMenu />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          <Brand height={40} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px', marginTop: 4 }}>
+            Surfar Global e Agir Local
+          </span>
         </div>
       </header>
 

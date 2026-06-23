@@ -178,18 +178,23 @@ input, select, textarea { accent-color: var(--turq); }
   z-index: 110;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 14px 8px;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 14px;
   background: url('/wave-header.png') center/cover no-repeat, var(--azul-abissal);
   color: #fff;
-  min-height: 48px;
   overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .radar-toolbar::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(6, 43, 69, 0.72);
+  background: linear-gradient(
+    180deg,
+    rgba(6, 43, 69, 0.78) 0%,
+    rgba(6, 43, 69, 0.5) 50%,
+    rgba(6, 43, 69, 0.72) 100%
+  );
   z-index: 0;
   pointer-events: none;
 }
