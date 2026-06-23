@@ -348,22 +348,18 @@ export function TideScrubTimeline({
                 strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
                 vectorEffect="non-scaling-stroke"
               />
-              <rect
-                x={-3}
-                y={VB_H / 2 - 8}
-                width={6}
-                height={16}
-                rx={2}
-                fill={scrubHora == null ? "rgba(13,110,168,0.8)" : "var(--acento)"}
-                vectorEffect="non-scaling-stroke"
-              />
-              <circle
-                cx={0}
-                cy={y(alturaNaHora(curva, scrubHora ?? horas[ativo]))}
-                r={2.5}
-                fill={scrubHora == null ? "rgba(13,110,168,0.8)" : "var(--acento)"}
-                vectorEffect="non-scaling-stroke"
-              />
+              {/* Prancha de surf como handle */}
+              <g transform={`translate(0, ${y(alturaNaHora(curva, scrubHora ?? horas[ativo])) - 6})`}>
+                <path
+                  d="M0-5 C1.8-4.5 2.2-2 2.2,1 C2.2,3.5 1.6,5 0,5.8 C-1.6,5 -2.2,3.5 -2.2,1 C-2.2-2 -1.8-4.5 0-5Z"
+                  fill={scrubHora == null ? "#1e8fc7" : "var(--acento)"}
+                  stroke="rgba(255,255,255,.6)"
+                  strokeWidth="0.4"
+                  vectorEffect="non-scaling-stroke"
+                />
+                {/* Stringer (linha central da prancha) */}
+                <line x1={0} y1={-4} x2={0} y2={5} stroke="rgba(255,255,255,.35)" strokeWidth="0.3" vectorEffect="non-scaling-stroke" />
+              </g>
             </g>
           </svg>
 
