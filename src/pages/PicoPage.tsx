@@ -10,7 +10,7 @@ import { buscarForecast } from '../services/forecast'
 import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
-import type { Ameaca, FeedDia, Forecast, Pico, PontoMare } from '../types/domain'
+import type { Ameaca, FeedDia, Forecast, Foto, Pico, PontoMare } from '../types/domain'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
