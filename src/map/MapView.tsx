@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useNavigate } from 'react-router-dom'
@@ -161,11 +161,15 @@ export function MapView({
   ameacas = [],
   mutiroes = [],
   onSelectPico,
+  className,
+  style,
 }: {
   picos: Pico[]
   ameacas?: Ameaca[]
   mutiroes?: Mutirao[]
   onSelectPico?: (p: Pico) => void
+  className?: string
+  style?: React.CSSProperties
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -337,5 +341,5 @@ export function MapView({
     if (src) src.setData(colecao({ picos, ameacas, mutiroes }))
   }, [picos, ameacas, mutiroes])
 
-  return <div ref={ref} style={{ position: 'absolute', inset: 0, background: 'var(--map-bg)' }} />
+  return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: 'var(--map-bg)', ...style }} />
 }

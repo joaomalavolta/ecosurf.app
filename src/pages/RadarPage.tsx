@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList } from '@tabler/icons-react'
-import { Header } from '../components/Header'
+import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown } from '@tabler/icons-react'
+import { Brand } from '../components/Brand'
+import { AccountMenu } from '../components/AccountMenu'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { FeedCard } from '../components/FeedCard'
-import { carregarPicos, ehFavorito } from '../services/picos'
+import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato, ehFavorito } from '../services/picos'
 import { buscarForecast } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
-import type { Forecast, Pico, Foto } from '../types/domain'
+import { MapView } from '../map/MapView'
+import type { Ameaca, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos'
 
@@ -17,10 +19,7 @@ function agruparPorPico(fotos: Foto[]): Map<string, Foto[]> {
   const map = new Map<string, Foto[]>()
   for (const f of fotos) {
     let arr = map.get(f.picoId)
-    if (!arr) {
-      arr = []
-      map.set(f.picoId, arr)
-    }
+    if (!arr) { arr = []; map.set(f.picoId, arr) }
     arr.push(f)
   }
   return map
@@ -33,6 +32,12 @@ export function RadarPage() {
   const [feed, setFeed] = useState<Foto[]>([])
   const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
   const [listaPicosAberta, setListaPicosAberta] = useState(false)
+  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
+  const [ativos, setAtivos] = useState<Set<string>>(new Set())
+  const [selPico, setSelPico] = useState<Pico | null>(null)
+  const [mapaExpandido, setMapaExpandido] = useState(false)
+  const feedRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let vivo = true
@@ -52,9 +57,10 @@ export function RadarPage() {
         if (vivo) setCurtidasMap(Object.fromEntries(likes))
       } catch {}
     })
-    return () => {
-      vivo = false
-    }
+    carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarMutiroes().then((m) => vivo && setMutiroes(m))
+    carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
+    return () => { vivo = false }
   }, [])
 
   const picoMap = useMemo(() => {
@@ -65,16 +71,14 @@ export function RadarPage() {
 
   const fotosPorPico = useMemo(() => agruparPorPico(feed), [feed])
 
-  // Feed cards: picos com foto, filtrados conforme seleção
   const feedCards = useMemo(() => {
     const entries = Array.from(fotosPorPico.entries())
     if (filtro === 'favoritos') {
       return entries.filter(([picoId]) => ehFavorito(picoId))
     }
-    return entries // 'todos'
+    return entries
   }, [filtro, fotosPorPico])
 
-  // Melhores ondas: ranking por curtidas
   const melhoresOndas = useMemo(() => {
     return [...feed].sort((a, b) => {
       const cA = curtidasMap[a.id] || 0
@@ -84,19 +88,79 @@ export function RadarPage() {
     })
   }, [feed, curtidasMap])
 
-  // Picos SEM foto (para a lista colapsável secundária)
   const picosSemFoto = useMemo(() => {
     return picosTodos.filter((p) => !fotosPorPico.has(p.id))
   }, [picosTodos, fotosPorPico])
 
-  return (
-    <div className="page">
-      <Header brand sub="o surf por quem surfa" />
+  // Quando um pico é selecionado no mapa, scroll feed até o card
+  const handleSelectPico = (pico: Pico) => {
+    setSelPico(pico)
+    // Scroll to the feed card if it exists
+    setTimeout(() => {
+      const el = document.getElementById(`feed-card-${pico.id}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
 
-      {/* Stories bubbles — por autor+pico */}
+  const picosAtivos = useMemo(
+    () => picosTodos.filter((p) => ativos.has(p.id)),
+    [picosTodos, ativos],
+  )
+
+  return (
+    <div className="radar-map-first">
+      {/* ─── TOOLBAR COMPACTA ─── */}
+      <header className="radar-toolbar">
+        <Brand height={24} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <AccountMenu />
+        </div>
+      </header>
+
+      {/* ─── MAPA (hero) ─── */}
+      <div className={`radar-map-container ${mapaExpandido ? 'expanded' : ''}`}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <Suspense fallback={<div style={{ background: 'var(--map-bg)', width: '100%', height: '100%' }} />}>
+            <MapView
+              picos={picosAtivos}
+              ameacas={ameacas}
+              mutiroes={mutiroes}
+              onSelectPico={handleSelectPico}
+            />
+          </Suspense>
+        </div>
+
+        {/* Toggle mapa expandido */}
+        <button
+          className="radar-map-toggle"
+          onClick={() => setMapaExpandido(!mapaExpandido)}
+          aria-label={mapaExpandido ? 'Reduzir mapa' : 'Expandir mapa'}
+        >
+          <IconChevronDown size={18} stroke={2.5} style={{ transform: mapaExpandido ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
+        </button>
+
+        {/* Pico selecionado — mini card flutuante */}
+        {selPico && (
+          <div className="radar-map-selected">
+            <Link to={`/pico/${selPico.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{selPico.nome}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{selPico.municipio} · {selPico.uf}</div>
+            </Link>
+            {fc[selPico.id] && (
+              <span className="badge b-info" style={{ fontSize: 11 }}>
+                {fc[selPico.id].ondaM.toFixed(1)}m · {fc[selPico.id].periodoS}s
+              </span>
+            )}
+            <button onClick={() => setSelPico(null)} aria-label="Fechar" style={{ background: 'none', border: 0, color: 'var(--muted)', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>×</button>
+          </div>
+        )}
+      </div>
+
+      {/* ─── STORIES ─── */}
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
-      <div className="page-pad stack">
+      {/* ─── FEED SECTION ─── */}
+      <div className="page-pad stack" ref={feedRef}>
         <div className="pills" role="tablist" aria-label="Filtro do radar">
           <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
           <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores ondas</Pill>
@@ -122,7 +186,6 @@ export function RadarPage() {
           })
         ) : (
           <>
-            {/* Estado vazio */}
             {feed.length === 0 && picosTodos.length === 0 && (
               <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>
             )}
@@ -134,17 +197,16 @@ export function RadarPage() {
               </div>
             )}
 
-            {/* Feed cards — foto como protagonista */}
             {feedCards.map(([picoId, fotos]) => (
-              <FeedCard
-                key={picoId}
-                fotos={fotos}
-                pico={picoMap.get(picoId)}
-                forecast={fc[picoId]}
-              />
+              <div key={picoId} id={`feed-card-${picoId}`}>
+                <FeedCard
+                  fotos={fotos}
+                  pico={picoMap.get(picoId)}
+                  forecast={fc[picoId]}
+                />
+              </div>
             ))}
 
-            {/* Lista secundária colapsável: picos sem foto */}
             {picosSemFoto.length > 0 && (
               <div style={{ marginTop: 8 }}>
                 <button

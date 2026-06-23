@@ -157,6 +157,84 @@ input, select, textarea { accent-color: var(--turq); }
 .header h1 { font-size: 25px; line-height: 1.06; }
 .header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
 
+/* ─── Map-First Radar Layout ─── */
+.radar-map-first {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.radar-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 14px 8px;
+  background: var(--azul-abissal);
+  color: #fff;
+  min-height: 48px;
+}
+
+.radar-map-container {
+  position: relative;
+  height: 38vh;
+  min-height: 200px;
+  max-height: 50vh;
+  transition: height .3s ease;
+  overflow: hidden;
+  border-bottom: 2px solid var(--line);
+}
+.radar-map-container.expanded {
+  height: 70vh;
+  max-height: 80vh;
+}
+
+.radar-map-toggle {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: 36px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+}
+.radar-map-toggle:hover { background: var(--bg-soft); }
+
+.radar-map-selected {
+  position: absolute;
+  bottom: 40px;
+  left: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideUp .25s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* cards */
 .card {
   background: var(--card);
