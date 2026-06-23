@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { IconRipple, IconMail, IconUser, IconMapPin, IconCamera, IconCheck } from '@tabler/icons-react'
+import { IconRipple, IconMail, IconUser, IconMapPin, IconCamera, IconCheck, IconChevronLeft } from '@tabler/icons-react'
 import { statusPerfil, enviarCodigo, confirmarCodigo, salvarPerfil } from '../services/perfil'
 import { carregarPicos } from '../services/picos'
 import { cpfValido, formatCpf } from '../lib/cpf'
@@ -82,6 +82,15 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
 
   return (
     <div className="onboarding-shell">
+      {(etapa === 'email' || etapa === 'codigo') && (
+        <button 
+          onClick={() => setEtapa(etapa === 'codigo' ? 'email' : 'boas-vindas')}
+          style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top,0px) + 24px)', left: 20, zIndex: 10, background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }}
+          aria-label="Voltar"
+        >
+          <IconChevronLeft size={24} />
+        </button>
+      )}
       <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 280, margin: '15vh auto 32px', display: 'block' }} />
       {etapa === 'boas-vindas' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
