@@ -52,8 +52,8 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
     try {
       await fn()
       depois?.()
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : 'Algo deu errado. Tente de novo.')
+    } catch (e: any) {
+      setMsg(e?.message || 'Não foi possível concluir a operação agora.')
     } finally {
       setCarregando(false)
     }
@@ -133,7 +133,16 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
           <p style={{ color: 'rgba(255,255,255,.8)', marginTop: 8 }}>Enviado para {email}.</p>
           <div className="stack" style={{ marginTop: 16 }}>
             <input className="input" type="text" inputMode="numeric" placeholder="0 0 0 0 0 0" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
-            <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} disabled={codigo.length < 6 || carregando} onClick={() => acao(() => confirmarCodigo(email, codigo), () => setEtapa('perfil'))}>
+            <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} disabled={codigo.length < 6 || carregando} onClick={() => acao(async () => {
+              await confirmarCodigo(email, codigo);
+              const s = await statusPerfil();
+              if (s.onboarded) {
+                onConcluir();
+                window.location.reload();
+              } else {
+                setEtapa('perfil');
+              }
+            })}>
               {carregando ? 'Confirmando…' : 'Confirmar'}
             </button>
             <button onClick={() => acao(() => enviarCodigo(email), () => setMsg('Reenviado.'))} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.8)', fontSize: 13, cursor: 'pointer' }}>
