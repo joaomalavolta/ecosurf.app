@@ -137,33 +137,18 @@ input, select, textarea { accent-color: var(--turq); }
   pointer-events: none;
 }
 
-/* header — base */
+/* header — foto de onda padrão em todas as páginas */
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--grad-ocean);
+  background: url('/wave-header.png') center/cover no-repeat, var(--grad-ocean);
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-.header::after {
-  content: ""; position: absolute; right: -36px; top: -54px;
-  width: 184px; height: 184px; border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 70%);
-  pointer-events: none;
-  clip-path: inset(0 0 0 0);
-}
-.header h1 { font-size: 25px; line-height: 1.06; }
-.header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
-
-/* header-wave — foto de onda como fundo (PicoPage, etc.) */
-.header.header-wave {
-  position: relative;
-  background: url('/wave-header.png') center/cover no-repeat;
   overflow: hidden;
 }
-.header.header-wave::before {
+.header::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -174,9 +159,11 @@ input, select, textarea { accent-color: var(--turq); }
     rgba(6, 43, 69, 0.72) 100%
   );
   z-index: 0;
+  pointer-events: none;
 }
-.header.header-wave::after { display: none; }
-.header.header-wave > * { position: relative; z-index: 1; }
+.header > * { position: relative; z-index: 1; }
+.header h1 { font-size: 25px; line-height: 1.06; }
+.header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; }
 
 /* ─── Map-First Radar Layout ─── */
 .radar-map-first {

@@ -21,7 +21,7 @@ export function Header({
 
   return (
     <header
-      className={`header ${!brand ? 'header-wave' : ''}`}
+      className="header"
       style={brand ? { textAlign: 'center' } : undefined}
     >
       {/* Menu de conta — sempre presente no topo direito */}
