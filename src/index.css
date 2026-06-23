@@ -316,3 +316,172 @@ table.adt tr:last-child td { border-bottom: 0; }
   top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
   right: 12px !important;
 }
+
+/* ───────────────── Story Bubbles (Radar topo) ───────────────── */
+.story-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px 4px;
+}
+.story-track::-webkit-scrollbar { display: none; }
+
+.story-bubble {
+  flex-shrink: 0;
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.story-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  padding: 3px;
+  background: var(--line);
+  transition: box-shadow .2s;
+}
+.story-ring.recent {
+  background: linear-gradient(135deg, #39B88F, #2BD4A0);
+  box-shadow: 0 0 0 3px rgba(57, 184, 143, .2);
+}
+.story-ring.today {
+  background: linear-gradient(135deg, #0D6EA8, #2E9BD6);
+  box-shadow: 0 0 0 3px rgba(13, 110, 168, .15);
+}
+
+.story-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 2.5px solid var(--bg);
+  display: block;
+}
+
+.story-pico {
+  font-size: 10.5px;
+  font-weight: 700;
+  margin-top: 6px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  color: var(--text);
+}
+.story-autor {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 1px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* ───────────────── Feed Card Carousel ───────────────── */
+.feed-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--raio) var(--raio) 0 0;
+}
+.feed-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.feed-carousel-track::-webkit-scrollbar { display: none; }
+
+.feed-carousel-track > img {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  scroll-snap-align: start;
+  display: block;
+}
+
+.feed-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+}
+.feed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .45);
+  transition: background .2s, transform .2s;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.feed-dot.active {
+  background: #fff;
+  transform: scale(1.3);
+}
+
+.feed-overlay-badges {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 5;
+  pointer-events: none;
+}
+.feed-overlay-badges > * { pointer-events: auto; }
+
+/* Seção "Todos os picos" colapsável */
+.pico-list-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 4px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pico-list-toggle svg {
+  transition: transform .2s;
+}
+.pico-list-toggle.open svg {
+  transform: rotate(90deg);
+}
+.pico-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+}
+.pico-list-item:active { opacity: .85; }
