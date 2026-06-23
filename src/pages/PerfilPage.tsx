@@ -111,10 +111,10 @@ export function PerfilPage() {
         {/* VIEW DO VISITANTE */}
         {!perfil && (
           <>
-            <div className="card pad" style={{ textAlign: 'center' }}>
-              <h3 style={{ marginBottom: 12 }}>Junte-se à Ecosurf</h3>
-              <p className="muted" style={{ lineHeight: 1.5 }}>
-                Crie uma conta gratuita e junte-se à comunidade Ecosurf. Receba em tempo real informações sobre as condições das melhores ondas do Brasil e participe da proteção dos ecossistemas de surf e do oceano.
+            <div className="card pad" style={{ textAlign: 'center', marginBottom: 12 }}>
+              <h3 style={{ marginBottom: 8 }}>Junte-se à Ecosurf</h3>
+              <p className="muted" style={{ lineHeight: 1.4 }}>
+                Entre para a comunidade colaborativa e tenha acesso às melhores ondas e proteção do litoral brasileiro.
               </p>
             </div>
             <AuthCard />

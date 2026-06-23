@@ -44,7 +44,7 @@ function Linha({
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <b>{titulo}</b>
-          {!to && <span className="tag cinza" style={{ fontSize: 10, padding: '2px 6px' }}>Em breve</span>}
+          {!to && <span className="tag" style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', color: 'var(--muted)' }}>Em breve</span>}
         </div>
         <div className="muted">{texto}</div>
       </div>

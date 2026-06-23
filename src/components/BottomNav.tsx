@@ -53,7 +53,7 @@ export function BottomNav() {
       ))}
 
       {/* slot central: captura */}
-      <div style={{ display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 60 }}>
         <button
           onClick={() => (onboarded ? navigate('/capturar') : abrir())}
           aria-label="Registrar agora (abre a câmera)"
@@ -70,7 +70,6 @@ export function BottomNav() {
             justifyContent: 'center',
             boxShadow: '0 14px 28px -6px rgba(31,227,200,0.8)',
             cursor: 'pointer',
-            pointerEvents: 'auto',
           }}
         >
           <IconCamera size={26} stroke={2} />
@@ -93,14 +92,16 @@ function NavItem({ to, Icon, label, end }: Item) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 3,
         textDecoration: 'none',
         fontSize: 11,
         fontWeight: 700,
         color: isActive ? 'var(--nav-active)' : 'var(--nav-inactive)',
         position: 'relative',
-        zIndex: 10,
+        zIndex: 60,
         cursor: 'pointer',
+        pointerEvents: 'auto',
       })}
     >
       <Icon size={22} stroke={2} aria-hidden />

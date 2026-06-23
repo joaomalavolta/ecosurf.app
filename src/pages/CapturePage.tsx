@@ -68,7 +68,6 @@ export function CapturePage() {
       streamRef.current = stream
       setEtapa('camera')
     } catch {
-      window.alert('Não foi possível acessar a câmera. Verifique as permissões do seu navegador.')
       setErro('Câmera indisponível neste dispositivo ou permissão negada.')
       setEtapa('camera')
     }

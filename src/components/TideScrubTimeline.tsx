@@ -56,6 +56,17 @@ export function TideScrubTimeline({
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
   const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
 
+  if (fotos.length === 0) {
+    return (
+      <div className="card pad" style={{ textAlign: 'center', margin: '20px 0' }}>
+        <p className="muted" style={{ marginBottom: 16 }}>
+          Nenhuma foto relatada hoje neste pico.
+        </p>
+        <p>Que tal ser o primeiro?</p>
+      </div>
+    )
+  }
+
   useEffect(() => {
     let vivo = true
     async function loadLikes() {
