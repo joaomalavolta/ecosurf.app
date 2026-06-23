@@ -67,7 +67,6 @@ export function PerfilPage() {
           <span className="eyebrow">Privacidade & LGPD</span>
           <div className="stack" style={{ marginTop: 10 }}>
             <label className="between">Borrar rostos nas minhas fotos <input type="checkbox" defaultChecked /></label>
-            <label className="between">Esconder localização exata em denúncias <input type="checkbox" defaultChecked /></label>
           </div>
         </div>
 
