@@ -1,5 +1,5 @@
 import type { Ameaca, Mutirao, Pico } from '../../types/domain'
-import { SUPABASE_URL, SUPABASE_KEY } from './config'
+import { SUPABASE_URL, SUPABASE_KEY, TEM_BACKEND } from './config'
 
 /**
  * Leitura via PostgREST com fetch puro — NÃO usa o SDK, então não pesa no
