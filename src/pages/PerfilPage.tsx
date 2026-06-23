@@ -77,7 +77,7 @@ export function PerfilPage() {
             <div className="card pad" style={{ textAlign: 'center' }}>
               <h3 style={{ marginBottom: 12 }}>Junte-se à Ecosurf</h3>
               <p className="muted" style={{ lineHeight: 1.5 }}>
-                Visitantes podem enviar dados de forma anônima, mas ao criar uma conta gratuita você constrói um histórico de ações ambientais, ganha reputação, medalhas de engajamento e pode exportar seus dados.
+                Crie uma conta gratuita e junte-se à comunidade Ecosurf. Receba em tempo real informações sobre as condições das melhores ondas do Brasil e participe da proteção dos ecossistemas de surf e do oceano.
               </p>
             </div>
             <AuthCard />
