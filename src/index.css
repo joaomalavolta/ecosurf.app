@@ -263,3 +263,9 @@ table.adt tr:last-child td { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* Posiciona os controles do mapa (como Geolocate) abaixo do menu superior */
+.maplibregl-ctrl-top-right {
+  top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
+  right: 12px !important;
+}

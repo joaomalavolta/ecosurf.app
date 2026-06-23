@@ -19,14 +19,69 @@ export function PicoPage() {
   const [curva, setCurva] = useState<PontoMare[]>([])
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
   const [feed, setFeed] = useState<FeedDia | null>(null)
+  const [fotosOtimistas, setFotosOtimistas] = useState<Foto[]>([])
 
   useEffect(() => {
     let vivo = true
-    carregarPico(picoId).then((p) => vivo && setPico(p ?? null))
-    carregarAmeacas().then((a) => vivo && setAmeacas(a.filter((x) => x.picoId === picoId)))
-    carregarFeed(picoId).then((f) => vivo && setFeed(f))
+    const loadAll = async () => {
+      const p = await carregarPico(picoId)
+      if (vivo) setPico(p ?? null)
+      const a = await carregarAmeacas()
+      if (vivo) setAmeacas(a.filter((x) => x.picoId === picoId))
+      const f = await carregarFeed(picoId)
+      if (vivo) setFeed(f)
+    }
+    loadAll()
+
+    let lastFilaCount = -1
+    const checkFila = async () => {
+      const { pendentes } = await import('../offline/uploadQueue')
+      const p = await pendentes()
+      
+      if (vivo) {
+        const filaDoPico = p.filter(x => x.picoId === picoId && x.tipo !== 'ameaca')
+        const otimistas = await Promise.all(filaDoPico.map(async x => {
+          let url = undefined
+          if (x.blob) {
+            url = URL.createObjectURL(x.blob)
+          }
+          return {
+            id: x.id,
+            picoId: x.picoId,
+            autorId: 'eu',
+            autorNome: 'Você',
+            capturadaEm: x.capturadaEm,
+            url,
+            observacao: x.observacao || 'Enviando...',
+            procedencia: 'no-local',
+            rostosBorrados: false,
+          } as Foto
+        }))
+        setFotosOtimistas(otimistas)
+      }
+
+      if (lastFilaCount !== -1 && p.length === 0 && p.length < lastFilaCount) {
+        // queue emptied (uploads finished), refresh feed!
+        const f = await carregarFeed(picoId)
+        if (vivo) setFeed(f)
+      }
+      lastFilaCount = p.length
+    }
+    checkFila()
+    
+    import('../offline/uploadQueue').then(({ onMudanca }) => {
+      const unsub = onMudanca(checkFila)
+      if (!vivo) unsub()
+      else {
+        // hook unsub function
+        // hacky way:
+        (window as any)._unsubFila = unsub
+      }
+    })
+
     return () => {
       vivo = false
+      if ((window as any)._unsubFila) (window as any)._unsubFila()
     }
   }, [picoId])
 
@@ -82,10 +137,10 @@ export function PicoPage() {
         <div>
           <div className="between" style={{ margin: '4px 2px 10px' }}>
             <h2 style={{ fontSize: 19 }}>Timeline do dia</h2>
-            <span className="muted">{feed?.fotos.length ?? 0} fotos</span>
+            <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline fotos={feed?.fotos ?? []} curva={curva} eventos={[]} />
+          <TideScrubTimeline picoId={pico.id} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas]} curva={curva} eventos={[]} />
         </div>
 
         <div className="card pad">
@@ -108,7 +163,7 @@ export function PicoPage() {
           </div>
         )}
 
-        <Link to="/capturar" className="btn full"><IconCamera size={18} stroke={2} /> Registrar agora neste pico</Link>
+        <Link to={`/capturar?pico=${pico.id}`} className="btn full"><IconCamera size={18} stroke={2} /> Registrar agora neste pico</Link>
       </div>
     </div>
   )

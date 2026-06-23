@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow, IconCamera } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -46,6 +46,43 @@ export function PerfilPage() {
     alert('Preferência de privacidade salva no dispositivo.')
   }
 
+  async function uploadAvatar(file: File) {
+    try {
+      const bmp = await createImageBitmap(file)
+      const size = 512
+      const escala = Math.min(1, size / Math.max(bmp.width, bmp.height))
+      const w = Math.round(bmp.width * escala)
+      const h = Math.round(bmp.height * escala)
+      const c = document.createElement('canvas')
+      c.width = w
+      c.height = h
+      c.getContext('2d')?.drawImage(bmp, 0, 0, w, h)
+      bmp.close?.()
+      const blob = await new Promise<Blob>((res) => c.toBlob((b) => res(b as Blob), 'image/webp', 0.85))
+      
+      const { sb } = await import('../services/supabase/client')
+      const { data } = await sb().auth.getSession()
+      const u = data.session?.user
+      if (!u) return
+      
+      const path = `${u.id}/avatar.webp`
+      const up = await sb().storage.from('avatars').upload(path, blob, {
+        contentType: 'image/webp',
+        upsert: true,
+      })
+      if (up.error) throw up.error
+      
+      const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl
+      
+      await sb().from('perfis').update({ avatar_url: url }).eq('id', u.id)
+      
+      setPerfil(p => p ? { ...p, avatarUrl: url } : p)
+      alert('Avatar atualizado com sucesso!')
+    } catch (e: any) {
+      alert('Erro ao enviar avatar: ' + e.message)
+    }
+  }
+
   function acaoEmBreve() {
     alert('Esta funcionalidade estará disponível na próxima atualização!')
   }
@@ -88,7 +125,22 @@ export function PerfilPage() {
         {perfil && (
           <>
             <div className="card pad row">
-              <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)' }} />
+              <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) uploadAvatar(f)
+                }} />
+                {perfil.avatarUrl ? (
+                  <img src={perfil.avatarUrl} alt="Avatar" style={{ width: 64, height: 64, borderRadius: 22, objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold' }}>
+                    {perfil.nome ? perfil.nome.charAt(0).toUpperCase() : '?'}
+                  </div>
+                )}
+                <div style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--primary)', color: '#fff', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                  <IconCamera size={14} />
+                </div>
+              </label>
               <div>
                 <b style={{ fontSize: 18 }}>{perfil.nome || 'Usuário Ecosurf'}</b>
                 <div className="muted">Nível: {perfil.nivel || "1 - Gota d'Água"}</div>

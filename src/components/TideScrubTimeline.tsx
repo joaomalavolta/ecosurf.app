@@ -35,10 +35,12 @@ function alturaNaHora(curva: PontoMare[], h: number): number {
  * sem poluir. Cada foto carrega procedência e a maré do instante.
  */
 export function TideScrubTimeline({
+  picoId,
   fotos,
   curva,
   eventos,
 }: {
+  picoId?: string
   fotos: Foto[]
   curva: PontoMare[]
   eventos: EventoVento[]
@@ -52,6 +54,21 @@ export function TideScrubTimeline({
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
+  const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let vivo = true
+    async function loadLikes() {
+      if (ordenadas.length === 0) return
+      const f = ordenadas[ativo]
+      if (curtidasMap[f.id] !== undefined) return
+      const { getCurtidas } = await import('../services/supabase/rest')
+      const c = await getCurtidas(f.id)
+      if (vivo) setCurtidasMap(m => ({ ...m, [f.id]: c }))
+    }
+    loadLikes()
+    return () => { vivo = false }
+  }, [ativo, ordenadas])
 
   async function denunciar(id: string) {
     try {
@@ -78,7 +95,7 @@ export function TideScrubTimeline({
         <p className="muted">
           Esse pico ainda não acendeu hoje. Seja o primeiro a registrar a condição do mar.
         </p>
-        <Link to="/capturar" className="btn acento full" style={{ marginTop: 8 }}>
+        <Link to={picoId ? `/capturar?pico=${picoId}` : (fotos.length > 0 ? `/capturar?pico=${fotos[0]?.picoId}` : "/capturar")} className="btn acento full" style={{ marginTop: 8 }}>
           <IconCamera size={18} stroke={2} /> Registrar agora
         </Link>
       </div>
@@ -171,17 +188,41 @@ export function TideScrubTimeline({
           </div>
           <div className="between">
             {f.observacao ? <div style={{ fontSize: 14, fontWeight: 600 }}>{f.observacao}</div> : <span />}
-            {denunciadas[f.id] ? (
-              <span style={{ fontSize: 11, opacity: 0.8 }}>denunciada</span>
-            ) : (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              {/* LIKES */}
               <button
-                onClick={() => denunciar(f.id)}
-                aria-label="Denunciar foto"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 9px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                onClick={async () => {
+                  try {
+                    const { curtirFoto } = await import('../services/supabase/rest')
+                    await curtirFoto(f.id)
+                    // optimistic update
+                    setCurtidasMap(m => ({ ...m, [f.id]: (m[f.id] || 0) + 1 }))
+                  } catch (e: any) {
+                    alert(e.message)
+                  }
+                }}
+                aria-label="Curtir foto"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'transform 0.1s' }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <IconFlag size={12} stroke={2} /> denunciar
+                <span style={{ fontSize: 14 }}>🤙</span> {curtidasMap[f.id] || 0}
               </button>
-            )}
+
+              {/* DENUNCIAR */}
+              {denunciadas[f.id] ? (
+                <span style={{ fontSize: 11, opacity: 0.8 }}>denunciada</span>
+              ) : (
+                <button
+                  onClick={() => denunciar(f.id)}
+                  aria-label="Denunciar foto"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'transparent', border: 0, color: 'rgba(255,255,255,.6)', borderRadius: 999, padding: '4px 0', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <IconFlag size={12} stroke={2} /> denunciar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -216,17 +257,20 @@ export function TideScrubTimeline({
           }}
           onPointerDown={(e) => {
             arrastando.current = true
+            e.currentTarget.setPointerCapture(e.pointerId)
             selecionarPorClientX(e.clientX)
           }}
           onPointerMove={(e) => {
             if (arrastando.current) selecionarPorClientX(e.clientX)
           }}
-          onPointerUp={() => {
+          onPointerUp={(e) => {
             arrastando.current = false
+            e.currentTarget.releasePointerCapture(e.pointerId)
             setScrubHora(null) // encaixa na foto mais próxima
           }}
-          onPointerCancel={() => {
+          onPointerCancel={(e) => {
             arrastando.current = false
+            e.currentTarget.releasePointerCapture(e.pointerId)
             setScrubHora(null)
           }}
           style={{ position: 'relative', paddingTop: 16, paddingBottom: 16, touchAction: 'none', cursor: 'ew-resize', userSelect: 'none' }}
@@ -240,16 +284,34 @@ export function TideScrubTimeline({
             </defs>
             <path d={area} fill="url(#grad-mare)" />
             <path d={linha} fill="none" stroke="#2E9BD6" strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
-            <line
-              x1={x(scrubHora ?? horas[ativo])}
-              y1={0}
-              x2={x(scrubHora ?? horas[ativo])}
-              y2={VB_H}
-              stroke="rgba(13,110,168,0.55)"
-              strokeWidth="0.5"
-              strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
-              vectorEffect="non-scaling-stroke"
-            />
+            <g transform={`translate(${x(scrubHora ?? horas[ativo])}, 0)`}>
+              <line
+                x1={0}
+                y1={0}
+                x2={0}
+                y2={VB_H}
+                stroke={scrubHora == null ? "rgba(13,110,168,0.55)" : "var(--acento)"}
+                strokeWidth="0.5"
+                strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
+                vectorEffect="non-scaling-stroke"
+              />
+              <rect
+                x={-3}
+                y={VB_H / 2 - 8}
+                width={6}
+                height={16}
+                rx={2}
+                fill={scrubHora == null ? "rgba(13,110,168,0.8)" : "var(--acento)"}
+                vectorEffect="non-scaling-stroke"
+              />
+              <circle
+                cx={0}
+                cy={y(alturaNaHora(curva, scrubHora ?? horas[ativo]))}
+                r={2.5}
+                fill={scrubHora == null ? "rgba(13,110,168,0.8)" : "var(--acento)"}
+                vectorEffect="non-scaling-stroke"
+              />
+            </g>
           </svg>
 
           {/* pontos das fotos (HTML, círculos crisp) */}

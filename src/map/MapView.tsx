@@ -5,9 +5,18 @@ import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
 import type { Ameaca, Mutirao, Pico } from '../types/domain'
 
-const TEARDROP_SVG = (color: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 24 26">
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+const TEARDROP_SVG = (color: string, colorDark: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="52" viewBox="-4 -2 32 34">
+    <defs>
+      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#04181F" flood-opacity="0.35"/>
+      </filter>
+      <linearGradient id="g-${color.replace('#','')}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="${color}"/>
+        <stop offset="100%" stop-color="${colorDark}"/>
+      </linearGradient>
+    </defs>
+    <path filter="url(#shadow)" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#g-${color.replace('#','')})" stroke="#fff" stroke-width="1.8"/>
     <g transform="translate(6, 3.5) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       ${paths}
     </g>
@@ -16,18 +25,21 @@ const TEARDROP_SVG = (color: string, paths: string) =>
 /** Teardrops coloridos. Picos (azul), ameaças (laranja) e mutirões (verde). */
 const ICONES: Record<string, string> = {
   'ic-pico': TEARDROP_SVG(
-    '#0E81A0',
+    '#1ECBC3',
+    '#0D6EA8',
     '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>' +
       '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5 -2 5 -2c2.5 0 2.5 2 5 2c2.5 0 2.5 -2 5 -2"/>'
   ),
   'ic-ameaca': TEARDROP_SVG(
-    '#FF6B4A',
+    '#FF8C76',
+    '#E86F61',
     '<path d="M12 9v4"/>' +
       '<path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/>' +
       '<path d="M12 16h.01"/>'
   ),
   'ic-mutirao': TEARDROP_SVG(
-    '#34D399',
+    '#5FE3AE',
+    '#1C8A63',
     '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>' +
       '<path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>' +
       '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>' +
@@ -182,6 +194,11 @@ export function MapView({
       zoom: 10.5,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
+    map.addControl(new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showAccuracyCircle: false,
+    }), 'top-right')
     map.on('error', () => {})
     mapRef.current = map
 

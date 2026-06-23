@@ -40,6 +40,7 @@ export function CapturePage() {
   const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
   const [carregando, setCarregando] = useState(true)
+  const picoSelecionado = new URLSearchParams(window.location.search).get('pico')
 
   useEffect(() => {
     let vivo = true
@@ -104,12 +105,24 @@ export function CapturePage() {
 
     const pos = await obterCoords() // GPS para o geofence (servidor valida)
 
+    let finalPicoId = picoSelecionado
+    if (!finalPicoId && pos.lat && pos.lng) {
+      const { carregarPicos } = await import('../services/picos')
+      const picos = await carregarPicos()
+      let minD = Infinity
+      for (const p of picos) {
+        const d = Math.hypot(p.lat - pos.lat, p.lng - pos.lng)
+        if (d < minD) { minD = d; finalPicoId = p.id }
+      }
+    }
+    if (!finalPicoId) finalPicoId = 'praia-do-sonho'
+
     // Upload otimista: a foto entra na fila offline AGORA, sobe quando der.
     const id = crypto.randomUUID()
     uploadId.current = id
     await enfileirar({
       id,
-      picoId: 'praia-do-sonho',
+      picoId: finalPicoId,
       capturadaEm: new Date().toISOString(),
       blob,
       capturaLat: pos.lat,
@@ -120,7 +133,17 @@ export function CapturePage() {
 
   async function classificar(tipo: 'report' | 'ameaca' | 'lixo' | 'ciencia') {
     if (uploadId.current) await definirTipo(uploadId.current, tipo)
-    navigate('/pico/praia-do-sonho')
+    
+    // navigate to the same pico we just sent the photo to
+    const finalPicoId = uploadId.current ? await getPicoIdFromFila(uploadId.current) : (picoSelecionado || 'praia-do-sonho')
+    navigate(`/pico/${finalPicoId}`)
+  }
+  
+  async function getPicoIdFromFila(id: string): Promise<string> {
+    const { pendentes } = await import('../offline/uploadQueue')
+    const fila = await pendentes()
+    const f = fila.find(x => x.id === id)
+    return f ? f.picoId : (picoSelecionado || 'praia-do-sonho')
   }
 
   if (carregando) {

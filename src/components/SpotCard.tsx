@@ -12,7 +12,7 @@ export function SpotCard({ pico, forecast }: { pico: Pico; forecast?: Forecast }
       style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
     >
       <Photo seed={pico.id} alt={`Mar em ${pico.nome}`} style={{ width: '100%', height: 140 }} />
-      <div className="pad">
+      <div style={{ padding: 16 }}>
         <div className="between">
           <div>
             <h3 style={{ fontSize: 18 }}>{pico.nome}</h3>

@@ -51,11 +51,17 @@ export async function buscarForecast(pico: Pico): Promise<Forecast> {
     const velocidadeKmh = Number(wind.hourly.wind_speed_10m?.[i] ?? 0)
     const direcaoVentoDeg = Number(wind.hourly.wind_direction_10m?.[i] ?? 0)
 
-    const h = new Date().getHours() + new Date().getMinutes() / 60
+    const agora = new Date()
+    const h = agora.getHours() + agora.getMinutes() / 60
+    
+    // Maré via provider local (constants DHN)
+    const { tideProvider } = await import('./tide/provider')
+    const alturaM = Number((await tideProvider.alturaEm(pico, agora.toISOString())).toFixed(2))
+    const fase = faseMare(h) // Mantém a lógica de fase baseada na altura atual
 
     return {
       picoId: pico.id,
-      emitidoEm: new Date().toISOString(),
+      emitidoEm: agora.toISOString(),
       ondaM,
       periodoS,
       direcaoOndaDeg,
@@ -64,7 +70,7 @@ export async function buscarForecast(pico: Pico): Promise<Forecast> {
         direcaoDeg: direcaoVentoDeg,
         tipo: classificarVento(direcaoVentoDeg, pico.orientacaoPraiaDeg, velocidadeKmh),
       },
-      mare: { alturaM: Number(alturaMare(h).toFixed(2)), fase: faseMare(h) }, // TODO: DHN
+      mare: { alturaM, fase },
       fonte: 'open-meteo',
     }
   } catch {
