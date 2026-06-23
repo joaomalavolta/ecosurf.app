@@ -10,6 +10,7 @@ import { AcoesPage } from './pages/AcoesPage'
 import { PerfilPage } from './pages/PerfilPage'
 import { CapturePage } from './pages/CapturePage'
 import { ModeracaoPage } from './pages/ModeracaoPage'
+import { TermosPage } from './pages/TermosPage'
 
 // O mapa carrega o MapLibre (~pesado). Fora do caminho crítico do Radar
 // (entrada diária), para o app abrir leve no 3G da praia.
@@ -21,7 +22,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default:
 
 export default function App() {
   const { pathname } = useLocation()
-  const semNav = pathname === '/capturar'
+  const semNav = pathname === '/capturar' || pathname === '/termos'
 
   useEffect(() => {
     iniciarSincronizacao()
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/moderacao" element={<ModeracaoPage />} />
         <Route path="/capturar" element={<CapturePage />} />
+        <Route path="/termos" element={<TermosPage />} />
         </Routes>
         {!semNav && <BottomNav />}
       </div>
