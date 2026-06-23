@@ -135,7 +135,9 @@ input, select, textarea { accent-color: var(--turq); }
 
 /* header — gradiente oceânico nos dois temas */
 .header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: var(--grad-ocean);
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
