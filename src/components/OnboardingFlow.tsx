@@ -91,22 +91,17 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
   const cpfOk = cpfValido(cpf)
   const perfilOk = nome.trim().length > 1 && cpfOk && cidade.trim().length > 1
 
-  const isHome = etapa === 'boas-vindas'
-  const bgStyle = isHome 
-    ? { background: 'linear-gradient(to bottom, rgba(4,20,29,0.1) 0%, rgba(4,20,29,0.6) 50%, rgba(4,20,29,1) 100%), url(/bg_onda.png) center/cover no-repeat' }
-    : { background: 'linear-gradient(165deg, #03161F 0%, #0A3A4C 55%, #0E5C70 100%)' }
+  const bgStyle = { background: 'linear-gradient(to bottom, rgba(4,20,29,0.1) 0%, rgba(4,20,29,0.7) 40%, rgba(4,20,29,1) 100%), url(/bg_onda.png) center/cover no-repeat' }
 
   return (
     <div style={{ ...SHELL, ...bgStyle }}>
+      <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 140, margin: '0 auto 24px', display: 'block' }} />
       {etapa === 'boas-vindas' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }} />
           <div>
-            <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 190, marginBottom: 16 }} />
             <p style={{ color: 'rgba(255,255,255,.9)', lineHeight: 1.5, fontSize: 16, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-              Aqui o mar é lido por quem está nele. Para contribuir — registrar a condição dos
-              picos e defender o litoral — a gente pede um cadastro rápido (toda contribuição é
-              identificada, sem anônimo).
+              Aqui o mar é observado por quem vive sintonizado com ele. Para contribuir e registrar a condição dos picos e proteger os ecossistemas de surf, você faz cadastro rápido. Junte-se a nós e faça a diferença!
             </p>
             <div className="stack" style={{ marginTop: 32 }}>
               <button className="btn acento full" style={{ minHeight: 48, fontSize: 15 }} onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
