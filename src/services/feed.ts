@@ -14,19 +14,29 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
       if (rows.length) {
         const { urlAssinada } = await import('./supabase/storage')
         const fotos: Foto[] = await Promise.all(
-          rows.map(async (r) => ({
-            id: r.id,
-            picoId: r.pico_id,
-            autorId: '',
-            autorNome: r.autor_nome ?? 'anônimo',
-            capturadaEm: r.capturada_em,
-            url: r.storage_path ? await urlAssinada(r.storage_path) : undefined,
-            alturaMareM: r.altura_mare_m ?? undefined,
-            ventoTipo: (r.vento_tipo ?? undefined) as Foto['ventoTipo'],
-            observacao: r.observacao ?? undefined,
-            procedencia: r.procedencia as Foto['procedencia'],
-            rostosBorrados: false,
-          })),
+          rows.map(async (r) => {
+            let url: string | undefined
+            if (r.storage_path) {
+              try {
+                url = await urlAssinada(r.storage_path)
+              } catch {
+                /* URL assinada falhou — foto ficará sem imagem mas não derruba a página */
+              }
+            }
+            return {
+              id: r.id,
+              picoId: r.pico_id,
+              autorId: '',
+              autorNome: r.autor_nome ?? 'anônimo',
+              capturadaEm: r.capturada_em,
+              url,
+              alturaMareM: r.altura_mare_m ?? undefined,
+              ventoTipo: (r.vento_tipo ?? undefined) as Foto['ventoTipo'],
+              observacao: r.observacao ?? undefined,
+              procedencia: r.procedencia as Foto['procedencia'],
+              rostosBorrados: false,
+            }
+          }),
         )
         return { picoId, data: new Date().toISOString().slice(0, 10), fotos }
       }

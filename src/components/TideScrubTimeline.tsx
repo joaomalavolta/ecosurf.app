@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag } from '@tabler/icons-react'
@@ -56,17 +56,6 @@ export function TideScrubTimeline({
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
   const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
 
-  if (fotos.length === 0) {
-    return (
-      <div className="card pad" style={{ textAlign: 'center', margin: '20px 0' }}>
-        <p className="muted" style={{ marginBottom: 16 }}>
-          Nenhuma foto relatada hoje neste pico.
-        </p>
-        <p>Que tal ser o primeiro?</p>
-      </div>
-    )
-  }
-
   useEffect(() => {
     let vivo = true
     async function loadLikes() {
@@ -80,6 +69,17 @@ export function TideScrubTimeline({
     loadLikes()
     return () => { vivo = false }
   }, [ativo, ordenadas])
+
+  if (fotos.length === 0) {
+    return (
+      <div className="card pad" style={{ textAlign: 'center', margin: '20px 0' }}>
+        <p className="muted" style={{ marginBottom: 16 }}>
+          Nenhuma foto relatada hoje neste pico.
+        </p>
+        <p>Que tal ser o primeiro?</p>
+      </div>
+    )
+  }
 
   async function denunciar(id: string) {
     try {
