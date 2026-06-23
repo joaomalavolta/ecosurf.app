@@ -9,7 +9,7 @@ export async function entrarComTelefone(phone: string): Promise<void> {
 export async function confirmarCodigo(telefoneOuEmail: string, token: string): Promise<void> {
   const isEmail = telefoneOuEmail.includes('@')
   const req = isEmail
-    ? { email: telefoneOuEmail, token, type: 'email' as const }
+    ? { email: telefoneOuEmail, token, type: 'magiclink' as const }
     : { phone: telefoneOuEmail, token, type: 'sms' as const }
   const { error } = await sb().auth.verifyOtp(req)
   if (error) throw error
