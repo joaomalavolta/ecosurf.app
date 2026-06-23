@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { temBackend } from '../services/api'
 
 /**
@@ -39,10 +39,23 @@ export function AuthCard() {
       const { confirmarCodigo } = await import('../services/supabase/auth')
       await confirmarCodigo(valor.trim(), codigo.trim())
       setMsg('Entrou! Bem-vindo.')
+      window.location.reload()
     } catch {
       setMsg('Código inválido.')
     }
   }
+
+  useEffect(() => {
+    if (!ativo) return
+    let sub: { unsubscribe: () => void } | undefined
+    import('../services/supabase/client').then(({ sb }) => {
+      const { data } = sb().auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_IN') window.location.reload()
+      })
+      sub = data.subscription
+    }).catch(() => {})
+    return () => sub?.unsubscribe()
+  }, [ativo])
 
   return (
     <div className="card pad">
