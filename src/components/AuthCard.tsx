@@ -59,7 +59,7 @@ export function AuthCard() {
 
   return (
     <div className="card pad">
-      <span className="eyebrow">Entrar · sem anônimo (toda contribuição é identificada)</span>
+      <span className="eyebrow">Entrar</span>
       <div className="pills" style={{ margin: '10px 0' }}>
         <button className={`pill ${metodo === 'email' ? 'active' : ''}`} onClick={() => { setMetodo('email'); setFase('inicio') }}>E-mail</button>
         <button className={`pill ${metodo === 'telefone' ? 'active' : ''}`} onClick={() => { setMetodo('telefone'); setFase('inicio') }}>Telefone</button>
