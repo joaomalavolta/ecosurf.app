@@ -239,6 +239,32 @@ select.input option { color: #0b1620; }
 .ic { display: inline-flex; align-items: center; vertical-align: middle; }
 :focus-visible { outline: 3px solid var(--turq); outline-offset: 2px; border-radius: 6px; }
 
+/* Bottom Sheet (Map) */
+.sheet {
+  position: absolute; left: 12px; right: 12px; bottom: calc(var(--altura-nav) + 14px);
+  border-radius: 22px; padding: 12px 14px;
+  background: var(--nav-bg); border: 1px solid var(--line);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 50px -16px rgba(0,0,0,.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 50;
+}
+.grip { width: 36px; height: 4px; border-radius: 999px; background: var(--muted); margin: 0 auto 12px; opacity: 0.5; }
+.thumb { width: 50px; height: 50px; border-radius: 14px; background: var(--grad-ocean) center/cover; flex: 0 0 auto; }
+
+@keyframes slideUp {
+  from { transform: translateY(120%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Stepper (Capture) */
+.stepper { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto; }
+.step { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: var(--muted); }
+.step .num { width: 22px; height: 22px; border-radius: 999px; border: 1.5px solid var(--muted); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.step.on { color: var(--text); }
+.step.on .num { background: var(--turq); border-color: transparent; color: var(--ink); }
+.step .ln { width: 18px; height: 1.5px; background: var(--line); }
+
 /* ───────────────── Painel Administrativo (Light Ocean) ───────────────── */
 .admin { min-height: 100dvh; background: var(--nevoa); color: var(--texto); }
 .admin-topbar {

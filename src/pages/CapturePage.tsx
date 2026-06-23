@@ -255,14 +255,26 @@ export function CapturePage() {
               <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}><IconMapPin size={13} stroke={2.2} /> Detectando localização…</span>
             </div>
           </div>
-          <div style={{ padding: '20px 0 calc(env(safe-area-inset-bottom,0px) + 24px)', display: 'flex', justifyContent: 'center' }}>
-            <button onClick={disparar} aria-label="Tirar foto" style={{ width: 76, height: 76, borderRadius: 999, border: '5px solid rgba(255,255,255,.6)', background: '#fff', cursor: 'pointer' }} />
+          <div style={{ padding: '20px 0 calc(env(safe-area-inset-bottom,0px) + 24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
+            <div className="stepper" style={{ marginBottom: 20 }}>
+              <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
+              <div className="step"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
+              <div className="step"><span className="num">3</span> Enviar</div>
+            </div>
+            <button onClick={disparar} aria-label="Tirar foto" style={{ width: 76, height: 76, borderRadius: 999, border: '4px solid rgba(255,255,255,.35)', background: '#fff', cursor: 'pointer', boxShadow: '0 0 0 8px rgba(31,227,200,.18), 0 14px 30px rgba(0,0,0,.5)' }}>
+              <div style={{ width: '100%', height: '100%', borderRadius: 999, background: 'var(--turq)', transform: 'scale(0.85)' }} />
+            </button>
           </div>
         </>
       )}
 
       {etapa === 'selecionar-pico' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
+          <div className="stepper" style={{ marginBottom: 24 }}>
+            <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
+            <div className="step on"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
+            <div className="step"><span className="num">3</span> Enviar</div>
+          </div>
           <IconMapPin size={40} stroke={1.5} style={{ margin: '0 auto', display: 'block', color: 'var(--turq)' }} />
           <h2 style={{ color: '#fff', marginTop: 12, textAlign: 'center' }}>Qual é o pico?</h2>
           <p style={{ color: 'rgba(255,255,255,.65)', textAlign: 'center', fontSize: 13 }}>
@@ -319,6 +331,11 @@ export function CapturePage() {
 
       {etapa === 'classificar' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
+          <div className="stepper" style={{ marginBottom: 24 }}>
+            <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
+            <div className="step on"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
+            <div className="step on"><span className="num">3</span> Enviar</div>
+          </div>
           <div style={{ height: 200, borderRadius: 18, background: 'linear-gradient(155deg,#9fc6e3,#3F8DC7)', marginBottom: 8 }} />
           <span className="tag ok"><IconArrowUp size={13} stroke={2.2} /> subindo em background</span>
           <h2 style={{ color: '#fff', marginTop: 16 }}>O que você registrou?</h2>

@@ -59,37 +59,34 @@ export function MapaPage() {
         <AccountMenu />
       </div>
 
-      <div style={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(var(--altura-nav) + 14px)' }}>
-        {sel ? (
-          <div className="card pad row">
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-              <IconRipple size={26} stroke={2} />
+      {sel && (
+        <div className="sheet">
+          <div className="grip" onClick={() => setSel(null)} style={{ cursor: 'pointer' }}></div>
+          <div className="row">
+            <div className="thumb">
+              <IconRipple size={24} style={{ color: 'var(--foam)', margin: '13px' }} />
             </div>
             <div style={{ flex: 1 }}>
-              <b>{sel.nome}</b>
-              <div className="muted">
-                {sel.municipio}/{sel.uf} · radar ativo{alertas > 0 ? ` · ${alertas} alerta${alertas > 1 ? 's' : ''}` : ''}
+              <div className="between">
+                <h3 style={{ fontSize: 16 }}>{sel.nome}</h3>
+                <span className="badge b-info">Ativo</span>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <Link to={`/pico/${sel.id}`} className="btn" style={{ minHeight: 42 }}>Abrir</Link>
-                <button className="btn outline" style={{ minHeight: 42 }} onClick={() => (onboarded ? navigate('/capturar') : abrir())}>
-                  Registrar
-                </button>
+              <div className="muted" style={{ marginTop: 2 }}>
+                {sel.municipio} · {sel.uf}
+                {alertas > 0 ? ` · ${alertas} alerta${alertas > 1 ? 's' : ''}` : ''}
               </div>
             </div>
           </div>
-        ) : (
-          <div className="card pad row">
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--azul-claro)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
-              <IconRipple size={26} stroke={2} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <b>Explore o litoral</b>
-              <div className="muted">Toque num pico para ver detalhes e registrar a condição do dia.</div>
-            </div>
+          <div className="row" style={{ marginTop: 12 }}>
+            <Link to={`/pico/${sel.id}`} className="btn full" style={{ minHeight: 40, height: 40, fontSize: 13 }}>
+              Abrir pico
+            </Link>
+            <button className="btn outline full" style={{ minHeight: 40, height: 40, fontSize: 13 }} onClick={() => (onboarded ? navigate('/capturar') : abrir())}>
+              Registrar
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
