@@ -13,7 +13,8 @@
   --text:#092233; --muted:#5E7280; --line:#DCE8EE;
   --amber:#F4B740; --coral:#E86F61; --foam:#FFFFFF; --ink:#04181F;
 
-  --grad-ocean: linear-gradient(150deg,#0A3A4C 0%, #0D6EA8 54%, #1ECBC3 100%);
+  --grad-ocean: linear-gradient(150deg,#0A3A4C 0%, #0E5C70 52%, #15A597 100%);
+  --shadow-cta: 0 10px 24px -8px rgba(30,203,195,.5);
   --shell-bg: radial-gradient(130% 55% at 50% -10%, rgba(30,203,195,.12), transparent 60%), #F5FAFC;
   --shadow-sm: 0 8px 22px -14px rgba(9,34,51,.22);
   --shadow: 0 16px 36px -18px rgba(9,34,51,.26);
@@ -58,6 +59,7 @@
               radial-gradient(100% 50% at 100% 100%, rgba(46,155,214,.10), transparent 55%), #06212C;
   --shadow-sm: 0 12px 30px -18px rgba(0,0,0,.6);
   --shadow: 0 22px 48px -20px rgba(0,0,0,.62);
+  --shadow-cta: 0 10px 24px -8px rgba(31,227,200,.7);
 
   --primary:#22E3C7; --on-primary:#04181F;
   --map-bg:#06202B;
@@ -175,10 +177,10 @@ input, select, textarea { accent-color: var(--turq); }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 0; border-radius: var(--raio-sm);
-  min-height: 50px; padding: 0 18px;
+  min-height: 46px; padding: 0 18px;
   background: var(--primary); color: var(--on-primary);
-  font-size: 15px; font-weight: 700; cursor: pointer;
-  box-shadow: 0 12px 24px -16px rgba(9, 34, 51, 0.5);
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  box-shadow: var(--shadow-cta);
 }
 .btn:active { transform: translateY(1px); }
 .btn.full { width: 100%; }
@@ -197,12 +199,29 @@ input, select, textarea { accent-color: var(--turq); }
 }
 .pill.active { background: var(--chip-on-bg); border-color: transparent; color: var(--chip-on-fg); }
 
-/* tags / selos */
+/* tags / selos (legado) */
 .tag { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 700; }
 .tag.cinza { background: var(--chip-bg); color: var(--muted); border: 1px solid var(--line); }
 .tag.alerta { background: var(--tag-alert-bg); color: var(--tag-alert-fg); }
 .tag.ok { background: var(--tag-ok-bg); color: var(--tag-ok-fg); }
 .tag.mar { background: var(--tag-info-bg); color: var(--tag-info-fg); }
+
+/* Badges Ocean Tech Premium */
+.badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800; letter-spacing: 0.01em; }
+.b-good { background: rgba(95,227,174,.16); color: var(--aqua); }
+.b-info { background: rgba(31,227,200,.15); color: var(--turq); }
+.b-warn { background: rgba(244,195,107,.16); color: var(--amber); }
+.b-alert { background: rgba(255,140,118,.16); color: var(--coral); }
+.b-glass { background: rgba(4,20,27,.55); color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+/* Insight Card */
+.insight {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--insight-bg); border: 1px solid rgba(31,227,200,.22);
+  border-radius: 12px; padding: 9px 11px;
+  font-size: 12px; font-weight: 600; color: var(--insight-fg);
+}
+.insight i, .insight svg { color: var(--turq); font-size: 15px; }
 
 /* inputs */
 .input {
