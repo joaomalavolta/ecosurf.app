@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconSearch, IconRipple } from '@tabler/icons-react'
+import { IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
@@ -39,12 +39,9 @@ export function MapaPage() {
     <div className="page" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* Header padrão com onda */}
       <Header title="Mapa" sub="Explore praias, alertas e mutirões.">
-        {/* Busca + Filtros dentro do header */}
+        {/* Filtros centralizados */}
         <div style={{ marginTop: 14 }}>
-          <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, padding: 11, color: 'rgba(255,255,255,.8)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,.2)' }}>
-            <IconSearch size={16} stroke={2} /> Buscar praia, pico ou alerta
-          </div>
-          <div className="pills" style={{ marginTop: 10 }}>
+          <div className="pills" style={{ justifyContent: 'center' }}>
             <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
             <Pill on={filtro === 'picos'} onClick={() => setFiltro('picos')}>Picos</Pill>
             <Pill on={filtro === 'alertas'} onClick={() => setFiltro('alertas')}>Alertas</Pill>

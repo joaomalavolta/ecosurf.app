@@ -220,7 +220,9 @@ export function MapView({
       style: estiloSatelite,
       center: [-46.79, -24.19],
       zoom: 10.5,
+      attributionControl: false,
     })
+    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     map.addControl(new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
