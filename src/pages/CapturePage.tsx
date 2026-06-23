@@ -26,6 +26,17 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   })
 }
 
+/** Distância em km entre dois pontos (lat/lng) usando fórmula Haversine. */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371 // raio da terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 /**
  * Registrar em 2 toques: o botão central já trouxe o usuário aqui (toque 1).
  * "Abrir câmera" → disparo (toque 2). A CLASSIFICAÇÃO vem DEPOIS da captura,
@@ -109,12 +120,35 @@ export function CapturePage() {
       const { carregarPicos } = await import('../services/picos')
       const picos = await carregarPicos()
       let minD = Infinity
+      let melhorPico: string | null = null
       for (const p of picos) {
-        const d = Math.hypot(p.lat - pos.lat, p.lng - pos.lng)
-        if (d < minD) { minD = d; finalPicoId = p.id }
+        const d = haversineKm(pos.lat, pos.lng, p.lat, p.lng)
+        if (d < minD) { minD = d; melhorPico = p.id }
+      }
+      // Só atribui automaticamente se estiver a menos de 2km do pico mais próximo
+      if (melhorPico && minD < 2) {
+        finalPicoId = melhorPico
       }
     }
-    if (!finalPicoId) finalPicoId = 'praia-do-sonho'
+    if (!finalPicoId) {
+      // Sem GPS ou longe demais — pedir seleção manual
+      const { carregarPicos } = await import('../services/picos')
+      const picos = await carregarPicos()
+      const escolha = window.prompt(
+        'Não conseguimos detectar o pico pelo GPS.\nDigite o nome ou parte do nome da praia:',
+        ''
+      )
+      if (escolha) {
+        const normalizado = escolha.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        const match = picos.find(p => 
+          p.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizado) ||
+          p.praia.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(normalizado)
+        )
+        finalPicoId = match?.id ?? picos[0]?.id ?? 'praia-do-sonho'
+      } else {
+        finalPicoId = picos[0]?.id ?? 'praia-do-sonho'
+      }
+    }
 
     // Upload otimista: a foto entra na fila offline AGORA, sobe quando der.
     const id = crypto.randomUUID()

@@ -48,38 +48,52 @@ export function PerfilPage() {
 
   async function uploadAvatar(file: File) {
     try {
-      const bmp = await createImageBitmap(file)
+      // Redimensionar para max 512px
+      const img = await createImageBitmap(file)
       const size = 512
-      const escala = Math.min(1, size / Math.max(bmp.width, bmp.height))
-      const w = Math.round(bmp.width * escala)
-      const h = Math.round(bmp.height * escala)
+      const escala = Math.min(1, size / Math.max(img.width, img.height))
+      const w = Math.round(img.width * escala)
+      const h = Math.round(img.height * escala)
       const c = document.createElement('canvas')
       c.width = w
       c.height = h
-      c.getContext('2d')?.drawImage(bmp, 0, 0, w, h)
-      bmp.close?.()
-      const blob = await new Promise<Blob>((res) => c.toBlob((b) => res(b as Blob), 'image/webp', 0.85))
+      const ctx = c.getContext('2d')
+      if (!ctx) throw new Error('Navegador não suporta canvas')
+      ctx.drawImage(img, 0, 0, w, h)
+      if (typeof img.close === 'function') img.close()
+      
+      const blob = await new Promise<Blob>((resolve, reject) => 
+        c.toBlob((b) => b ? resolve(b) : reject(new Error('Falha ao converter imagem')), 'image/webp', 0.85)
+      )
       
       const { sb } = await import('../services/supabase/client')
       const { data } = await sb().auth.getSession()
       const u = data.session?.user
-      if (!u) return
+      if (!u) { alert('Você precisa estar logado para alterar o avatar.'); return }
       
       const path = `${u.id}/avatar.webp`
+      
+      // Tentar remover arquivo antigo primeiro (ignora erro se não existir)
+      await sb().storage.from('avatars').remove([path]).catch(() => {})
+      
+      // Upload como novo arquivo
       const up = await sb().storage.from('avatars').upload(path, blob, {
         contentType: 'image/webp',
         upsert: true,
       })
-      if (up.error) throw up.error
+      if (up.error) throw new Error(`Upload falhou: ${up.error.message}`)
       
-      const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl
+      // Gerar URL pública com cache-bust
+      const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now()
       
-      await sb().from('perfis').update({ foto_url: url }).eq('id', u.id)
+      const upd = await sb().from('perfis').update({ foto_url: url }).eq('id', u.id)
+      if (upd.error) throw new Error(`Salvar perfil falhou: ${upd.error.message}`)
       
       setPerfil(p => p ? { ...p, avatarUrl: url } : p)
       alert('Avatar atualizado com sucesso!')
     } catch (e: any) {
-      alert('Erro ao enviar avatar: ' + e.message)
+      console.error('Avatar upload error:', e)
+      alert('Erro ao enviar avatar: ' + (e?.message || 'erro desconhecido'))
     }
   }
 
