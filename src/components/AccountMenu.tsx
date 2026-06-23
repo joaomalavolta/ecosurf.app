@@ -12,6 +12,7 @@ import {
   IconChevronRight,
 } from '@tabler/icons-react'
 import { meuStatus, permissoes, sair, type Papel } from '../services/admin'
+import { useOnboarding } from '../onboarding/OnboardingContext'
 
 /* ── Helpers de PWA ──────────────────────────────────────────────────── */
 let _deferredPrompt: BeforeInstallPromptEvent | null = null
@@ -62,6 +63,7 @@ export function AccountMenu() {
   const [instalado, setInstalado] = useState(jaInstalado())
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const { abrir } = useOnboarding()
 
   useEffect(() => {
     let vivo = true
@@ -355,7 +357,7 @@ export function AccountMenu() {
               </button>
             ) : (
               <button
-                onClick={() => ir('/perfil')}
+                onClick={() => { setAberto(false); abrir() }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
