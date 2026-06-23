@@ -9,13 +9,13 @@
   /* base */
   --bg:#F5FAFC; --bg-soft:#EEF6F8; --card:#FFFFFF; --card-soft:#F8FCFD;
   --deep:#062B45; --deep-2:#0A3A4C; --petrol:#0A3A4C;
-  --radar:#0D6EA8; --turq:#1ECBC3; --aqua:#39B88F;
+  --radar:#0D6EA8; --turq:#2E9BD6; --aqua:#1A7FB8;
   --text:#092233; --muted:#5E7280; --line:#DCE8EE;
   --amber:#F4B740; --coral:#E86F61; --foam:#FFFFFF; --ink:#04181F;
 
   --grad-ocean: linear-gradient(150deg,#0A3A4C 0%, #0E5C70 52%, #15A597 100%);
-  --shadow-cta: 0 10px 24px -8px rgba(30,203,195,.5);
-  --shell-bg: radial-gradient(130% 55% at 50% -10%, rgba(30,203,195,.12), transparent 60%), #F5FAFC;
+  --shadow-cta: 0 10px 24px -8px rgba(13,110,168,.45);
+  --shell-bg: radial-gradient(130% 55% at 50% -10%, rgba(46,155,214,.12), transparent 60%), #F5FAFC;
   --shadow-sm: 0 8px 22px -14px rgba(9,34,51,.22);
   --shadow: 0 16px 36px -18px rgba(9,34,51,.26);
 
@@ -25,19 +25,19 @@
   --nav-bg:rgba(255,255,255,.92); --nav-line:#DCE8EE; --nav-inactive:#7C93A0; --nav-active:#0D6EA8;
   --metric-bg:#F8FCFD;
   --chip-bg:#EEF6F8; --chip-fg:#062B45; --chip-on-bg:#062B45; --chip-on-fg:#FFFFFF;
-  --tag-ok-bg:rgba(57,184,143,.16);   --tag-ok-fg:#1C8A63;
+  --tag-ok-bg:rgba(26,127,184,.14);   --tag-ok-fg:#0D6EA8;
   --tag-warn-bg:rgba(244,183,64,.20); --tag-warn-fg:#8A5E00;
   --tag-alert-bg:rgba(232,111,97,.16);--tag-alert-fg:#C2483A;
   --tag-info-bg:rgba(13,110,168,.12); --tag-info-fg:#0B5E91;
-  --insight-bg:rgba(30,203,195,.12);  --insight-fg:#062B45;
+  --insight-bg:rgba(46,155,214,.12);  --insight-fg:#062B45;
 
   /* aliases dos nomes antigos (compat) */
   --stroke:var(--line); --glass:var(--card); --glass-2:#EEF6F8; --mist:var(--muted);
   --surface:#FFFFFF; --surface-2:#F8FCFD;
-  --azul-abissal:#062B45; --azul:#0D6EA8; --azul-medio:#2E9BD6; --azul-claro:rgba(30,203,195,.16);
-  --verde:#39B88F; --verde-claro:rgba(57,184,143,.16);
+  --azul-abissal:#062B45; --azul:#0D6EA8; --azul-medio:#2E9BD6; --azul-claro:rgba(46,155,214,.16);
+  --verde:#1A7FB8; --verde-claro:rgba(26,127,184,.14);
   --branco:#FFFFFF; --nevoa:#F5FAFC; --cinza:#EEF6F8; --cinza-borda:#DCE8EE;
-  --texto:#092233; --perigo:#E86F61; --perigo-bg:rgba(232,111,97,.16); --ok:#1C8A63;
+  --texto:#092233; --perigo:#E86F61; --perigo-bg:rgba(232,111,97,.16); --ok:#0D6EA8;
 
   --raio:22px; --raio-sm:14px;
   --sombra:var(--shadow); --sombra-sm:var(--shadow-sm);
@@ -53,34 +53,34 @@ a { text-decoration: none; }
 
   --bg:#06212C; --bg-soft:#0A2A37; --card:rgba(255,255,255,.06); --card-soft:rgba(255,255,255,.04);
   --deep:#062B45; --deep-2:#0A3A4C; --petrol:#0A3A4C;
-  --radar:#2E9BD6; --turq:#22E3C7; --aqua:#5FE3AE;
+  --radar:#2E9BD6; --turq:#5BB8E8; --aqua:#4AAED6;
   --text:#EAF8F9; --muted:#9CBAC5; --line:rgba(255,255,255,.12);
   --amber:#F4C36B; --coral:#FF8C76; --foam:#FFFFFF; --ink:#04181F;
 
-  --shell-bg: radial-gradient(130% 60% at 50% -12%, rgba(34,227,199,.12), transparent 60%),
+  --shell-bg: radial-gradient(130% 60% at 50% -12%, rgba(91,184,232,.12), transparent 60%),
               radial-gradient(100% 50% at 100% 100%, rgba(46,155,214,.10), transparent 55%), #06212C;
   --shadow-sm: 0 12px 30px -18px rgba(0,0,0,.6);
   --shadow: 0 22px 48px -20px rgba(0,0,0,.62);
-  --shadow-cta: 0 10px 24px -8px rgba(31,227,200,.7);
+  --shadow-cta: 0 10px 24px -8px rgba(91,184,232,.5);
 
-  --primary:#22E3C7; --on-primary:#04181F;
+  --primary:#5BB8E8; --on-primary:#04181F;
   --map-bg:#06202B;
   --input-bg:rgba(255,255,255,.04);
-  --nav-bg:rgba(7,28,37,.82); --nav-line:rgba(255,255,255,.12); --nav-inactive:#9CBAC5; --nav-active:#22E3C7;
+  --nav-bg:rgba(7,28,37,.82); --nav-line:rgba(255,255,255,.12); --nav-inactive:#9CBAC5; --nav-active:#5BB8E8;
   --metric-bg:rgba(255,255,255,.05);
-  --chip-bg:rgba(255,255,255,.06); --chip-fg:#EAF8F9; --chip-on-bg:#22E3C7; --chip-on-fg:#04181F;
-  --tag-ok-bg:rgba(95,227,174,.16);   --tag-ok-fg:#5FE3AE;
+  --chip-bg:rgba(255,255,255,.06); --chip-fg:#EAF8F9; --chip-on-bg:#5BB8E8; --chip-on-fg:#04181F;
+  --tag-ok-bg:rgba(91,184,232,.16);   --tag-ok-fg:#5BB8E8;
   --tag-warn-bg:rgba(244,195,107,.16);--tag-warn-fg:#F4C36B;
   --tag-alert-bg:rgba(255,140,118,.16);--tag-alert-fg:#FF8C76;
   --tag-info-bg:rgba(46,155,214,.16); --tag-info-fg:#7FC6EA;
-  --insight-bg:rgba(34,227,199,.12);  --insight-fg:#D5F6F0;
+  --insight-bg:rgba(91,184,232,.12);  --insight-fg:#D5F0F6;
 
   --stroke:var(--line); --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.10); --mist:var(--muted);
   --surface:#0B2A37; --surface-2:#0E3A4A;
-  --azul-abissal:#072330; --azul:#22E3C7; --azul-medio:#2E9BD6; --azul-claro:rgba(34,227,199,.16);
-  --verde:#5FE3AE; --verde-claro:rgba(95,227,174,.16);
+  --azul-abissal:#072330; --azul:#5BB8E8; --azul-medio:#2E9BD6; --azul-claro:rgba(91,184,232,.16);
+  --verde:#4AAED6; --verde-claro:rgba(74,174,214,.16);
   --branco:rgba(255,255,255,.06); --nevoa:#06212C; --cinza:rgba(255,255,255,.06); --cinza-borda:rgba(255,255,255,.12);
-  --texto:#EAF8F9; --perigo:#FF8C76; --perigo-bg:rgba(255,140,118,.16); --ok:#5FE3AE;
+  --texto:#EAF8F9; --perigo:#FF8C76; --perigo-bg:rgba(255,140,118,.16); --ok:#5BB8E8;
 }
 
 * { box-sizing: border-box; }
@@ -187,7 +187,7 @@ input, select, textarea { accent-color: var(--turq); }
 .btn:active { transform: translateY(1px); }
 .btn.full { width: 100%; }
 .btn.outline { background: transparent; color: var(--text); border: 1.5px solid var(--line); box-shadow: none; }
-.btn.acento { background: var(--aqua); color: #05312F; } /* CTA de registro */
+.btn.acento { background: var(--aqua); color: #fff; } /* CTA de registro */
 
 /* pílulas / chips */
 .pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
@@ -210,8 +210,8 @@ input, select, textarea { accent-color: var(--turq); }
 
 /* Badges Ocean Tech Premium */
 .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800; letter-spacing: 0.01em; }
-.b-good { background: rgba(95,227,174,.16); color: var(--aqua); }
-.b-info { background: rgba(31,227,200,.15); color: var(--turq); }
+.b-good { background: rgba(26,127,184,.14); color: var(--aqua); }
+.b-info { background: rgba(46,155,214,.15); color: var(--turq); }
 .b-warn { background: rgba(244,195,107,.16); color: var(--amber); }
 .b-alert { background: rgba(255,140,118,.16); color: var(--coral); }
 .b-glass { background: rgba(4,20,27,.55); color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
@@ -219,7 +219,7 @@ input, select, textarea { accent-color: var(--turq); }
 /* Insight Card */
 .insight {
   display: flex; align-items: center; gap: 8px;
-  background: var(--insight-bg); border: 1px solid rgba(31,227,200,.22);
+  background: var(--insight-bg); border: 1px solid rgba(46,155,214,.22);
   border-radius: 12px; padding: 9px 11px;
   font-size: 12px; font-weight: 600; color: var(--insight-fg);
 }
@@ -352,8 +352,8 @@ table.adt tr:last-child td { border-bottom: 0; }
   transition: box-shadow .2s;
 }
 .story-ring.recent {
-  background: linear-gradient(135deg, #39B88F, #2BD4A0);
-  box-shadow: 0 0 0 3px rgba(57, 184, 143, .2);
+  background: linear-gradient(135deg, #0D6EA8, #2E9BD6);
+  box-shadow: 0 0 0 3px rgba(13, 110, 168, .2);
 }
 .story-ring.today {
   background: linear-gradient(135deg, #0D6EA8, #2E9BD6);

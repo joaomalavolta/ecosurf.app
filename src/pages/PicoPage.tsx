@@ -151,10 +151,10 @@ export function PicoPage() {
         <div>
           <div className="between" style={{ margin: '4px 2px 10px' }}>
             <h2 style={{ fontSize: 19 }}>Timeline do dia</h2>
-            <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.length} fotos</span>
+            <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id)).length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} />
+          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} />
         </div>
 
         <div className="card pad">
