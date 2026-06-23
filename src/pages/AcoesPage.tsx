@@ -6,20 +6,18 @@ import {
   IconAlertTriangle,
   IconHeartHandshake,
   IconBolt,
-  IconFlask2,
-  IconDroplet,
-  IconFish,
-  IconMicroscope,
   IconRecycle,
+  IconDroplet,
+  IconTrash,
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { carregarAmeacas } from '../services/picos'
-import type { Ameaca } from '../types/domain'
+import type { Alerta } from '../types/domain'
 
 /**
- * Hub único — Ameaças, Mutirões, Limpeza e Ciência são SEÇÕES de uma página
- * rolável, não 4 telas escondidas atrás de um menu.
+ * Hub de ações — Alertas, Mutirões e Limpeza.
+ * Ciência cidadã foi removida conforme redesign.
  */
 function Linha({
   Icon,
@@ -69,25 +67,26 @@ function Secao({ titulo, children }: { titulo: ReactNode; children: ReactNode })
 }
 
 export function AcoesPage() {
-  const [ameacas, setAmeacas] = useState<Ameaca[]>([])
+  const [alertas, setAlertas] = useState<Alerta[]>([])
   useEffect(() => {
     let vivo = true
-    carregarAmeacas().then((a) => vivo && setAmeacas(a))
+    carregarAmeacas().then((a) => vivo && setAlertas(a))
     return () => {
       vivo = false
     }
   }, [])
   return (
     <div className="page">
-      <Header title="Ações" sub="Registrar, defender a costa, mobilizar e gerar dado." />
+      <Header title="Ações" sub="Registrar, defender a costa e mobilizar." />
       <div className="page-pad stack">
         <Link to="/capturar" className="btn acento full" style={{ minHeight: 56, fontSize: 16 }}>
           <IconCamera size={20} stroke={2} /> Registrar agora — 2 toques
         </Link>
 
-        <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Ameaças costeiras</>}>
-          {ameacas.map((a) => (
-            <Linha key={a.id} Icon={IconAlertTriangle} cor="var(--perigo)" titulo={a.titulo} texto={`${a.municipio}/${a.uf} · ${a.status} · localização ${a.precisao}`} />
+        <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Alertas ambientais</>}>
+          {alertas.length === 0 && <p className="muted">Nenhum alerta ativo no momento.</p>}
+          {alertas.map((a) => (
+            <Linha key={a.id} Icon={a.categoria === 'lixo' ? IconTrash : a.categoria === 'esgoto' ? IconDroplet : IconAlertTriangle} cor={a.categoria === 'lixo' ? '#E84855' : a.categoria === 'esgoto' ? '#7B8794' : 'var(--perigo)'} titulo={a.titulo} texto={`${a.municipio}/${a.uf} · ${a.status}`} />
           ))}
         </Secao>
 
@@ -98,13 +97,6 @@ export function AcoesPage() {
 
         <Secao titulo={<><IconRecycle size={19} stroke={2} /> Limpeza</>}>
           <Linha Icon={IconBolt} titulo="Modo rápido" texto="Peso, tempo, participantes e fotos." />
-          <Linha Icon={IconFlask2} titulo="Modo científico" texto="Item por item, material e contagem." />
-        </Secao>
-
-        <Secao titulo={<><IconFlask2 size={19} stroke={2} /> Ciência cidadã</>}>
-          <Linha Icon={IconDroplet} titulo="Qualidade visual da água" texto="Cor, odor, espuma, turbidez, sinais de esgoto." />
-          <Linha Icon={IconFish} titulo="Fauna observada" texto="Ocorrências especiais e fauna impactada." />
-          <Linha Icon={IconMicroscope} titulo="Microplásticos" texto="Presença visual, área observada e evidência." />
         </Secao>
       </div>
     </div>
