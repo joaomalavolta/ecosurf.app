@@ -46,6 +46,8 @@
   --largura-app:480px; --altura-nav:76px;
 }
 
+a { text-decoration: none; }
+
 :root[data-theme="dark"] {
   color-scheme: dark;
 
