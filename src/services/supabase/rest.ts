@@ -102,6 +102,7 @@ interface AmeacaRow {
   titulo: string
   categoria: string
   status: string
+  gravidade: string | null
   pico_id: string | null
   municipio: string | null
   uf: string | null
@@ -118,6 +119,7 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     titulo: r.titulo,
     categoria: r.categoria as Ameaca['categoria'],
     status: r.status as Ameaca['status'],
+    gravidade: (r.gravidade ?? 'media') as Ameaca['gravidade'],
     picoId: r.pico_id ?? undefined,
     municipio: r.municipio ?? '',
     uf: r.uf ?? '',

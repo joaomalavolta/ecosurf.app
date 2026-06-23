@@ -105,24 +105,49 @@ export interface EventoVento {
   rotulo: string;
 }
 
-/** Alerta socioambiental sobre a costa. */
-export type CategoriaAlerta = 'esgoto' | 'lixo' | 'erosao' | 'privatizacao' | 'obra' | 'poluicao' | 'outro';
-export type StatusAlerta = 'identificado' | 'em-observacao' | 'recorrente' | 'resolvido';
+/** Registro ambiental colaborativo. */
+export type CategoriaAlerta =
+  | 'lixo-praia'
+  | 'lixo-rio'
+  | 'esgoto'
+  | 'erosao'
+  | 'oleo'
+  | 'animal'
+  | 'entulho'
+  | 'microplasticos'
+  | 'espuma'
+  | 'queimada'
+  | 'ocupacao'
+  | 'outro';
+
+export type GravidadeAlerta = 'baixa' | 'media' | 'alta' | 'emergencial';
+
+export type StatusAlerta =
+  | 'publicado'       // "Publicado pela comunidade"
+  | 'em-revisao'      // "Em revisão pela moderação"
+  | 'validado'        // "Validado visualmente"
+  | 'sinalizado'      // "Sinalizado pela comunidade"
+  | 'ocultado'        // "Ocultado por inconsistência"
+  | 'removido';       // "Removido por violar regras"
 
 export interface Alerta {
   id: string;
   titulo: string;
   categoria: CategoriaAlerta;
   status: StatusAlerta;
+  gravidade: GravidadeAlerta;
   picoId?: string;
   municipio: string;
   uf: UF;
-  /** Para proteger denunciante: localização grosseira por padrão. */
+  localNome?: string;
+  /** Para proteger o autor: localização grosseira por padrão. */
   precisao: 'exata' | 'aproximada';
-  /** Coordenada GROSSEIRA (geom_aprox) — nunca a exata. */
   lat?: number;
   lng?: number;
   descricao?: string;
+  images?: string[];
+  recorrente?: boolean;
+  checkboxAceite?: boolean;
 }
 
 /** @deprecated Use Alerta */
@@ -133,24 +158,39 @@ export type CategoriaAmeaca = CategoriaAlerta;
 export type StatusAmeaca = StatusAlerta;
 
 /** Mobilização da comunidade (limpeza, restinga, mutirão de praia). */
-export type StatusMutirao = 'agendado' | 'realizado' | 'cancelado';
+export type TipoAcaoMutirao = 'limpeza' | 'educativa' | 'restauracao' | 'monitoramento' | 'outro';
+export type StatusMutirao = 'rascunho' | 'agendado' | 'realizado' | 'cancelado';
 
 export interface Mutirao {
   id: string;
   titulo: string;
-  /** Local público e EXATO — diferente da ameaça, aqui a meta é juntar gente. */
+  tipoAcao?: TipoAcaoMutirao;
   picoId?: string;
   municipio: string;
   uf: UF;
-  /** Início do mutirão (ISO). */
   quando: string;
-  /** Janela legível, ex. "8h às 11h". */
   horario?: string;
   organizador?: string;
+  instituicao?: string;
+  contato?: string;
+  pontoEncontro?: string;
+  imagemUrl?: string;
   inscritos?: number;
   vagas?: number;
+  infoVoluntarios?: string;
   status: StatusMutirao;
   lat: number;
   lng: number;
   descricao?: string;
+  rascunho?: boolean;
 }
+
+/** Rascunho salvo pelo usuário (armazenado no Supabase). */
+export interface Rascunho {
+  id: string;
+  tipo: 'alerta' | 'mutirao';
+  dados: Record<string, unknown>;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+

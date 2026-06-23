@@ -1,0 +1,180 @@
+import type { CategoriaAlerta, GravidadeAlerta, Rascunho } from '../types/domain'
+import { SUPABASE_URL, SUPABASE_KEY, TEM_BACKEND } from './supabase/config'
+
+/**
+ * Service para o módulo "+ Nova Ação":
+ * - Publicar alerta ambiental
+ * - Publicar mutirão
+ * - Gerenciar rascunhos
+ */
+
+async function authed() {
+  const { sb } = await import('./supabase/client')
+  const { data } = await sb().auth.getSession()
+  const u = data.session?.user
+  if (!u) throw new Error('Faça login para publicar.')
+  return { sb: sb(), user: u, token: data.session!.access_token }
+}
+
+/* ─── Alerta Ambiental ─── */
+
+export interface DadosAlerta {
+  titulo: string
+  categoria: CategoriaAlerta
+  gravidade: GravidadeAlerta
+  descricao?: string
+  localNome?: string
+  municipio: string
+  uf: string
+  lat: number
+  lng: number
+  recorrente?: boolean
+  checkboxAceite: boolean
+  images?: File[]
+}
+
+export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  // Upload de imagens
+  const imagePaths: string[] = []
+  if (dados.images) {
+    for (const file of dados.images.slice(0, 3)) {
+      const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
+      const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
+      if (!error) imagePaths.push(path)
+    }
+  }
+
+  const body = {
+    titulo: dados.titulo,
+    categoria: dados.categoria,
+    status: 'publicado',
+    gravidade: dados.gravidade,
+    geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
+    geom_aprox: `SRID=4326;POINT(${dados.lng + (Math.random() - 0.5) * 0.01} ${dados.lat + (Math.random() - 0.5) * 0.01})`,
+    municipio: dados.municipio,
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    local_nome: dados.localNome ?? null,
+    precisao: 'aproximada',
+    denunciante_id: user.id,
+    anonima: false,
+    descricao: dados.descricao ?? null,
+    images: imagePaths.length > 0 ? imagePaths : null,
+    recorrente: dados.recorrente ?? false,
+    checkbox_aceite: dados.checkboxAceite,
+  }
+
+  const { data, error } = await sb.from('ameacas').insert(body).select('id').single()
+  if (error) throw new Error(`Erro ao publicar: ${error.message}`)
+  return data.id
+}
+
+/* ─── Mutirão ─── */
+
+export interface DadosMutirao {
+  titulo: string
+  tipoAcao: string
+  descricao?: string
+  municipio: string
+  uf: string
+  lat: number
+  lng: number
+  quando: string
+  horarioInicio?: string
+  horarioFim?: string
+  pontoEncontro?: string
+  organizador?: string
+  instituicao?: string
+  contato?: string
+  vagas?: number
+  infoVoluntarios?: string
+  imagemCapa?: File
+  rascunho?: boolean
+}
+
+export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  let imagemUrl: string | null = null
+  if (dados.imagemCapa) {
+    const path = `mutiroes/${user.id}/${Date.now()}.jpg`
+    const { error } = await sb.storage.from('fotos').upload(path, dados.imagemCapa, { contentType: dados.imagemCapa.type })
+    if (!error) {
+      const { data: urlData } = sb.storage.from('fotos').getPublicUrl(path)
+      imagemUrl = urlData.publicUrl
+    }
+  }
+
+  const horario = [dados.horarioInicio, dados.horarioFim].filter(Boolean).join(' às ')
+
+  const body = {
+    titulo: dados.titulo,
+    tipo_acao: dados.tipoAcao,
+    geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
+    municipio: dados.municipio,
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    quando: dados.quando,
+    horario: horario || null,
+    ponto_encontro: dados.pontoEncontro ?? null,
+    organizador: dados.organizador ?? null,
+    organizador_id: user.id,
+    instituicao: dados.instituicao ?? null,
+    contato: dados.contato ?? null,
+    vagas: dados.vagas ?? null,
+    info_voluntarios: dados.infoVoluntarios ?? null,
+    imagem_url: imagemUrl,
+    status: dados.rascunho ? 'rascunho' : 'agendado',
+    rascunho: dados.rascunho ?? false,
+    descricao: dados.descricao ?? null,
+  }
+
+  const { data, error } = await sb.from('mutiroes').insert(body).select('id').single()
+  if (error) throw new Error(`Erro ao publicar: ${error.message}`)
+  return data.id
+}
+
+/* ─── Rascunhos ─── */
+
+export async function salvarRascunho(tipo: 'alerta' | 'mutirao', dados: Record<string, unknown>): Promise<string> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  const { data, error } = await sb.from('rascunhos').upsert({
+    user_id: user.id,
+    tipo,
+    dados,
+    atualizado_em: new Date().toISOString(),
+  }).select('id').single()
+  if (error) throw new Error(`Erro ao salvar rascunho: ${error.message}`)
+  return data.id
+}
+
+export async function listarRascunhos(): Promise<Rascunho[]> {
+  if (!TEM_BACKEND) return []
+  try {
+    const { sb, user } = await authed()
+    const { data, error } = await sb.from('rascunhos')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('atualizado_em', { ascending: false })
+    if (error || !data) return []
+    return data.map((r: any) => ({
+      id: r.id,
+      tipo: r.tipo,
+      dados: r.dados,
+      criadoEm: r.criado_em,
+      atualizadoEm: r.atualizado_em,
+    }))
+  } catch {
+    return []
+  }
+}
+
+export async function excluirRascunho(id: string): Promise<void> {
+  if (!TEM_BACKEND) return
+  const { sb } = await authed()
+  await sb.from('rascunhos').delete().eq('id', id)
+}

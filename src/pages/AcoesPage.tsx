@@ -5,19 +5,16 @@ import {
   IconCamera,
   IconAlertTriangle,
   IconHeartHandshake,
-  IconBolt,
-  IconRecycle,
-  IconDroplet,
-  IconTrash,
+  IconPlus,
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { carregarAmeacas } from '../services/picos'
-import type { Alerta } from '../types/domain'
+import { categoriaPorId } from '../components/SeletorCategoria'
+import { carregarAmeacas, carregarMutiroes } from '../services/picos'
+import type { Alerta, Mutirao } from '../types/domain'
 
 /**
- * Hub de ações — Alertas, Mutirões e Limpeza.
- * Ciência cidadã foi removida conforme redesign.
+ * Hub de ações — Alertas, Mutirões e "+ Nova Ação".
  */
 function Linha({
   Icon,
@@ -33,17 +30,14 @@ function Linha({
   to?: string
 }) {
   const inner = (
-    <div className="card pad row" style={!to ? { opacity: 0.7, cursor: 'default' } : undefined}>
+    <div className="card pad row">
       <div
         style={{ width: 50, height: 50, borderRadius: 16, background: 'var(--cinza)', color: cor, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}
       >
         <Icon size={24} stroke={2} />
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <b>{titulo}</b>
-          {!to && <span className="tag" style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', color: 'var(--muted)' }}>Em breve</span>}
-        </div>
+        <b>{titulo}</b>
         <div className="muted">{texto}</div>
       </div>
     </div>
@@ -66,37 +60,73 @@ function Secao({ titulo, children }: { titulo: ReactNode; children: ReactNode })
   )
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  publicado: 'Publicado pela comunidade',
+  'em-revisao': 'Em revisão',
+  validado: 'Validado',
+  sinalizado: 'Sinalizado',
+  identificado: 'Publicado',
+  'em-observacao': 'Em observação',
+  recorrente: 'Recorrente',
+  resolvido: 'Resolvido',
+}
+
 export function AcoesPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
+  const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
+
   useEffect(() => {
     let vivo = true
     carregarAmeacas().then((a) => vivo && setAlertas(a))
+    carregarMutiroes().then((m) => vivo && setMutiroes(m))
     return () => {
       vivo = false
     }
   }, [])
+
   return (
     <div className="page">
       <Header title="Ações" sub="Registrar, defender a costa e mobilizar." />
       <div className="page-pad stack">
-        <Link to="/capturar" className="btn acento full" style={{ minHeight: 56, fontSize: 16 }}>
-          <IconCamera size={20} stroke={2} /> Registrar agora — 2 toques
-        </Link>
+        {/* Botões principais */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link to="/capturar" className="btn acento full" style={{ minHeight: 50, fontSize: 14 }}>
+            <IconCamera size={18} stroke={2} /> Foto rápida
+          </Link>
+          <Link to="/nova-acao" className="btn full" style={{ minHeight: 50, fontSize: 14, background: 'var(--azul-abissal)', color: '#fff' }}>
+            <IconPlus size={18} stroke={2} /> Nova Ação
+          </Link>
+        </div>
 
-        <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Alertas ambientais</>}>
-          {alertas.length === 0 && <p className="muted">Nenhum alerta ativo no momento.</p>}
-          {alertas.map((a) => (
-            <Linha key={a.id} Icon={a.categoria === 'lixo' ? IconTrash : a.categoria === 'esgoto' ? IconDroplet : IconAlertTriangle} cor={a.categoria === 'lixo' ? '#E84855' : a.categoria === 'esgoto' ? '#7B8794' : 'var(--perigo)'} titulo={a.titulo} texto={`${a.municipio}/${a.uf} · ${a.status}`} />
+        {/* Alertas Ambientais */}
+        <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Registros ambientais</>}>
+          {alertas.length === 0 && <p className="muted">Nenhum registro ambiental no momento.</p>}
+          {alertas.map((a) => {
+            const cat = categoriaPorId(a.categoria)
+            return (
+              <Linha
+                key={a.id}
+                Icon={cat.icone}
+                cor={cat.cor}
+                titulo={a.titulo}
+                texto={`${a.municipio}/${a.uf} · ${STATUS_LABELS[a.status] ?? a.status}`}
+              />
+            )
+          })}
+        </Secao>
+
+        {/* Mutirões */}
+        <Secao titulo={<><IconHeartHandshake size={19} stroke={2} color="#FF8C42" /> Mutirões</>}>
+          {mutiroes.length === 0 && <p className="muted">Nenhum mutirão agendado no momento.</p>}
+          {mutiroes.map((m) => (
+            <Linha
+              key={m.id}
+              Icon={IconHeartHandshake}
+              cor="#FF8C42"
+              titulo={m.titulo}
+              texto={`${m.municipio}/${m.uf} · ${m.horario ?? new Date(m.quando).toLocaleDateString('pt-BR')}${m.vagas ? ` · ${m.vagas} vagas` : ''}`}
+            />
           ))}
-        </Secao>
-
-        <Secao titulo={<><IconHeartHandshake size={19} stroke={2} /> Mutirões</>}>
-          <Linha Icon={IconHeartHandshake} titulo="Mutirão Praia dos Pescadores" texto="Sábado · 8h às 11h · 46 inscritos" />
-          <Linha Icon={IconHeartHandshake} titulo="Restinga Viva" texto="Domingo · Peruíbe · 22 vagas" />
-        </Secao>
-
-        <Secao titulo={<><IconRecycle size={19} stroke={2} /> Limpeza</>}>
-          <Linha Icon={IconBolt} titulo="Modo rápido" texto="Peso, tempo, participantes e fotos." />
         </Secao>
       </div>
     </div>

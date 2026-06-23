@@ -19,34 +19,38 @@ const CIRCLE_PIN = (bg: string, paths: string) =>
     </g>
   </svg>`
 
+/* Paths SVG dos ícones Tabler usados em cada pin */
+const WAVE = '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/><path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>'
+const PEOPLE = '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'
+const DROP = '<path d="M12 3c-3.2 4.5-6 7.5-6 10.5a6 6 0 0 0 12 0c0-3-2.8-6-6-10.5z"/>'
+const TRASH = '<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/>'
+const BOTTLE = '<path d="M10 5h4"/><path d="M10 5v-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/><rect x="8" y="5" width="8" height="14" rx="1.5"/><path d="M11 8v6"/><path d="M13 8v6"/>'
+const MOUNTAIN = '<path d="M3 20h18"/><path d="M12 4l-8 16h16z"/>'
+const FLAME = '<path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z"/>'
+const FISH = '<path d="M16.69 7.44a6.973 6.973 0 0 0-1.69 4.56c0 1.747 .642 3.346 1.7 4.57"/><path d="M2 9.504c7.4 8.83 14.6 7.83 19-1.504-4.4-9.33-11.6-10.33-19-1.504z"/><circle cx="14.5" cy="11.5" r=".5" fill="#fff"/>'
+const DOT = '<circle cx="12" cy="12" r="4"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/>'
+const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-6-2.749-6s-2.5 3.582-2.5 8s-.5 8-2.5 8s-2.452-2.547-2.749-6c-.1-1.147-.867-2-1.763-2h-1.928"/>'
+const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
+const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
+const SKULL = '<path d="M12 4c4.418 0 8 3.358 8 7.5c0 1.901-.755 3.637-2 4.96v2.54a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-2.54c-1.245-1.322-2-3.058-2-4.96c0-4.142 3.582-7.5 8-7.5z"/><path d="M10 17v.01"/><path d="M14 17v.01"/>'
+
 /** Ícones por categoria — círculos coloridos com ícones brancos */
 const ICONES: Record<string, string> = {
-  // Pico — azul, onda
-  'ic-pico': CIRCLE_PIN(
-    '#0D6EA8',
-    '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>' +
-      '<path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>'
-  ),
-  // Mutirão — laranja, pessoas
-  'ic-mutirao': CIRCLE_PIN(
-    '#FF8C42',
-    '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/>' +
-      '<path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>' +
-      '<path d="M16 3.13a4 4 0 0 1 0 7.75"/>' +
-      '<path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'
-  ),
-  // Esgoto — cinza, droplet
-  'ic-esgoto': CIRCLE_PIN(
-    '#7B8794',
-    '<path d="M12 3c-3.2 4.5-6 7.5-6 10.5a6 6 0 0 0 12 0c0-3-2.8-6-6-10.5z"/>'
-  ),
-  // Lixo — vermelho, garrafa
-  'ic-lixo': CIRCLE_PIN(
-    '#E84855',
-    '<path d="M10 5h4"/><path d="M10 5v-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/>' +
-      '<rect x="8" y="5" width="8" height="14" rx="1.5"/>' +
-      '<path d="M11 8v6"/><path d="M13 8v6"/>'
-  ),
+  'ic-pico':           CIRCLE_PIN('#0D6EA8', WAVE),
+  'ic-mutirao':        CIRCLE_PIN('#FF8C42', PEOPLE),
+  // 12 categorias de alerta ambiental
+  'ic-lixo-praia':     CIRCLE_PIN('#E84855', TRASH),
+  'ic-lixo-rio':       CIRCLE_PIN('#D64045', BOTTLE),
+  'ic-esgoto':         CIRCLE_PIN('#7B8794', DROP),
+  'ic-erosao':         CIRCLE_PIN('#C17817', MOUNTAIN),
+  'ic-oleo':           CIRCLE_PIN('#3D3D3D', DOT),
+  'ic-animal':         CIRCLE_PIN('#5B8C5A', FISH),
+  'ic-entulho':        CIRCLE_PIN('#9B6B4D', TRASH),
+  'ic-microplasticos': CIRCLE_PIN('#B266B2', DOT),
+  'ic-espuma':         CIRCLE_PIN('#5E8C61', WAVESINE),
+  'ic-queimada':       CIRCLE_PIN('#FF6B35', FLAME),
+  'ic-ocupacao':       CIRCLE_PIN('#8B6914', HOME),
+  'ic-outro':          CIRCLE_PIN('#6B7280', QUESTION),
 }
 
 const SRC = 'feicoes'
@@ -68,13 +72,11 @@ function colecao({ picos, alertas, mutiroes }: Dados): FeatureCollection<Point> 
   }
   for (const a of alertas) {
     if (a.lat == null || a.lng == null) continue
-    // Subcategorizar alertas: esgoto e lixo têm pins diferentes
-    const sub = (a.categoria === 'esgoto' || a.categoria === 'lixo') ? a.categoria : 'esgoto'
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
       properties: {
-        tipo: sub,
+        tipo: a.categoria,
         id: a.id,
         titulo: a.titulo,
         status: a.status,
@@ -298,9 +300,24 @@ export function MapView({
           'icon-image': [
             'match',
             ['get', 'tipo'],
+            'lixo-praia', 'ic-lixo-praia',
+            'lixo-rio', 'ic-lixo-rio',
             'esgoto', 'ic-esgoto',
-            'lixo', 'ic-lixo',
+            'erosao', 'ic-erosao',
+            'oleo', 'ic-oleo',
+            'animal', 'ic-animal',
+            'entulho', 'ic-entulho',
+            'microplasticos', 'ic-microplasticos',
+            'espuma', 'ic-espuma',
+            'queimada', 'ic-queimada',
+            'ocupacao', 'ic-ocupacao',
+            'outro', 'ic-outro',
             'mutirao', 'ic-mutirao',
+            // legacy fallbacks
+            'lixo', 'ic-lixo-praia',
+            'poluicao', 'ic-oleo',
+            'privatizacao', 'ic-ocupacao',
+            'obra', 'ic-entulho',
             'ic-pico', // default: pico
           ],
           'icon-size': 1,

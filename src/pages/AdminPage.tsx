@@ -24,7 +24,7 @@ const MODULOS: { id: ModId; rotulo: string; Icone: typeof IconPhoto; pode: (p: P
   { id: 'fotos', rotulo: 'Fotos', Icone: IconPhoto, pode: (p) => p.modera },
   { id: 'registros', rotulo: 'Registros', Icone: IconClipboardList, pode: (p) => p.acessa },
   { id: 'usuarios', rotulo: 'Usuários', Icone: IconUsers, pode: (p) => p.gerenciaUsuarios },
-  { id: 'ameacas', rotulo: 'Ameaças', Icone: IconAlertTriangle, pode: (p) => p.modera },
+  { id: 'ameacas', rotulo: 'Alertas', Icone: IconAlertTriangle, pode: (p) => p.modera },
   { id: 'picos', rotulo: 'Picos', Icone: IconMapPin, pode: (p) => p.gerenciaPicos },
   { id: 'relatorios', rotulo: 'Relatórios', Icone: IconReportAnalytics, pode: (p) => p.acessa },
   { id: 'logs', rotulo: 'Logs', Icone: IconHistory, pode: (p) => p.veLogs },
@@ -347,7 +347,7 @@ function ModuloUsuarios({ eu }: { eu: Eu }) {
 }
 
 // ───────────────────────────────────────────────────────────────── Ameaças ──
-const AMEACA_STATUS = ['identificado', 'em-observacao', 'recorrente', 'resolvido']
+const AMEACA_STATUS = ['publicado', 'em-revisao', 'validado', 'sinalizado', 'ocultado', 'removido', 'identificado', 'em-observacao', 'recorrente', 'resolvido']
 
 function ModuloAmeacas({ perm }: { perm: Permissoes }) {
   const [itens, setItens] = useState<Ameaca[] | null>(null)
@@ -370,7 +370,7 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
 
   return (
     <section className="admin-content">
-      <Titulo nome="Ameaças" desc="Denúncias ambientais. A localização exata fica protegida; aqui só município/UF." />
+      <Titulo nome="Alertas Ambientais" desc="Registros ambientais colaborativos. A localização exata fica protegida; aqui só município/UF." />
       {erro && <Estado>Erro ao carregar ameaças.</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
       {itens && itens.length === 0 && <Estado>Nenhuma ameaça registrada.</Estado>}

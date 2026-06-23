@@ -674,4 +674,42 @@ table.adt tr:last-child td { border-bottom: 0; }
   white-space: nowrap;
 }
 
+/* ─── Form inputs (módulo Nova Ação) ─── */
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color .15s;
+  box-sizing: border-box;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--turq);
+  box-shadow: 0 0 0 3px rgba(46,155,214,.15);
+}
+textarea.input { line-height: 1.5; }
+select.input { appearance: auto; cursor: pointer; }
 
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+/* btn acento (Nova Ação) */
+.btn.acento {
+  background: var(--turq);
+  color: #fff;
+  border-color: transparent;
+}
+.btn.acento:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
