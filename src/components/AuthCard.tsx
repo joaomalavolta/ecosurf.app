@@ -8,7 +8,7 @@ import { temBackend } from '../services/api'
 export function AuthCard() {
   const [metodo, setMetodo] = useState<'email' | 'telefone'>('email')
   const [fase, setFase] = useState<'inicio' | 'codigo'>('inicio')
-  const [valor, setValor] = useState('')
+  const [valor, setValor] = useState(() => localStorage.getItem('ecosurf:last_email') || '')
   const [codigo, setCodigo] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
   const ativo = temBackend()
@@ -21,6 +21,7 @@ export function AuthCard() {
     try {
       const auth = await import('../services/supabase/auth')
       if (metodo === 'email') {
+        localStorage.setItem('ecosurf:last_email', valor.trim())
         await auth.entrarComEmail(valor.trim())
         setFase('codigo')
         setMsg('Enviamos um link e um código numérico para seu e-mail.')

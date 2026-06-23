@@ -25,7 +25,7 @@ async function resizeAvatar(file: File): Promise<Blob> {
 
 export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vindas' }: { onConcluir: () => void; onExplorar: () => void; etapaInicial?: 'boas-vindas' | 'email' }) {
   const [etapa, setEtapa] = useState<Etapa>(etapaInicial)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => localStorage.getItem('ecosurf:last_email') || '')
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
   const [cpf, setCpf] = useState('')
@@ -50,6 +50,9 @@ export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vi
     setMsg(null)
     setCarregando(true)
     try {
+      if (etapa === 'email') {
+        localStorage.setItem('ecosurf:last_email', email)
+      }
       await fn()
       depois?.()
     } catch (e: any) {
