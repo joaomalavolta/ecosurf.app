@@ -95,7 +95,7 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
 
   return (
     <div style={{ ...SHELL, ...bgStyle }}>
-      <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 140, margin: '0 auto 24px', display: 'block' }} />
+      <img src="/logo_ecosurf.png" alt="Ecosurf" style={{ width: 210, margin: '64px auto 32px', display: 'block' }} />
       {etapa === 'boas-vindas' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }} />
