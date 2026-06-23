@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag } from '@tabler/icons-react'
+import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
@@ -167,6 +167,48 @@ export function TideScrubTimeline({
             <Photo seed={f.id} url={f.url} alt={f.observacao ?? 'Foto do pico'} style={{ width: '100%', height: '100%' }} />
           </motion.div>
         </AnimatePresence>
+
+        {/* Setas de navegação */}
+        {ordenadas.length > 1 && (
+          <>
+            {ativo > 0 && (
+              <button
+                onClick={() => { setDir(-1); setScrubHora(null); setAtivo(a => Math.max(0, a - 1)) }}
+                aria-label="Foto anterior"
+                style={{
+                  position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(6px)',
+                  border: '1px solid rgba(255,255,255,.2)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 5,
+                }}
+              >
+                <IconChevronLeft size={20} stroke={2.5} />
+              </button>
+            )}
+            {ativo < ordenadas.length - 1 && (
+              <button
+                onClick={() => { setDir(1); setScrubHora(null); setAtivo(a => Math.min(ordenadas.length - 1, a + 1)) }}
+                aria-label="Próxima foto"
+                style={{
+                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'rgba(0,0,0,.45)', backdropFilter: 'blur(6px)',
+                  border: '1px solid rgba(255,255,255,.2)',
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 5,
+                }}
+              >
+                <IconChevronRight size={20} stroke={2.5} />
+              </button>
+            )}
+            {/* Contador */}
+            <div style={{ position: 'absolute', bottom: 80, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,.5)', borderRadius: 10, padding: '2px 8px', color: '#fff', fontSize: 11, zIndex: 5 }}>
+              {ativo + 1} / {ordenadas.length}
+            </div>
+          </>
+        )}
 
         <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
           <span className="tag" style={{ background: 'rgba(11,58,83,.72)', color: '#fff' }}>
