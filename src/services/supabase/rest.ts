@@ -191,6 +191,14 @@ export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
   )
 }
 
+/** Últimas fotos globais da plataforma, independente do pico. */
+export async function restUltimasFotosGlobais(limite = 10): Promise<FotoRow[]> {
+  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
+  return rest<FotoRow[]>(
+    `fotos_publicas?select=${cols}&storage_path=not.is.null&order=capturada_em.desc&limit=${limite}`
+  )
+}
+
 export async function restPicosComRelatoHoje(): Promise<string[]> {
   const inicio = new Date()
   inicio.setHours(0, 0, 0, 0)
