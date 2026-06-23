@@ -485,3 +485,76 @@ table.adt tr:last-child td { border-bottom: 0; }
   color: inherit;
 }
 .pico-list-item:active { opacity: .85; }
+
+/* ───────────────── Tide Day Tabs (Timeline multi-dia) ───────────────── */
+.tide-day-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  gap: 2px;
+  padding: 8px 14px 0;
+  border-top: 1px solid var(--line);
+}
+.tide-day-tabs::-webkit-scrollbar { display: none; }
+
+.tide-day-tab {
+  flex: 1;
+  min-width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px 6px;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--muted);
+  transition: color .15s, border-color .15s;
+}
+.tide-day-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--turq);
+}
+.tide-day-tab.hoje .tide-day-label {
+  font-weight: 800;
+}
+.tide-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tide-day-badge {
+  font-size: 9px;
+  font-weight: 800;
+  background: var(--turq);
+  color: #fff;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ───────────────── Share Button (FeedCard) ───────────────── */
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,.16);
+  border: none;
+  color: #fff;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.share-btn:hover { background: rgba(255,255,255,.28); }
+.share-btn:active { transform: scale(0.95); }
+

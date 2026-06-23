@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { IconCamera, IconAlertTriangle } from '@tabler/icons-react'
+import { IconCamera, IconAlertTriangle, IconShare } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
-import { TideScrubTimeline } from '../components/TideScrubTimeline'
+import { TideScrubTimeline, compartilharPico } from '../components/TideScrubTimeline'
 import { carregarPico, carregarAmeacas } from '../services/picos'
 import { carregarFeed } from '../services/feed'
 import { buscarForecast } from '../services/forecast'
@@ -17,6 +17,7 @@ export function PicoPage() {
   const [pico, setPico] = useState<Pico | null | undefined>(undefined) // undefined = carregando
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
+  const [curvasMultiDia, setCurvasMultiDia] = useState<Record<string, PontoMare[]>>({})
   const [ameacas, setAmeacas] = useState<Ameaca[]>([])
   const [feed, setFeed] = useState<FeedDia | null>(null)
   const [fotosOtimistas, setFotosOtimistas] = useState<Foto[]>([])
@@ -89,7 +90,20 @@ export function PicoPage() {
     if (!pico) return
     let vivo = true
     buscarForecast(pico).then((f) => vivo && setFc(f))
-    tideProvider.curvaDoDia(pico, new Date()).then((c) => vivo && setCurva(c))
+    // Buscar curvas de maré para 7 dias (-3 a +3)
+    const hoje = new Date()
+    tideProvider.curvaDoDia(pico, hoje).then((c) => vivo && setCurva(c))
+    const fetchMultiDia = async () => {
+      const resultado: Record<string, PontoMare[]> = {}
+      for (let i = -3; i <= 3; i++) {
+        const d = new Date(hoje)
+        d.setDate(d.getDate() + i)
+        const key = d.toISOString().slice(0, 10)
+        resultado[key] = await tideProvider.curvaDoDia(pico, d)
+      }
+      if (vivo) setCurvasMultiDia(resultado)
+    }
+    fetchMultiDia()
     return () => {
       vivo = false
     }
@@ -140,7 +154,7 @@ export function PicoPage() {
             <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline picoId={pico.id} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas]} curva={curva} eventos={[]} />
+          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} />
         </div>
 
         <div className="card pad">
@@ -163,7 +177,16 @@ export function PicoPage() {
           </div>
         )}
 
-        <Link to={`/capturar?pico=${pico.id}`} className="btn full"><IconCamera size={18} stroke={2} /> Registrar agora neste pico</Link>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link to={`/capturar?pico=${pico.id}`} className="btn full" style={{ flex: 1 }}><IconCamera size={18} stroke={2} /> Registrar</Link>
+          <button
+            onClick={() => compartilharPico(pico.id, pico.nome, fc ? rotularCondicao(fc.ondaM, fc.vento.tipo) : undefined)}
+            className="btn outline"
+            style={{ flex: 0, minWidth: 56 }}
+          >
+            <IconShare size={18} stroke={2} />
+          </button>
+        </div>
       </div>
     </div>
   )

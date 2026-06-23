@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconShieldCheck, IconPhoto } from '@tabler/icons-react'
+import { IconShieldCheck, IconPhoto, IconShare } from '@tabler/icons-react'
+import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
 import { ForecastStrip } from './ForecastStrip'
@@ -111,6 +112,22 @@ export function FeedCard({
               <IconPhoto size={14} stroke={2} /> {fotosComUrl.length}
             </span>
           )}
+          <button
+            className="share-btn"
+            style={{ background: 'var(--turq)', color: '#fff', fontSize: 10 }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              compartilharPico(
+                fotos[0].picoId,
+                pico?.nome ?? fotos[0].picoId,
+                forecast ? undefined : undefined,
+              )
+            }}
+            aria-label="Compartilhar pico"
+          >
+            <IconShare size={13} stroke={2} /> Enviar
+          </button>
         </div>
 
         {forecast && (
