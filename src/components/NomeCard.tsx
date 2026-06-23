@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { temBackend } from '../services/api'
 
 /** Define o nome de exibição que aparece nos registros do usuário no feed. */
-export function NomeCard() {
-  const [nome, setNome] = useState('')
+export function NomeCard({ defaultNome = '' }: { defaultNome?: string }) {
+  const [nome, setNome] = useState(defaultNome)
   const [msg, setMsg] = useState<string | null>(null)
   const ativo = temBackend()
 
