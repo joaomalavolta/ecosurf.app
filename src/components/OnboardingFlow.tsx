@@ -88,7 +88,7 @@ export function OnboardingFlow({ onConcluir, onExplorar }: { onConcluir: () => v
           <div style={{ flex: 1 }} />
           <div>
             <p style={{ color: 'rgba(255,255,255,.9)', lineHeight: 1.5, fontSize: 16, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-              Aqui o mar é observado por quem vive sintonizado com ele. Para contribuir e registrar a condição dos picos e proteger os ecossistemas de surf, você faz cadastro rápido. Junte-se a nós e faça a diferença!
+              Aqui o mar é observado por quem vive sintonizado com ele. Para contribuir e registrar a condição dos picos e proteger os ecossistemas de surf. Faça um cadastro rápido, junte-se a nós e faça a diferença!
             </p>
             <div className="stack" style={{ marginTop: 32 }}>
               <button className="btn full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 16, height: 48 }} onClick={() => setEtapa('email')}>Criar conta e contribuir</button>
