@@ -110,7 +110,7 @@ input, select, textarea { accent-color: var(--turq); }
 
 /* header — gradiente oceânico nos dois temas */
 .header {
-  position: relative; overflow: hidden;
+  position: relative;
   background: var(--grad-ocean);
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
@@ -121,6 +121,7 @@ input, select, textarea { accent-color: var(--turq); }
   width: 184px; height: 184px; border-radius: 999px;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 70%);
   pointer-events: none;
+  clip-path: inset(0 0 0 0);
 }
 .header h1 { font-size: 25px; line-height: 1.06; }
 .header .sub { font-size: 13.5px; color: rgba(255, 255, 255, 0.92); margin-top: 6px; line-height: 1.4; position: relative; }
