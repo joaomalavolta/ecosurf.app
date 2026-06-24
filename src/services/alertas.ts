@@ -50,7 +50,7 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
   const body = {
     titulo: dados.titulo,
     categoria: dados.categoria,
-    status: 'publicado',
+    status: 'identificado',
     gravidade: dados.gravidade,
     geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
     geom_aprox: `SRID=4326;POINT(${dados.lng + (Math.random() - 0.5) * 0.01} ${dados.lat + (Math.random() - 0.5) * 0.01})`,
