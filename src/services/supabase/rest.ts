@@ -110,6 +110,9 @@ interface AmeacaRow {
   descricao: string | null
   lat: number | null
   lng: number | null
+  autor_id: string | null
+  autor_nome: string | null
+  autor_foto: string | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
@@ -127,6 +130,9 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     lat: r.lat ?? undefined,
     lng: r.lng ?? undefined,
     descricao: r.descricao ?? undefined,
+    autorId: r.autor_id ?? undefined,
+    autorNome: r.autor_nome ?? undefined,
+    autorFoto: r.autor_foto ?? undefined,
   }))
 }
 
@@ -151,6 +157,9 @@ interface MutiraoRow {
   lat: number | null
   lng: number | null
   descricao: string | null
+  autor_id: string | null
+  autor_nome: string | null
+  autor_foto: string | null
 }
 
 /** Mutirões públicos futuros e recentes — local EXATO (mobilização aberta). */
@@ -179,7 +188,27 @@ export async function restMutiroes(): Promise<Mutirao[]> {
       lat: r.lat as number,
       lng: r.lng as number,
       descricao: r.descricao ?? undefined,
+      autorId: r.autor_id ?? undefined,
+      autorNome: r.autor_nome ?? undefined,
+      autorFoto: r.autor_foto ?? undefined,
     }))
+}
+
+/** Perfil público de um usuário. */
+export async function restPerfilPublico(userId: string): Promise<import('../../types/domain').PerfilPublico | null> {
+  const rows = await rest<{ id: string; nome: string | null; foto_url: string | null; nivel: string | null; cidade: string | null; criado_em: string }[]>(
+    `perfis_publicos?id=eq.${userId}&select=*`
+  )
+  if (!rows.length) return null
+  const r = rows[0]
+  return {
+    id: r.id,
+    nome: r.nome,
+    fotoUrl: r.foto_url,
+    nivel: r.nivel,
+    cidade: r.cidade,
+    criadoEm: r.criado_em,
+  }
 }
 
 export interface FotoRow {

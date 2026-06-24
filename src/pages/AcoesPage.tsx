@@ -25,12 +25,18 @@ function Linha({
   texto,
   cor = 'var(--turq)',
   to,
+  autorNome,
+  autorFoto,
+  autorId,
 }: {
   Icon: ComponentType<IconProps>
   titulo: string
   texto: string
   cor?: string
   to?: string
+  autorNome?: string
+  autorFoto?: string
+  autorId?: string
 }) {
   const inner = (
     <div className="card pad row">
@@ -42,6 +48,24 @@ function Linha({
       <div style={{ flex: 1 }}>
         <b>{titulo}</b>
         <div className="muted">{texto}</div>
+        {autorNome && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+            {autorFoto ? (
+              <img src={autorFoto} alt="" style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--azul-medio)', color: '#fff', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                {autorNome.charAt(0).toUpperCase()}
+              </div>
+            )}
+            {autorId ? (
+              <Link to={`/usuario/${autorId}`} style={{ fontSize: 11.5, color: 'var(--muted)', textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+                {autorNome}
+              </Link>
+            ) : (
+              <span style={{ fontSize: 11.5, color: 'var(--muted)' }}>{autorNome}</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -120,6 +144,9 @@ export function AcoesPage() {
                 cor={cat.cor}
                 titulo={a.titulo}
                 texto={`${a.municipio}/${a.uf} · ${STATUS_LABELS[a.status] ?? a.status}`}
+                autorNome={a.autorNome}
+                autorFoto={a.autorFoto}
+                autorId={a.autorId}
               />
             )
           })}
@@ -135,6 +162,10 @@ export function AcoesPage() {
               cor="#FF8C42"
               titulo={m.titulo}
               texto={`${m.municipio}/${m.uf} · ${m.horario ?? new Date(m.quando).toLocaleDateString('pt-BR')}${m.vagas ? ` · ${m.vagas} vagas` : ''}`}
+              to={`/mutirao/${m.id}`}
+              autorNome={m.autorNome}
+              autorFoto={m.autorFoto}
+              autorId={m.autorId}
             />
           ))}
         </Secao>

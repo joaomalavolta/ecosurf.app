@@ -15,6 +15,7 @@ import { NovaAcaoPage } from './pages/NovaAcaoPage'
 import { FormularioAlertaPage } from './pages/FormularioAlertaPage'
 import { FormularioMutiraoPage } from './pages/FormularioMutiraoPage'
 import { MutiraoPage } from './pages/MutiraoPage'
+import { UsuarioPage } from './pages/UsuarioPage'
 
 // O mapa carrega o MapLibre (~pesado). Fora do caminho crítico do Radar
 // (entrada diária), para o app abrir leve no 3G da praia.
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/nova-acao/alerta" element={<FormularioAlertaPage />} />
         <Route path="/nova-acao/mutirao" element={<FormularioMutiraoPage />} />
         <Route path="/mutirao/:mutiraoId" element={<MutiraoPage />} />
+        <Route path="/usuario/:userId" element={<UsuarioPage />} />
         </Routes>
         {!semNav && <BottomNav />}
       </div>

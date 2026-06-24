@@ -148,6 +148,10 @@ export interface Alerta {
   images?: string[];
   recorrente?: boolean;
   checkboxAceite?: boolean;
+  /** Autor (perfil público) */
+  autorId?: string;
+  autorNome?: string;
+  autorFoto?: string;
 }
 
 /** @deprecated Use Alerta */
@@ -183,6 +187,10 @@ export interface Mutirao {
   lng: number;
   descricao?: string;
   rascunho?: boolean;
+  /** Autor (perfil público) */
+  autorId?: string;
+  autorNome?: string;
+  autorFoto?: string;
 }
 
 /** Rascunho salvo pelo usuário (armazenado no Supabase). */
@@ -194,3 +202,12 @@ export interface Rascunho {
   atualizadoEm: string;
 }
 
+/** Perfil público visível por outros usuários. */
+export interface PerfilPublico {
+  id: string;
+  nome: string | null;
+  fotoUrl: string | null;
+  nivel: string | null;
+  cidade: string | null;
+  criadoEm: string;
+}
