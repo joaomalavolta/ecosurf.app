@@ -7,8 +7,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['favicon_ecosurf.svg', 'atalho_icone_celular.png', 'og.png', 'logo_ecosurf.png'],
       manifest: {
         name: 'Ecosurf',

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { UploadStatusBar } from './components/UploadStatusBar'
+import { UpdatePrompt } from './components/UpdatePrompt'
 import { OnboardingProvider } from './onboarding/OnboardingContext'
 import { iniciarSincronizacao } from './offline/uploadQueue'
 import { HomePage } from './pages/HomePage'
@@ -37,6 +38,7 @@ export default function App() {
     return (
       <Suspense fallback={<div className="admin" style={{ display: 'grid', placeItems: 'center' }}><p className="muted">Carregando painel…</p></div>}>
         <AdminPage />
+        <UpdatePrompt />
       </Suspense>
     )
   }
@@ -68,6 +70,7 @@ export default function App() {
         <Route path="/usuario/:userId" element={<UsuarioPage />} />
         </Routes>
         {!semNav && <BottomNav />}
+        <UpdatePrompt />
       </div>
     </OnboardingProvider>
   )
