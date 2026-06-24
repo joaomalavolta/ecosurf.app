@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   IconLayoutDashboard, IconPhoto, IconClipboardList, IconUsers, IconAlertTriangle,
   IconMapPin, IconReportAnalytics, IconHistory, IconSettings, IconMenu2, IconLogout,
   IconShieldLock, IconArrowBackUp, IconTrash, IconCheck, IconEyeOff, IconRefresh,
-  IconDownload, IconArrowBackUp as IconRestaurar,
+  IconDownload, IconArrowBackUp as IconRestaurar, IconBan, IconUserX, IconArrowLeft,
+  IconEdit, IconHeartHandshake,
 } from '@tabler/icons-react'
 import { temBackend } from '../services/api'
 import { enviarCodigo, confirmarCodigo } from '../services/perfil'
@@ -76,7 +77,9 @@ function Dashboard() {
             <StatCard k="Fotos ativas" v={ind.fotos} />
             <StatCard k="Fotos pendentes" v={ind.fotosPendentes} />
             <StatCard k="Fotos removidas" v={ind.fotosRemovidas} />
-            <StatCard k="Ameaças" v={ind.ameacas} />
+            <StatCard k="Alertas" v={ind.ameacas} />
+            <StatCard k="Mutirões" v={ind.mutiroes} />
+            <StatCard k="Bloqueados" v={ind.bloqueados} />
             <StatCard k="Ações registradas" v={ind.logs} />
           </div>
           {ind.fotosPendentes > 0 && (
@@ -84,6 +87,14 @@ function Dashboard() {
               <span className="eyebrow">Atenção</span>
               <p style={{ marginTop: 6 }}>
                 {ind.fotosPendentes} foto(s) aguardando moderação.
+              </p>
+            </div>
+          )}
+          {ind.bloqueados > 0 && (
+            <div className="card pad" style={{ marginTop: 8, borderLeft: '4px solid #d97706' }}>
+              <span className="eyebrow">Usuários bloqueados</span>
+              <p style={{ marginTop: 6 }}>
+                {ind.bloqueados} usuário(s) com atividades suspensas.
               </p>
             </div>
           )}
@@ -287,12 +298,18 @@ function ModuloRegistros() {
 // ──────────────────────────────────────────────────────────────── Usuários ──
 const TODOS_PAPEIS: Papel[] = ['user', 'analyst', 'moderator', 'admin', 'super_admin']
 
-function ModuloUsuarios({ eu }: { eu: Eu }) {
+function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
   const [users, setUsers] = useState<UsuarioAdmin[] | null>(null)
   const [erro, setErro] = useState('')
-  useEffect(() => {
+  const [dlgBloquear, setDlgBloquear] = useState<{ user: UsuarioAdmin; motivo: string } | null>(null)
+  const [dlgExcluir, setDlgExcluir] = useState<{ user: UsuarioAdmin; motivo: string } | null>(null)
+  const [trabalhando, setTrabalhando] = useState(false)
+
+  const carregar = useCallback(() => {
+    setErro('')
     admin.listarUsuarios().then(setUsers).catch((e) => setErro(String(e?.message ?? e)))
   }, [])
+  useEffect(() => carregar(), [carregar])
 
   // admin não cria super_admin; só super_admin gere admins e super_admins.
   const base: Papel[] = eu.papel === 'super_admin' ? TODOS_PAPEIS : ['user', 'analyst', 'moderator']
@@ -307,33 +324,101 @@ function ModuloUsuarios({ eu }: { eu: Eu }) {
     }
   }
 
+  async function confirmarBloquear() {
+    if (!dlgBloquear) return
+    setTrabalhando(true)
+    try {
+      const bloquear = !dlgBloquear.user.bloqueado_em
+      await admin.bloquearUsuario(dlgBloquear.user.id, bloquear, dlgBloquear.motivo.trim() || undefined)
+      setUsers((xs) => xs?.map((x) => (x.id === dlgBloquear.user.id ? { ...x, bloqueado_em: bloquear ? new Date().toISOString() : null } : x)) ?? null)
+      setDlgBloquear(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
+
+  async function confirmarExcluir() {
+    if (!dlgExcluir) return
+    setTrabalhando(true)
+    try {
+      await admin.excluirUsuario(dlgExcluir.user.id, dlgExcluir.motivo.trim() || 'sem motivo informado')
+      setUsers((xs) => xs?.filter((x) => x.id !== dlgExcluir.user.id) ?? null)
+      setDlgExcluir(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
+
   return (
     <section className="admin-content">
       <Titulo
         nome="Usuários"
-        desc="Gestão de papéis e acesso. CPF e dados sensíveis não são exibidos (LGPD)."
-        acao={<button className="btn outline" style={{ minHeight: 40 }} disabled={!users?.length} onClick={() => users && admin.baixarCSV('usuarios', users.map((u) => ({ id: u.id, nome: u.nome ?? '', cidade: u.cidade ?? '', papel: u.papel, onboarded: u.onboarded, criado_em: u.criado_em })))}><IconDownload size={16} /> CSV</button>}
+        desc="Gestão de papéis, bloqueio e exclusão de contas. CPF e dados sensíveis não são exibidos (LGPD)."
+        acao={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
+            <button className="btn outline" style={{ minHeight: 40 }} disabled={!users?.length} onClick={() => users && admin.baixarCSV('usuarios', users.map((u) => ({ id: u.id, nome: u.nome ?? '', cidade: u.cidade ?? '', papel: u.papel, onboarded: u.onboarded, bloqueado: u.bloqueado_em ? 'sim' : 'não', criado_em: u.criado_em })))}><IconDownload size={16} /> CSV</button>
+          </div>
+        }
       />
       {erro && <Estado>Erro ao carregar usuários.</Estado>}
       {!users && !erro && <Estado>Carregando…</Estado>}
       {users && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Nome</th><th>Cidade</th><th>Cadastro</th><th>Papel</th><th>Alterar</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Cidade</th><th>Cadastro</th><th>Status</th><th>Papel</th><th>Alterar</th><th>Ações</th></tr></thead>
             <tbody>
               {users.map((u) => {
                 const opcoes = base.includes(u.papel) ? base : [...base, u.papel]
                 const proprio = u.id === eu.id
+                const bloqueado = !!u.bloqueado_em
                 return (
-                  <tr key={u.id}>
-                    <td>{u.nome || <span className="muted">sem nome</span>}{!u.onboarded && <span className="muted" style={{ fontSize: 11 }}> · incompleto</span>}</td>
+                  <tr key={u.id} style={{ opacity: bloqueado ? 0.55 : undefined }}>
+                    <td>
+                      {u.nome || <span className="muted">sem nome</span>}
+                      {!u.onboarded && <span className="muted" style={{ fontSize: 11 }}> · incompleto</span>}
+                    </td>
                     <td>{u.cidade || '—'}</td>
                     <td>{fmtData(u.criado_em)}</td>
+                    <td>
+                      {bloqueado
+                        ? <span className="tag alerta" style={{ fontSize: 11 }}><IconBan size={12} stroke={2.2} /> bloqueado</span>
+                        : <span className="tag ok" style={{ fontSize: 11 }}>ativo</span>
+                      }
+                    </td>
                     <td><RoleBadge papel={u.papel} /></td>
                     <td>
                       <select className="sel" value={u.papel} disabled={proprio} title={proprio ? 'Você não pode alterar o próprio papel' : ''} onChange={(e) => mudar(u, e.target.value as Papel)}>
                         {opcoes.map((p) => <option key={p} value={p}>{p}</option>)}
                       </select>
+                    </td>
+                    <td>
+                      {!proprio && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            className="btn outline"
+                            style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: bloqueado ? 'var(--turq)' : '#d97706', borderColor: bloqueado ? 'rgba(30,203,195,.3)' : '#d9770630' }}
+                            title={bloqueado ? 'Desbloquear usuário' : 'Bloquear atividades do usuário'}
+                            onClick={() => setDlgBloquear({ user: u, motivo: '' })}
+                          >
+                            <IconBan size={14} /> {bloqueado ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                          {perm.excluiPermanente && (
+                            <button
+                              className="btn outline"
+                              style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: 'var(--perigo)', borderColor: 'var(--perigo-bg)' }}
+                              title="Excluir conta permanentemente"
+                              onClick={() => setDlgExcluir({ user: u, motivo: '' })}
+                            >
+                              <IconUserX size={14} /> Excluir
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )
@@ -341,6 +426,52 @@ function ModuloUsuarios({ eu }: { eu: Eu }) {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Dialog: Bloquear / Desbloquear */}
+      {dlgBloquear && (
+        <ConfirmDialog
+          titulo={dlgBloquear.user.bloqueado_em ? `Desbloquear ${dlgBloquear.user.nome || 'usuário'}?` : `Bloquear ${dlgBloquear.user.nome || 'usuário'}?`}
+          texto={dlgBloquear.user.bloqueado_em
+            ? 'O usuário voltará a poder fazer login e contribuir com fotos, alertas e mutirões.'
+            : 'O usuário será impedido de fazer login e contribuir. Fotos e alertas existentes permanecem. Você pode desbloquear a qualquer momento.'
+          }
+          confirmar={trabalhando ? 'Processando…' : dlgBloquear.user.bloqueado_em ? 'Desbloquear' : 'Bloquear'}
+          perigo={!dlgBloquear.user.bloqueado_em}
+          onConfirmar={confirmarBloquear}
+          onCancelar={() => setDlgBloquear(null)}
+        >
+          <textarea
+            className="input"
+            placeholder="Motivo (registrado na auditoria)"
+            value={dlgBloquear.motivo}
+            onChange={(e) => setDlgBloquear({ ...dlgBloquear, motivo: e.target.value })}
+            style={{ marginTop: 12, minHeight: 60, resize: 'vertical' }}
+          />
+        </ConfirmDialog>
+      )}
+
+      {/* Dialog: Excluir conta */}
+      {dlgExcluir && (
+        <ConfirmDialog
+          titulo={`Excluir conta de ${dlgExcluir.user.nome || 'usuário'}?`}
+          texto="Ação IRREVERSÍVEL. Todos os dados do usuário serão apagados: fotos, alertas, mutirões, rascunhos e perfil. Registre o motivo obrigatoriamente."
+          confirmar={trabalhando ? 'Excluindo…' : 'Excluir conta definitivamente'}
+          perigo
+          onConfirmar={confirmarExcluir}
+          onCancelar={() => setDlgExcluir(null)}
+        >
+          <textarea
+            className="input"
+            placeholder="Motivo obrigatório (registrado na auditoria)"
+            value={dlgExcluir.motivo}
+            onChange={(e) => setDlgExcluir({ ...dlgExcluir, motivo: e.target.value })}
+            style={{ marginTop: 12, minHeight: 70, resize: 'vertical' }}
+          />
+          <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', fontSize: 12, color: 'var(--perigo)', lineHeight: 1.4 }}>
+            ⚠️ Esta ação exclui todas as fotos, alertas e mutirões criados por este usuário. Não é possível desfazer.
+          </div>
+        </ConfirmDialog>
       )}
     </section>
   )
@@ -353,9 +484,13 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
   const [itens, setItens] = useState<Ameaca[] | null>(null)
   const [erro, setErro] = useState('')
   const [dlg, setDlg] = useState<{ a: Ameaca; motivo: string } | null>(null)
-  useEffect(() => {
+  const [trabalhando, setTrabalhando] = useState(false)
+
+  const carregar = useCallback(() => {
+    setErro('')
     admin.listarAmeacasAdmin().then(setItens).catch((e) => setErro(String(e?.message ?? e)))
   }, [])
+  useEffect(() => carregar(), [carregar])
 
   async function mudarStatus(a: Ameaca, status: string) {
     setItens((xs) => xs?.map((x) => (x.id === a.id ? { ...x, status } : x)) ?? null)
@@ -363,21 +498,37 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
   }
   async function confirmarExcluir() {
     if (!dlg) return
-    await admin.excluirAmeaca(dlg.a.id, dlg.motivo.trim() || 'sem motivo informado')
-    setItens((xs) => xs?.filter((x) => x.id !== dlg.a.id) ?? null)
-    setDlg(null)
+    setTrabalhando(true)
+    try {
+      await admin.excluirAmeaca(dlg.a.id, dlg.motivo.trim() || 'sem motivo informado')
+      setItens((xs) => xs?.filter((x) => x.id !== dlg.a.id) ?? null)
+      setDlg(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
   }
 
   return (
     <section className="admin-content">
-      <Titulo nome="Alertas Ambientais" desc="Registros ambientais colaborativos. A localização exata fica protegida; aqui só município/UF." />
-      {erro && <Estado>Erro ao carregar ameaças.</Estado>}
+      <Titulo
+        nome="Alertas Ambientais"
+        desc="Registros ambientais colaborativos. Altere status, exclua ou exporte."
+        acao={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
+            <button className="btn outline" style={{ minHeight: 40 }} disabled={!itens?.length} onClick={() => itens && admin.baixarCSV('alertas', itens as unknown as Record<string, unknown>[])}><IconDownload size={16} /> CSV</button>
+          </div>
+        }
+      />
+      {erro && <Estado>Erro ao carregar alertas.</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
       {itens && itens.length === 0 && <Estado>Nenhum alerta registrado.</Estado>}
       {itens && itens.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Título</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th>{perm.excluiPermanente && <th></th>}</tr></thead>
+            <thead><tr><th>Título</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {itens.map((a) => (
                 <tr key={a.id}>
@@ -390,9 +541,11 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
                       {AMEACA_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
-                  {perm.excluiPermanente && (
-                    <td><button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: 'var(--perigo)' }} onClick={() => setDlg({ a, motivo: '' })}><IconTrash size={14} /></button></td>
-                  )}
+                  <td>
+                    <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: 'var(--perigo)' }} onClick={() => setDlg({ a, motivo: '' })}>
+                      <IconTrash size={14} /> Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -400,7 +553,7 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
         </div>
       )}
       {dlg && (
-        <ConfirmDialog titulo="Excluir alerta?" texto="Ação definitiva. Registre o motivo." confirmar="Excluir" perigo onConfirmar={confirmarExcluir} onCancelar={() => setDlg(null)}>
+        <ConfirmDialog titulo="Excluir alerta?" texto="Ação definitiva. Registre o motivo." confirmar={trabalhando ? 'Excluindo…' : 'Excluir'} perigo onConfirmar={confirmarExcluir} onCancelar={() => setDlg(null)}>
           <textarea className="input" placeholder="Motivo" value={dlg.motivo} onChange={(e) => setDlg({ ...dlg, motivo: e.target.value })} style={{ marginTop: 12, minHeight: 60 }} />
         </ConfirmDialog>
       )}
@@ -410,45 +563,163 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
 
 // ──────────────────────────────────────────────────────────────────── Picos ──
 const VISIBILIDADES: Array<'publico' | 'comunidade' | 'abafado'> = ['publico', 'comunidade', 'abafado']
+const FUNDOS: Array<'areia' | 'pedra' | 'misto'> = ['areia', 'pedra', 'misto']
 
-function ModuloPicos() {
+function ModuloPicos({ perm }: { perm: Permissoes }) {
   const [picos, setPicos] = useState<PicoAdm[] | null>(null)
   const [erro, setErro] = useState('')
-  useEffect(() => {
+  const [editando, setEditando] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{ nome: string; praia: string; municipio: string; uf: string; fundo: string }>({ nome: '', praia: '', municipio: '', uf: '', fundo: 'areia' })
+  const [dlgExcluir, setDlgExcluir] = useState<{ pico: PicoAdm; motivo: string } | null>(null)
+  const [trabalhando, setTrabalhando] = useState(false)
+
+  const carregar = useCallback(() => {
+    setErro('')
     admin.listarPicosAdmin().then(setPicos).catch((e) => setErro(String(e?.message ?? e)))
   }, [])
+  useEffect(() => carregar(), [carregar])
 
-  async function mudar(p: PicoAdm, visibilidade: 'publico' | 'comunidade' | 'abafado') {
+  async function mudarVisibilidade(p: PicoAdm, visibilidade: 'publico' | 'comunidade' | 'abafado') {
     setPicos((xs) => xs?.map((x) => (x.id === p.id ? { ...x, visibilidade } : x)) ?? null)
     await admin.definirVisibilidade(p.id, visibilidade)
   }
 
+  function iniciarEdicao(p: PicoAdm) {
+    setEditando(p.id)
+    setEditForm({ nome: p.nome, praia: p.praia, municipio: p.municipio ?? '', uf: p.uf ?? '', fundo: p.fundo })
+  }
+
+  async function salvarEdicao(p: PicoAdm) {
+    setTrabalhando(true)
+    try {
+      await admin.editarPico(p.id, editForm)
+      setPicos((xs) => xs?.map((x) => (x.id === p.id ? { ...x, ...editForm } : x)) ?? null)
+      setEditando(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
+
+  async function confirmarExcluir() {
+    if (!dlgExcluir) return
+    setTrabalhando(true)
+    try {
+      await admin.excluirPico(dlgExcluir.pico.id, dlgExcluir.motivo.trim() || 'sem motivo informado')
+      setPicos((xs) => xs?.filter((x) => x.id !== dlgExcluir.pico.id) ?? null)
+      setDlgExcluir(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
+
   return (
     <section className="admin-content">
-      <Titulo nome="Picos" desc="Catálogo de picos. A visibilidade controla o que aparece no radar público." />
+      <Titulo
+        nome="Picos"
+        desc="Catálogo de picos. Edite, exclua ou altere a visibilidade."
+        acao={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
+            <button className="btn outline" style={{ minHeight: 40 }} disabled={!picos?.length} onClick={() => picos && admin.baixarCSV('picos', picos as unknown as Record<string, unknown>[])}><IconDownload size={16} /> CSV</button>
+          </div>
+        }
+      />
       {erro && <Estado>Erro ao carregar picos.</Estado>}
       {!picos && !erro && <Estado>Carregando…</Estado>}
       {picos && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Nome</th><th>Praia</th><th>Local</th><th>Fundo</th><th>Visibilidade</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Praia</th><th>Local</th><th>Fundo</th><th>Visibilidade</th><th>Ações</th></tr></thead>
             <tbody>
-              {picos.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.nome}</td>
-                  <td>{p.praia}</td>
-                  <td>{[p.municipio, p.uf].filter(Boolean).join(' / ') || '—'}</td>
-                  <td>{p.fundo}</td>
-                  <td>
-                    <select className="sel" value={p.visibilidade} onChange={(e) => mudar(p, e.target.value as 'publico' | 'comunidade' | 'abafado')}>
-                      {VISIBILIDADES.map((v) => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                  </td>
-                </tr>
-              ))}
+              {picos.map((p) => {
+                const isEditing = editando === p.id
+                return (
+                  <tr key={p.id}>
+                    <td>
+                      {isEditing
+                        ? <input className="input" value={editForm.nome} onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })} style={{ minWidth: 120, padding: '4px 8px', fontSize: 13 }} />
+                        : p.nome
+                      }
+                    </td>
+                    <td>
+                      {isEditing
+                        ? <input className="input" value={editForm.praia} onChange={(e) => setEditForm({ ...editForm, praia: e.target.value })} style={{ minWidth: 100, padding: '4px 8px', fontSize: 13 }} />
+                        : p.praia
+                      }
+                    </td>
+                    <td>
+                      {isEditing
+                        ? <div style={{ display: 'flex', gap: 4 }}>
+                            <input className="input" placeholder="Cidade" value={editForm.municipio} onChange={(e) => setEditForm({ ...editForm, municipio: e.target.value })} style={{ width: 100, padding: '4px 8px', fontSize: 13 }} />
+                            <input className="input" placeholder="UF" maxLength={2} value={editForm.uf} onChange={(e) => setEditForm({ ...editForm, uf: e.target.value.toUpperCase() })} style={{ width: 46, padding: '4px 8px', fontSize: 13 }} />
+                          </div>
+                        : [p.municipio, p.uf].filter(Boolean).join(' / ') || '—'
+                      }
+                    </td>
+                    <td>
+                      {isEditing
+                        ? <select className="sel" value={editForm.fundo} onChange={(e) => setEditForm({ ...editForm, fundo: e.target.value })}>
+                            {FUNDOS.map((f) => <option key={f} value={f}>{f}</option>)}
+                          </select>
+                        : p.fundo
+                      }
+                    </td>
+                    <td>
+                      <select className="sel" value={p.visibilidade} onChange={(e) => mudarVisibilidade(p, e.target.value as 'publico' | 'comunidade' | 'abafado')}>
+                        {VISIBILIDADES.map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {isEditing ? (
+                          <>
+                            <button className="btn" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }} disabled={trabalhando} onClick={() => salvarEdicao(p)}>
+                              <IconCheck size={14} /> Salvar
+                            </button>
+                            <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }} onClick={() => setEditando(null)}>
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }} onClick={() => iniciarEdicao(p)}>
+                              <IconEdit size={14} /> Editar
+                            </button>
+                            {perm.excluiPermanente && (
+                              <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: 'var(--perigo)', borderColor: 'var(--perigo-bg)' }} onClick={() => setDlgExcluir({ pico: p, motivo: '' })}>
+                                <IconTrash size={14} /> Excluir
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
+      )}
+
+      {dlgExcluir && (
+        <ConfirmDialog
+          titulo={`Excluir pico "${dlgExcluir.pico.nome}"?`}
+          texto="Ação IRREVERSÍVEL. Todas as fotos e alertas associados a este pico também serão excluídos."
+          confirmar={trabalhando ? 'Excluindo…' : 'Excluir pico'}
+          perigo
+          onConfirmar={confirmarExcluir}
+          onCancelar={() => setDlgExcluir(null)}
+        >
+          <textarea className="input" placeholder="Motivo obrigatório (registrado na auditoria)" value={dlgExcluir.motivo} onChange={(e) => setDlgExcluir({ ...dlgExcluir, motivo: e.target.value })} style={{ marginTop: 12, minHeight: 60, resize: 'vertical' }} />
+          <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', fontSize: 12, color: 'var(--perigo)', lineHeight: 1.4 }}>
+            ⚠️ Isto exclui o pico + todas as fotos e alertas vinculados. Não é possível desfazer.
+          </div>
+        </ConfirmDialog>
       )}
     </section>
   )
@@ -531,25 +802,53 @@ const MUTIRAO_STATUS = ['rascunho', 'agendado', 'realizado', 'cancelado']
 function ModuloMutiroes({ perm }: { perm: Permissoes }) {
   const [itens, setItens] = useState<MutiraoAdmin[] | null>(null)
   const [erro, setErro] = useState('')
-  useEffect(() => {
+  const [dlg, setDlg] = useState<{ m: MutiraoAdmin; motivo: string } | null>(null)
+  const [trabalhando, setTrabalhando] = useState(false)
+
+  const carregar = useCallback(() => {
+    setErro('')
     admin.listarMutiroesAdmin().then(setItens).catch((e) => setErro(String(e?.message ?? e)))
   }, [])
+  useEffect(() => carregar(), [carregar])
 
   async function mudarStatus(m: MutiraoAdmin, status: string) {
     setItens((xs) => xs?.map((x) => (x.id === m.id ? { ...x, status } : x)) ?? null)
     await admin.atualizarStatusMutirao(m.id, status)
   }
 
+  async function confirmarExcluir() {
+    if (!dlg) return
+    setTrabalhando(true)
+    try {
+      await admin.excluirMutirao(dlg.m.id, dlg.motivo.trim() || 'sem motivo informado')
+      setItens((xs) => xs?.filter((x) => x.id !== dlg.m.id) ?? null)
+      setDlg(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
+
   return (
     <section className="admin-content">
-      <Titulo nome="Mutirões" desc="Gestão de mutirões criados pela comunidade." />
+      <Titulo
+        nome="Mutirões"
+        desc="Gestão de mutirões criados pela comunidade. Altere status ou exclua."
+        acao={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
+            <button className="btn outline" style={{ minHeight: 40 }} disabled={!itens?.length} onClick={() => itens && admin.baixarCSV('mutiroes', itens as unknown as Record<string, unknown>[])}><IconDownload size={16} /> CSV</button>
+          </div>
+        }
+      />
       {erro && <Estado>Erro ao carregar mutirões.</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
       {itens && itens.length === 0 && <Estado>Nenhum mutirão registrado.</Estado>}
       {itens && itens.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Título</th><th>Tipo</th><th>Local</th><th>Data</th><th>Vagas</th><th>Status</th></tr></thead>
+            <thead><tr><th>Título</th><th>Tipo</th><th>Local</th><th>Data</th><th>Vagas</th><th>Organizador</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {itens.map((m) => (
                 <tr key={m.id}>
@@ -557,17 +856,35 @@ function ModuloMutiroes({ perm }: { perm: Permissoes }) {
                   <td>{m.tipo_acao ?? '—'}</td>
                   <td>{[m.municipio, m.uf].filter(Boolean).join(' / ') || '—'}</td>
                   <td>{m.quando ? new Date(m.quando).toLocaleDateString('pt-BR') : '—'}</td>
-                  <td>{m.vagas ?? '—'}</td>
+                  <td>{m.vagas != null ? `${m.inscritos ?? 0}/${m.vagas}` : '—'}</td>
+                  <td>{m.organizador ?? '—'}</td>
                   <td>
                     <select className="sel" value={m.status} onChange={(e) => mudarStatus(m, e.target.value)}>
                       {MUTIRAO_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
+                  </td>
+                  <td>
+                    <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: 'var(--perigo)' }} onClick={() => setDlg({ m, motivo: '' })}>
+                      <IconTrash size={14} /> Excluir
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {dlg && (
+        <ConfirmDialog
+          titulo={`Excluir mutirão "${dlg.m.titulo}"?`}
+          texto="Ação definitiva. O mutirão será removido do mapa e da lista de ações."
+          confirmar={trabalhando ? 'Excluindo…' : 'Excluir mutirão'}
+          perigo
+          onConfirmar={confirmarExcluir}
+          onCancelar={() => setDlg(null)}
+        >
+          <textarea className="input" placeholder="Motivo (registrado na auditoria)" value={dlg.motivo} onChange={(e) => setDlg({ ...dlg, motivo: e.target.value })} style={{ marginTop: 12, minHeight: 60, resize: 'vertical' }} />
+        </ConfirmDialog>
       )}
     </section>
   )
@@ -653,6 +970,7 @@ export function AdminPage() {
   const [carregando, setCarregando] = useState(true)
   const [aba, setAba] = useState<ModId>('dashboard')
   const [menu, setMenu] = useState(false)
+  const navigate = useNavigate()
 
   const carregar = useCallback(() => {
     setCarregando(true)
@@ -684,6 +1002,19 @@ export function AdminPage() {
     <div className="admin">
       <header className="admin-topbar">
         <button className="ic admin-menu-btn" aria-label="Menu" style={{ background: 'none', border: 0, cursor: 'pointer' }} onClick={() => setMenu((v) => !v)}><IconMenu2 size={22} /></button>
+        <button
+          onClick={() => navigate('/')}
+          aria-label="Voltar ao app"
+          title="Voltar ao app"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)',
+            borderRadius: 10, padding: '5px 12px', cursor: 'pointer',
+            color: 'rgba(255,255,255,.85)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+          }}
+        >
+          <IconArrowLeft size={16} stroke={2.2} /> Voltar
+        </button>
         <span className="marca">Painel Ecosurf</span>
         <div style={{ flex: 1 }} />
         <span className="muted admin-email" style={{ fontSize: 12.5 }}>{eu.email}</span>
@@ -708,9 +1039,9 @@ export function AdminPage() {
           {abaAtiva === 'dashboard' && <Dashboard />}
           {abaAtiva === 'fotos' && <ModuloFotos perm={perm} />}
           {abaAtiva === 'registros' && <ModuloRegistros />}
-          {abaAtiva === 'usuarios' && <ModuloUsuarios eu={eu} />}
+          {abaAtiva === 'usuarios' && <ModuloUsuarios eu={eu} perm={perm} />}
           {abaAtiva === 'ameacas' && <ModuloAmeacas perm={perm} />}
-          {abaAtiva === 'picos' && <ModuloPicos />}
+          {abaAtiva === 'picos' && <ModuloPicos perm={perm} />}
           {abaAtiva === 'relatorios' && <ModuloRelatorios />}
           {abaAtiva === 'logs' && <ModuloLogs />}
           {abaAtiva === 'mutiroes' && <ModuloMutiroes perm={perm} />}

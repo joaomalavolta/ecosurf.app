@@ -88,21 +88,25 @@ export interface Indicadores {
   fotosPendentes: number
   fotosRemovidas: number
   ameacas: number
+  mutiroes: number
+  bloqueados: number
   logs: number
 }
 
 export async function indicadores(): Promise<Indicadores> {
   const c = await sb()
-  const [usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, logs] = await Promise.all([
+  const [usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, mutiroes, bloqueados, logs] = await Promise.all([
     contar(c, 'perfis'),
     contar(c, 'picos'),
     contar(c, 'fotos', (q) => q.is('deleted_at', null)),
     contar(c, 'fotos', (q) => q.eq('status', 'pendente')),
     contar(c, 'fotos', (q) => q.not('deleted_at', 'is', null)),
     contar(c, 'ameacas'),
+    contar(c, 'mutiroes'),
+    contar(c, 'perfis', (q) => q.not('bloqueado_em', 'is', null)),
     contar(c, 'admin_logs'),
   ])
-  return { usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, logs }
+  return { usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, mutiroes, bloqueados, logs }
 }
 
 // ── Fotos ────────────────────────────────────────────────────────────────
@@ -171,11 +175,12 @@ export interface UsuarioAdmin {
   papel: Papel
   onboarded: boolean
   criado_em: string
+  bloqueado_em: string | null
 }
 
 export async function listarUsuarios(): Promise<UsuarioAdmin[]> {
   const c = await sb()
-  const { data } = await c.from('perfis').select('id,nome,cidade,papel,onboarded,criado_em').order('criado_em', { ascending: false }).limit(200)
+  const { data } = await c.from('perfis').select('id,nome,cidade,papel,onboarded,criado_em,bloqueado_em').order('criado_em', { ascending: false }).limit(200)
   return (data ?? []) as UsuarioAdmin[]
 }
 
@@ -183,6 +188,26 @@ export async function definirPapel(id: string, papel: Papel) {
   const c = await sb()
   await c.from('perfis').update({ papel }).eq('id', id)
   await log(c, 'usuario:papel', 'usuario', id, undefined, { papel })
+}
+
+/** Bloqueia ou desbloqueia um usuário (impede login e contribuições). */
+export async function bloquearUsuario(id: string, bloquear: boolean, motivo?: string) {
+  const c = await sb()
+  await c.from('perfis').update({ bloqueado_em: bloquear ? new Date().toISOString() : null }).eq('id', id)
+  await log(c, bloquear ? 'usuario:bloquear' : 'usuario:desbloquear', 'usuario', id, undefined, { bloqueado: bloquear }, motivo)
+}
+
+/** Exclui permanentemente a conta de um usuário e todos os seus dados (fotos, alertas, mutirões, rascunhos). */
+export async function excluirUsuario(id: string, motivo: string) {
+  const c = await sb()
+  // Cascata: remover dados associados (cada tabela usa nome diferente para a FK)
+  await c.from('fotos').delete().eq('autor_id', id)
+  await c.from('ameacas').delete().eq('denunciante_id', id)
+  await c.from('mutiroes').delete().eq('organizador_id', id)
+  await c.from('rascunhos').delete().eq('user_id', id)
+  // Registrar antes de excluir o perfil
+  await log(c, 'usuario:excluir', 'usuario', id, undefined, undefined, motivo)
+  await c.from('perfis').delete().eq('id', id)
 }
 
 // ── Ameaças ──────────────────────────────────────────────────────────────
@@ -215,6 +240,22 @@ export async function definirVisibilidade(id: string, visibilidade: 'publico' | 
   const c = await sb()
   await c.from('picos').update({ visibilidade }).eq('id', id)
   await log(c, 'pico:visibilidade', 'pico', id, undefined, { visibilidade })
+}
+
+/** Edita campos de um pico existente. */
+export async function editarPico(id: string, campos: { nome?: string; praia?: string; municipio?: string; uf?: string; fundo?: string }) {
+  const c = await sb()
+  await c.from('picos').update(campos).eq('id', id)
+  await log(c, 'pico:editar', 'pico', id, undefined, campos)
+}
+
+/** Exclui um pico e todos os dados associados (fotos, ameaças). */
+export async function excluirPico(id: string, motivo: string) {
+  const c = await sb()
+  await c.from('fotos').delete().eq('pico_id', id)
+  await c.from('ameacas').delete().eq('pico_id', id)
+  await log(c, 'pico:excluir', 'pico', id, undefined, undefined, motivo)
+  await c.from('picos').delete().eq('id', id)
 }
 
 // ── Mutirões ─────────────────────────────────────────────────────────────
