@@ -133,14 +133,20 @@ export async function restAmeacas(): Promise<Ameaca[]> {
 interface MutiraoRow {
   id: string
   titulo: string
+  tipo_acao: string | null
   pico_id: string | null
   municipio: string | null
   uf: string | null
   quando: string
   horario: string | null
   organizador: string | null
+  instituicao: string | null
+  contato: string | null
+  ponto_encontro: string | null
+  imagem_url: string | null
   inscritos: number | null
   vagas: number | null
+  info_voluntarios: string | null
   status: string
   lat: number | null
   lng: number | null
@@ -155,14 +161,20 @@ export async function restMutiroes(): Promise<Mutirao[]> {
     .map((r) => ({
       id: r.id,
       titulo: r.titulo,
+      tipoAcao: (r.tipo_acao ?? 'limpeza') as Mutirao['tipoAcao'],
       picoId: r.pico_id ?? undefined,
       municipio: r.municipio ?? '',
       uf: r.uf ?? '',
       quando: r.quando,
       horario: r.horario ?? undefined,
       organizador: r.organizador ?? undefined,
+      instituicao: r.instituicao ?? undefined,
+      contato: r.contato ?? undefined,
+      pontoEncontro: r.ponto_encontro ?? undefined,
+      imagemUrl: r.imagem_url ?? undefined,
       inscritos: r.inscritos ?? undefined,
       vagas: r.vagas ?? undefined,
+      infoVoluntarios: r.info_voluntarios ?? undefined,
       status: r.status as Mutirao['status'],
       lat: r.lat as number,
       lng: r.lng as number,
