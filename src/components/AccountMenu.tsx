@@ -140,13 +140,11 @@ export function AccountMenu() {
           width: 38,
           height: 38,
           borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.24)',
-          background: logado
-            ? 'linear-gradient(150deg, var(--turq), var(--radar))'
-            : 'rgba(255,255,255,0.16)',
+          border: '1px solid rgba(0,0,0,0.08)',
+          background: logado ? '#fff' : 'rgba(255,255,255,0.16)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
-          color: '#fff',
+          color: logado ? 'var(--text)' : '#fff',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -154,11 +152,13 @@ export function AccountMenu() {
           fontWeight: 700,
           fontSize: 15,
           fontFamily: 'var(--fonte-titulo)',
+          padding: 0,
+          overflow: 'hidden',
         }}
       >
         {logado ? (
           status.avatarUrl ? (
-            <img src={status.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+            <img src={status.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : inicial
         ) : <IconUser size={20} stroke={2} />}
       </button>
@@ -187,15 +187,16 @@ export function AccountMenu() {
             <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 {status.avatarUrl ? (
-                  <img src={status.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover' }} />
+                  <img src={status.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover', flex: '0 0 auto' }} />
                 ) : (
                   <div
                     style={{
                       width: 44,
                       height: 44,
                       borderRadius: 14,
-                      background: 'linear-gradient(150deg, var(--turq), var(--radar))',
-                      color: '#fff',
+                      background: '#fff',
+                      border: '1px solid var(--line)',
+                      color: 'var(--text)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
