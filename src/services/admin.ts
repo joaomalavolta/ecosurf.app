@@ -188,20 +188,20 @@ export async function definirPapel(id: string, papel: Papel) {
 // ── Ameaças ──────────────────────────────────────────────────────────────
 export async function listarAmeacasAdmin() {
   const c = await sb()
-  const { data } = await c.from('ameacas').select('id,titulo,categoria,status,municipio,uf,precisao').order('criada_em', { ascending: false }).limit(200)
-  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; municipio: string | null; uf: string | null; precisao: string }[]
+  const { data } = await c.from('ameacas').select('id,titulo,categoria,status,gravidade,municipio,uf,precisao').order('criada_em', { ascending: false }).limit(200)
+  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; precisao: string }[]
 }
 
 export async function atualizarStatusAmeaca(id: string, status: string) {
   const c = await sb()
   await c.from('ameacas').update({ status }).eq('id', id)
-  await log(c, 'ameaca:status', 'ameaca', id, undefined, { status })
+  await log(c, 'alerta:status', 'alerta', id, undefined, { status })
 }
 
 export async function excluirAmeaca(id: string, motivo: string) {
   const c = await sb()
   await c.from('ameacas').delete().eq('id', id)
-  await log(c, 'ameaca:excluir', 'ameaca', id, undefined, undefined, motivo)
+  await log(c, 'alerta:excluir', 'alerta', id, undefined, undefined, motivo)
 }
 
 // ── Picos ────────────────────────────────────────────────────────────────
@@ -215,6 +215,31 @@ export async function definirVisibilidade(id: string, visibilidade: 'publico' | 
   const c = await sb()
   await c.from('picos').update({ visibilidade }).eq('id', id)
   await log(c, 'pico:visibilidade', 'pico', id, undefined, { visibilidade })
+}
+
+// ── Mutirões ─────────────────────────────────────────────────────────────
+export interface MutiraoAdmin {
+  id: string; titulo: string; tipo_acao: string | null; municipio: string | null; uf: string | null;
+  quando: string; horario: string | null; organizador: string | null; status: string;
+  vagas: number | null; inscritos: number | null
+}
+
+export async function listarMutiroesAdmin(): Promise<MutiraoAdmin[]> {
+  const c = await sb()
+  const { data } = await c.from('mutiroes').select('id,titulo,tipo_acao,municipio,uf,quando,horario,organizador,status,vagas,inscritos').order('quando', { ascending: false }).limit(200)
+  return (data ?? []) as MutiraoAdmin[]
+}
+
+export async function atualizarStatusMutirao(id: string, status: string) {
+  const c = await sb()
+  await c.from('mutiroes').update({ status }).eq('id', id)
+  await log(c, 'mutirao:status', 'mutirao', id, undefined, { status })
+}
+
+export async function excluirMutirao(id: string, motivo: string) {
+  const c = await sb()
+  await c.from('mutiroes').delete().eq('id', id)
+  await log(c, 'mutirao:excluir', 'mutirao', id, undefined, undefined, motivo)
 }
 
 // ── Logs ─────────────────────────────────────────────────────────────────
@@ -237,3 +262,4 @@ export function baixarCSV(nome: string, linhas: Record<string, unknown>[]) {
   a.click()
   URL.revokeObjectURL(url)
 }
+

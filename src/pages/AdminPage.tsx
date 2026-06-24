@@ -9,7 +9,7 @@ import {
 import { temBackend } from '../services/api'
 import { enviarCodigo, confirmarCodigo } from '../services/perfil'
 import * as admin from '../services/admin'
-import { permissoes, meuStatus, type Papel, type Permissoes, type Indicadores, type FotoAdmin, type UsuarioAdmin } from '../services/admin'
+import { permissoes, meuStatus, type Papel, type Permissoes, type Indicadores, type FotoAdmin, type UsuarioAdmin, type MutiraoAdmin } from '../services/admin'
 import { StatCard, StatusBadge, RoleBadge, ConfirmDialog, Estado } from '../admin/ui'
 
 type Ameaca = Awaited<ReturnType<typeof admin.listarAmeacasAdmin>>[number]
@@ -373,16 +373,17 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
       <Titulo nome="Alertas Ambientais" desc="Registros ambientais colaborativos. A localização exata fica protegida; aqui só município/UF." />
       {erro && <Estado>Erro ao carregar ameaças.</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
-      {itens && itens.length === 0 && <Estado>Nenhuma ameaça registrada.</Estado>}
+      {itens && itens.length === 0 && <Estado>Nenhum alerta registrado.</Estado>}
       {itens && itens.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Título</th><th>Categoria</th><th>Local</th><th>Status</th>{perm.excluiPermanente && <th></th>}</tr></thead>
+            <thead><tr><th>Título</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th>{perm.excluiPermanente && <th></th>}</tr></thead>
             <tbody>
               {itens.map((a) => (
                 <tr key={a.id}>
                   <td>{a.titulo}</td>
                   <td>{a.categoria}</td>
+                  <td>{(a as any).gravidade ?? '—'}</td>
                   <td>{[a.municipio, a.uf].filter(Boolean).join(' / ') || '—'}</td>
                   <td>
                     <select className="sel" value={a.status} onChange={(e) => mudarStatus(a, e.target.value)}>
@@ -399,7 +400,7 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
         </div>
       )}
       {dlg && (
-        <ConfirmDialog titulo="Excluir ameaça?" texto="Ação definitiva. Registre o motivo." confirmar="Excluir" perigo onConfirmar={confirmarExcluir} onCancelar={() => setDlg(null)}>
+        <ConfirmDialog titulo="Excluir alerta?" texto="Ação definitiva. Registre o motivo." confirmar="Excluir" perigo onConfirmar={confirmarExcluir} onCancelar={() => setDlg(null)}>
           <textarea className="input" placeholder="Motivo" value={dlg.motivo} onChange={(e) => setDlg({ ...dlg, motivo: e.target.value })} style={{ marginTop: 12, minHeight: 60 }} />
         </ConfirmDialog>
       )}
@@ -525,11 +526,49 @@ function ModuloRelatorios() {
   )
 }
 
-function Stub({ titulo }: { titulo: string }) {
+const MUTIRAO_STATUS = ['rascunho', 'agendado', 'realizado', 'cancelado']
+
+function ModuloMutiroes({ perm }: { perm: Permissoes }) {
+  const [itens, setItens] = useState<MutiraoAdmin[] | null>(null)
+  const [erro, setErro] = useState('')
+  useEffect(() => {
+    admin.listarMutiroesAdmin().then(setItens).catch((e) => setErro(String(e?.message ?? e)))
+  }, [])
+
+  async function mudarStatus(m: MutiraoAdmin, status: string) {
+    setItens((xs) => xs?.map((x) => (x.id === m.id ? { ...x, status } : x)) ?? null)
+    await admin.atualizarStatusMutirao(m.id, status)
+  }
+
   return (
     <section className="admin-content">
-      <Titulo nome={titulo} />
-      <Estado>Módulo em construção. Em breve por aqui.</Estado>
+      <Titulo nome="Mutirões" desc="Gestão de mutirões criados pela comunidade." />
+      {erro && <Estado>Erro ao carregar mutirões.</Estado>}
+      {!itens && !erro && <Estado>Carregando…</Estado>}
+      {itens && itens.length === 0 && <Estado>Nenhum mutirão registrado.</Estado>}
+      {itens && itens.length > 0 && (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="adt">
+            <thead><tr><th>Título</th><th>Tipo</th><th>Local</th><th>Data</th><th>Vagas</th><th>Status</th></tr></thead>
+            <tbody>
+              {itens.map((m) => (
+                <tr key={m.id}>
+                  <td>{m.titulo}</td>
+                  <td>{m.tipo_acao ?? '—'}</td>
+                  <td>{[m.municipio, m.uf].filter(Boolean).join(' / ') || '—'}</td>
+                  <td>{m.quando ? new Date(m.quando).toLocaleDateString('pt-BR') : '—'}</td>
+                  <td>{m.vagas ?? '—'}</td>
+                  <td>
+                    <select className="sel" value={m.status} onChange={(e) => mudarStatus(m, e.target.value)}>
+                      {MUTIRAO_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }
@@ -674,7 +713,7 @@ export function AdminPage() {
           {abaAtiva === 'picos' && <ModuloPicos />}
           {abaAtiva === 'relatorios' && <ModuloRelatorios />}
           {abaAtiva === 'logs' && <ModuloLogs />}
-          {abaAtiva === 'mutiroes' && <Stub titulo="Mutirões" />}
+          {abaAtiva === 'mutiroes' && <ModuloMutiroes perm={perm} />}
           {abaAtiva === 'config' && <ModuloConfig eu={eu} onSair={sair} />}
         </main>
       </div>
