@@ -4,7 +4,7 @@ import { BottomNav } from './components/BottomNav'
 import { UploadStatusBar } from './components/UploadStatusBar'
 import { OnboardingProvider } from './onboarding/OnboardingContext'
 import { iniciarSincronizacao } from './offline/uploadQueue'
-import { RadarPage } from './pages/RadarPage'
+import { HomePage } from './pages/HomePage'
 import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
 import { PerfilPage } from './pages/PerfilPage'
@@ -46,7 +46,7 @@ export default function App() {
       <div className="app-shell">
         <UploadStatusBar />
         <Routes>
-        <Route path="/" element={<RadarPage />} />
+        <Route path="/" element={<HomePage />} />
         <Route
           path="/mapa"
           element={
