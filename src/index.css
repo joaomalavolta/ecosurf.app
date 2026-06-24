@@ -793,7 +793,7 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.01);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -825,7 +825,7 @@ select.input { appearance: auto; cursor: pointer; }
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.01);
   color: rgba(255, 255, 255, 0.75);
 }
 .landing-cta {
@@ -888,7 +888,7 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-auth { width: 100%; }
 .landing-auth .card {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.01);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -923,4 +923,5 @@ select.input { appearance: auto; cursor: pointer; }
 /* Hide BottomNav on landing page */
 body[data-landing] nav[aria-label="Navegação principal"] { display: none !important; }
 body[data-landing] .app-shell { padding-bottom: 0 !important; }
+
 
