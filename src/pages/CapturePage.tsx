@@ -241,8 +241,11 @@ export function CapturePage() {
 
       {etapa === 'camera' && (
         <>
-          <div style={{ flex: 1, position: 'relative', background: '#000' }}>
+          {/* Viewfinder fullscreen com cantos arredondados e vinheta */}
+          <div style={{ flex: 1, position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden' }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {/* Vinheta sutil */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%)', zIndex: 1 }} />
             {erro && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, color: 'rgba(255,255,255,.8)', background: 'linear-gradient(160deg,#0b3a53,#04141d)', zIndex: 10 }}>
                 <IconAlertTriangle size={48} stroke={1.5} style={{ marginBottom: 16, color: 'var(--perigo)' }} />
@@ -250,18 +253,52 @@ export function CapturePage() {
                 <button onClick={() => setEtapa('inicio')} className="btn outline" style={{ marginTop: 24, borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>Tentar novamente</button>
               </div>
             )}
-            <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <span className="tag" style={{ background: 'rgba(0,0,0,.5)', color: '#fff' }}><IconMapPin size={13} stroke={2.2} /> Detectando localização…</span>
+            {/* GPS indicator — pulsa enquanto detecta */}
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,.9)',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}>
+                <IconMapPin size={13} stroke={2.2} style={{ color: 'var(--turq)' }} /> Detectando localização…
+              </span>
             </div>
           </div>
-          <div style={{ padding: '20px 0 calc(env(safe-area-inset-bottom,0px) + 24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
-            <div className="stepper" style={{ marginBottom: 20 }}>
-              <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
-              <div className="step"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
-              <div className="step"><span className="num">3</span> Enviar</div>
+
+          {/* Bottom bar — shutter + dots */}
+          <div style={{ padding: '16px 0 calc(env(safe-area-inset-bottom,0px) + 20px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+            {/* Dot stepper */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Foto</span>
+              <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,.2)' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.25)' }} />
+              <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,.2)' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.25)' }} />
             </div>
-            <button onClick={disparar} aria-label="Tirar foto" style={{ width: 76, height: 76, borderRadius: 999, border: '4px solid rgba(255,255,255,.35)', background: '#fff', cursor: 'pointer', boxShadow: '0 0 0 8px rgba(31,227,200,.18), 0 14px 30px rgba(0,0,0,.5)' }}>
-              <div style={{ width: '100%', height: '100%', borderRadius: 999, background: 'var(--turq)', transform: 'scale(0.85)' }} />
+
+            {/* Shutter button — estilo câmera nativa */}
+            <button
+              onClick={disparar}
+              aria-label="Tirar foto"
+              className="shutter-btn"
+              style={{
+                width: 72, height: 72, borderRadius: '50%',
+                border: '4px solid rgba(255,255,255,.9)',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0,
+                boxShadow: '0 0 0 2px rgba(255,255,255,.15), 0 8px 24px rgba(0,0,0,.4)',
+                transition: 'transform .1s',
+              }}
+            >
+              <div style={{
+                width: 58, height: 58, borderRadius: '50%',
+                background: '#fff',
+                transition: 'transform .15s ease',
+              }} />
             </button>
           </div>
         </>

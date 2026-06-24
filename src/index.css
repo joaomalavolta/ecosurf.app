@@ -947,4 +947,14 @@ select.input { appearance: auto; cursor: pointer; }
 body[data-landing] nav[aria-label="Navegação principal"] { display: none !important; }
 body[data-landing] .app-shell { padding-bottom: 0 !important; }
 
-
+/* ─── Camera capture ─── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+.shutter-btn:active {
+  transform: scale(0.92) !important;
+}
+.shutter-btn:active > div {
+  transform: scale(0.85) !important;
+}
