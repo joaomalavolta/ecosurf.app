@@ -37,21 +37,19 @@ export function MapaPage() {
 
   return (
     <div className="page" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
-      {/* Header padrão com onda */}
-      <Header title="Mapa" sub="Explore praias, alertas e mutirões.">
-        {/* Filtros centralizados */}
-        <div style={{ marginTop: 14 }}>
-          <div className="pills" style={{ justifyContent: 'center' }}>
-            <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
-            <Pill on={filtro === 'picos'} onClick={() => setFiltro('picos')}>Picos</Pill>
-            <Pill on={filtro === 'alertas'} onClick={() => setFiltro('alertas')}>Alertas</Pill>
-            <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
-          </div>
-        </div>
-      </Header>
+      {/* Header padrão — mesmo tamanho de todas as páginas */}
+      <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
 
       {/* Mapa ocupa todo espaço restante */}
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+        {/* Filtros flutuantes sobre o mapa */}
+        <div className="map-filter-bar">
+          <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
+          <Pill on={filtro === 'picos'} onClick={() => setFiltro('picos')}>Picos</Pill>
+          <Pill on={filtro === 'alertas'} onClick={() => setFiltro('alertas')}>Alertas</Pill>
+          <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
+        </div>
+
         <MapView
           picos={verPicos ? picos.filter((p) => ativos.has(p.id)) : []}
           alertas={verAlertas ? alertas : []}
