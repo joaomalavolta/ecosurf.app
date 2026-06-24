@@ -752,7 +752,7 @@ select.input { appearance: auto; cursor: pointer; }
   background: url('/wave-header.png') center/cover no-repeat;
   z-index: 0;
 }
-.landing-slide-1 .landing-bg::after {
+.landing-bg::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -761,17 +761,6 @@ select.input { appearance: auto; cursor: pointer; }
     rgba(4, 28, 48, 0.45) 0%,
     rgba(4, 28, 48, 0.62) 35%,
     rgba(4, 28, 48, 0.88) 100%
-  );
-}
-.landing-slide-2 .landing-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(4, 28, 48, 0.92) 0%,
-    rgba(4, 28, 48, 0.85) 50%,
-    rgba(4, 28, 48, 0.95) 100%
   );
 }
 .landing-content {
@@ -804,10 +793,10 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
   padding: 4px 18px;
   display: flex;
@@ -836,8 +825,8 @@ select.input { appearance: auto; cursor: pointer; }
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.75);
 }
 .landing-cta {
   width: 100%;
@@ -846,8 +835,8 @@ select.input { appearance: auto; cursor: pointer; }
   justify-content: center;
   min-height: 52px;
   border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: #fff;
@@ -899,10 +888,10 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-auth { width: 100%; }
 .landing-auth .card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 .landing-auth .eyebrow { color: rgba(255, 255, 255, 0.6); }

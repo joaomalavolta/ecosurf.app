@@ -73,12 +73,12 @@ export function LandingPage() {
       <section className="landing-slide landing-slide-2" ref={slide2Ref}>
         <div className="landing-bg" />
         <div className="landing-content">
-          <Brand height={36} />
+          <Brand height={44} />
 
-          <h2 className="landing-headline" style={{ fontSize: 24, marginTop: 12 }}>
+          <h2 className="landing-headline">
             Entre para a comunidade
           </h2>
-          <p className="landing-sub" style={{ marginBottom: 24 }}>
+          <p className="landing-sub">
             Cadastre-se com seu e-mail e comece a monitorar, registrar e mobilizar pelo litoral brasileiro.
           </p>
 
