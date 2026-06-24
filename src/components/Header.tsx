@@ -22,7 +22,7 @@ export function Header({
   return (
     <header
       className="header"
-      style={brand ? { textAlign: 'center', padding: `calc(env(safe-area-inset-top, 0px) + 14px) 18px 14px` } : undefined}
+      style={brand ? { textAlign: 'center' } : undefined}
     >
       {/* Menu de conta — sempre presente no topo direito */}
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 14, zIndex: 2 }}>
@@ -56,7 +56,7 @@ export function Header({
       )}
       {brand ? (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Brand height={24} />
+          <Brand height={26} />
         </div>
       ) : (
         <h1 style={showBack ? { paddingLeft: 56 } : undefined}>{title}</h1>
