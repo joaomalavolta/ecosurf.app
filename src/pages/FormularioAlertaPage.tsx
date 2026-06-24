@@ -217,7 +217,7 @@ export function FormularioAlertaPage() {
                 </label>
                 <label className="btn outline full" style={{ cursor: 'pointer' }}>
                   <IconUpload size={18} /> Galeria
-                  <input type="file" accept="image/*" onChange={adicionarFoto} hidden />
+                  <input type="file" accept="image/*" multiple onChange={adicionarFoto} hidden />
                 </label>
               </div>
             )}
