@@ -63,8 +63,8 @@ export function AuthCard() {
     <div className="card pad">
       <span className="eyebrow">Entrar</span>
       <div className="pills" style={{ margin: '10px 0' }}>
-        <button className={`pill ${metodo === 'email' ? 'active' : ''}`} onClick={() => { setMetodo('email'); setFase('inicio') }}>E-mail</button>
-        <button className={`pill ${metodo === 'telefone' ? 'active' : ''}`} onClick={() => { setMetodo('telefone'); setFase('inicio') }}>Telefone</button>
+        <button className={`pill ${metodo === 'email' ? 'active' : ''}`} onClick={() => { setMetodo('email'); setFase('inicio'); setValor(localStorage.getItem('ecosurf:last_email') || ''); setMsg(null) }}>E-mail</button>
+        <button className={`pill ${metodo === 'telefone' ? 'active' : ''}`} onClick={() => { setMetodo('telefone'); setFase('inicio'); setValor('+55 '); setMsg(null) }}>Telefone</button>
       </div>
       <div className="stack">
         {fase === 'inicio' ? (
