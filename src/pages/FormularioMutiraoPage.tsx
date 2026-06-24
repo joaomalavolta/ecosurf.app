@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { MapaPicker } from '../components/MapaPicker'
 import { publicarMutirao, salvarRascunho, type DadosMutirao } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 
@@ -177,10 +178,19 @@ export function FormularioMutiraoPage() {
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
           <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>📍 Local da ação</legend>
 
+          <MapaPicker
+            lat={lat}
+            lng={lng}
+            height={180}
+            onChange={(newLat, newLng) => {
+              setLat(newLat)
+              setLng(newLng)
+            }}
+          />
           {lat && lng && (
-            <div className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <IconMapPin size={18} stroke={2} color="var(--turq)" />
-              <span className="muted" style={{ fontSize: 12 }}>GPS: {lat.toFixed(5)}, {lng.toFixed(5)}</span>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+              <IconMapPin size={12} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />
+              {lat.toFixed(5)}, {lng.toFixed(5)}
             </div>
           )}
 
