@@ -41,7 +41,7 @@ export function MapaPage() {
       <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
 
       {/* Mapa ocupa todo espaço restante */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
         {/* Filtros flutuantes sobre o mapa */}
         <div className="map-filter-bar">
           <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>

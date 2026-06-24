@@ -192,7 +192,9 @@ input, select, textarea { accent-color: var(--turq); }
   max-height: 50vh;
   transition: height .3s ease;
   overflow: hidden;
-  border-bottom: 2px solid var(--line);
+  margin: 12px 12px 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
 }
 .radar-map-container.expanded {
   height: 70vh;
