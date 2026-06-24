@@ -793,9 +793,9 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
   padding: 4px 18px;
@@ -825,7 +825,7 @@ select.input { appearance: auto; cursor: pointer; }
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
   color: rgba(255, 255, 255, 0.75);
 }
 .landing-cta {
@@ -837,8 +837,8 @@ select.input { appearance: auto; cursor: pointer; }
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: transparent;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
@@ -888,9 +888,9 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-auth { width: 100%; }
 .landing-auth .card {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: #fff;
 }
