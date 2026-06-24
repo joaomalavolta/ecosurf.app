@@ -111,6 +111,7 @@ export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
   const horario = [dados.horarioInicio, dados.horarioFim].filter(Boolean).join(' às ')
 
   const body = {
+    id: crypto.randomUUID(),
     titulo: dados.titulo,
     tipo_acao: dados.tipoAcao,
     geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
