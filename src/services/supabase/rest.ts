@@ -302,6 +302,7 @@ export async function restInserirPico(dados: {
   uf: string
 }): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb } = await import('./client')
   const nome = titleCase(dados.nome)
   const id = slug(nome)
   const body = {
@@ -315,20 +316,10 @@ export async function restInserirPico(dados: {
     fundo: 'areia',
     visibilidade: 'publico',
   }
-  const r = await fetch(`${BASE}/rest/v1/picos`, {
-    method: 'POST',
-    headers: {
-      apikey: KEY,
-      Authorization: `Bearer ${KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
-    },
-    body: JSON.stringify(body),
-  })
-  if (!r.ok) {
-    const msg = await r.text()
-    if (msg.includes('duplicate key')) return id // já existe, usa o existente
-    throw new Error(`Erro ao criar pico: ${msg}`)
+  const { error } = await sb().from('picos').insert(body)
+  if (error) {
+    if (error.message.includes('duplicate key')) return id
+    throw new Error(`Erro ao criar pico: ${JSON.stringify(error)}`)
   }
   return id
 }
