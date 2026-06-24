@@ -116,7 +116,7 @@ export function RadarPage() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
           <Brand height={40} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.5px', marginTop: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.5px', marginTop: 4 }}>
             Surfar Global e Agir Local
           </span>
         </div>

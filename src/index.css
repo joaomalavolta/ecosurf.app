@@ -178,23 +178,10 @@ input, select, textarea { accent-color: var(--turq); }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 14px;
-  background: url('/wave-header.png') center/cover no-repeat, var(--azul-abissal);
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-}
-.radar-toolbar::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(6, 43, 69, 0.78) 0%,
-    rgba(6, 43, 69, 0.5) 50%,
-    rgba(6, 43, 69, 0.72) 100%
-  );
-  z-index: 0;
-  pointer-events: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
 }
 .radar-toolbar > * { position: relative; z-index: 1; }
 
@@ -314,11 +301,11 @@ input, select, textarea { accent-color: var(--turq); }
   gap: 6px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 .map-filter-bar .pill {
   padding: 7px 12px;
