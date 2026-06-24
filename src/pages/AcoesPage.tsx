@@ -6,12 +6,15 @@ import {
   IconAlertTriangle,
   IconHeartHandshake,
   IconPlus,
+  IconBookmark,
+  IconTrash,
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { categoriaPorId } from '../components/SeletorCategoria'
 import { carregarAmeacas, carregarMutiroes } from '../services/picos'
-import type { Alerta, Mutirao } from '../types/domain'
+import { listarRascunhos, excluirRascunho } from '../services/alertas'
+import type { Alerta, Mutirao, Rascunho } from '../types/domain'
 
 /**
  * Hub de ações — Alertas, Mutirões e "+ Nova Ação".
@@ -74,15 +77,22 @@ const STATUS_LABELS: Record<string, string> = {
 export function AcoesPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
+  const [rascunhos, setRascunhos] = useState<Rascunho[]>([])
 
   useEffect(() => {
     let vivo = true
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
+    listarRascunhos().then((r) => vivo && setRascunhos(r))
     return () => {
       vivo = false
     }
   }, [])
+
+  async function removerRascunho(id: string) {
+    await excluirRascunho(id)
+    setRascunhos((rs) => rs.filter((r) => r.id !== id))
+  }
 
   return (
     <div className="page">
@@ -128,6 +138,32 @@ export function AcoesPage() {
             />
           ))}
         </Secao>
+
+        {/* Rascunhos */}
+        {rascunhos.length > 0 && (
+          <Secao titulo={<><IconBookmark size={19} stroke={2} color="var(--muted)" /> Rascunhos</>}>
+            {rascunhos.map((r) => {
+              const dados = r.dados as Record<string, any>
+              const titulo = dados.titulo || (r.tipo === 'alerta' ? 'Alerta sem título' : 'Mutirão sem título')
+              return (
+                <div key={r.id} className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{titulo}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {r.tipo === 'alerta' ? '🔴 Alerta' : '🟠 Mutirão'} · salvo em {new Date(r.atualizadoEm).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  <Link to={`/nova-acao/${r.tipo === 'alerta' ? 'alerta' : 'mutirao'}`} className="btn" style={{ fontSize: 12, padding: '6px 10px', minHeight: 32 }}>
+                    Retomar
+                  </Link>
+                  <button className="btn outline" style={{ fontSize: 12, padding: '6px 8px', minHeight: 32, color: 'var(--perigo)' }} onClick={() => removerRascunho(r.id)}>
+                    <IconTrash size={14} />
+                  </button>
+                </div>
+              )
+            })}
+          </Secao>
+        )}
       </div>
     </div>
   )

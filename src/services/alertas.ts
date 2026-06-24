@@ -1,5 +1,5 @@
 import type { CategoriaAlerta, GravidadeAlerta, Rascunho } from '../types/domain'
-import { SUPABASE_URL, SUPABASE_KEY, TEM_BACKEND } from './supabase/config'
+import { TEM_BACKEND } from './supabase/config'
 
 /**
  * Service para o módulo "+ Nova Ação":
