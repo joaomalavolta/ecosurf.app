@@ -5,7 +5,8 @@ import { LandingPage } from './LandingPage'
 
 /**
  * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
- * Expõe `isLanding` via window para o App poder esconder a BottomNav.
+ * Escuta onAuthStateChange para capturar login OAuth (Google) que chega
+ * via hash na URL após redirect.
  */
 export function HomePage() {
   const [estado, setEstado] = useState<'loading' | 'logado' | 'visitante'>('loading')
@@ -15,11 +16,31 @@ export function HomePage() {
       setEstado('visitante')
       return
     }
+
+    let sub: { unsubscribe: () => void } | undefined
+
     import('../services/supabase/client').then(({ sb }) => {
+      // 1. Verificar sessão existente
       sb().auth.getSession().then(({ data }) => {
-        setEstado(data.session ? 'logado' : 'visitante')
+        if (data.session) {
+          setEstado('logado')
+        } else {
+          setEstado('visitante')
+        }
       }).catch(() => setEstado('visitante'))
+
+      // 2. Escutar mudanças de auth (OAuth callback via URL hash)
+      const { data } = sb().auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_IN') {
+          setEstado('logado')
+        } else if (event === 'SIGNED_OUT') {
+          setEstado('visitante')
+        }
+      })
+      sub = data.subscription
     }).catch(() => setEstado('visitante'))
+
+    return () => sub?.unsubscribe()
   }, [])
 
   // Signal to App.tsx whether to hide nav
