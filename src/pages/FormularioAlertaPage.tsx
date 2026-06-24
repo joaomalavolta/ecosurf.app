@@ -5,6 +5,7 @@ import {
   IconCamera, IconUpload, IconBookmark,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { MapaPicker } from '../components/MapaPicker'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'
@@ -86,7 +87,7 @@ export function FormularioAlertaPage() {
       case 2: return true // fotos são opcionais
       case 3: return !!municipio && !!uf
       case 4: return !!gravidade
-      case 5: return descricao.trim().length > 10
+      case 5: return descricao.trim().length > 3
       case 6: return aceite
       default: return false
     }
@@ -232,19 +233,42 @@ export function FormularioAlertaPage() {
           <>
             <h2 style={{ fontSize: 18 }}>Localização</h2>
 
-            {lat && lng ? (
-              <div className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <IconMapPin size={20} stroke={2} color="var(--turq)" />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>GPS detectado</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{lat.toFixed(5)}, {lng.toFixed(5)}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="card pad muted" style={{ textAlign: 'center', fontSize: 13 }}>
-                Obtendo localização...
-              </div>
-            )}
+            {/* Mini-mapa com pin arrastável */}
+            <MapaPicker
+              lat={lat}
+              lng={lng}
+              height={180}
+              onChange={(newLat, newLng) => {
+                setLat(newLat)
+                setLng(newLng)
+              }}
+            />
+
+            {/* Botão GPS + coordenadas */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                type="button"
+                className="btn outline"
+                style={{ fontSize: 12, padding: '6px 12px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  obterCoords().then((pos) => {
+                    if (pos.lat && pos.lng) {
+                      setLat(pos.lat)
+                      setLng(pos.lng)
+                    } else {
+                      alert('Não foi possível obter GPS.')
+                    }
+                  })
+                }}
+              >
+                <IconMapPin size={14} stroke={2} /> Usar meu GPS
+              </button>
+              {lat && lng && (
+                <span className="muted" style={{ fontSize: 11 }}>
+                  {lat.toFixed(5)}, {lng.toFixed(5)}
+                </span>
+              )}
+            </div>
 
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Nome do local</label>
