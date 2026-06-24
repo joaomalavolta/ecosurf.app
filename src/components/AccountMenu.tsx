@@ -59,6 +59,7 @@ export function AccountMenu() {
     papel: Papel
     email?: string
     nome?: string
+    avatarUrl?: string
   }>({ papel: 'user' })
   const [instalado, setInstalado] = useState(jaInstalado())
   const ref = useRef<HTMLDivElement>(null)
@@ -70,14 +71,16 @@ export function AccountMenu() {
     meuStatus().then(async (s) => {
       if (!vivo) return
       let nome: string | undefined
+      let avatarUrl: string | undefined
       if (s.id) {
         try {
           const { carregarPerfilAtual } = await import('../services/perfil')
           const perfil = await carregarPerfilAtual()
           nome = perfil?.nome
+          avatarUrl = perfil?.avatarUrl
         } catch { /* ignora */ }
       }
-      setStatus({ ...s, nome })
+      setStatus({ ...s, nome, avatarUrl })
     })
     return () => { vivo = false }
   }, [])
@@ -153,7 +156,11 @@ export function AccountMenu() {
           fontFamily: 'var(--fonte-titulo)',
         }}
       >
-        {logado ? inicial : <IconUser size={20} stroke={2} />}
+        {logado ? (
+          status.avatarUrl ? (
+            <img src={status.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+          ) : inicial
+        ) : <IconUser size={20} stroke={2} />}
       </button>
 
       {/* Popover */}
@@ -179,24 +186,28 @@ export function AccountMenu() {
           {logado ? (
             <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    background: 'linear-gradient(150deg, var(--turq), var(--radar))',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: 18,
-                    fontFamily: 'var(--fonte-titulo)',
-                    flex: '0 0 auto',
-                  }}
-                >
-                  {inicial}
-                </div>
+                {status.avatarUrl ? (
+                  <img src={status.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover' }} />
+                ) : (
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 14,
+                      background: 'linear-gradient(150deg, var(--turq), var(--radar))',
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: 18,
+                      fontFamily: 'var(--fonte-titulo)',
+                      flex: '0 0 auto',
+                    }}
+                  >
+                    {inicial}
+                  </div>
+                )}
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {status.nome ?? 'Surfista'}
