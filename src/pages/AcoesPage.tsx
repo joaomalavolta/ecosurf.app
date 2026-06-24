@@ -123,7 +123,7 @@ export function AcoesPage() {
       <Header title="Ações" sub="Registrar, defender a costa e mobilizar." />
       <div className="page-pad stack">
         {/* Botões principais */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
           <Link to="/capturar" className="btn acento full" style={{ minHeight: 50, fontSize: 14 }}>
             <IconCamera size={18} stroke={2} /> Foto rápida
           </Link>
