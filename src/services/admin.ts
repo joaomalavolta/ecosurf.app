@@ -290,6 +290,16 @@ export async function listarLogs() {
   return (data ?? []) as { id: string; papel: string; acao: string; item_tipo: string; item_id: string; motivo: string | null; criado_em: string }[]
 }
 
+export async function excluirLog(id: string) {
+  const c = await sb()
+  await c.from('admin_logs').delete().eq('id', id)
+}
+
+export async function limparLogs() {
+  const c = await sb()
+  await c.from('admin_logs').delete().neq('id', '')
+}
+
 // ── Exportar CSV ─────────────────────────────────────────────────────────
 export function baixarCSV(nome: string, linhas: Record<string, unknown>[]) {
   if (!linhas.length) return
