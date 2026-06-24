@@ -144,6 +144,7 @@ export function AcoesPage() {
                 cor={cat.cor}
                 titulo={a.titulo}
                 texto={`${a.municipio}/${a.uf} · ${STATUS_LABELS[a.status] ?? a.status}`}
+                to={`/alerta/${a.id}`}
                 autorNome={a.autorNome}
                 autorFoto={a.autorFoto}
                 autorId={a.autorId}
