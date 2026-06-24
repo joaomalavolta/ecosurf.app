@@ -1,5 +1,6 @@
 import type { CategoriaAlerta, GravidadeAlerta, Rascunho } from '../types/domain'
 import { TEM_BACKEND } from './supabase/config'
+import { sb } from './supabase/client'
 
 /**
  * Service para o módulo "+ Nova Ação":
@@ -9,7 +10,6 @@ import { TEM_BACKEND } from './supabase/config'
  */
 
 async function authed() {
-  const { sb } = await import('./supabase/client')
   const { data } = await sb().auth.getSession()
   const u = data.session?.user
   if (!u) throw new Error('Faça login para publicar.')

@@ -39,7 +39,11 @@ export function FormularioMutiraoPage() {
   const [lat, setLat] = useState<number | undefined>()
   const [lng, setLng] = useState<number | undefined>()
   const [pontoEncontro, setPontoEncontro] = useState('')
-  const [quando, setQuando] = useState('')
+  const [quando, setQuando] = useState(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return d.toISOString().slice(0, 10)
+  })
   const [horarioInicio, setHorarioInicio] = useState('')
   const [horarioFim, setHorarioFim] = useState('')
   const [organizador, setOrganizador] = useState('')
