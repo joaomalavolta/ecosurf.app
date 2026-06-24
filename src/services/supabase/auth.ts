@@ -25,6 +25,17 @@ export async function sair(): Promise<void> {
   await sb().auth.signOut()
 }
 
+/** Login com Google OAuth — redireciona para tela de consentimento do Google. */
+export async function entrarComGoogle(): Promise<void> {
+  const { error } = await sb().auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+    },
+  })
+  if (error) throw error
+}
+
 /** Define o nome de exibição do usuário (aparece no feed). Exige sessão real. */
 export async function definirNome(nome: string): Promise<void> {
   const { data } = await sb().auth.getSession()
