@@ -5,8 +5,7 @@ import { LandingPage } from './LandingPage'
 
 /**
  * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
- * Visitantes não-logados veem a landing com CTA.
- * Usuários logados vão direto para o Radar.
+ * Expõe `isLanding` via window para o App poder esconder a BottomNav.
  */
 export function HomePage() {
   const [estado, setEstado] = useState<'loading' | 'logado' | 'visitante'>('loading')
@@ -22,6 +21,16 @@ export function HomePage() {
       }).catch(() => setEstado('visitante'))
     }).catch(() => setEstado('visitante'))
   }, [])
+
+  // Signal to App.tsx whether to hide nav
+  useEffect(() => {
+    if (estado === 'visitante') {
+      document.body.setAttribute('data-landing', '')
+    } else {
+      document.body.removeAttribute('data-landing')
+    }
+    return () => document.body.removeAttribute('data-landing')
+  }, [estado])
 
   if (estado === 'loading') {
     return <div className="page" style={{ minHeight: '100dvh' }} />
