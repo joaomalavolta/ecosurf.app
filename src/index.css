@@ -804,10 +804,10 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 4px 18px;
   display: flex;
@@ -836,8 +836,8 @@ select.input { appearance: auto; cursor: pointer; }
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
 }
 .landing-cta {
   width: 100%;
@@ -846,8 +846,8 @@ select.input { appearance: auto; cursor: pointer; }
   justify-content: center;
   min-height: 52px;
   border-radius: 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: #fff;
@@ -899,10 +899,10 @@ select.input { appearance: auto; cursor: pointer; }
 }
 .landing-auth { width: 100%; }
 .landing-auth .card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 .landing-auth .eyebrow { color: rgba(255, 255, 255, 0.6); }
