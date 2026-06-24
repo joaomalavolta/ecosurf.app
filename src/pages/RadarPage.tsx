@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown } from '@tabler/icons-react'
-import { Brand } from '../components/Brand'
-import { AccountMenu } from '../components/AccountMenu'
+import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato, ehFavorito } from '../services/picos'
@@ -109,18 +108,8 @@ export function RadarPage() {
 
   return (
     <div className="radar-map-first">
-      {/* ─── HEADER RADAR ─── */}
-      <header className="radar-toolbar">
-        <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 10px)', right: 14, zIndex: 2 }}>
-          <AccountMenu />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-          <Brand height={40} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', letterSpacing: '0.5px', marginTop: 4 }}>
-            Surfar Global e Agir Local
-          </span>
-        </div>
-      </header>
+      {/* ─── HEADER RADAR — padrão com onda ─── */}
+      <Header brand sub="Surfar Global e Agir Local" />
 
       {/* ─── MAPA (hero) ─── */}
       <div className={`radar-map-container ${mapaExpandido ? 'expanded' : ''}`}>
