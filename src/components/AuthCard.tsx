@@ -63,11 +63,25 @@ export function AuthCard() {
     <div className="card pad">
       <span className="eyebrow">Entrar</span>
 
+      {/* Termos — obrigatório para qualquer método */}
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, cursor: 'pointer' }}>
+        <input 
+          type="checkbox" 
+          checked={aceitouTermos} 
+          onChange={(e) => setAceitouTermos(e.target.checked)} 
+          style={{ marginTop: 2, accentColor: 'var(--turq)', width: 16, height: 16, flexShrink: 0 }} 
+        />
+        <span style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.4 }}>
+          Li e aceito a <a href="/termos" target="_blank" rel="noreferrer" style={{ color: 'var(--turq)', textDecoration: 'none', fontWeight: 600 }}>Declaração de Conformidade, Responsabilidade e Uso</a>.
+        </span>
+      </label>
+
       {/* Google OAuth */}
       <button
         className="btn full auth-google"
+        disabled={!aceitouTermos}
         style={{
-          marginTop: 10,
+          marginTop: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -78,6 +92,7 @@ export function AuthCard() {
           border: '1px solid rgba(0,0,0,0.12)',
           fontWeight: 600,
           fontSize: 14,
+          opacity: aceitouTermos ? 1 : 0.45,
         }}
         onClick={async () => {
           try {
@@ -114,17 +129,6 @@ export function AuthCard() {
               inputMode={metodo === 'email' ? 'email' : 'tel'}
               aria-label={metodo === 'email' ? 'E-mail' : 'Telefone'}
             />
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 4, cursor: 'pointer' }}>
-              <input 
-                type="checkbox" 
-                checked={aceitouTermos} 
-                onChange={(e) => setAceitouTermos(e.target.checked)} 
-                style={{ marginTop: 2, accentColor: 'var(--turq)', width: 16, height: 16, flexShrink: 0 }} 
-              />
-              <span style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.4 }}>
-                Li e aceito a <a href="/termos" target="_blank" rel="noreferrer" style={{ color: 'var(--turq)', textDecoration: 'none', fontWeight: 600 }}>Declaração de Conformidade, Responsabilidade e Uso</a>.
-              </span>
-            </label>
             <button className="btn full" onClick={iniciar} disabled={(metodo === 'email' ? !valor.includes('@') : valor.trim().length < 8) || !aceitouTermos} style={{ marginTop: 8 }}>
               {metodo === 'email' ? 'Enviar código de acesso' : 'Enviar código'}
             </button>
