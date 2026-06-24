@@ -112,9 +112,12 @@ const esc = (s: unknown) =>
 /** Conteúdo do popup para alerta/mutirão (pico navega; não abre popup). */
 function popupHtml(p: Record<string, unknown>): string {
   const local = `${esc(p.municipio)}/${esc(p.uf)}`
+  const isMutirao = p.tipo === 'mutirao'
+  const href = isMutirao ? `/mutirao/${esc(p.id)}` : `/acoes`
   let meta = ''
-  if (p.tipo === 'esgoto' || p.tipo === 'lixo') {
-    meta = `${esc(p.status)} · ${local} · local ${esc(p.precisao)}`
+  if (!isMutirao) {
+    meta = `${esc(p.status)} · ${local}`
+    if (p.precisao) meta += ` · local ${esc(p.precisao)}`
   } else {
     const quando = p.horario ? esc(p.horario) : ''
     const gente =
@@ -127,8 +130,15 @@ function popupHtml(p: Record<string, unknown>): string {
     if (p.organizador) meta += `<br/><span style="opacity:.8">por ${esc(p.organizador)}</span>`
   }
   return (
+    `<a href="${href}" style="display:block;text-decoration:none;color:inherit;cursor:pointer">` +
+    `<div style="display:flex;align-items:center;gap:6px">` +
+    `<div style="flex:1">` +
     `<div style="font:600 14px 'Inter',system-ui,sans-serif;color:#14202A;max-width:220px">${esc(p.titulo)}</div>` +
-    `<div style="font:500 12px 'Inter',system-ui,sans-serif;color:#5A6B79;margin-top:3px;line-height:1.4">${meta}</div>`
+    `<div style="font:500 12px 'Inter',system-ui,sans-serif;color:#5A6B79;margin-top:3px;line-height:1.4">${meta}</div>` +
+    `</div>` +
+    `<div style="color:#1c8aad;flex-shrink:0;font-size:18px">›</div>` +
+    `</div>` +
+    `</a>`
   )
 }
 
