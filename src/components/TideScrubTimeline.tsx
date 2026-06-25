@@ -332,198 +332,266 @@ export function TideScrubTimeline({
         })}
       </div>
 
-      {/* SCRUB = curva de maré — Immersive Glass */}
+      {/* SCRUB = curva de maré — Immersive Glass v4 */}
       <div style={{ padding: '10px 14px 14px' }}>
-        <div ref={trackRef} role="slider" aria-label="Linha do tempo de maré" tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowRight') { setDir(1); setScrubHora(null); setAtivo(a => Math.min(ordenadas.length - 1, a + 1)) }
-            if (e.key === 'ArrowLeft') { setDir(-1); setScrubHora(null); setAtivo(a => Math.max(0, a - 1)) }
-          }}
-          onPointerDown={(e) => { arrastando.current = true; e.currentTarget.setPointerCapture(e.pointerId); selecionarPorClientX(e.clientX) }}
-          onPointerMove={(e) => { if (arrastando.current) selecionarPorClientX(e.clientX) }}
-          onPointerUp={(e) => { arrastando.current = false; e.currentTarget.releasePointerCapture(e.pointerId); setScrubHora(null) }}
-          onPointerCancel={(e) => { arrastando.current = false; e.currentTarget.releasePointerCapture(e.pointerId); setScrubHora(null) }}
-          style={{ position: 'relative', paddingTop: 28, paddingBottom: 22, touchAction: 'none', cursor: 'ew-resize', userSelect: 'none' }}>
-
-          <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height={SVG_H} preserveAspectRatio="none" aria-hidden="true" style={{ display: 'block' }}>
-            <defs>
-              <linearGradient id="grad-mare-v3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1ECBC3" stopOpacity="0.45" />
-                <stop offset="35%" stopColor="#1A7FB8" stopOpacity="0.3" />
-                <stop offset="70%" stopColor="#0D4D6E" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#0b3a53" stopOpacity="0.05" />
-              </linearGradient>
-              <linearGradient id="grad-linha-v3" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="rgba(255,255,255,.5)" />
-                <stop offset="30%" stopColor="rgba(255,255,255,.85)" />
-                <stop offset="70%" stopColor="rgba(255,255,255,.85)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,.5)" />
-              </linearGradient>
-              <filter id="glow-line">
-                <feGaussianBlur stdDeviation="0.6" result="blur" />
-                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
-            </defs>
-            {/* Filled area */}
-            <path d={area} fill="url(#grad-mare-v3)" />
-            {/* Curve line with glow */}
-            <path d={linha} fill="none" stroke="url(#grad-linha-v3)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" filter="url(#glow-line)" />
-
-            {/* Picos e vales — dots no SVG */}
+        {/* Layout: Y-axis ruler | Chart area */}
+        <div style={{ display: 'flex', gap: 0 }}>
+          {/* Y-axis ruler */}
+          <div style={{ width: 28, position: 'relative', flexShrink: 0, marginTop: 28, marginBottom: 22 }}>
             {(() => {
-              const pv = encontrarPicosVales(curvaDoDia)
-              return pv.map((p, i) => (
-                <circle
-                  key={`pv-${i}`}
-                  cx={x(p.hora)}
-                  cy={y(p.alturaM)}
-                  r="2.2"
-                  fill={p.tipo === 'alta' ? '#1ECBC3' : '#FF6B6B'}
-                  stroke="#fff"
-                  strokeWidth="0.6"
+              // Gerar ticks bonitos para o eixo Y
+              const rangeM = max - min
+              const step = rangeM > 2 ? 1 : rangeM > 1 ? 0.5 : 0.2
+              const ticks: number[] = []
+              const lo = Math.floor(min / step) * step
+              for (let v = lo; v <= max + step * 0.1; v += step) {
+                ticks.push(Math.round(v * 10) / 10)
+              }
+              return ticks.map((v) => {
+                const pct = (1 - (v - min) / ((max - min) || 1)) * 100
+                const yPctClamped = Math.max(2, Math.min(98, (6 / VB_H + pct / 100 * 30 / VB_H) * 100))
+                return (
+                  <span key={v} style={{
+                    position: 'absolute',
+                    right: 4,
+                    top: `${yPctClamped}%`,
+                    transform: 'translateY(-50%)',
+                    fontSize: 8.5,
+                    fontWeight: 600,
+                    color: 'var(--muted)',
+                    opacity: 0.55,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {v.toFixed(1)}
+                  </span>
+                )
+              })
+            })()}
+            {/* Unit label */}
+            <span style={{
+              position: 'absolute', top: -14, right: 4,
+              fontSize: 7.5, fontWeight: 700, color: 'var(--muted)',
+              opacity: 0.45, letterSpacing: '0.5px',
+            }}>m</span>
+          </div>
+
+          {/* Chart area */}
+          <div ref={trackRef} role="slider" aria-label="Linha do tempo de maré" tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') { setDir(1); setScrubHora(null); setAtivo(a => Math.min(ordenadas.length - 1, a + 1)) }
+              if (e.key === 'ArrowLeft') { setDir(-1); setScrubHora(null); setAtivo(a => Math.max(0, a - 1)) }
+            }}
+            onPointerDown={(e) => { arrastando.current = true; e.currentTarget.setPointerCapture(e.pointerId); selecionarPorClientX(e.clientX) }}
+            onPointerMove={(e) => { if (arrastando.current) selecionarPorClientX(e.clientX) }}
+            onPointerUp={(e) => { arrastando.current = false; e.currentTarget.releasePointerCapture(e.pointerId); setScrubHora(null) }}
+            onPointerCancel={(e) => { arrastando.current = false; e.currentTarget.releasePointerCapture(e.pointerId); setScrubHora(null) }}
+            style={{ position: 'relative', paddingTop: 28, paddingBottom: 22, touchAction: 'none', cursor: 'ew-resize', userSelect: 'none', flex: 1, minWidth: 0 }}>
+
+            <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" height={SVG_H} preserveAspectRatio="none" aria-hidden="true" style={{ display: 'block' }}>
+              <defs>
+                <linearGradient id="grad-mare-v3" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1ECBC3" stopOpacity="0.45" />
+                  <stop offset="35%" stopColor="#1A7FB8" stopOpacity="0.3" />
+                  <stop offset="70%" stopColor="#0D4D6E" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#0b3a53" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id="grad-linha-v3" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="rgba(255,255,255,.5)" />
+                  <stop offset="30%" stopColor="rgba(255,255,255,.85)" />
+                  <stop offset="70%" stopColor="rgba(255,255,255,.85)" />
+                  <stop offset="100%" stopColor="rgba(255,255,255,.5)" />
+                </linearGradient>
+                <filter id="glow-line">
+                  <feGaussianBlur stdDeviation="0.6" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Filled area */}
+              <path d={area} fill="url(#grad-mare-v3)" />
+              {/* Curve line with glow */}
+              <path d={linha} fill="none" stroke="url(#grad-linha-v3)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" filter="url(#glow-line)" />
+
+              {/* AGORA vertical line (only line, no circle — circle is HTML) */}
+              {ehHoje && (
+                <line x1={x(agoraH)} y1={0} x2={x(agoraH)} y2={VB_H} stroke="#1ECBC3" strokeWidth="0.8" vectorEffect="non-scaling-stroke" opacity="0.5" strokeDasharray="2 1.5" />
+              )}
+
+              {/* Handle vertical line */}
+              {ordenadas.length > 0 && (
+                <line
+                  x1={x(scrubHora ?? horas[ativo])} y1={0}
+                  x2={x(scrubHora ?? horas[ativo])} y2={VB_H}
+                  stroke={scrubHora == null ? "rgba(30,203,195,0.25)" : "#1ECBC3"}
+                  strokeWidth="0.5" strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined}
                   vectorEffect="non-scaling-stroke"
                 />
-              ))
+              )}
+            </svg>
+
+            {/* HTML round dots for picos/vales — always perfectly round */}
+            {(() => {
+              const pv = encontrarPicosVales(curvaDoDia)
+              return pv.map((p, i) => {
+                const isAlta = p.tipo === 'alta'
+                return (
+                  <div key={`dot-${i}`} style={{
+                    position: 'absolute',
+                    left: `${(p.hora / 24) * 100}%`,
+                    top: 28 + topPx(p.alturaM),
+                    transform: 'translate(-50%, -50%)',
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: isAlta ? '#1ECBC3' : '#FF6B6B',
+                    border: '2px solid #fff',
+                    boxShadow: `0 1px 4px ${isAlta ? 'rgba(30,203,195,.5)' : 'rgba(255,107,107,.4)'}`,
+                    pointerEvents: 'none', zIndex: 3,
+                  }} />
+                )
+              })
             })()}
 
-            {/* Marcador AGORA — turquesa pulsante */}
+            {/* AGORA — round HTML dot with pulse */}
             {ehHoje && (
-              <g transform={`translate(${x(agoraH)}, 0)`}>
-                <line x1={0} y1={0} x2={0} y2={VB_H} stroke="#1ECBC3" strokeWidth="0.8" vectorEffect="non-scaling-stroke" opacity="0.6" strokeDasharray="2 1.5" />
-                <circle cx={0} cy={y(alturaNaHora(curvaDoDia, agoraH))} r="2.5" fill="#1ECBC3" stroke="#fff" strokeWidth="0.6" vectorEffect="non-scaling-stroke">
-                  <animate attributeName="r" values="2.5;3.5;2.5" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
-                </circle>
-              </g>
+              <div style={{
+                position: 'absolute',
+                left: `${(agoraH / 24) * 100}%`,
+                top: 28 + topPx(alturaNaHora(curvaDoDia, agoraH)),
+                transform: 'translate(-50%, -50%)',
+                width: 10, height: 10, borderRadius: '50%',
+                background: '#1ECBC3',
+                border: '2px solid #fff',
+                boxShadow: '0 0 8px rgba(30,203,195,.6)',
+                animation: 'pulse 2s ease-in-out infinite',
+                pointerEvents: 'none', zIndex: 3,
+              }} />
             )}
 
-            {/* Prancha handle */}
+            {/* Handle — round HTML dot */}
             {ordenadas.length > 0 && (
-              <g transform={`translate(${x(scrubHora ?? horas[ativo])}, 0)`}>
-                <line x1={0} y1={0} x2={0} y2={VB_H} stroke={scrubHora == null ? "rgba(30,203,195,0.3)" : "#1ECBC3"} strokeWidth="0.5" strokeDasharray={scrubHora == null ? '1.4 1.4' : undefined} vectorEffect="non-scaling-stroke" />
-                <g transform={`translate(0, ${y(alturaNaHora(curvaDoDia, scrubHora ?? horas[ativo])) - 6})`}>
-                  <path d="M0-5 C1.8-4.5 2.2-2 2.2,1 C2.2,3.5 1.6,5 0,5.8 C-1.6,5 -2.2,3.5 -2.2,1 C-2.2-2 -1.8-4.5 0-5Z" fill={scrubHora == null ? "#1A7FB8" : "#0D6EA8"} stroke="rgba(255,255,255,.7)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
-                  <line x1={0} y1={-4} x2={0} y2={5} stroke="rgba(255,255,255,.4)" strokeWidth="0.3" vectorEffect="non-scaling-stroke" />
-                </g>
-              </g>
+              <div style={{
+                position: 'absolute',
+                left: `${((scrubHora ?? horas[ativo]) / 24) * 100}%`,
+                top: 28 + topPx(alturaNaHora(curvaDoDia, scrubHora ?? horas[ativo])),
+                transform: 'translate(-50%, -50%)',
+                width: 14, height: 14, borderRadius: '50%',
+                background: scrubHora == null ? '#1A7FB8' : '#0D6EA8',
+                border: '2.5px solid rgba(255,255,255,.85)',
+                boxShadow: '0 2px 8px rgba(0,0,0,.3)',
+                pointerEvents: 'none', zIndex: 5,
+                transition: scrubHora == null ? 'left .1s ease-out' : 'none',
+              }} />
             )}
-          </svg>
 
-          {/* Floating badges — maré alta/baixa */}
-          {(() => {
-            const pv = encontrarPicosVales(curvaDoDia)
-            return pv.map((p, i) => {
-              const isAlta = p.tipo === 'alta'
-              const leftPct = (p.hora / 24) * 100
-              const topPos = 28 + (y(p.alturaM) / VB_H) * SVG_H
+            {/* Floating badges — maré alta/baixa */}
+            {(() => {
+              const pv = encontrarPicosVales(curvaDoDia)
+              return pv.map((p, i) => {
+                const isAlta = p.tipo === 'alta'
+                const leftPct = (p.hora / 24) * 100
+                const topPos = 28 + topPx(p.alturaM)
+                return (
+                  <span
+                    key={`badge-${i}`}
+                    style={{
+                      position: 'absolute',
+                      left: `${leftPct}%`,
+                      top: isAlta ? topPos - 28 : topPos + 8,
+                      transform: 'translateX(-50%)',
+                      display: 'inline-flex', alignItems: 'center', gap: 3,
+                      background: isAlta ? 'rgba(30,203,195,.18)' : 'rgba(255,107,107,.15)',
+                      border: `1px solid ${isAlta ? 'rgba(30,203,195,.4)' : 'rgba(255,107,107,.35)'}`,
+                      color: isAlta ? '#1ECBC3' : '#FF6B6B',
+                      borderRadius: 10, padding: '2px 7px',
+                      fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+                      zIndex: 3,
+                    }}
+                  >
+                    {p.alturaM.toFixed(1)}m · {fmtHora(p.hora)}
+                  </span>
+                )
+              })
+            })()}
+
+            {/* Label AGORA */}
+            {ehHoje && (
+              <span style={{
+                position: 'absolute', top: 8,
+                left: `${(agoraH / 24) * 100}%`, transform: 'translateX(-50%)',
+                fontSize: 8, fontWeight: 800, color: '#1ECBC3',
+                letterSpacing: '0.6px', textTransform: 'uppercase',
+                whiteSpace: 'nowrap', pointerEvents: 'none',
+                background: 'rgba(30,203,195,.12)', padding: '1px 6px', borderRadius: 6,
+              }}>
+                agora
+              </span>
+            )}
+
+            {/* Thumbnails das fotos na curva */}
+            {ordenadas.map((ft, idx) => {
+              const h = horas[idx]
+              const alt = alturaNaHora(curvaDoDia, h)
+              const isAtivo = idx === ativo
+              const size = isAtivo ? 28 : 20
               return (
-                <span
-                  key={`badge-${i}`}
+                <button key={ft.id} onClick={() => { setDir(idx > ativo ? 1 : -1); setAtivo(idx) }} aria-label={`Foto das ${horaCurta(ft.capturadaEm)}`}
                   style={{
                     position: 'absolute',
-                    left: `${leftPct}%`,
-                    top: isAlta ? topPos - 28 : topPos + 8,
-                    transform: 'translateX(-50%)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 3,
-                    background: isAlta ? 'rgba(30,203,195,.18)' : 'rgba(255,107,107,.15)',
-                    border: `1px solid ${isAlta ? 'rgba(30,203,195,.4)' : 'rgba(255,107,107,.35)'}`,
-                    color: isAlta ? '#1ECBC3' : '#FF6B6B',
-                    borderRadius: 10,
-                    padding: '2px 7px',
-                    fontSize: 9,
-                    fontWeight: 700,
-                    whiteSpace: 'nowrap',
-                    pointerEvents: 'none',
-                    backdropFilter: 'blur(4px)',
-                    WebkitBackdropFilter: 'blur(4px)',
-                    zIndex: 3,
-                  }}
-                >
-                  {p.alturaM.toFixed(1)}m · {fmtHora(p.hora)}
-                </span>
+                    left: `${(h / 24) * 100}%`,
+                    top: 28 + topPx(alt),
+                    transform: 'translate(-50%, -50%)',
+                    width: size, height: size,
+                    borderRadius: '50%',
+                    border: isAtivo ? '2.5px solid #1ECBC3' : '2px solid rgba(255,255,255,.85)',
+                    background: 'var(--azul-medio)',
+                    boxShadow: isAtivo ? '0 3px 12px rgba(30,203,195,.45)' : '0 2px 6px rgba(0,0,0,.2)',
+                    padding: 0, cursor: 'pointer', overflow: 'hidden',
+                    transition: 'all .15s ease-out', zIndex: 4,
+                  }}>
+                  {ft.url && (
+                    <img src={ft.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: '50%' }} />
+                  )}
+                </button>
               )
-            })
-          })()}
+            })}
 
-          {/* Label AGORA */}
-          {ehHoje && (
-            <span style={{
-              position: 'absolute', top: 8,
-              left: `${(agoraH / 24) * 100}%`, transform: 'translateX(-50%)',
-              fontSize: 8, fontWeight: 800, color: '#1ECBC3',
-              letterSpacing: '0.6px', textTransform: 'uppercase',
-              whiteSpace: 'nowrap', pointerEvents: 'none',
-              background: 'rgba(30,203,195,.12)', padding: '1px 6px', borderRadius: 6,
-            }}>
-              agora
-            </span>
-          )}
+            {/* Eixo de horas — 24h completo */}
+            {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => (
+              <span key={h} style={{
+                position: 'absolute', bottom: 2,
+                left: `${(h / 24) * 100}%`, transform: 'translateX(-50%)',
+                fontSize: 9, fontWeight: 600, color: 'var(--muted)',
+                opacity: h === 0 || h === 12 ? 0.7 : 0.5,
+              }}>{h}h</span>
+            ))}
 
-          {/* Thumbnails das fotos na curva */}
-          {ordenadas.map((ft, idx) => {
-            const h = horas[idx]
-            const alt = alturaNaHora(curvaDoDia, h)
-            const isAtivo = idx === ativo
-            const size = isAtivo ? 28 : 20
-            return (
-              <button key={ft.id} onClick={() => { setDir(idx > ativo ? 1 : -1); setAtivo(idx) }} aria-label={`Foto das ${horaCurta(ft.capturadaEm)}`}
-                style={{
-                  position: 'absolute',
-                  left: `${(h / 24) * 100}%`,
-                  top: 28 + topPx(alt),
-                  transform: 'translate(-50%, -50%)',
-                  width: size,
-                  height: size,
-                  borderRadius: 999,
-                  border: isAtivo ? '2.5px solid #1ECBC3' : '2px solid rgba(255,255,255,.85)',
-                  background: 'var(--azul-medio)',
-                  boxShadow: isAtivo ? '0 3px 12px rgba(30,203,195,.45)' : '0 2px 6px rgba(0,0,0,.2)',
-                  padding: 0,
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  transition: 'all .15s ease-out',
-                  zIndex: 4,
-                }}>
-                {ft.url && (
-                  <img src={ft.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 999 }} />
-                )}
-              </button>
-            )
-          })}
+            {/* Eventos de vento */}
+            {scrubHora == null && eventos.map((ev) => (
+              <span key={ev.rotulo} style={{ position: 'absolute', top: 8, left: `${(ev.hora / 24) * 100}%`, transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: 'var(--azul-medio)', whiteSpace: 'nowrap' }}>
+                ↡ {ev.rotulo}
+              </span>
+            ))}
 
-          {/* Eixo de horas */}
-          {[6, 9, 12, 15, 18].map((h) => (
-            <span key={h} style={{ position: 'absolute', bottom: 2, left: `${(h / 24) * 100}%`, transform: 'translateX(-50%)', fontSize: 9.5, fontWeight: 600, color: 'var(--muted)', opacity: 0.6 }}>{h}h</span>
-          ))}
-
-          {/* Eventos de vento */}
-          {scrubHora == null && eventos.map((ev) => (
-            <span key={ev.rotulo} style={{ position: 'absolute', top: 8, left: `${(ev.hora / 24) * 100}%`, transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: 'var(--azul-medio)', whiteSpace: 'nowrap' }}>
-              ↡ {ev.rotulo}
-            </span>
-          ))}
-
-          {/* Leitura contínua sob o dedo */}
-          {scrubHora != null && (
-            <span style={{
-              position: 'absolute', top: 8,
-              left: `${(scrubHora / 24) * 100}%`, transform: 'translateX(-50%)',
-              background: 'rgba(11,58,83,.9)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-              color: '#fff', fontSize: 10.5, fontWeight: 700,
-              padding: '3px 10px', borderRadius: 10,
-              whiteSpace: 'nowrap', pointerEvents: 'none',
-              boxShadow: '0 2px 10px rgba(0,0,0,.25)',
-              border: '1px solid rgba(30,203,195,.3)',
-            }}>
-              {fmtHora(scrubHora)} · {alturaNaHora(curvaDoDia, scrubHora).toFixed(1)}m
-            </span>
-          )}
+            {/* Leitura contínua sob o dedo */}
+            {scrubHora != null && (
+              <span style={{
+                position: 'absolute', top: 8,
+                left: `${(scrubHora / 24) * 100}%`, transform: 'translateX(-50%)',
+                background: 'rgba(11,58,83,.9)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                color: '#fff', fontSize: 10.5, fontWeight: 700,
+                padding: '3px 10px', borderRadius: 10,
+                whiteSpace: 'nowrap', pointerEvents: 'none',
+                boxShadow: '0 2px 10px rgba(0,0,0,.25)',
+                border: '1px solid rgba(30,203,195,.3)',
+              }}>
+                {fmtHora(scrubHora)} · {alturaNaHora(curvaDoDia, scrubHora).toFixed(1)}m
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Info strip — glass pills */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6, marginLeft: 28 }}>
           <span className="tide-info-chip" style={{
             background: 'rgba(30,203,195,.1)', border: '1px solid rgba(30,203,195,.25)',
             color: '#1ECBC3', fontWeight: 700,
@@ -562,4 +630,3 @@ export function TideScrubTimeline({
     </div>
   )
 }
-
