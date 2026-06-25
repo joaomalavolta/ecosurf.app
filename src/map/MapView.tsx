@@ -171,7 +171,7 @@ function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<
   return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
-      if (!map.hasImage(nome)) map.addImage(nome, img, { pixelRatio: 2 })
+      if (!map.hasImage(nome)) map.addImage(nome, img, { pixelRatio: 1 })
       resolve()
     }
     img.onerror = () => resolve()
@@ -272,8 +272,8 @@ export function MapView({
         type: 'geojson',
         data: colecao(dadosRef.current),
         cluster: true,
-        clusterRadius: 40,
-        clusterMaxZoom: 10,
+        clusterRadius: 50,
+        clusterMaxZoom: 14,
       })
 
       // Clusters — brancos com borda e número escuro (estilo Zurrb)
@@ -347,12 +347,12 @@ export function MapView({
           ],
           'icon-size': [
             'interpolate', ['linear'], ['zoom'],
-            5, 0.55,   // zoom continental → 55%
-            8, 0.7,    // zoom costa → 70%
-            10, 0.85,  // zoom cidade → 85%
-            13, 1.0,   // zoom normal → 100%
-            16, 1.15,  // zoom close → 115%
-            18, 1.3,   // zoom máximo → 130%
+            5, 0.4,    // zoom continental
+            8, 0.55,   // zoom costa
+            10, 0.7,   // zoom cidade
+            12, 0.85,  // zoom bairro
+            14, 1.0,   // zoom rua
+            17, 1.2,   // zoom close-up
           ],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
@@ -370,7 +370,7 @@ export function MapView({
           'text-field': ['get', 'titulo'],
           'text-font': ['Noto Sans Bold'],
           'text-size': 12,
-          'text-offset': [0, 2],
+          'text-offset': [0, 0.8],
           'text-anchor': 'top',
           'text-max-width': 10,
         },
