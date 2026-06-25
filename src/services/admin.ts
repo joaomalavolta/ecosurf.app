@@ -215,7 +215,8 @@ export async function excluirUsuario(id: string, motivo: string) {
 // ── Ameaças ──────────────────────────────────────────────────────────────
 export async function listarAmeacasAdmin() {
   const c = await sb()
-  const { data } = await c.from('ameacas').select('id,titulo,categoria,status,gravidade,municipio,uf,precisao,descricao,local_nome,recorrente').order('criada_em', { ascending: false }).limit(200)
+  const { data, error } = await c.rpc('admin_listar_ameacas')
+  if (error) throw new Error(error.message)
   return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; precisao: string; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
 }
 
