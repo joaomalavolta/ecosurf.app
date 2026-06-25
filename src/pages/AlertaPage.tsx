@@ -36,7 +36,7 @@ export function AlertaPage() {
 
   useEffect(() => {
     if (!id) return
-    fetch(`${SUPABASE_URL}/rest/v1/ameacas?select=*&id=eq.${encodeURIComponent(id)}`, {
+    fetch(`${SUPABASE_URL}/rest/v1/ameacas_publicas?select=*&id=eq.${encodeURIComponent(id)}`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
     })
       .then((r) => r.json())
