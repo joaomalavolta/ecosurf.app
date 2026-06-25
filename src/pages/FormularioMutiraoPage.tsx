@@ -355,10 +355,10 @@ export function FormularioMutiraoPage() {
           {modoEdicao && (
             <button
               className="btn outline"
+              type="button"
               onClick={() => {
-                if (confirm('Descartar todas as alterações?')) {
-                  navigate(`/mutirao/${mutiraoId}`, { replace: true })
-                }
+                const sair = window.confirm('Descartar todas as alteracoes?')
+                if (sair) navigate(-1)
               }}
               disabled={enviando || excluindo}
               style={{ fontSize: 13 }}
