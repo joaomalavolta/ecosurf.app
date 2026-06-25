@@ -12,23 +12,23 @@ import type { Alerta, Mutirao, Pico } from '../types/domain'
  * Cada SVG tem filter ID ÚNICO (sufixo cor hex) para evitar conflito no MapLibre.
  */
 const ZURB_PIN = (bg: string, paths: string, size = 48) => {
-  // ID único por cor para evitar conflito de filter entre SVGs rasterizados
   const uid = bg.replace('#', '')
   const r = size / 2
-  const svgH = size + 12  // espaço para ponteira
-  const cy = r            // centro vertical do círculo
-  const tipY = size + 2   // ponta inferior
+  const svgH = size + 12
+  const cy = r
+  const tipY = size + 2
+  // Ícone Tabler = 24x24. scale(0.8) = 19.2px — ocupa ~60% do círculo (como ZUrb)
+  const s = 0.8
+  const ix = r - 12 * s   // centralizar horizontalmente
+  const iy = cy - 12 * s  // centralizar verticalmente
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${svgH}" viewBox="0 0 ${size} ${svgH}">` +
     `<defs><filter id="s${uid}" x="-30%" y="-20%" width="160%" height="160%">` +
     `<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/>` +
     `</filter></defs>` +
-    // Ponteira triangular (branca borda + cor preenchimento)
     `<polygon points="${r - 5},${size - 4} ${r},${tipY} ${r + 5},${size - 4}" fill="${bg}" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>` +
-    // Círculo principal
     `<circle cx="${r}" cy="${cy}" r="${r - 3}" fill="${bg}" stroke="#fff" stroke-width="3" filter="url(#s${uid})"/>` +
-    // Ícone branco centralizado
-    `<g transform="translate(${r - 6}, ${cy - 6}) scale(0.5)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">` +
+    `<g transform="translate(${ix}, ${iy}) scale(${s})" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">` +
     paths +
     `</g></svg>`
   )
