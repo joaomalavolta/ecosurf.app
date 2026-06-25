@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IconMapPin, IconAlertTriangle, IconArrowLeft } from '@tabler/icons-react'
+import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { MapaLocal } from '../components/MapaLocal'
 import { categoriaPorId } from '../components/SeletorCategoria'
 import { SUPABASE_URL, SUPABASE_KEY } from '../services/supabase/config'
 
@@ -19,6 +20,8 @@ interface AlertaDetalhe {
   images: string[] | null
   criada_em: string
   denunciante_id: string | null
+  lat: number | null
+  lng: number | null
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -76,28 +79,58 @@ export function AlertaPage() {
   const imageUrls = (alerta.images ?? []).map(
     (path) => `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`
   )
+  const dataFormatada = new Date(alerta.criada_em).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
+  const localTexto = `${alerta.local_nome ? `${alerta.local_nome} — ` : ''}${alerta.municipio}/${alerta.uf}`
+
+  async function compartilhar() {
+    const url = window.location.href
+    const coordsTexto = alerta!.lat && alerta!.lng
+      ? `\n📍 Coordenadas: ${alerta!.lat.toFixed(5)}, ${alerta!.lng.toFixed(5)}\n🗺️ Google Maps: https://www.google.com/maps?q=${alerta!.lat},${alerta!.lng}`
+      : ''
+    const texto = `⚠️ Registro Ambiental: ${alerta!.titulo}\n📋 ${cat.label} · ${STATUS_LABELS[alerta!.status] ?? alerta!.status}\n📍 ${localTexto}${coordsTexto}\n📅 ${dataFormatada}\n\nVeja o registro completo: ${url}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: alerta!.titulo, text: texto, url })
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(texto)
+      alert('Link e localização copiados!')
+    }
+  }
 
   return (
     <div className="page">
       <Header title="Registro Ambiental" sub={alerta.titulo} />
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 80 }}>
-        {/* Badge categoria */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <div
-            style={{
-              width: 44, height: 44, borderRadius: 14,
-              background: `${cat.cor}18`, color: cat.cor,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <CatIcon size={24} stroke={2} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
-            <div className="muted" style={{ fontSize: 12 }}>
-              {cat.label} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+        {/* Badge categoria + compartilhar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 44, height: 44, borderRadius: 14,
+                background: `${cat.cor}18`, color: cat.cor,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <CatIcon size={24} stroke={2} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
+              <div className="muted" style={{ fontSize: 12 }}>
+                {cat.label} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+              </div>
             </div>
           </div>
+          <button
+            className="btn outline"
+            onClick={compartilhar}
+            style={{ fontSize: 12, padding: '6px 14px', flexShrink: 0 }}
+          >
+            <IconShare size={15} /> Compartilhar
+          </button>
         </div>
 
         {/* Fotos */}
@@ -120,14 +153,20 @@ export function AlertaPage() {
           </div>
         )}
 
-        {/* Info cards */}
-        <div className="card pad">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        {/* Info card */}
+        <div className="card pad stack" style={{ gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <IconMapPin size={16} stroke={2} color="var(--turq)" />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>
-              {alerta.local_nome ? `${alerta.local_nome} — ` : ''}
-              {alerta.municipio}/{alerta.uf}
-            </span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{localTexto}</span>
+          </div>
+          {alerta.lat && alerta.lng && (
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 24 }}>
+              Coordenadas: {alerta.lat.toFixed(5)}, {alerta.lng.toFixed(5)}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <IconCalendar size={16} stroke={2} color="var(--turq)" />
+            <span style={{ fontSize: 13 }}>Registrado em {dataFormatada}</span>
           </div>
           {alerta.gravidade && (
             <div style={{ fontSize: 13 }}>
@@ -139,12 +178,39 @@ export function AlertaPage() {
               ⚠ Problema recorrente neste local
             </div>
           )}
-          <div className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-            Registrado em {new Date(alerta.criada_em).toLocaleDateString('pt-BR', {
-              day: '2-digit', month: 'long', year: 'numeric',
-            })}
-          </div>
         </div>
+
+        {/* Mapa do local */}
+        {alerta.lat != null && alerta.lng != null && (
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <IconMapPin size={16} stroke={2} color="var(--turq)" /> Local do registro
+            </h3>
+            <MapaLocal
+              lat={alerta.lat}
+              lng={alerta.lng}
+              label={alerta.local_nome ?? alerta.titulo}
+              height={200}
+            />
+            <a
+              href={`https://www.google.com/maps?q=${alerta.lat},${alerta.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 8,
+                fontSize: 12,
+                color: 'var(--turq)',
+                textDecoration: 'none',
+                fontWeight: 600,
+              }}
+            >
+              <IconMapPin size={14} /> Abrir no Google Maps
+            </a>
+          </div>
+        )}
 
         {/* Descrição */}
         {alerta.descricao && (
