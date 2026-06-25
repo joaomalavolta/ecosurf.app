@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { IconMapPin, IconAlertTriangle, IconArrowLeft } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { categoriaPorId } from '../components/SeletorCategoria'
-import { sb } from '../services/supabase/client'
-import { SUPABASE_URL } from '../services/supabase/config'
+import { SUPABASE_URL, SUPABASE_KEY } from '../services/supabase/config'
 
 interface AlertaDetalhe {
   id: string
@@ -37,15 +36,15 @@ export function AlertaPage() {
 
   useEffect(() => {
     if (!id) return
-    sb()
-      .from('ameacas')
-      .select('*')
-      .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) setAlerta(data as AlertaDetalhe)
+    fetch(`${SUPABASE_URL}/rest/v1/ameacas?select=*&id=eq.${encodeURIComponent(id)}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    })
+      .then((r) => r.json())
+      .then((rows: AlertaDetalhe[]) => {
+        if (rows.length > 0) setAlerta(rows[0])
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [id])
 
   if (loading) {
