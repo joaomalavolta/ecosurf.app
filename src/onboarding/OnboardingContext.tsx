@@ -35,9 +35,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [aberto, setAberto] = useState(false)
   const [etapa, setEtapa] = useState<'boas-vindas' | 'email'>('boas-vindas')
 
-  useEffect(() => {
-    if (!ler(ONBOARDED) && !ler(VISTO)) setAberto(true) // primeira visita
-  }, [])
+  // Não abre automaticamente — a LandingPage cuida da primeira visita.
+  // O OnboardingFlow só abre quando chamado via abrir() (ex: botão câmera).
 
   return (
     <C.Provider value={{ onboarded, abrir: (e = 'boas-vindas') => { setEtapa(e); setAberto(true) } }}>
