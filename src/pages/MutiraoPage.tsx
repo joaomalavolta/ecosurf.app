@@ -13,6 +13,7 @@ import {
   IconPhoto,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { MapaLocal } from '../components/MapaLocal'
 import { carregarMutiroes } from '../services/picos'
 import { sb } from '../services/supabase/client'
 import type { Mutirao } from '../types/domain'
@@ -141,6 +142,21 @@ export function MutiraoPage() {
           {mutirao.contato && <InfoLinha icon={IconPhone} label="Contato" value={mutirao.contato} />}
           {mutirao.vagas && <InfoLinha icon={IconUsers} label="Vagas" value={`${mutirao.inscritos ?? 0} / ${mutirao.vagas}`} />}
         </div>
+
+        {/* Mapa do local */}
+        {mutirao.lat != null && mutirao.lng != null && (
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <IconMapPin size={16} stroke={2} color="var(--turq)" /> Local no mapa
+            </h3>
+            <MapaLocal
+              lat={mutirao.lat}
+              lng={mutirao.lng}
+              label={mutirao.pontoEncontro ?? mutirao.titulo}
+              height={200}
+            />
+          </div>
+        )}
 
         {/* Descrição */}
         {mutirao.descricao && (
