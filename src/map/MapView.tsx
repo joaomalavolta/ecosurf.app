@@ -18,7 +18,7 @@ const ZURB_PIN = (bg: string, paths: string, size = 48) => {
   const cy = r
   const tipY = size + 2
   // Ícone Tabler = 24x24. scale(0.8) = 19.2px — ocupa ~60% do círculo (como ZUrb)
-  const s = 0.8
+  const s = 0.92
   const ix = r - 12 * s   // centralizar horizontalmente
   const iy = cy - 12 * s  // centralizar verticalmente
   return (
@@ -273,7 +273,7 @@ export function MapView({
         data: colecao(dadosRef.current),
         cluster: true,
         clusterRadius: 50,
-        clusterMaxZoom: 14,
+        clusterMaxZoom: 9,
       })
 
       // Clusters — brancos com borda e número escuro (estilo Zurrb)
@@ -347,12 +347,12 @@ export function MapView({
           ],
           'icon-size': [
             'interpolate', ['linear'], ['zoom'],
-            5, 0.4,    // zoom continental
-            8, 0.55,   // zoom costa
-            10, 0.7,   // zoom cidade
-            12, 0.85,  // zoom bairro
+            5, 0.5,    // zoom continental — sempre visível
+            8, 0.6,    // zoom costa
+            10, 0.75,  // zoom cidade (inicial)
+            12, 0.9,   // zoom bairro
             14, 1.0,   // zoom rua
-            17, 1.2,   // zoom close-up
+            17, 1.15,  // zoom close-up
           ],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
