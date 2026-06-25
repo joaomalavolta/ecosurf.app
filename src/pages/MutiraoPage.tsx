@@ -19,6 +19,12 @@ import { carregarMutiroes } from '../services/picos'
 import { sb } from '../services/supabase/client'
 import type { Mutirao } from '../types/domain'
 
+interface Participante {
+  user_id: string
+  nome: string | null
+  foto_url: string | null
+}
+
 export function MutiraoPage() {
   const { mutiraoId } = useParams<{ mutiraoId: string }>()
   const navigate = useNavigate()
@@ -26,6 +32,7 @@ export function MutiraoPage() {
   const [participando, setParticipando] = useState(false)
   const [jaParticipou, setJaParticipou] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [participantes, setParticipantes] = useState<Participante[]>([])
 
   useEffect(() => {
     sb().auth.getSession().then(({ data }) => {
@@ -38,7 +45,23 @@ export function MutiraoPage() {
       const found = ms.find((m) => m.id === mutiraoId)
       setMutirao(found ?? null)
     })
+    // Carregar participantes
+    if (mutiraoId) {
+      sb().from('mutirao_participantes_publicos')
+        .select('user_id, nome, foto_url')
+        .eq('mutirao_id', mutiraoId)
+        .then(({ data }) => {
+          if (data) setParticipantes(data as Participante[])
+        })
+    }
   }, [mutiraoId])
+
+  // Verificar se o user já participou
+  useEffect(() => {
+    if (userId && participantes.length > 0) {
+      setJaParticipou(participantes.some((p) => p.user_id === userId))
+    }
+  }, [userId, participantes])
 
   if (mutirao === undefined) {
     return (
@@ -71,17 +94,27 @@ export function MutiraoPage() {
     if (!mutirao || jaParticipou) return
     setParticipando(true)
     try {
+      const session = await sb().auth.getSession()
+      const user = session.data.session?.user
+      if (!user) {
+        alert('Faça login para participar.')
+        setParticipando(false)
+        return
+      }
+
       const { error } = await sb()
         .rpc('inscrever_mutirao', { p_mutirao_id: mutirao.id })
-      if (error) {
-        // Fallback: incrementar inscritos diretamente
-        await sb()
-          .from('mutiroes')
-          .update({ inscritos: (mutirao.inscritos ?? 0) + 1 })
-          .eq('id', mutirao.id)
-      }
+      if (error) throw error
+
       setJaParticipou(true)
       setMutirao({ ...mutirao, inscritos: (mutirao.inscritos ?? 0) + 1 })
+
+      // Adicionar o user à lista de participantes localmente
+      const perfil = await sb().from('perfis').select('nome, foto_url').eq('id', user.id).single()
+      setParticipantes((prev) => [
+        ...prev,
+        { user_id: user.id, nome: perfil.data?.nome ?? user.email ?? 'Voluntário', foto_url: perfil.data?.foto_url ?? null },
+      ])
     } catch {
       alert('Erro ao participar. Tente novamente.')
     } finally {
@@ -194,6 +227,75 @@ export function MutiraoPage() {
           >
             {jaParticipou ? '✅ Participação confirmada!' : participando ? 'Confirmando...' : '🙋 Quero participar'}
           </button>
+        )}
+
+        {/* Lista de participantes */}
+        {participantes.length > 0 && (
+          <div className="card pad" style={{ marginTop: 8 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <IconUsers size={16} stroke={2} color="var(--turq)" /> Participantes ({participantes.length})
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              {participantes.map((p) => (
+                <div
+                  key={p.user_id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 4,
+                    width: 64,
+                  }}
+                >
+                  {p.foto_url ? (
+                    <img
+                      src={p.foto_url}
+                      alt={p.nome ?? ''}
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid var(--turq)',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #1ECBC3, #0D6EA8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontSize: 16,
+                        fontWeight: 700,
+                        border: '2px solid var(--turq)',
+                      }}
+                    >
+                      {(p.nome ?? '?')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                      color: 'var(--text)',
+                      maxWidth: 64,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {p.nome?.split(' ')[0] ?? 'Voluntário'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Botão Editar (só para o criador) */}
