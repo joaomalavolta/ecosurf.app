@@ -155,10 +155,23 @@ export function RadarPage() {
       </div>
 
       {/* ─── FILTRO MAPA ─── */}
-      <div className="pills" style={{ margin: '10px 12px 0', justifyContent: 'center' }}>
-        <Pill on={filtroMapa === 'eco'} onClick={() => setFiltroMapa('eco')}><IconRipple size={15} stroke={2} /> Eco</Pill>
-        <Pill on={filtroMapa === 'ecosurf'} onClick={() => setFiltroMapa('ecosurf')}><IconWorld size={15} stroke={2} /> Ecosurf</Pill>
-        <Pill on={filtroMapa === 'surf'} onClick={() => setFiltroMapa('surf')}><IconSnowboarding size={15} stroke={2} /> Surf</Pill>
+      <div className="seg-filter" style={{ margin: '10px 12px 0' }}>
+        <div
+          className="seg-filter-thumb"
+          style={{
+            left: `calc(${filtroMapa === 'eco' ? 0 : filtroMapa === 'ecosurf' ? 1 : 2} * 33.333% + 3px)`,
+            background: filtroMapa === 'eco' ? '#22c55e' : filtroMapa === 'surf' ? '#0D6EA8' : 'linear-gradient(135deg, #22c55e, #0D6EA8)',
+          }}
+        />
+        <button className={`seg-filter-btn ${filtroMapa === 'eco' ? 'on' : ''}`} onClick={() => setFiltroMapa('eco')}>
+          <IconRipple size={15} stroke={2} /> Eco
+        </button>
+        <button className={`seg-filter-btn ${filtroMapa === 'ecosurf' ? 'on' : ''}`} onClick={() => setFiltroMapa('ecosurf')}>
+          <IconWorld size={15} stroke={2} /> Ecosurf
+        </button>
+        <button className={`seg-filter-btn ${filtroMapa === 'surf' ? 'on' : ''}`} onClick={() => setFiltroMapa('surf')}>
+          <IconSnowboarding size={15} stroke={2} /> Surf
+        </button>
       </div>
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
