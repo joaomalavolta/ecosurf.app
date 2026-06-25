@@ -61,11 +61,11 @@ const ZURB_PIN_ATIVO = (bg: string, paths: string, size = 48) => {
 
 /** Ícones — modelo ZUrb: círculos sólidos com ponteira + sombra forte */
 const ICONES: Record<string, string> = {
-  // 🏄 Pico de surf — azul oceano (maior: 52px)
-  'ic-pico':           ZURB_PIN('#0D6EA8', WAVE, 52),
-  'ic-pico-ativo':     ZURB_PIN_ATIVO('#0D6EA8', WAVE, 52),
-  // 🧹 Mutirão — laranja (maior: 50px)
-  'ic-mutirao':        ZURB_PIN('#FF8C42', PEOPLE, 50),
+  // 🏄 Pico de surf — azul oceano
+  'ic-pico':           ZURB_PIN('#0D6EA8', WAVE, 44),
+  'ic-pico-ativo':     ZURB_PIN_ATIVO('#0D6EA8', WAVE, 44),
+  // 🧹 Mutirão — laranja
+  'ic-mutirao':        ZURB_PIN('#FF8C42', PEOPLE, 44),
   // 🔴 Alertas ambientais — tamanho padrão 44px
   'ic-lixo-praia':     ZURB_PIN('#E84855', TRASH, 44),
   'ic-lixo-rio':       ZURB_PIN('#D64045', BOTTLE, 44),
