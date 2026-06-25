@@ -9,15 +9,20 @@ import {
   IconBuilding,
   IconInfoCircle,
   IconArrowLeft,
+  IconShare,
+  IconPhoto,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { carregarMutiroes } from '../services/picos'
+import { sb } from '../services/supabase/client'
 import type { Mutirao } from '../types/domain'
 
 export function MutiraoPage() {
   const { mutiraoId } = useParams<{ mutiraoId: string }>()
   const navigate = useNavigate()
   const [mutirao, setMutirao] = useState<Mutirao | null | undefined>(undefined)
+  const [participando, setParticipando] = useState(false)
+  const [jaParticipou, setJaParticipou] = useState(false)
 
   useEffect(() => {
     carregarMutiroes().then((ms) => {
@@ -53,26 +58,78 @@ export function MutiraoPage() {
 
   const data = mutirao.quando ? new Date(mutirao.quando).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'
 
+  async function participar() {
+    if (!mutirao || jaParticipou) return
+    setParticipando(true)
+    try {
+      const { error } = await sb()
+        .rpc('inscrever_mutirao', { p_mutirao_id: mutirao.id })
+      if (error) {
+        // Fallback: incrementar inscritos diretamente
+        await sb()
+          .from('mutiroes')
+          .update({ inscritos: (mutirao.inscritos ?? 0) + 1 })
+          .eq('id', mutirao.id)
+      }
+      setJaParticipou(true)
+      setMutirao({ ...mutirao, inscritos: (mutirao.inscritos ?? 0) + 1 })
+    } catch {
+      alert('Erro ao participar. Tente novamente.')
+    } finally {
+      setParticipando(false)
+    }
+  }
+
+  async function compartilhar() {
+    const url = window.location.href
+    const texto = `🌊 ${mutirao.titulo} — ${data}\n📍 ${mutirao.municipio}/${mutirao.uf}\n\nParticipe: ${url}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: mutirao.titulo, text: texto, url })
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(texto)
+      alert('Link copiado!')
+    }
+  }
+
   return (
     <div className="page">
       <Header title={mutirao.titulo} sub={`${mutirao.municipio}/${mutirao.uf}`} />
 
-      <div className="page-pad stack" style={{ paddingTop: 16 }}>
+      <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 80 }}>
         {/* Imagem de capa */}
-        {mutirao.imagemUrl && (
-          <div style={{ borderRadius: 14, overflow: 'hidden', height: 180 }}>
+        {mutirao.imagemUrl ? (
+          <div style={{ borderRadius: 14, overflow: 'hidden', height: 200 }}>
             <img src={mutirao.imagemUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        ) : (
+          <div style={{
+            borderRadius: 14, height: 120,
+            background: 'linear-gradient(135deg, #0D6EA820, #FF8C4220)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexDirection: 'column', gap: 6,
+          }}>
+            <IconPhoto size={32} stroke={1.5} color="var(--muted)" />
+            <span className="muted" style={{ fontSize: 12 }}>Sem foto de capa</span>
           </div>
         )}
 
-        {/* Status */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        {/* Status + Compartilhar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="tag" style={{
             background: mutirao.status === 'agendado' ? 'var(--tag-ok-bg)' : mutirao.status === 'realizado' ? 'var(--cinza)' : 'var(--tag-warn-bg)',
             color: mutirao.status === 'agendado' ? 'var(--tag-ok-fg)' : mutirao.status === 'realizado' ? 'var(--muted)' : 'var(--tag-warn-fg)',
           }}>
             {mutirao.status === 'agendado' ? '📅 Agendado' : mutirao.status === 'realizado' ? '✅ Realizado' : mutirao.status}
           </span>
+          <button
+            className="btn outline"
+            onClick={compartilhar}
+            style={{ fontSize: 12, padding: '6px 14px' }}
+          >
+            <IconShare size={15} /> Compartilhar
+          </button>
         </div>
 
         {/* Informações principais */}
@@ -103,10 +160,15 @@ export function MutiraoPage() {
           </div>
         )}
 
-        {/* Ação */}
+        {/* Ação — Quero participar */}
         {mutirao.status === 'agendado' && (
-          <button className="btn acento full" style={{ minHeight: 50, fontSize: 15, marginTop: 8 }}>
-            🙋 Quero participar
+          <button
+            className="btn acento full"
+            style={{ minHeight: 50, fontSize: 15, marginTop: 8 }}
+            onClick={participar}
+            disabled={participando || jaParticipou}
+          >
+            {jaParticipou ? '✅ Participação confirmada!' : participando ? 'Confirmando...' : '🙋 Quero participar'}
           </button>
         )}
 
@@ -129,3 +191,4 @@ function InfoLinha({ icon: Icon, label, value }: { icon: typeof IconCalendar; la
     </div>
   )
 }
+
