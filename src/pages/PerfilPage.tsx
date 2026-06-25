@@ -210,7 +210,7 @@ export function PerfilPage() {
               <Stat icon={IconTargetArrow} k="Precisão" v="—" />
             </div>
 
-            <NomeCard defaultNome={perfil.nome || ''} />
+            <NomeCard defaultNome={perfil.nome || ''} defaultAvatar={perfil.avatarUrl || ''} />
 
             {/* Minhas publicações */}
             <div className="card pad">
