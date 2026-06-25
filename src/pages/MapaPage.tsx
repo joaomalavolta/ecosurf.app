@@ -15,6 +15,7 @@ export function MapaPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
+  const [soRecentes, setSoRecentes] = useState(false)
   const [sel, setSel] = useState<Pico | null>(null)
   const navigate = useNavigate()
   const { onboarded, abrir } = useOnboarding()
@@ -33,6 +34,12 @@ export function MapaPage() {
   const verPicos = filtro === 'tudo' || filtro === 'picos'
   const verAlertas = filtro === 'tudo' || filtro === 'alertas'
   const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
+
+  // Quando toggle "Só com foto recente" está ON, mostra só os picos ativos
+  const picosNoMapa = verPicos
+    ? (soRecentes ? picos.filter((p) => ativos.has(p.id)) : picos)
+    : []
+
   const numAlertas = sel ? alertas.filter((a) => a.picoId === sel.id).length : 0
 
   return (
@@ -50,10 +57,31 @@ export function MapaPage() {
           <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
         </div>
 
+        {/* Toggle "Só com foto recente" */}
+        {(filtro === 'tudo' || filtro === 'picos') && (
+          <button
+            onClick={() => setSoRecentes(!soRecentes)}
+            style={{
+              position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 10, display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px', borderRadius: 20,
+              background: soRecentes ? 'rgba(34,197,94,0.9)' : 'rgba(20,32,42,0.75)',
+              color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              transition: 'background .2s',
+            }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: soRecentes ? '#fff' : '#22c55e', flexShrink: 0 }} />
+            {soRecentes ? 'Só com foto recente' : 'Todos os picos'}
+          </button>
+        )}
+
         <MapView
-          picos={verPicos ? picos.filter((p) => ativos.has(p.id)) : []}
+          picos={picosNoMapa}
           alertas={verAlertas ? alertas : []}
           mutiroes={verMutiroes ? mutiroes : []}
+          ativos={ativos}
           onSelectPico={setSel}
         />
 
@@ -67,7 +95,9 @@ export function MapaPage() {
               <div style={{ flex: 1 }}>
                 <div className="between">
                   <h3 style={{ fontSize: 16 }}>{sel.nome}</h3>
-                  <span className="badge b-info">Ativo</span>
+                  <span className={`badge ${ativos.has(sel.id) ? 'b-success' : 'b-info'}`}>
+                    {ativos.has(sel.id) ? 'Ativo' : 'Sem relato'}
+                  </span>
                 </div>
                 <div className="muted" style={{ marginTop: 2 }}>
                   {sel.municipio} · {sel.uf}

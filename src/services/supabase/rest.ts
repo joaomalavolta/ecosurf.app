@@ -245,6 +245,7 @@ export async function restUltimasFotosGlobais(limite = 10): Promise<FotoRow[]> {
 
 export async function restPicosComRelatoHoje(): Promise<string[]> {
   const inicio = new Date()
+  inicio.setDate(inicio.getDate() - 30)
   inicio.setHours(0, 0, 0, 0)
   try {
     const rows = await rest<{ pico_id: string }[]>(

@@ -116,9 +116,10 @@ export function RadarPage() {
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <Suspense fallback={<div style={{ background: 'var(--map-bg)', width: '100%', height: '100%' }} />}>
             <MapView
-              picos={picosAtivos}
+              picos={picosTodos}
               alertas={alertas}
               mutiroes={mutiroes}
+              ativos={ativos}
               onSelectPico={handleSelectPico}
             />
           </Suspense>

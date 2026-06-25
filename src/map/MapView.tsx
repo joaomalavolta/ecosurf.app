@@ -48,10 +48,22 @@ const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-
 const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
 const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
 
+/** Pin com badge verde "ativo" — checkmark no canto superior direito */
+const ZURB_PIN_ATIVO = (bg: string, paths: string, size = 48) => {
+  const base = ZURB_PIN(bg, paths, size)
+  const bx = size - 6
+  const by = 8
+  const badge =
+    `<circle cx="${bx}" cy="${by}" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>` +
+    `<path d="M${bx - 3} ${by}l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+  return base.replace('</svg>', badge + '</svg>')
+}
+
 /** Ícones — modelo ZUrb: círculos sólidos com ponteira + sombra forte */
 const ICONES: Record<string, string> = {
   // 🏄 Pico de surf — azul oceano (maior: 52px)
   'ic-pico':           ZURB_PIN('#0D6EA8', WAVE, 52),
+  'ic-pico-ativo':     ZURB_PIN_ATIVO('#0D6EA8', WAVE, 52),
   // 🧹 Mutirão — laranja (maior: 50px)
   'ic-mutirao':        ZURB_PIN('#FF8C42', PEOPLE, 50),
   // 🔴 Alertas ambientais — tamanho padrão 44px
@@ -75,15 +87,17 @@ interface Dados {
   picos: Pico[]
   alertas: Alerta[]
   mutiroes: Mutirao[]
+  ativos?: Set<string>
 }
 
-function colecao({ picos, alertas, mutiroes }: Dados): FeatureCollection<Point> {
+function colecao({ picos, alertas, mutiroes, ativos }: Dados): FeatureCollection<Point> {
   const features: FeatureCollection<Point>['features'] = []
   for (const p of picos) {
+    const ativo = ativos?.has(p.id) ?? false
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-      properties: { tipo: 'pico', id: p.id, titulo: p.nome },
+      properties: { tipo: ativo ? 'pico-ativo' : 'pico', id: p.id, titulo: p.nome },
     })
   }
   for (const a of alertas) {
@@ -190,6 +204,7 @@ export function MapView({
   picos,
   alertas = [],
   mutiroes = [],
+  ativos,
   onSelectPico,
   className,
   style,
@@ -197,6 +212,7 @@ export function MapView({
   picos: Pico[]
   alertas?: Alerta[]
   mutiroes?: Mutirao[]
+  ativos?: Set<string>
   onSelectPico?: (p: Pico) => void
   className?: string
   style?: React.CSSProperties
@@ -204,8 +220,8 @@ export function MapView({
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const prontoRef = useRef(false)
-  const dadosRef = useRef<Dados>({ picos, alertas, mutiroes })
-  dadosRef.current = { picos, alertas, mutiroes }
+  const dadosRef = useRef<Dados>({ picos, alertas, mutiroes, ativos })
+  dadosRef.current = { picos, alertas, mutiroes, ativos }
   const navigate = useNavigate()
   const navRef = useRef(navigate)
   navRef.current = navigate
@@ -343,6 +359,7 @@ export function MapView({
             'poluicao', 'ic-oleo',
             'privatizacao', 'ic-ocupacao',
             'obra', 'ic-entulho',
+            'pico-ativo', 'ic-pico-ativo',
             'ic-pico', // default: pico
           ],
           'icon-size': [
@@ -365,7 +382,7 @@ export function MapView({
         id: 'pico-labels',
         type: 'symbol',
         source: SRC,
-        filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'tipo'], 'pico']],
+        filter: ['all', ['!', ['has', 'point_count']], ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']]],
         layout: {
           'text-field': ['get', 'titulo'],
           'text-font': ['Noto Sans Bold'],
@@ -397,7 +414,7 @@ export function MapView({
         const f = e.features?.[0]
         if (!f) return
         const p = f.properties as Record<string, unknown>
-        if (p.tipo === 'pico') {
+        if (p.tipo === 'pico' || p.tipo === 'pico-ativo') {
           const pico = dadosRef.current.picos.find((x) => x.id === p.id)
           if (pico && onSelRef.current) {
             onSelRef.current(pico)
@@ -435,8 +452,8 @@ export function MapView({
     const map = mapRef.current
     if (!map || !prontoRef.current) return
     const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
-    if (src) src.setData(colecao({ picos, alertas, mutiroes }))
-  }, [picos, alertas, mutiroes])
+    if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos }))
+  }, [picos, alertas, mutiroes, ativos])
 
   return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: '#0a1929', ...style }} />
 }
