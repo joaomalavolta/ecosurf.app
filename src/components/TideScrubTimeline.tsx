@@ -334,8 +334,9 @@ export function TideScrubTimeline({
 
       {/* SCRUB = curva de maré — Immersive Glass v4 */}
       <div style={{ padding: '10px 14px 14px' }}>
+        {/* Container arredondado */}
         {/* Layout: Y-axis ruler | Chart area */}
-        <div style={{ display: 'flex', gap: 0 }}>
+        <div style={{ display: 'flex', gap: 0, background: 'var(--card)', borderRadius: 16, padding: '8px 4px 4px 0', border: '1px solid var(--line)' }}>
           {/* Y-axis ruler */}
           <div style={{ width: 28, position: 'relative', flexShrink: 0, marginTop: 28, marginBottom: 22 }}>
             {(() => {
@@ -369,9 +370,9 @@ export function TideScrubTimeline({
             })()}
             {/* Unit label */}
             <span style={{
-              position: 'absolute', top: -14, right: 4,
-              fontSize: 7.5, fontWeight: 700, color: 'var(--muted)',
-              opacity: 0.45, letterSpacing: '0.5px',
+              position: 'absolute', top: -14, right: 2,
+              fontSize: 8, fontWeight: 800, color: 'var(--azul-medio)',
+              opacity: 0.7, letterSpacing: '0.5px',
             }}>m</span>
           </div>
 
@@ -406,6 +407,18 @@ export function TideScrubTimeline({
                   <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                 </filter>
               </defs>
+              {/* Horizontal grid lines */}
+              {(() => {
+                const rangeM = max - min
+                const step = rangeM > 2 ? 1 : rangeM > 1 ? 0.5 : 0.2
+                const lines: JSX.Element[] = []
+                const lo = Math.floor(min / step) * step
+                for (let v = lo; v <= max + step * 0.1; v += step) {
+                  const yVal = y(Math.round(v * 10) / 10)
+                  lines.push(<line key={v} x1={0} y1={yVal} x2={VB_W} y2={yVal} stroke="var(--line)" strokeWidth="0.3" vectorEffect="non-scaling-stroke" opacity="0.5" strokeDasharray="2 2" />)
+                }
+                return lines
+              })()}
               {/* Filled area */}
               <path d={area} fill="url(#grad-mare-v3)" />
               {/* Curve line with glow */}
@@ -555,14 +568,15 @@ export function TideScrubTimeline({
               )
             })}
 
-            {/* Eixo de horas — 24h completo */}
+            {/* Eixo de horas — relógio 24h */}
             {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => (
               <span key={h} style={{
                 position: 'absolute', bottom: 2,
                 left: `${(h / 24) * 100}%`, transform: 'translateX(-50%)',
-                fontSize: 9, fontWeight: 600, color: 'var(--muted)',
+                fontSize: 8.5, fontWeight: 600, color: 'var(--muted)',
                 opacity: h === 0 || h === 12 ? 0.7 : 0.5,
-              }}>{h}h</span>
+                fontVariantNumeric: 'tabular-nums',
+              }}>{String(h).padStart(2, '0')}:00</span>
             ))}
 
             {/* Eventos de vento */}

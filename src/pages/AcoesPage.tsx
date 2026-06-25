@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType } from 'react'
 import {
   IconCamera,
   IconAlertTriangle,
@@ -102,6 +102,7 @@ export function AcoesPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [rascunhos, setRascunhos] = useState<Rascunho[]>([])
+  const [tab, setTab] = useState<'tudo' | 'alertas' | 'mutiroes'>('tudo')
 
   useEffect(() => {
     let vivo = true
@@ -132,7 +133,14 @@ export function AcoesPage() {
           </Link>
         </div>
 
-        {/* Alertas Ambientais */}
+        {/* Tabs de filtro */}
+        <div className="pills" style={{ marginBottom: 8 }}>
+          <Pill on={tab === 'tudo'} onClick={() => setTab('tudo')}>Tudo</Pill>
+          <Pill on={tab === 'alertas'} onClick={() => setTab('alertas')}><IconAlertTriangle size={14} stroke={2} /> Alertas</Pill>
+          <Pill on={tab === 'mutiroes'} onClick={() => setTab('mutiroes')}><IconHeartHandshake size={14} stroke={2} /> Mutirões</Pill>
+        </div>
+
+        {(tab === 'tudo' || tab === 'alertas') && (
         <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Registros ambientais</>}>
           {alertas.length === 0 && <p className="muted">Nenhum registro ambiental no momento.</p>}
           {alertas.map((a) => {
@@ -152,8 +160,9 @@ export function AcoesPage() {
             )
           })}
         </Secao>
+        )}
 
-        {/* Mutirões */}
+        {(tab === 'tudo' || tab === 'mutiroes') && (
         <Secao titulo={<><IconHeartHandshake size={19} stroke={2} color="#FF8C42" /> Mutirões</>}>
           {mutiroes.length === 0 && <p className="muted">Nenhum mutirão agendado no momento.</p>}
           {mutiroes.map((m) => (
@@ -170,6 +179,7 @@ export function AcoesPage() {
             />
           ))}
         </Secao>
+        )}
 
         {/* Rascunhos */}
         {rascunhos.length > 0 && (
@@ -198,5 +208,13 @@ export function AcoesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function Pill({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button className={`pill ${on ? 'active' : ''}`} onClick={onClick}>
+      {children}
+    </button>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar } from '@tabler/icons-react'
+import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocal } from '../components/MapaLocal'
 import { categoriaPorId } from '../components/SeletorCategoria'
@@ -36,9 +36,11 @@ export function AlertaPage() {
   const navigate = useNavigate()
   const [alerta, setAlerta] = useState<AlertaDetalhe | null>(null)
   const [loading, setLoading] = useState(true)
+  const [ver, setVer] = useState(0)
 
   useEffect(() => {
     if (!id) return
+    setLoading(true)
     fetch(`${SUPABASE_URL}/rest/v1/ameacas_publicas?select=*&id=eq.${encodeURIComponent(id)}`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
     })
@@ -48,7 +50,7 @@ export function AlertaPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [id])
+  }, [id, ver])
 
   if (loading) {
     return (
@@ -220,13 +222,20 @@ export function AlertaPage() {
           </div>
         )}
 
-        <button
-          className="btn outline full"
-          onClick={() => navigate('/acoes')}
-          style={{ marginTop: 12 }}
-        >
-          <IconArrowLeft size={16} /> Voltar para Ações
-        </button>
+        <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+          <button
+            className="btn outline full"
+            onClick={() => navigate('/acoes')}
+          >
+            <IconArrowLeft size={16} /> Voltar
+          </button>
+          <button
+            className="btn acento full"
+            onClick={() => setVer(v => v + 1)}
+          >
+            <IconRefresh size={16} /> Atualizar
+          </button>
+        </div>
       </div>
     </div>
   )
