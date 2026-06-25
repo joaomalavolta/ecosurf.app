@@ -5,62 +5,36 @@ import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 
-/* ─── 3 estilos de ícone: Pin 3D, Squircle, Pill ─── */
+/* ─── Ícones estilo ZUrb: círculo + ponteira + ícone branco ─── */
 
-/** Pin 3D com ponteira — para PICOS */
-const PIN_3D = (bg: string, bgLight: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="58" viewBox="0 0 48 58">
-    <defs>
-      <linearGradient id="g3d" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="${bgLight}"/>
-        <stop offset="100%" stop-color="${bg}"/>
-      </linearGradient>
-      <filter id="sh3d" x="-25%" y="-15%" width="150%" height="160%">
-        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
-      </filter>
-    </defs>
-    <g filter="url(#sh3d)">
-      <path d="M24 52 L17 38 A20 20 0 1 1 31 38 Z" fill="url(#g3d)" stroke="#fff" stroke-width="2.5"/>
-    </g>
-    <circle cx="24" cy="22" r="1" fill="rgba(255,255,255,.15)"/>
-    <g transform="translate(12, 10) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-      ${paths}
-    </g>
-  </svg>`
+/**
+ * Cria pin estilo ZUrb — círculo colorido sólido + ponteira triangular.
+ * Cada SVG tem filter ID ÚNICO (sufixo cor hex) para evitar conflito no MapLibre.
+ */
+const ZURB_PIN = (bg: string, paths: string, size = 48) => {
+  // ID único por cor para evitar conflito de filter entre SVGs rasterizados
+  const uid = bg.replace('#', '')
+  const r = size / 2
+  const svgH = size + 12  // espaço para ponteira
+  const cy = r            // centro vertical do círculo
+  const tipY = size + 2   // ponta inferior
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${svgH}" viewBox="0 0 ${size} ${svgH}">` +
+    `<defs><filter id="s${uid}" x="-30%" y="-20%" width="160%" height="160%">` +
+    `<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/>` +
+    `</filter></defs>` +
+    // Ponteira triangular (branca borda + cor preenchimento)
+    `<polygon points="${r - 5},${size - 4} ${r},${tipY} ${r + 5},${size - 4}" fill="${bg}" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>` +
+    // Círculo principal
+    `<circle cx="${r}" cy="${cy}" r="${r - 3}" fill="${bg}" stroke="#fff" stroke-width="3" filter="url(#s${uid})"/>` +
+    // Ícone branco centralizado
+    `<g transform="translate(${r - 6}, ${cy - 6}) scale(0.5)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">` +
+    paths +
+    `</g></svg>`
+  )
+}
 
-/** Squircle badge — para ALERTAS AMBIENTAIS */
-const SQUIRCLE = (bg: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
-    <defs>
-      <filter id="shsq" x="-20%" y="-10%" width="140%" height="150%">
-        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45"/>
-      </filter>
-    </defs>
-    <rect x="3" y="3" width="40" height="40" rx="12" fill="#fff" stroke="${bg}" stroke-width="3" filter="url(#shsq)"/>
-    <g transform="translate(11, 11) scale(0.5)" fill="none" stroke="${bg}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      ${paths}
-    </g>
-  </svg>`
-
-/** Pill label com ponteira — para MUTIRÕES */
-const PILL = (bg: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="46" viewBox="0 0 52 46">
-    <defs>
-      <filter id="shp" x="-15%" y="-10%" width="130%" height="150%">
-        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45"/>
-      </filter>
-    </defs>
-    <g filter="url(#shp)">
-      <rect x="2" y="2" width="48" height="32" rx="16" fill="${bg}" stroke="#fff" stroke-width="2.5"/>
-      <polygon points="22,34 26,42 30,34" fill="${bg}" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
-      <rect x="22" y="32" width="8" height="3" fill="${bg}"/>
-    </g>
-    <g transform="translate(14, 6) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-      ${paths}
-    </g>
-  </svg>`
-
-/* Paths SVG dos ícones Tabler usados em cada pin */
+/* Paths SVG (Tabler icons) */
 const WAVE = '<path d="M2 7c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/><path d="M2 13c.6 .5 1.2 1 2.5 1c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2"/>'
 const PEOPLE = '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'
 const DROP = '<path d="M12 3c-3.2 4.5-6 7.5-6 10.5a6 6 0 0 0 12 0c0-3-2.8-6-6-10.5z"/>'
@@ -74,25 +48,25 @@ const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-
 const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
 const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
 
-/** Ícones por categoria — 3 estilos distintos */
+/** Ícones — modelo ZUrb: círculos sólidos com ponteira + sombra forte */
 const ICONES: Record<string, string> = {
-  // 🏄 PICO → Pin 3D glossy com ponteira
-  'ic-pico':           PIN_3D('#0D6EA8', '#2AABE2', WAVE),
-  // 🧹 MUTIRÃO → Pill label com ponteira
-  'ic-mutirao':        PILL('#FF8C42', PEOPLE),
-  // 🔴 ALERTAS → Squircle badges (branco + anel colorido)
-  'ic-lixo-praia':     SQUIRCLE('#E84855', TRASH),
-  'ic-lixo-rio':       SQUIRCLE('#D64045', BOTTLE),
-  'ic-esgoto':         SQUIRCLE('#7B8794', DROP),
-  'ic-erosao':         SQUIRCLE('#C17817', MOUNTAIN),
-  'ic-oleo':           SQUIRCLE('#3D3D3D', DOT),
-  'ic-animal':         SQUIRCLE('#5B8C5A', FISH),
-  'ic-entulho':        SQUIRCLE('#9B6B4D', TRASH),
-  'ic-microplasticos': SQUIRCLE('#B266B2', DOT),
-  'ic-espuma':         SQUIRCLE('#5E8C61', WAVESINE),
-  'ic-queimada':       SQUIRCLE('#FF6B35', FLAME),
-  'ic-ocupacao':       SQUIRCLE('#8B6914', HOME),
-  'ic-outro':          SQUIRCLE('#6B7280', QUESTION),
+  // 🏄 Pico de surf — azul oceano (maior: 52px)
+  'ic-pico':           ZURB_PIN('#0D6EA8', WAVE, 52),
+  // 🧹 Mutirão — laranja (maior: 50px)
+  'ic-mutirao':        ZURB_PIN('#FF8C42', PEOPLE, 50),
+  // 🔴 Alertas ambientais — tamanho padrão 44px
+  'ic-lixo-praia':     ZURB_PIN('#E84855', TRASH, 44),
+  'ic-lixo-rio':       ZURB_PIN('#D64045', BOTTLE, 44),
+  'ic-esgoto':         ZURB_PIN('#7B8794', DROP, 44),
+  'ic-erosao':         ZURB_PIN('#C17817', MOUNTAIN, 44),
+  'ic-oleo':           ZURB_PIN('#3D3D3D', DOT, 44),
+  'ic-animal':         ZURB_PIN('#5B8C5A', FISH, 44),
+  'ic-entulho':        ZURB_PIN('#9B6B4D', TRASH, 44),
+  'ic-microplasticos': ZURB_PIN('#B266B2', DOT, 44),
+  'ic-espuma':         ZURB_PIN('#5E8C61', WAVESINE, 44),
+  'ic-queimada':       ZURB_PIN('#FF6B35', FLAME, 44),
+  'ic-ocupacao':       ZURB_PIN('#8B6914', HOME, 44),
+  'ic-outro':          ZURB_PIN('#6B7280', QUESTION, 44),
 }
 
 const SRC = 'feicoes'
