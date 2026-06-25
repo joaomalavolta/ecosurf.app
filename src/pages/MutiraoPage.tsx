@@ -11,6 +11,7 @@ import {
   IconArrowLeft,
   IconShare,
   IconPhoto,
+  IconEdit,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocal } from '../components/MapaLocal'
@@ -24,6 +25,13 @@ export function MutiraoPage() {
   const [mutirao, setMutirao] = useState<Mutirao | null | undefined>(undefined)
   const [participando, setParticipando] = useState(false)
   const [jaParticipou, setJaParticipou] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    sb().auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? null)
+    })
+  }, [])
 
   useEffect(() => {
     carregarMutiroes().then((ms) => {
@@ -185,6 +193,13 @@ export function MutiraoPage() {
             disabled={participando || jaParticipou}
           >
             {jaParticipou ? '✅ Participação confirmada!' : participando ? 'Confirmando...' : '🙋 Quero participar'}
+          </button>
+        )}
+
+        {/* Botão Editar (só para o criador) */}
+        {userId && mutirao.autorId === userId && (
+          <button className="btn outline full" onClick={() => navigate(`/mutirao/${mutiraoId}/editar`)} style={{ marginTop: 8 }}>
+            <IconEdit size={16} /> Editar mutirão
           </button>
         )}
 

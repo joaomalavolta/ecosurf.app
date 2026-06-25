@@ -137,6 +137,86 @@ export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
   return data.id
 }
 
+/** Carrega um mutirão para edição (somente o criador). */
+export async function carregarMutiraoParaEdicao(id: string): Promise<DadosMutirao & { id: string; imagemUrl?: string }> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  const { data, error } = await sb.from('mutiroes')
+    .select('*')
+    .eq('id', id)
+    .eq('organizador_id', user.id)
+    .single()
+
+  if (error || !data) throw new Error('Mutirão não encontrado ou sem permissão.')
+
+  const horarios = (data.horario ?? '').split(' às ')
+  return {
+    id: data.id,
+    titulo: data.titulo ?? '',
+    tipoAcao: data.tipo_acao ?? 'limpeza',
+    descricao: data.descricao ?? undefined,
+    municipio: data.municipio ?? '',
+    uf: data.uf ?? '',
+    lat: data.geom ? 0 : -23.96, // placeholder, real coords come from geom
+    lng: data.geom ? 0 : -46.33,
+    quando: data.quando ? new Date(data.quando).toISOString().slice(0, 10) : '',
+    horarioInicio: horarios[0] ?? undefined,
+    horarioFim: horarios[1] ?? undefined,
+    pontoEncontro: data.ponto_encontro ?? undefined,
+    organizador: data.organizador ?? undefined,
+    instituicao: data.instituicao ?? undefined,
+    contato: data.contato ?? undefined,
+    vagas: data.vagas ?? undefined,
+    infoVoluntarios: data.info_voluntarios ?? undefined,
+    imagemUrl: data.imagem_url ?? undefined,
+  }
+}
+
+/** Atualiza um mutirão existente (somente o criador). */
+export async function atualizarMutirao(id: string, dados: DadosMutirao): Promise<void> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  let imagemUrl: string | undefined
+  if (dados.imagemCapa) {
+    const path = `mutiroes/${user.id}/${Date.now()}.jpg`
+    const { error } = await sb.storage.from('fotos').upload(path, dados.imagemCapa, { contentType: dados.imagemCapa.type })
+    if (!error) {
+      const { data: urlData } = sb.storage.from('fotos').getPublicUrl(path)
+      imagemUrl = urlData.publicUrl
+    }
+  }
+
+  const horario = [dados.horarioInicio, dados.horarioFim].filter(Boolean).join(' às ')
+
+  const body: Record<string, unknown> = {
+    titulo: dados.titulo,
+    tipo_acao: dados.tipoAcao,
+    municipio: dados.municipio,
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    quando: new Date(dados.quando).toISOString(),
+    horario: horario || null,
+    ponto_encontro: dados.pontoEncontro ?? null,
+    organizador: dados.organizador ?? null,
+    instituicao: dados.instituicao ?? null,
+    contato: dados.contato ?? null,
+    vagas: dados.vagas ?? null,
+    info_voluntarios: dados.infoVoluntarios ?? null,
+    descricao: dados.descricao ?? null,
+  }
+
+  if (dados.lat && dados.lng) {
+    body.geom = `SRID=4326;POINT(${dados.lng} ${dados.lat})`
+  }
+  if (imagemUrl) {
+    body.imagem_url = imagemUrl
+  }
+
+  const { error } = await sb.from('mutiroes').update(body).eq('id', id).eq('organizador_id', user.id)
+  if (error) throw new Error(`Erro ao atualizar: ${error.message}`)
+}
+
 /* ─── Rascunhos ─── */
 
 export async function salvarRascunho(tipo: 'alerta' | 'mutirao', dados: Record<string, unknown>): Promise<string> {

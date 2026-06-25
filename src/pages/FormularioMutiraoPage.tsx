@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPicker } from '../components/MapaPicker'
-import { publicarMutirao, salvarRascunho, type DadosMutirao } from '../services/alertas'
+import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, type DadosMutirao } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 
 const TIPOS_ACAO = [
@@ -27,8 +27,11 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
 
 export function FormularioMutiraoPage() {
   const navigate = useNavigate()
+  const { mutiraoId } = useParams<{ mutiraoId?: string }>()
+  const modoEdicao = !!mutiraoId
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
+  const [carregandoEdicao, setCarregandoEdicao] = useState(modoEdicao)
 
   // Campos
   const [tipoAcao, setTipoAcao] = useState('limpeza')
@@ -57,20 +60,48 @@ export function FormularioMutiraoPage() {
   useEffect(() => {
     statusPerfil().then((s) => {
       if (!s.sessao) {
-        window.alert('Faça login para criar um mutirão.')
+        window.alert('Faça login para continuar.')
         navigate('/perfil', { replace: true })
       }
     })
   }, [navigate])
 
+  // Carregar dados para edição
   useEffect(() => {
-    if (!lat) {
+    if (!modoEdicao || !mutiraoId) return
+    carregarMutiraoParaEdicao(mutiraoId)
+      .then((d) => {
+        setTitulo(d.titulo)
+        setTipoAcao(d.tipoAcao)
+        setDescricao(d.descricao ?? '')
+        setMunicipio(d.municipio)
+        setUf(d.uf)
+        setQuando(d.quando)
+        setHorarioInicio(d.horarioInicio ?? '')
+        setHorarioFim(d.horarioFim ?? '')
+        setPontoEncontro(d.pontoEncontro ?? '')
+        setOrganizador(d.organizador ?? '')
+        setInstituicao(d.instituicao ?? '')
+        setContato(d.contato ?? '')
+        setVagas(d.vagas)
+        setInfoVoluntarios(d.infoVoluntarios ?? '')
+        if (d.imagemUrl) setPreviewUrl(d.imagemUrl)
+        setCarregandoEdicao(false)
+      })
+      .catch((e) => {
+        alert(e instanceof Error ? e.message : 'Erro ao carregar mutirão')
+        navigate(-1)
+      })
+  }, [modoEdicao, mutiraoId, navigate])
+
+  useEffect(() => {
+    if (!lat && !modoEdicao) {
       obterCoords().then((pos) => {
         if (pos.lat) setLat(pos.lat)
         if (pos.lng) setLng(pos.lng)
       })
     }
-  }, [lat])
+  }, [lat, modoEdicao])
 
   function selecionarImagem(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -85,7 +116,7 @@ export function FormularioMutiraoPage() {
   }
 
   async function publicar(comoRascunho = false) {
-    if (!lat || !lng) {
+    if (!modoEdicao && (!lat || !lng)) {
       alert('Aguarde a localização GPS ou informe manualmente.')
       return
     }
@@ -97,9 +128,9 @@ export function FormularioMutiraoPage() {
         descricao: descricao.trim() || undefined,
         municipio: municipio.trim(),
         uf: uf.toUpperCase(),
-        lat,
-        lng,
-        quando: new Date(quando).toISOString(),
+        lat: lat ?? 0,
+        lng: lng ?? 0,
+        quando: quando,
         horarioInicio: horarioInicio || undefined,
         horarioFim: horarioFim || undefined,
         pontoEncontro: pontoEncontro.trim() || undefined,
@@ -120,7 +151,11 @@ export function FormularioMutiraoPage() {
         return
       }
 
-      await publicarMutirao(dados)
+      if (modoEdicao && mutiraoId) {
+        await atualizarMutirao(mutiraoId, dados)
+      } else {
+        await publicarMutirao(dados)
+      }
       setSucesso(true)
     } catch (e) {
       alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
@@ -129,21 +164,31 @@ export function FormularioMutiraoPage() {
     }
   }
 
+  if (carregandoEdicao) {
+    return (
+      <div className="page">
+        <Header title="Editar Mutirão" sub="Carregando dados..." />
+        <div className="page-pad" style={{ textAlign: 'center', paddingTop: 40 }}>
+          <p className="muted">Carregando...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (sucesso) {
     return (
       <div className="page">
-        <Header title="Mutirão criado!" sub="Agora ele está visível para toda a comunidade." />
+        <Header title={modoEdicao ? 'Mutirão atualizado!' : 'Mutirão criado!'} sub={modoEdicao ? 'As alterações foram salvas.' : 'Agora ele está visível para toda a comunidade.'} />
         <div className="page-pad stack" style={{ textAlign: 'center', paddingTop: 40 }}>
           <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,140,66,0.15)', color: '#FF8C42', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
             <IconCheck size={36} stroke={2} />
           </div>
-          <h2 style={{ fontSize: 20, marginTop: 16 }}>Mutirão publicado!</h2>
+          <h2 style={{ fontSize: 20, marginTop: 16 }}>{modoEdicao ? 'Alterações salvas!' : 'Mutirão publicado!'}</h2>
           <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
-            O mutirão aparece no mapa e na lista de ações.
-            Convide amigos para participar!
+            {modoEdicao ? 'O mutirão foi atualizado com as novas informações.' : 'O mutirão aparece no mapa e na lista de ações. Convide amigos para participar!'}
           </p>
-          <button className="btn acento full" style={{ marginTop: 24 }} onClick={() => navigate('/mapa')}>
-            Ver no mapa
+          <button className="btn acento full" style={{ marginTop: 24 }} onClick={() => navigate(modoEdicao ? `/mutirao/${mutiraoId}` : '/mapa')}>
+            {modoEdicao ? 'Ver mutirão' : 'Ver no mapa'}
           </button>
           <button className="btn outline full" style={{ marginTop: 8 }} onClick={() => navigate('/acoes')}>
             Voltar às ações
@@ -155,7 +200,7 @@ export function FormularioMutiraoPage() {
 
   return (
     <div className="page">
-      <Header title="Criar Mutirão" sub="Organize uma ação ambiental colaborativa." />
+      <Header title={modoEdicao ? 'Editar Mutirão' : 'Criar Mutirão'} sub={modoEdicao ? 'Ajuste as informações do seu evento.' : 'Organize uma ação ambiental colaborativa.'} />
 
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 100, gap: 16 }}>
         {/* Tipo */}
@@ -298,11 +343,13 @@ export function FormularioMutiraoPage() {
         gap: 10,
         zIndex: 40,
       }}>
-        <button className="btn outline" onClick={() => publicar(true)} disabled={enviando} style={{ fontSize: 13 }}>
-          <IconBookmark size={16} /> Rascunho
-        </button>
+        {!modoEdicao && (
+          <button className="btn outline" onClick={() => publicar(true)} disabled={enviando} style={{ fontSize: 13 }}>
+            <IconBookmark size={16} /> Rascunho
+          </button>
+        )}
         <button className="btn acento full" disabled={!podePublicar() || enviando} onClick={() => publicar(false)}>
-          {enviando ? 'Publicando...' : 'Publicar Mutirão'}
+          {enviando ? 'Salvando...' : modoEdicao ? '✅ Salvar Alterações' : 'Publicar Mutirão'}
         </button>
       </div>
     </div>
