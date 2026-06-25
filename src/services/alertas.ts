@@ -228,6 +228,17 @@ export async function atualizarMutirao(id: string, dados: DadosMutirao): Promise
 
 /* ─── Rascunhos ─── */
 
+export async function excluirMutirao(id: string): Promise<void> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  // Deletar participantes primeiro (FK cascade deveria cuidar, mas seguro)
+  await sb.from('mutirao_participantes').delete().eq('mutirao_id', id)
+
+  const { error } = await sb.from('mutiroes').delete().eq('id', id).eq('organizador_id', user.id)
+  if (error) throw new Error(`Erro ao excluir: ${error.message}`)
+}
+
 export async function salvarRascunho(tipo: 'alerta' | 'mutirao', dados: Record<string, unknown>): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb, user } = await authed()

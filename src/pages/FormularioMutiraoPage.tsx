@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark } from '@tabler/icons-react'
+import { IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPicker } from '../components/MapaPicker'
-import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, type DadosMutirao } from '../services/alertas'
+import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 
 const TIPOS_ACAO = [
@@ -32,6 +32,7 @@ export function FormularioMutiraoPage() {
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [carregandoEdicao, setCarregandoEdicao] = useState(modoEdicao)
+  const [excluindo, setExcluindo] = useState(false)
 
   // Campos
   const [tipoAcao, setTipoAcao] = useState('limpeza')
@@ -340,17 +341,65 @@ export function FormularioMutiraoPage() {
         background: 'var(--bg)',
         borderTop: '1px solid var(--line)',
         display: 'flex',
-        gap: 10,
+        flexDirection: 'column',
+        gap: 8,
         zIndex: 40,
       }}>
-        {!modoEdicao && (
-          <button className="btn outline" onClick={() => publicar(true)} disabled={enviando} style={{ fontSize: 13 }}>
-            <IconBookmark size={16} /> Rascunho
+        {/* Linha principal: Rascunho/Descartar + Salvar */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          {!modoEdicao && (
+            <button className="btn outline" onClick={() => publicar(true)} disabled={enviando} style={{ fontSize: 13 }}>
+              <IconBookmark size={16} /> Rascunho
+            </button>
+          )}
+          {modoEdicao && (
+            <button
+              className="btn outline"
+              onClick={() => {
+                if (confirm('Descartar todas as alterações?')) {
+                  navigate(`/mutirao/${mutiraoId}`, { replace: true })
+                }
+              }}
+              disabled={enviando || excluindo}
+              style={{ fontSize: 13 }}
+            >
+              <IconArrowBack size={16} /> Descartar
+            </button>
+          )}
+          <button className="btn acento full" disabled={!podePublicar() || enviando || excluindo} onClick={() => publicar(false)}>
+            {enviando ? 'Salvando...' : modoEdicao ? '✅ Salvar Alterações' : 'Publicar Mutirão'}
+          </button>
+        </div>
+
+        {/* Botão Excluir (só no modo edição) */}
+        {modoEdicao && (
+          <button
+            className="btn full"
+            onClick={async () => {
+              if (!confirm('⚠️ Tem certeza que deseja EXCLUIR este mutirão?\n\nEssa ação não pode ser desfeita.')) return
+              setExcluindo(true)
+              try {
+                await excluirMutirao(mutiraoId!)
+                alert('Mutirão excluído.')
+                navigate('/acoes', { replace: true })
+              } catch (e) {
+                alert('Erro ao excluir: ' + (e instanceof Error ? e.message : 'desconhecido'))
+              } finally {
+                setExcluindo(false)
+              }
+            }}
+            disabled={enviando || excluindo}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--perigo)',
+              color: 'var(--perigo)',
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            <IconTrash size={15} /> {excluindo ? 'Excluindo...' : 'Excluir evento'}
           </button>
         )}
-        <button className="btn acento full" disabled={!podePublicar() || enviando} onClick={() => publicar(false)}>
-          {enviando ? 'Salvando...' : modoEdicao ? '✅ Salvar Alterações' : 'Publicar Mutirão'}
-        </button>
       </div>
     </div>
   )
