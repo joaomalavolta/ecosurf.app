@@ -136,6 +136,22 @@ export function RadarPage() {
         >
           <IconChevronDown size={18} stroke={2.5} style={{ transform: mapaExpandido ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
         </button>
+
+        {/* Pico selecionado — mini card flutuante */}
+        {selPico && (
+          <div className="radar-map-selected">
+            <Link to={`/pico/${selPico.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{selPico.nome}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{selPico.municipio} · {selPico.uf}</div>
+            </Link>
+            {fc[selPico.id] && (
+              <span className="badge b-info" style={{ fontSize: 11 }}>
+                {fc[selPico.id].ondaM.toFixed(1)}m · {fc[selPico.id].periodoS}s
+              </span>
+            )}
+            <button onClick={() => setSelPico(null)} aria-label="Fechar" style={{ background: 'none', border: 0, color: 'var(--muted)', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>×</button>
+          </div>
+        )}
       </div>
 
       {/* ─── FILTRO SEGMENTED PILL ─── */}
@@ -170,23 +186,6 @@ export function RadarPage() {
             <span>Surf</span>
           </button>
         </div>
-      </div>
-
-        {/* Pico selecionado — mini card flutuante */}
-        {selPico && (
-          <div className="radar-map-selected">
-            <Link to={`/pico/${selPico.id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{selPico.nome}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{selPico.municipio} · {selPico.uf}</div>
-            </Link>
-            {fc[selPico.id] && (
-              <span className="badge b-info" style={{ fontSize: 11 }}>
-                {fc[selPico.id].ondaM.toFixed(1)}m · {fc[selPico.id].periodoS}s
-              </span>
-            )}
-            <button onClick={() => setSelPico(null)} aria-label="Fechar" style={{ background: 'none', border: 0, color: 'var(--muted)', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>×</button>
-          </div>
-        )}
       </div>
 
       {/* ─── STORIES ─── */}
