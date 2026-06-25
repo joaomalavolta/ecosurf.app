@@ -7,12 +7,14 @@ import {
   IconRipple,
   IconAlertTriangle,
   IconTrash,
-  IconArrowUp,
+  IconCheck,
+  IconPhoto,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { statusPerfil } from '../services/perfil'
 
-type Etapa = 'inicio' | 'camera' | 'selecionar-pico' | 'classificar'
+type TipoRegistro = 'report' | 'alerta' | 'lixo'
+type Etapa = 'tipo' | 'camera' | 'selecionar-pico' | 'concluido'
 
 function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   return new Promise((res) => {
@@ -25,9 +27,8 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   })
 }
 
-/** Distância em km entre dois pontos (lat/lng) usando fórmula Haversine. */
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371 // raio da terra em km
+  const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLng = (lng2 - lng1) * Math.PI / 180
   const a = Math.sin(dLat / 2) ** 2 +
@@ -36,14 +37,15 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-/**
- * Registrar em 2 toques: o botão central já trouxe o usuário aqui (toque 1).
- * "Abrir câmera" → disparo (toque 2). A CLASSIFICAÇÃO vem DEPOIS da captura,
- * enquanto a foto subiria em background (upload otimista, fila offline).
- * Nunca um menu antes da foto: na praia, com a série entrando, o momento se perde.
- */
+const TIPOS: { id: TipoRegistro; icone: typeof IconRipple; titulo: string; desc: string; cor: string }[] = [
+  { id: 'report', icone: IconRipple, titulo: 'Report do mar', desc: 'Registro das condições de surf agora', cor: '#1ECBC3' },
+  { id: 'alerta', icone: IconAlertTriangle, titulo: 'Alerta ambiental', desc: 'Esgoto, erosão, obra, poluição, óleo', cor: '#E84855' },
+  { id: 'lixo', icone: IconTrash, titulo: 'Lixo na praia', desc: 'Resíduo na praia ou no mar', cor: '#FF8C42' },
+]
+
 export function CapturePage() {
-  const [etapa, setEtapa] = useState<Etapa>('inicio')
+  const [etapa, setEtapa] = useState<Etapa>('tipo')
+  const [tipo, setTipo] = useState<TipoRegistro | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -51,12 +53,12 @@ export function CapturePage() {
   const navigate = useNavigate()
   const [carregando, setCarregando] = useState(true)
   const picoSelecionado = new URLSearchParams(window.location.search).get('pico')
-  // Estado para seleção/criação de pico
   const [picosDisponiveis, setPicosDisponiveis] = useState<Array<{id: string, nome: string}>>([])
   const [blobCapturado, setBlobCapturado] = useState<Blob | undefined>()
   const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number}>({})
   const [novoPicoNome, setNovoPicoNome] = useState('')
   const [buscaPico, setBuscaPico] = useState('')
+  const [picoFinal, setPicoFinal] = useState<string | null>(null)
 
   useEffect(() => {
     let vivo = true
@@ -105,7 +107,6 @@ export function CapturePage() {
     const v = videoRef.current
     let blob: Blob | undefined
     if (v && v.videoWidth > 0) {
-      // resize client-side: cap em 1600px, WebP — economiza dados no 3G da praia
       const maxDim = 1600
       const escala = Math.min(1, maxDim / Math.max(v.videoWidth, v.videoHeight))
       const w = Math.round(v.videoWidth * escala)
@@ -118,7 +119,7 @@ export function CapturePage() {
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
-    const pos = await obterCoords() // GPS para o geofence (servidor valida)
+    const pos = await obterCoords()
 
     let finalPicoId = picoSelecionado
     if (!finalPicoId && pos.lat && pos.lng) {
@@ -133,7 +134,6 @@ export function CapturePage() {
       if (melhorPico && minD < 2) {
         finalPicoId = melhorPico
       } else {
-        // Longe de picos — mostrar seletor
         setBlobCapturado(blob)
         setPosCapturada(pos)
         setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
@@ -164,7 +164,10 @@ export function CapturePage() {
       capturaLat: pos?.lat,
       capturaLng: pos?.lng,
     })
-    setEtapa('classificar')
+    // Definir tipo imediatamente
+    if (tipo) await definirTipo(id, tipo)
+    setPicoFinal(picoId)
+    setEtapa('concluido')
   }
 
   async function selecionarPicoExistente(picoId: string) {
@@ -175,7 +178,6 @@ export function CapturePage() {
     if (!novoPicoNome.trim()) return
     try {
       const { restInserirPico } = await import('../services/supabase/rest')
-      // Geocodificação reversa para preencher município/UF
       let municipio = ''
       let uf = 'SP'
       if (posCapturada.lat && posCapturada.lng) {
@@ -199,61 +201,118 @@ export function CapturePage() {
     }
   }
 
-  async function classificar(tipo: 'report' | 'alerta' | 'lixo') {
-    if (uploadId.current) await definirTipo(uploadId.current, tipo)
-    
-    // navigate to the same pico we just sent the photo to
-    const finalPicoId = uploadId.current ? await getPicoIdFromFila(uploadId.current) : (picoSelecionado || 'praia-do-sonho')
-    navigate(`/pico/${finalPicoId}`)
-  }
-  
-  async function getPicoIdFromFila(id: string): Promise<string> {
-    const { pendentes } = await import('../offline/uploadQueue')
-    const fila = await pendentes()
-    const f = fila.find(x => x.id === id)
-    return f ? f.picoId : (picoSelecionado || 'praia-do-sonho')
+  if (carregando) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: 'linear-gradient(160deg,#0b3a53,#04141d)', color: '#fff' }}>
+        <div className="spinner" />
+      </div>
+    )
   }
 
-  if (carregando) {
-    return <div style={{ position: 'fixed', inset: 0, background: '#04141d', zIndex: 100 }} />
-  }
+  const tipoInfo = tipo ? TIPOS.find(t => t.id === tipo) : null
 
   return (
-    <div style={{ position: 'fixed', inset: 0, maxWidth: 'var(--largura-app)', margin: '0 auto', background: '#04141d', color: '#fff', display: 'flex', flexDirection: 'column', zIndex: 100 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'calc(env(safe-area-inset-top,0px) + 14px) 16px 12px' }}>
-        <button onClick={() => navigate(-1)} aria-label="Fechar" style={{ background: 'none', border: 0, color: '#fff', display: 'flex', cursor: 'pointer' }}><IconX size={24} stroke={2} /></button>
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100dvh',
+      background: 'linear-gradient(160deg,#0b3a53,#04141d)', color: '#fff',
+    }}>
+      {/* Top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0', zIndex: 10 }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+          <IconX size={22} stroke={2} />
+        </button>
         <b>Registrar</b>
         <span style={{ width: 24 }} />
       </div>
 
-      {etapa === 'inicio' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 24 }}>
-          <IconCamera size={56} stroke={1.5} />
-          <h2 style={{ color: '#fff', marginTop: 12 }}>A foto primeiro</h2>
-          <p style={{ color: 'rgba(255,255,255,.75)', maxWidth: 280 }}>
-            Aponte e registre o mar agora. Você diz o que é (report, alerta, lixo…) depois — enquanto a foto sobe.
+      {/* ETAPA 1: Escolher tipo */}
+      {etapa === 'tipo' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24 }}>
+          <h2 style={{ color: '#fff', textAlign: 'center', marginBottom: 4 }}>O que você vai registrar?</h2>
+          <p style={{ color: 'rgba(255,255,255,.6)', textAlign: 'center', fontSize: 13, marginBottom: 20 }}>
+            Escolha o tipo para organizar melhor o registro.
           </p>
-          <button className="btn acento full" style={{ marginTop: 20, maxWidth: 320 }} onClick={abrirCamera}>
-            <IconCamera size={18} stroke={2} /> Abrir câmera
+          <div className="stack" style={{ gap: 12 }}>
+            {TIPOS.map((t) => {
+              const Icon = t.icone
+              const selecionado = tipo === t.id
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTipo(t.id)}
+                  style={{
+                    textAlign: 'left',
+                    background: selecionado ? `${t.cor}25` : 'rgba(255,255,255,.06)',
+                    border: selecionado ? `2px solid ${t.cor}` : '2px solid rgba(255,255,255,.1)',
+                    borderRadius: 16,
+                    padding: 16,
+                    color: '#fff',
+                    display: 'flex',
+                    gap: 14,
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    transition: 'all .15s',
+                  }}
+                >
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 14,
+                    background: `${t.cor}20`, color: t.cor,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <Icon size={24} stroke={2} />
+                  </div>
+                  <span>
+                    <b style={{ fontSize: 15 }}>{t.titulo}</b>
+                    <div style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 2 }}>{t.desc}</div>
+                  </span>
+                  {selecionado && (
+                    <IconCheck size={20} stroke={2.5} color={t.cor} style={{ marginLeft: 'auto', flexShrink: 0 }} />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          <button
+            className="btn acento full"
+            style={{ marginTop: 20, minHeight: 50, fontSize: 15 }}
+            disabled={!tipo}
+            onClick={abrirCamera}
+          >
+            <IconCamera size={20} stroke={2} /> {tipo ? 'Abrir câmera' : 'Selecione o tipo acima'}
           </button>
         </div>
       )}
 
+      {/* ETAPA 2: Câmera */}
       {etapa === 'camera' && (
         <>
-          {/* Viewfinder fullscreen com cantos arredondados e vinheta */}
+          {/* Tipo selecionado badge */}
+          {tipoInfo && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 16px', justifyContent: 'center',
+            }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: `${tipoInfo.cor}30`, color: tipoInfo.cor,
+                borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 600,
+              }}>
+                <tipoInfo.icone size={14} stroke={2} /> {tipoInfo.titulo}
+              </span>
+            </div>
+          )}
+
           <div style={{ flex: 1, position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden' }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {/* Vinheta sutil */}
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%)', zIndex: 1 }} />
             {erro && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, color: 'rgba(255,255,255,.8)', background: 'linear-gradient(160deg,#0b3a53,#04141d)', zIndex: 10 }}>
                 <IconAlertTriangle size={48} stroke={1.5} style={{ marginBottom: 16, color: 'var(--perigo)' }} />
                 <p>{erro}</p>
-                <button onClick={() => setEtapa('inicio')} className="btn outline" style={{ marginTop: 24, borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>Tentar novamente</button>
+                <button onClick={() => setEtapa('tipo')} className="btn outline" style={{ marginTop: 24, borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>Tentar novamente</button>
               </div>
             )}
-            {/* GPS indicator — pulsa enquanto detecta */}
             <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2 }}>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -266,83 +325,88 @@ export function CapturePage() {
             </div>
           </div>
 
-          {/* Bottom bar — shutter + dots */}
           <div style={{ padding: '16px 0 calc(env(safe-area-inset-bottom,0px) + 20px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-            {/* Dot stepper */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', opacity: 0.4 }} />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Tipo</span>
+              <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,.2)' }} />
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', letterSpacing: 1, textTransform: 'uppercase' }}>Foto</span>
+              <span style={{ fontSize: 11, color: '#fff', letterSpacing: 1, textTransform: 'uppercase' }}>Foto</span>
               <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,.2)' }} />
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.25)' }} />
-              <div style={{ width: 20, height: 1, background: 'rgba(255,255,255,.2)' }} />
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,.25)' }} />
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,.3)' }} />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', letterSpacing: 1, textTransform: 'uppercase' }}>Enviar</span>
             </div>
 
-            {/* Shutter button — estilo câmera nativa */}
             <button
               onClick={disparar}
-              aria-label="Tirar foto"
-              className="shutter-btn"
+              disabled={!!erro}
+              aria-label="Disparar"
               style={{
-                width: 72, height: 72, borderRadius: '50%',
-                border: '4px solid rgba(255,255,255,.9)',
-                background: 'transparent',
-                cursor: 'pointer',
+                width: 72, height: 72, borderRadius: '50%', cursor: 'pointer',
+                background: 'radial-gradient(circle at 40% 35%, #29e0d5, #0D6EA8)',
+                border: '4px solid rgba(255,255,255,.85)',
+                boxShadow: '0 4px 20px rgba(30,203,195,.5)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 0,
-                boxShadow: '0 0 0 2px rgba(255,255,255,.15), 0 8px 24px rgba(0,0,0,.4)',
                 transition: 'transform .1s',
               }}
+              onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(.9)')}
+              onPointerUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >
-              <div style={{
-                width: 58, height: 58, borderRadius: '50%',
-                background: '#fff',
-                transition: 'transform .15s ease',
-              }} />
+              <IconCamera size={28} stroke={2.2} color="#fff" />
             </button>
           </div>
         </>
       )}
 
+      {/* ETAPA 3: Selecionar pico */}
       {etapa === 'selecionar-pico' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
-          <div className="stepper" style={{ marginBottom: 24 }}>
-            <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
-            <div className="step on"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
-            <div className="step"><span className="num">3</span> Enviar</div>
+          <div className="stepper" style={{ marginBottom: 16 }}>
+            <div className="step on"><span className="num">1</span> Tipo</div><span className="ln" />
+            <div className="step on"><span className="num">2</span> Foto</div><span className="ln" />
+            <div className="step on"><span className="num">3</span> Local</div>
           </div>
-          <IconMapPin size={40} stroke={1.5} style={{ margin: '0 auto', display: 'block', color: 'var(--turq)' }} />
-          <h2 style={{ color: '#fff', marginTop: 12, textAlign: 'center' }}>Qual é o pico?</h2>
-          <p style={{ color: 'rgba(255,255,255,.65)', textAlign: 'center', fontSize: 13 }}>
-            Não encontramos um pico próximo. Selecione um existente ou cadastre um novo.
+
+          {tipoInfo && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, justifyContent: 'center' }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: `${tipoInfo.cor}30`, color: tipoInfo.cor,
+                borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 600,
+              }}>
+                <tipoInfo.icone size={14} stroke={2} /> {tipoInfo.titulo}
+              </span>
+            </div>
+          )}
+
+          <h2 style={{ color: '#fff', marginBottom: 6 }}>Onde foi feito o registro?</h2>
+          <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 16 }}>
+            Selecione o pico mais próximo ou cadastre um novo.
           </p>
 
-          {/* Busca */}
           <input
             className="input"
             placeholder="Buscar pico..."
             value={buscaPico}
             onChange={(e) => setBuscaPico(e.target.value)}
-            style={{ marginTop: 16, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+            style={{ marginBottom: 10, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
           />
 
-          {/* Lista filtrada */}
-          <div style={{ maxHeight: 200, overflow: 'auto', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
             {picosDisponiveis
-              .filter(p => !buscaPico || p.nome.toLowerCase().includes(buscaPico.toLowerCase()))
-              .map(p => (
+              .filter((p) => !buscaPico || p.nome.toLowerCase().includes(buscaPico.toLowerCase()))
+              .slice(0, 20)
+              .map((p) => (
                 <button
                   key={p.id}
                   onClick={() => selecionarPicoExistente(p.id)}
-                  style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 12, padding: '10px 14px', color: '#fff', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit' }}
+                  style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 12, padding: '10px 14px', color: '#fff', cursor: 'pointer', fontSize: 14 }}
                 >
-                  <IconMapPin size={14} stroke={2} style={{ marginRight: 6, verticalAlign: -2 }} />
                   {p.nome}
                 </button>
               ))}
           </div>
 
-          {/* Cadastrar novo pico */}
           <div style={{ marginTop: 20, padding: 16, background: 'rgba(30,203,195,.1)', borderRadius: 16, border: '1px solid rgba(30,203,195,.25)' }}>
             <b style={{ fontSize: 14 }}>🏖️ Novo pico</b>
             <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 4 }}>Não encontrou? Cadastre a praia e ela fica disponível para todos.</p>
@@ -365,38 +429,49 @@ export function CapturePage() {
         </div>
       )}
 
-      {etapa === 'classificar' && (
-        <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
-          <div className="stepper" style={{ marginBottom: 24 }}>
-            <div className="step on"><span className="num">1</span> Foto</div><span className="ln"></span>
-            <div className="step on"><span className="num">2</span> Local/Pico</div><span className="ln"></span>
-            <div className="step on"><span className="num">3</span> Enviar</div>
+      {/* ETAPA 4: Concluído */}
+      {etapa === 'concluido' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 24 }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: 'rgba(30,203,195,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 16,
+          }}>
+            <IconCheck size={40} stroke={2} color="#1ECBC3" />
           </div>
-          <div style={{ height: 200, borderRadius: 18, background: 'linear-gradient(155deg,#9fc6e3,#3F8DC7)', marginBottom: 8 }} />
-          <span className="tag ok"><IconArrowUp size={13} stroke={2.2} /> subindo em background</span>
-          <h2 style={{ color: '#fff', marginTop: 16 }}>O que você registrou?</h2>
-          <div className="stack" style={{ marginTop: 10 }}>
-            {([
-              ['report', IconRipple, 'Report do mar', 'Condição de surf agora'],
-              ['alerta', IconAlertTriangle, 'Alerta ambiental', 'Esgoto, erosão, obra, poluição'],
-              ['lixo', IconTrash, 'Lixo na praia', 'Resíduo na praia ou no mar'],
-            ] as const).map(([tipo, Icon, t, s]) => (
-              <button
-                key={t}
-                onClick={() => classificar(tipo)}
-                style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 16, padding: 14, color: '#fff', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer' }}
-              >
-                <Icon size={24} stroke={2} />
-                <span>
-                  <b>{t}</b>
-                  <div style={{ color: 'rgba(255,255,255,.7)', fontSize: 13 }}>{s}</div>
-                </span>
-              </button>
-            ))}
-          </div>
-          <p style={{ color: 'rgba(255,255,255,.55)', fontSize: 12, marginTop: 16 }}>
-            A classificação não bloqueia o envio. Se você sair, a foto sobe mesmo assim.
+          <h2 style={{ color: '#fff', marginBottom: 8 }}>Registro enviado!</h2>
+          {tipoInfo && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: `${tipoInfo.cor}30`, color: tipoInfo.cor,
+              borderRadius: 20, padding: '6px 16px', fontSize: 13, fontWeight: 600,
+              marginBottom: 12,
+            }}>
+              <tipoInfo.icone size={16} stroke={2} /> {tipoInfo.titulo}
+            </span>
+          )}
+          <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, lineHeight: 1.5, maxWidth: 280 }}>
+            Sua foto está sendo enviada em background. Obrigado por contribuir com o monitoramento!
           </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24, width: '100%', maxWidth: 320 }}>
+            {picoFinal && (
+              <button className="btn acento full" onClick={() => navigate(`/pico/${picoFinal}`)}>
+                <IconPhoto size={18} /> Ver pico
+              </button>
+            )}
+            <button className="btn outline full" style={{ borderColor: 'rgba(255,255,255,.3)', color: '#fff' }} onClick={() => {
+              setTipo(null)
+              setEtapa('tipo')
+              setBlobCapturado(undefined)
+              setPicoFinal(null)
+            }}>
+              <IconCamera size={18} /> Novo registro
+            </button>
+            <button className="btn outline full" style={{ borderColor: 'rgba(255,255,255,.2)', color: 'rgba(255,255,255,.7)' }} onClick={() => navigate('/')}>
+              Voltar ao Radar
+            </button>
+          </div>
         </div>
       )}
     </div>

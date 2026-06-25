@@ -46,7 +46,11 @@ export function UpdatePrompt() {
     >
       <span style={{ flex: 1 }}>🆕 Nova versão disponível!</span>
       <button
-        onClick={() => updateServiceWorker(true)}
+        onClick={() => {
+          updateServiceWorker(true)
+          // Fallback: se o SW não recarregou em 2s, forçar reload
+          setTimeout(() => window.location.reload(), 2000)
+        }}
         style={{
           background: 'var(--azul, #1c8aad)',
           color: '#fff',
