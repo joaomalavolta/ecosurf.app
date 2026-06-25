@@ -11,6 +11,7 @@ const KEY = SUPABASE_KEY
 async function rest<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}/rest/v1/${path}`, {
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+    cache: 'no-store',
   })
   if (!r.ok) throw new Error(`rest ${r.status}`)
   return (await r.json()) as T

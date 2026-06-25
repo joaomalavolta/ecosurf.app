@@ -74,15 +74,22 @@ export function PicoPage() {
       const unsub = onMudanca(checkFila)
       if (!vivo) unsub()
       else {
-        // hook unsub function
-        // hacky way:
         (window as any)._unsubFila = unsub
       }
     })
 
+    // Refresh feed when user returns to this tab (e.g. after deleting photos in admin)
+    const onVisChange = () => {
+      if (document.visibilityState === 'visible' && vivo) {
+        carregarFeed(picoId).then(f => { if (vivo) setFeed(f) })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisChange)
+
     return () => {
       vivo = false
       if ((window as any)._unsubFila) (window as any)._unsubFila()
+      document.removeEventListener('visibilitychange', onVisChange)
     }
   }, [picoId])
 
