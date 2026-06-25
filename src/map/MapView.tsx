@@ -5,16 +5,57 @@ import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 
-/* ─── Pins circulares flat (estilo Zurrb) ─── */
-const CIRCLE_PIN = (bg: string, paths: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+/* ─── 3 estilos de ícone: Pin 3D, Squircle, Pill ─── */
+
+/** Pin 3D com ponteira — para PICOS */
+const PIN_3D = (bg: string, bgLight: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="58" viewBox="0 0 48 58">
     <defs>
-      <filter id="sh" x="-20%" y="-10%" width="140%" height="150%">
-        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.4"/>
+      <linearGradient id="g3d" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${bgLight}"/>
+        <stop offset="100%" stop-color="${bg}"/>
+      </linearGradient>
+      <filter id="sh3d" x="-25%" y="-15%" width="150%" height="160%">
+        <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
       </filter>
     </defs>
-    <circle cx="22" cy="22" r="18" fill="${bg}" stroke="#fff" stroke-width="2.5" filter="url(#sh)"/>
-    <g transform="translate(10, 10) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <g filter="url(#sh3d)">
+      <path d="M24 52 L17 38 A20 20 0 1 1 31 38 Z" fill="url(#g3d)" stroke="#fff" stroke-width="2.5"/>
+    </g>
+    <circle cx="24" cy="22" r="1" fill="rgba(255,255,255,.15)"/>
+    <g transform="translate(12, 10) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      ${paths}
+    </g>
+  </svg>`
+
+/** Squircle badge — para ALERTAS AMBIENTAIS */
+const SQUIRCLE = (bg: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
+    <defs>
+      <filter id="shsq" x="-20%" y="-10%" width="140%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45"/>
+      </filter>
+    </defs>
+    <rect x="3" y="3" width="40" height="40" rx="12" fill="#fff" stroke="${bg}" stroke-width="3" filter="url(#shsq)"/>
+    <g transform="translate(11, 11) scale(0.5)" fill="none" stroke="${bg}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      ${paths}
+    </g>
+  </svg>`
+
+/** Pill label com ponteira — para MUTIRÕES */
+const PILL = (bg: string, paths: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="46" viewBox="0 0 52 46">
+    <defs>
+      <filter id="shp" x="-15%" y="-10%" width="130%" height="150%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45"/>
+      </filter>
+    </defs>
+    <g filter="url(#shp)">
+      <rect x="2" y="2" width="48" height="32" rx="16" fill="${bg}" stroke="#fff" stroke-width="2.5"/>
+      <polygon points="22,34 26,42 30,34" fill="${bg}" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="22" y="32" width="8" height="3" fill="${bg}"/>
+    </g>
+    <g transform="translate(14, 6) scale(0.5)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
       ${paths}
     </g>
   </svg>`
@@ -32,25 +73,26 @@ const DOT = '<circle cx="12" cy="12" r="4"/><path d="M12 3v2"/><path d="M12 19v2
 const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-6-2.749-6s-2.5 3.582-2.5 8s-.5 8-2.5 8s-2.452-2.547-2.749-6c-.1-1.147-.867-2-1.763-2h-1.928"/>'
 const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
 const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
-const SKULL = '<path d="M12 4c4.418 0 8 3.358 8 7.5c0 1.901-.755 3.637-2 4.96v2.54a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-2.54c-1.245-1.322-2-3.058-2-4.96c0-4.142 3.582-7.5 8-7.5z"/><path d="M10 17v.01"/><path d="M14 17v.01"/>'
 
-/** Ícones por categoria — círculos coloridos com ícones brancos */
+/** Ícones por categoria — 3 estilos distintos */
 const ICONES: Record<string, string> = {
-  'ic-pico':           CIRCLE_PIN('#0D6EA8', WAVE),
-  'ic-mutirao':        CIRCLE_PIN('#FF8C42', PEOPLE),
-  // 12 categorias de alerta ambiental
-  'ic-lixo-praia':     CIRCLE_PIN('#E84855', TRASH),
-  'ic-lixo-rio':       CIRCLE_PIN('#D64045', BOTTLE),
-  'ic-esgoto':         CIRCLE_PIN('#7B8794', DROP),
-  'ic-erosao':         CIRCLE_PIN('#C17817', MOUNTAIN),
-  'ic-oleo':           CIRCLE_PIN('#3D3D3D', DOT),
-  'ic-animal':         CIRCLE_PIN('#5B8C5A', FISH),
-  'ic-entulho':        CIRCLE_PIN('#9B6B4D', TRASH),
-  'ic-microplasticos': CIRCLE_PIN('#B266B2', DOT),
-  'ic-espuma':         CIRCLE_PIN('#5E8C61', WAVESINE),
-  'ic-queimada':       CIRCLE_PIN('#FF6B35', FLAME),
-  'ic-ocupacao':       CIRCLE_PIN('#8B6914', HOME),
-  'ic-outro':          CIRCLE_PIN('#6B7280', QUESTION),
+  // 🏄 PICO → Pin 3D glossy com ponteira
+  'ic-pico':           PIN_3D('#0D6EA8', '#2AABE2', WAVE),
+  // 🧹 MUTIRÃO → Pill label com ponteira
+  'ic-mutirao':        PILL('#FF8C42', PEOPLE),
+  // 🔴 ALERTAS → Squircle badges (branco + anel colorido)
+  'ic-lixo-praia':     SQUIRCLE('#E84855', TRASH),
+  'ic-lixo-rio':       SQUIRCLE('#D64045', BOTTLE),
+  'ic-esgoto':         SQUIRCLE('#7B8794', DROP),
+  'ic-erosao':         SQUIRCLE('#C17817', MOUNTAIN),
+  'ic-oleo':           SQUIRCLE('#3D3D3D', DOT),
+  'ic-animal':         SQUIRCLE('#5B8C5A', FISH),
+  'ic-entulho':        SQUIRCLE('#9B6B4D', TRASH),
+  'ic-microplasticos': SQUIRCLE('#B266B2', DOT),
+  'ic-espuma':         SQUIRCLE('#5E8C61', WAVESINE),
+  'ic-queimada':       SQUIRCLE('#FF6B35', FLAME),
+  'ic-ocupacao':       SQUIRCLE('#8B6914', HOME),
+  'ic-outro':          SQUIRCLE('#6B7280', QUESTION),
 }
 
 const SRC = 'feicoes'
@@ -256,8 +298,8 @@ export function MapView({
         type: 'geojson',
         data: colecao(dadosRef.current),
         cluster: true,
-        clusterRadius: 50,
-        clusterMaxZoom: 13,
+        clusterRadius: 40,
+        clusterMaxZoom: 10,
       })
 
       // Clusters — brancos com borda e número escuro (estilo Zurrb)
@@ -329,10 +371,18 @@ export function MapView({
             'obra', 'ic-entulho',
             'ic-pico', // default: pico
           ],
-          'icon-size': 1,
+          'icon-size': [
+            'interpolate', ['linear'], ['zoom'],
+            5, 0.55,   // zoom continental → 55%
+            8, 0.7,    // zoom costa → 70%
+            10, 0.85,  // zoom cidade → 85%
+            13, 1.0,   // zoom normal → 100%
+            16, 1.15,  // zoom close → 115%
+            18, 1.3,   // zoom máximo → 130%
+          ],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
-          'icon-anchor': 'center',
+          'icon-anchor': 'bottom',
         },
       })
 
