@@ -193,18 +193,31 @@ function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<
   })
 }
 
+/** Tipos para filtro por camada */
+const TIPOS_PICO = ['pico', 'pico-ativo']
+const TIPOS_ALERTA = ['lixo-praia', 'lixo-rio', 'esgoto', 'erosao', 'oleo', 'animal', 'entulho', 'microplasticos', 'espuma', 'queimada', 'ocupacao', 'outro', 'lixo', 'poluicao', 'privatizacao', 'obra']
+const TIPOS_MUTIRAO = ['mutirao']
+
+function filtroLayer(filtro?: string): maplibregl.ExpressionSpecification | null {
+  switch (filtro) {
+    case 'picos': return ['in', ['get', 'tipo'], ['literal', TIPOS_PICO]]
+    case 'alertas': return ['in', ['get', 'tipo'], ['literal', TIPOS_ALERTA]]
+    case 'mutiroes': return ['in', ['get', 'tipo'], ['literal', TIPOS_MUTIRAO]]
+    default: return null
+  }
+}
+
 /**
- * Mapa satélite híbrido (ESRI World Imagery + labels CARTO).
- * Pins circulares coloridos por categoria:
- *   Pico (azul), Mutirão (laranja), Esgoto (cinza), Lixo (vermelho).
- * Clusterização nativa do MapLibre.
- * Tocar num pico: seleciona (onSelectPico) ou navega para a página.
+ * Mapa satélite híbrido (ESRI World Imagery).
+ * Pins circulares coloridos por categoria.
+ * Filtragem instantânea via setFilter (sem rebuild).
  */
 export function MapView({
   picos,
   alertas = [],
   mutiroes = [],
   ativos,
+  filtro,
   onSelectPico,
   className,
   style,
@@ -213,6 +226,7 @@ export function MapView({
   alertas?: Alerta[]
   mutiroes?: Mutirao[]
   ativos?: Set<string>
+  filtro?: 'tudo' | 'picos' | 'alertas' | 'mutiroes'
   onSelectPico?: (p: Pico) => void
   className?: string
   style?: React.CSSProperties
@@ -228,12 +242,10 @@ export function MapView({
   const onSelRef = useRef(onSelectPico)
   onSelRef.current = onSelectPico
 
-  // monta o mapa, carrega ícones, cria a fonte clusterizada e as camadas
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     let descartado = false
 
-    // Estilo satélite puro (sem labels de terceiros)
     const estiloSatelite: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
@@ -244,26 +256,17 @@ export function MapView({
           ],
           tileSize: 256,
           maxzoom: 19,
-          attribution: '&copy; Esri, Maxar, Earthstar'
         },
       },
-      layers: [
-        {
-          id: 'satellite',
-          type: 'raster',
-          source: 'esri-satellite',
-          minzoom: 0,
-          maxzoom: 19,
-        },
-      ],
-      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+      layers: [{ id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite' }],
+      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     }
 
     const map = new maplibregl.Map({
       container: ref.current,
       style: estiloSatelite,
       center: [-46.79, -24.19],
-      zoom: 10.5,
+      zoom: 12,
       attributionControl: false,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
@@ -287,56 +290,13 @@ export function MapView({
       map.addSource(SRC, {
         type: 'geojson',
         data: colecao(dadosRef.current),
-        cluster: true,
-        clusterRadius: 50,
-        clusterMaxZoom: 9,
+        cluster: false,
       })
 
-      // Clusters — brancos com borda e número escuro (estilo Zurrb)
-      map.addLayer({
-        id: 'clusters-glow',
-        type: 'circle',
-        source: SRC,
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': '#ffffff',
-          'circle-radius': ['step', ['get', 'point_count'], 28, 10, 34, 25, 40],
-          'circle-opacity': 0.25,
-          'circle-blur': 0.4,
-        },
-      })
-      map.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: SRC,
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': '#ffffff',
-          'circle-radius': ['step', ['get', 'point_count'], 20, 10, 24, 25, 30],
-          'circle-stroke-width': 2.5,
-          'circle-stroke-color': 'rgba(13, 110, 168, 0.6)',
-        },
-      })
-      map.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: SRC,
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': ['get', 'point_count_abbreviated'],
-          'text-font': ['Noto Sans Bold'],
-          'text-size': ['step', ['get', 'point_count'], 14, 10, 16, 25, 20],
-          'text-allow-overlap': true,
-        },
-        paint: {
-          'text-color': '#0D6EA8',
-        },
-      })
       map.addLayer({
         id: 'pontos-icone',
         type: 'symbol',
         source: SRC,
-        filter: ['!', ['has', 'point_count']],
         layout: {
           'icon-image': [
             'match',
@@ -354,22 +314,21 @@ export function MapView({
             'ocupacao', 'ic-ocupacao',
             'outro', 'ic-outro',
             'mutirao', 'ic-mutirao',
-            // legacy fallbacks
             'lixo', 'ic-lixo-praia',
             'poluicao', 'ic-oleo',
             'privatizacao', 'ic-ocupacao',
             'obra', 'ic-entulho',
             'pico-ativo', 'ic-pico-ativo',
-            'ic-pico', // default: pico
+            'ic-pico',
           ],
           'icon-size': [
             'interpolate', ['linear'], ['zoom'],
-            5, 0.5,    // zoom continental — sempre visível
-            8, 0.6,    // zoom costa
-            10, 0.75,  // zoom cidade (inicial)
-            12, 0.9,   // zoom bairro
-            14, 1.0,   // zoom rua
-            17, 1.15,  // zoom close-up
+            5, 0.45,
+            8, 0.55,
+            10, 0.7,
+            12, 0.85,
+            14, 1.0,
+            17, 1.15,
           ],
           'icon-allow-overlap': true,
           'icon-ignore-placement': true,
@@ -377,12 +336,11 @@ export function MapView({
         },
       })
 
-      // Labels dos picos — nome do local abaixo do pin
       map.addLayer({
         id: 'pico-labels',
         type: 'symbol',
         source: SRC,
-        filter: ['all', ['!', ['has', 'point_count']], ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']]],
+        filter: ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']],
         layout: {
           'text-field': ['get', 'titulo'],
           'text-font': ['Noto Sans Bold'],
@@ -398,18 +356,6 @@ export function MapView({
         },
       })
 
-      // clique no cluster: aproxima até abrir
-      map.on('click', 'clusters', (e) => {
-        const f = map.queryRenderedFeatures(e.point, { layers: ['clusters'] })[0]
-        const clusterId = f?.properties?.cluster_id
-        if (clusterId == null) return
-        const src = map.getSource(SRC) as maplibregl.GeoJSONSource
-        src.getClusterExpansionZoom(clusterId).then((zoom) => {
-          map.easeTo({ center: (f.geometry as Point).coordinates as [number, number], zoom })
-        })
-      })
-
-      // clique no ponto: pico seleciona (ou navega); alerta/mutirão abre popup
       map.on('click', 'pontos-icone', (e) => {
         const f = e.features?.[0]
         if (!f) return
@@ -430,10 +376,8 @@ export function MapView({
           .addTo(map)
       })
 
-      for (const camada of ['clusters', 'pontos-icone']) {
-        map.on('mouseenter', camada, () => (map.getCanvas().style.cursor = 'pointer'))
-        map.on('mouseleave', camada, () => (map.getCanvas().style.cursor = ''))
-      }
+      map.on('mouseenter', 'pontos-icone', () => (map.getCanvas().style.cursor = 'pointer'))
+      map.on('mouseleave', 'pontos-icone', () => (map.getCanvas().style.cursor = ''))
 
       prontoRef.current = true
       aplicar()
@@ -447,13 +391,27 @@ export function MapView({
     }
   }, [])
 
-  // atualiza os dados quando os filtros mudam
+  // atualiza dados quando picos/alertas/mutiroes mudam
   useEffect(() => {
     const map = mapRef.current
     if (!map || !prontoRef.current) return
     const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
     if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos }))
   }, [picos, alertas, mutiroes, ativos])
+
+  // Filtro INSTANTÂNEO por tipo (sem rebuild de dados)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !prontoRef.current) return
+    const expr = filtroLayer(filtro)
+    map.setFilter('pontos-icone', expr)
+    const picoVisivel = !filtro || filtro === 'tudo' || filtro === 'picos'
+    if (picoVisivel) {
+      map.setFilter('pico-labels', ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']])
+    } else {
+      map.setFilter('pico-labels', ['==', ['get', 'tipo'], '__none__'])
+    }
+  }, [filtro])
 
   return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: '#0a1929', ...style }} />
 }

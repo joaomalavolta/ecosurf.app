@@ -78,10 +78,11 @@ export function MapaPage() {
         )}
 
         <MapView
-          picos={picosNoMapa}
-          alertas={verAlertas ? alertas : []}
-          mutiroes={verMutiroes ? mutiroes : []}
+          picos={soRecentes ? picos.filter((p) => ativos.has(p.id)) : picos}
+          alertas={alertas}
+          mutiroes={mutiroes}
           ativos={ativos}
+          filtro={filtro}
           onSelectPico={setSel}
         />
 
