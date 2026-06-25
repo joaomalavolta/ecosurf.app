@@ -180,22 +180,31 @@ export async function atualizarMutirao(id: string, dados: DadosMutirao): Promise
 
   let imagemUrl: string | undefined
   if (dados.imagemCapa) {
-    const path = `mutiroes/${user.id}/${Date.now()}.jpg`
-    const { error } = await sb.storage.from('fotos').upload(path, dados.imagemCapa, { contentType: dados.imagemCapa.type })
-    if (!error) {
-      const { data: urlData } = sb.storage.from('fotos').getPublicUrl(path)
-      imagemUrl = urlData.publicUrl
+    const ext = dados.imagemCapa.name?.split('.').pop() || 'jpg'
+    const path = `mutiroes/${user.id}/${Date.now()}.${ext}`
+    const { error: upErr } = await sb.storage.from('fotos').upload(path, dados.imagemCapa, {
+      contentType: dados.imagemCapa.type,
+      upsert: true,
+    })
+    if (upErr) {
+      console.error('Erro ao fazer upload da imagem:', upErr)
+      throw new Error(`Erro ao enviar foto: ${upErr.message}`)
     }
+    const { data: urlData } = sb.storage.from('fotos').getPublicUrl(path)
+    imagemUrl = urlData.publicUrl
   }
 
   const horario = [dados.horarioInicio, dados.horarioFim].filter(Boolean).join(' às ')
+
+  // Garantir formato correto de data (evitar problemas de timezone com new Date('YYYY-MM-DD'))
+  const quandoStr = dados.quando.includes('T') ? dados.quando : `${dados.quando}T12:00:00`
 
   const body: Record<string, unknown> = {
     titulo: dados.titulo,
     tipo_acao: dados.tipoAcao,
     municipio: dados.municipio,
     uf: dados.uf.toUpperCase().slice(0, 2),
-    quando: new Date(dados.quando).toISOString(),
+    quando: new Date(quandoStr).toISOString(),
     horario: horario || null,
     ponto_encontro: dados.pontoEncontro ?? null,
     organizador: dados.organizador ?? null,
