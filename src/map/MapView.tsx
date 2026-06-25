@@ -201,7 +201,7 @@ const TIPOS_MUTIRAO = ['mutirao']
 function filtroLayer(filtro?: string): maplibregl.ExpressionSpecification | null {
   switch (filtro) {
     case 'picos': return ['in', ['get', 'tipo'], ['literal', TIPOS_PICO]]
-    case 'alertas': return ['in', ['get', 'tipo'], ['literal', TIPOS_ALERTA]]
+    case 'alertas': return ['in', ['get', 'tipo'], ['literal', [...TIPOS_ALERTA, ...TIPOS_MUTIRAO]]]
     case 'mutiroes': return ['in', ['get', 'tipo'], ['literal', TIPOS_MUTIRAO]]
     default: return null
   }

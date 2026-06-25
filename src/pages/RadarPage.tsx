@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown } from '@tabler/icons-react'
+import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWaveSine, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { FeedCard } from '../components/FeedCard'
@@ -12,6 +12,7 @@ import { MapView } from '../map/MapView'
 import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos'
+type FiltroMapa = 'ecosurf' | 'eco' | 'surf'
 
 /** Agrupa fotos por picoId, preservando ordem (mais recentes primeiro). */
 function agruparPorPico(fotos: Foto[]): Map<string, Foto[]> {
@@ -36,6 +37,7 @@ export function RadarPage() {
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [selPico, setSelPico] = useState<Pico | null>(null)
   const [mapaExpandido, setMapaExpandido] = useState(false)
+  const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
   const feedRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export function RadarPage() {
               alertas={alertas}
               mutiroes={mutiroes}
               ativos={ativos}
+              filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
             />
           </Suspense>
@@ -133,6 +136,41 @@ export function RadarPage() {
         >
           <IconChevronDown size={18} stroke={2.5} style={{ transform: mapaExpandido ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
         </button>
+      </div>
+
+      {/* ─── FILTRO SEGMENTED PILL ─── */}
+      <div className="radar-filter-pill">
+        <div className="radar-filter-track">
+          <div
+            className="radar-filter-indicator"
+            style={{
+              left: filtroMapa === 'eco' ? '0%' : filtroMapa === 'ecosurf' ? '33.33%' : '66.66%',
+              background: filtroMapa === 'eco' ? '#22c55e' : filtroMapa === 'surf' ? '#0D6EA8' : 'linear-gradient(135deg, #22c55e, #0D6EA8)',
+            }}
+          />
+          <button
+            className={`radar-filter-seg ${filtroMapa === 'eco' ? 'active' : ''}`}
+            onClick={() => setFiltroMapa('eco')}
+          >
+            <IconWaveSine size={15} stroke={2.2} />
+            <span>Eco</span>
+          </button>
+          <button
+            className={`radar-filter-seg ${filtroMapa === 'ecosurf' ? 'active' : ''}`}
+            onClick={() => setFiltroMapa('ecosurf')}
+          >
+            <IconWorld size={15} stroke={2.2} />
+            <span>Ecosurf</span>
+          </button>
+          <button
+            className={`radar-filter-seg ${filtroMapa === 'surf' ? 'active' : ''}`}
+            onClick={() => setFiltroMapa('surf')}
+          >
+            <IconSnowboarding size={15} stroke={2.2} />
+            <span>Surf</span>
+          </button>
+        </div>
+      </div>
 
         {/* Pico selecionado — mini card flutuante */}
         {selPico && (
