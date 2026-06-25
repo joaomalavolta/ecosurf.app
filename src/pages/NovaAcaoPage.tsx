@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { IconAlertTriangle, IconHeartHandshake, IconPlus } from '@tabler/icons-react'
+import { IconAlertTriangle, IconHeartHandshake, IconBeach } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 
 export function NovaAcaoPage() {
@@ -75,6 +75,37 @@ export function NovaAcaoPage() {
               <div style={{ fontWeight: 700, fontSize: 16 }}>Criar Mutirão</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, lineHeight: 1.4 }}>
                 Organize uma limpeza de praia, rio, mangue, costão, trilha costeira ou ação educativa.
+              </div>
+            </div>
+          </Link>
+
+          {/* Card Cadastrar Pico */}
+          <Link
+            to="/nova-acao/pico"
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              borderRadius: 16,
+              border: '2px solid var(--line)',
+              padding: '20px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              background: 'var(--card)',
+              transition: 'border-color .15s, box-shadow .15s',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: 16,
+              background: 'linear-gradient(135deg, #1ECBC3, #0D6EA8)',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto',
+            }}>
+              <IconBeach size={28} stroke={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>Cadastrar Pico de Surf</div>
+              <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, lineHeight: 1.4 }}>
+                Adicione uma praia, costão ou spot que ainda não está no mapa da comunidade.
               </div>
             </div>
           </Link>
