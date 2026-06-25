@@ -58,7 +58,7 @@ function TelaCheia({ children }: { children: ReactNode }) {
 }
 
 // ───────────────────────────────────────────────────────────────── Dashboard ──
-function Dashboard() {
+function Dashboard({ onNavegar }: { onNavegar: (mod: ModId) => void }) {
   const [ind, setInd] = useState<Indicadores | null>(null)
   const [erro, setErro] = useState('')
   useEffect(() => {
@@ -66,21 +66,21 @@ function Dashboard() {
   }, [])
   return (
     <section className="admin-content">
-      <Titulo nome="Painel" desc="Visão geral da plataforma." />
+      <Titulo nome="Painel" desc="Visão geral da plataforma. Toque em qualquer card para acessar." />
       {erro && <Estado>Não foi possível carregar os indicadores.</Estado>}
       {!ind && !erro && <Estado>Carregando…</Estado>}
       {ind && (
         <>
           <div className="admin-grid">
-            <StatCard k="Usuários" v={ind.usuarios} />
-            <StatCard k="Picos" v={ind.picos} />
-            <StatCard k="Fotos ativas" v={ind.fotos} />
-            <StatCard k="Fotos pendentes" v={ind.fotosPendentes} />
-            <StatCard k="Fotos removidas" v={ind.fotosRemovidas} />
-            <StatCard k="Alertas" v={ind.ameacas} />
-            <StatCard k="Mutirões" v={ind.mutiroes} />
-            <StatCard k="Bloqueados" v={ind.bloqueados} />
-            <StatCard k="Ações registradas" v={ind.logs} />
+            <StatCard k="Usuários" v={ind.usuarios} onClick={() => onNavegar('usuarios')} />
+            <StatCard k="Picos" v={ind.picos} onClick={() => onNavegar('picos')} />
+            <StatCard k="Fotos ativas" v={ind.fotos} onClick={() => onNavegar('fotos')} />
+            <StatCard k="Fotos pendentes" v={ind.fotosPendentes} onClick={() => onNavegar('fotos')} />
+            <StatCard k="Fotos removidas" v={ind.fotosRemovidas} onClick={() => onNavegar('fotos')} />
+            <StatCard k="Alertas" v={ind.ameacas} onClick={() => onNavegar('ameacas')} />
+            <StatCard k="Mutirões" v={ind.mutiroes} onClick={() => onNavegar('mutiroes')} />
+            <StatCard k="Bloqueados" v={ind.bloqueados} onClick={() => onNavegar('usuarios')} />
+            <StatCard k="Ações registradas" v={ind.logs} onClick={() => onNavegar('logs')} />
           </div>
           {ind.fotosPendentes > 0 && (
             <div className="card pad" style={{ marginTop: 16 }}>
@@ -1298,7 +1298,7 @@ export function AdminPage() {
         </nav>
 
         <main className="admin-main">
-          {abaAtiva === 'dashboard' && <Dashboard />}
+          {abaAtiva === 'dashboard' && <Dashboard onNavegar={abrir} />}
           {abaAtiva === 'fotos' && <ModuloFotos perm={perm} />}
           {abaAtiva === 'registros' && <ModuloRegistros />}
           {abaAtiva === 'usuarios' && <ModuloUsuarios eu={eu} perm={perm} />}

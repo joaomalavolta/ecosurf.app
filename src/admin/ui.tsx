@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react'
 import type { Papel } from '../services/admin'
 
-export function StatCard({ k, v }: { k: string; v: ReactNode }) {
+export function StatCard({ k, v, onClick }: { k: string; v: ReactNode; onClick?: () => void }) {
   return (
-    <div className="stat">
+    <div
+      className="stat"
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer', transition: 'transform .1s, box-shadow .15s' } : undefined}
+      onPointerEnter={onClick ? (e) => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)' } : undefined}
+      onPointerLeave={onClick ? (e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '' } : undefined}
+    >
       <div className="v">{v}</div>
       <div className="k">{k}</div>
     </div>
