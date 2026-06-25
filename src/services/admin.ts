@@ -213,8 +213,8 @@ export async function excluirUsuario(id: string, motivo: string) {
 // ── Ameaças ──────────────────────────────────────────────────────────────
 export async function listarAmeacasAdmin() {
   const c = await sb()
-  const { data } = await c.from('ameacas').select('id,titulo,categoria,status,gravidade,municipio,uf,precisao').order('criada_em', { ascending: false }).limit(200)
-  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; precisao: string }[]
+  const { data } = await c.from('ameacas').select('id,titulo,categoria,status,gravidade,municipio,uf,precisao,descricao,local_nome,recorrente').order('criada_em', { ascending: false }).limit(200)
+  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; precisao: string; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
 }
 
 export async function atualizarStatusAmeaca(id: string, status: string) {
@@ -227,6 +227,13 @@ export async function excluirAmeaca(id: string, motivo: string) {
   const c = await sb()
   await c.from('ameacas').delete().eq('id', id)
   await log(c, 'alerta:excluir', 'alerta', id, undefined, undefined, motivo)
+}
+
+/** Edita campos de um alerta ambiental. */
+export async function editarAmeaca(id: string, campos: { titulo?: string; categoria?: string; gravidade?: string; municipio?: string; uf?: string; descricao?: string; local_nome?: string }) {
+  const c = await sb()
+  await c.from('ameacas').update(campos).eq('id', id)
+  await log(c, 'alerta:editar', 'alerta', id, undefined, campos)
 }
 
 // ── Picos ────────────────────────────────────────────────────────────────
@@ -261,13 +268,14 @@ export async function excluirPico(id: string, motivo: string) {
 // ── Mutirões ─────────────────────────────────────────────────────────────
 export interface MutiraoAdmin {
   id: string; titulo: string; tipo_acao: string | null; municipio: string | null; uf: string | null;
-  quando: string; horario: string | null; organizador: string | null; status: string;
-  vagas: number | null; inscritos: number | null
+  quando: string; horario: string | null; organizador: string | null; instituicao: string | null;
+  contato: string | null; ponto_encontro: string | null; info_voluntarios: string | null;
+  descricao: string | null; status: string; vagas: number | null; inscritos: number | null
 }
 
 export async function listarMutiroesAdmin(): Promise<MutiraoAdmin[]> {
   const c = await sb()
-  const { data } = await c.from('mutiroes').select('id,titulo,tipo_acao,municipio,uf,quando,horario,organizador,status,vagas,inscritos').order('quando', { ascending: false }).limit(200)
+  const { data } = await c.from('mutiroes').select('id,titulo,tipo_acao,municipio,uf,quando,horario,organizador,instituicao,contato,ponto_encontro,info_voluntarios,descricao,status,vagas,inscritos').order('quando', { ascending: false }).limit(200)
   return (data ?? []) as MutiraoAdmin[]
 }
 
@@ -281,6 +289,13 @@ export async function excluirMutirao(id: string, motivo: string) {
   const c = await sb()
   await c.from('mutiroes').delete().eq('id', id)
   await log(c, 'mutirao:excluir', 'mutirao', id, undefined, undefined, motivo)
+}
+
+/** Edita campos de um mutirão. */
+export async function editarMutirao(id: string, campos: Record<string, unknown>) {
+  const c = await sb()
+  await c.from('mutiroes').update(campos).eq('id', id)
+  await log(c, 'mutirao:editar', 'mutirao', id, undefined, campos)
 }
 
 // ── Logs ─────────────────────────────────────────────────────────────────
