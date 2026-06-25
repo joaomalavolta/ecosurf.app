@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWaveSine, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { FeedCard } from '../components/FeedCard'
@@ -154,41 +154,12 @@ export function RadarPage() {
         )}
       </div>
 
-      {/* ─── FILTRO SEGMENTED PILL ─── */}
-      <div className="radar-filter-pill">
-        <div className="radar-filter-track">
-          <div
-            className="radar-filter-indicator"
-            style={{
-              left: filtroMapa === 'eco' ? '0%' : filtroMapa === 'ecosurf' ? '33.33%' : '66.66%',
-              background: filtroMapa === 'eco' ? '#22c55e' : filtroMapa === 'surf' ? '#0D6EA8' : 'linear-gradient(135deg, #22c55e, #0D6EA8)',
-            }}
-          />
-          <button
-            className={`radar-filter-seg ${filtroMapa === 'eco' ? 'active' : ''}`}
-            onClick={() => setFiltroMapa('eco')}
-          >
-            <IconWaveSine size={15} stroke={2.2} />
-            <span>Eco</span>
-          </button>
-          <button
-            className={`radar-filter-seg ${filtroMapa === 'ecosurf' ? 'active' : ''}`}
-            onClick={() => setFiltroMapa('ecosurf')}
-          >
-            <IconWorld size={15} stroke={2.2} />
-            <span>Ecosurf</span>
-          </button>
-          <button
-            className={`radar-filter-seg ${filtroMapa === 'surf' ? 'active' : ''}`}
-            onClick={() => setFiltroMapa('surf')}
-          >
-            <IconSnowboarding size={15} stroke={2.2} />
-            <span>Surf</span>
-          </button>
-        </div>
+      {/* ─── FILTRO MAPA ─── */}
+      <div className="pills" style={{ margin: '10px 12px 0', justifyContent: 'center' }}>
+        <Pill on={filtroMapa === 'eco'} onClick={() => setFiltroMapa('eco')}><IconRipple size={15} stroke={2} /> Eco</Pill>
+        <Pill on={filtroMapa === 'ecosurf'} onClick={() => setFiltroMapa('ecosurf')}><IconWorld size={15} stroke={2} /> Ecosurf</Pill>
+        <Pill on={filtroMapa === 'surf'} onClick={() => setFiltroMapa('surf')}><IconSnowboarding size={15} stroke={2} /> Surf</Pill>
       </div>
-
-      {/* ─── STORIES ─── */}
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
       {/* ─── FEED SECTION ─── */}
