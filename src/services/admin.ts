@@ -95,18 +95,20 @@ export interface Indicadores {
 
 export async function indicadores(): Promise<Indicadores> {
   const c = await sb()
-  const [usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, mutiroes, bloqueados, logs] = await Promise.all([
-    contar(c, 'perfis'),
-    contar(c, 'picos'),
-    contar(c, 'fotos', (q) => q.is('deleted_at', null)),
-    contar(c, 'fotos', (q) => q.eq('status', 'pendente')),
-    contar(c, 'fotos', (q) => q.not('deleted_at', 'is', null)),
-    contar(c, 'ameacas'),
-    contar(c, 'mutiroes'),
-    contar(c, 'perfis', (q) => q.not('bloqueado_em', 'is', null)),
-    contar(c, 'admin_logs'),
-  ])
-  return { usuarios, picos, fotos, fotosPendentes, fotosRemovidas, ameacas, mutiroes, bloqueados, logs }
+  const { data, error } = await c.rpc('admin_indicadores')
+  if (error) throw new Error(error.message)
+  const d = data as Indicadores
+  return {
+    usuarios: d.usuarios ?? 0,
+    picos: d.picos ?? 0,
+    fotos: d.fotos ?? 0,
+    fotosPendentes: d.fotosPendentes ?? 0,
+    fotosRemovidas: d.fotosRemovidas ?? 0,
+    ameacas: d.ameacas ?? 0,
+    mutiroes: d.mutiroes ?? 0,
+    bloqueados: d.bloqueados ?? 0,
+    logs: d.logs ?? 0,
+  }
 }
 
 // ── Fotos ────────────────────────────────────────────────────────────────
