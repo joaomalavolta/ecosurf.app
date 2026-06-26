@@ -240,10 +240,22 @@ export function CapturePage() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', height: '100dvh',
-      background: 'linear-gradient(160deg,#0b3a53,#04141d)', color: '#fff',
+      color: '#fff', position: 'relative', overflow: 'hidden',
     }}>
+      {/* Background — mesmo da Landing Page */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 0,
+        backgroundImage: "url('/wave-header.png')",
+        backgroundSize: 'cover', backgroundPosition: 'center',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(4,28,48,.45) 0%, rgba(4,28,48,.62) 35%, rgba(4,28,48,.88) 100%)',
+        }} />
+      </div>
+
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0', zIndex: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0', zIndex: 10, position: 'relative' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
           <IconX size={22} stroke={2} />
         </button>
@@ -253,7 +265,7 @@ export function CapturePage() {
 
       {/* ETAPA 1: Escolher tipo */}
       {etapa === 'tipo' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24, position: 'relative', zIndex: 1 }}>
           <h2 style={{ color: '#fff', textAlign: 'center', marginBottom: 4 }}>O que você vai registrar?</h2>
           <p style={{ color: 'rgba(255,255,255,.6)', textAlign: 'center', fontSize: 13, marginBottom: 20 }}>
             Escolha o tipo para organizar melhor o registro.
@@ -307,7 +319,7 @@ export function CapturePage() {
 
       {/* ETAPA 2: Localização */}
       {etapa === 'localizacao' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24, position: 'relative', zIndex: 1 }}>
           {/* Tipo selecionado badge */}
           {tipoInfo && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
