@@ -428,7 +428,7 @@ export function CapturePage() {
 
       {/* ETAPA 3: Câmera */}
       {etapa === 'camera' && (
-        <>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
           {/* Badge tipo + local */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {tipoInfo && (
@@ -516,12 +516,12 @@ export function CapturePage() {
               </p>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {/* ETAPA 4: Selecionar pico (só se não detectou automaticamente) */}
       {etapa === 'selecionar-pico' && (
-        <div style={{ flex: 1, padding: 20, overflow: 'auto' }}>
+        <div style={{ flex: 1, padding: 20, overflow: 'auto', position: 'relative', zIndex: 1 }}>
           {tipoInfo && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, justifyContent: 'center' }}>
               <span style={{
@@ -581,7 +581,7 @@ export function CapturePage() {
 
       {/* ETAPA 5: Concluído */}
       {etapa === 'concluido' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 24 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 24, position: 'relative', zIndex: 1 }}>
           <div style={{
             width: 80, height: 80, borderRadius: '50%',
             background: 'rgba(30,203,195,0.15)',
