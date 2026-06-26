@@ -282,26 +282,27 @@ export function CapturePage() {
                     setNoLocal(null) // reset
                   }}
                   style={{
-                    textAlign: 'left',
+                    textAlign: 'center',
                     background: selecionado ? `${t.cor}25` : 'rgba(255,255,255,.06)',
                     border: selecionado ? `2px solid ${t.cor}` : '2px solid rgba(255,255,255,.1)',
-                    borderRadius: 16, padding: 16, color: '#fff',
-                    display: 'flex', gap: 14, alignItems: 'center', cursor: 'pointer',
-                    transition: 'all .15s',
+                    borderRadius: 16, padding: '16px 16px', color: '#fff',
+                    display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all .15s',
+                    minHeight: 80, position: 'relative',
                   }}
                 >
                   <div style={{
-                    width: 48, height: 48, borderRadius: 14,
+                    width: 40, height: 40, borderRadius: 12,
                     background: `${t.cor}20`, color: t.cor,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <Icon size={24} stroke={2} />
+                    <Icon size={22} stroke={2} />
                   </div>
-                  <span>
-                    <b style={{ fontSize: 15 }}>{t.titulo}</b>
-                    <div style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 2 }}>{t.desc}</div>
-                  </span>
-                  {selecionado && <IconCheck size={20} stroke={2.5} color={t.cor} style={{ marginLeft: 'auto', flexShrink: 0 }} />}
+                  <div>
+                    <b style={{ fontSize: 14 }}>{t.titulo}</b>
+                    <div style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, marginTop: 1 }}>{t.desc}</div>
+                  </div>
+                  {selecionado && <IconCheck size={18} stroke={2.5} color={t.cor} style={{ position: 'absolute', top: 10, right: 10 }} />}
                 </button>
               )
             })}
