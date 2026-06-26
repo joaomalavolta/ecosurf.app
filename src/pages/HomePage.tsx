@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { temBackend } from '../services/api'
 import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'
+import { gravaOnboarded } from '../onboarding/OnboardingContext'
 
 /**
  * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
@@ -32,6 +33,7 @@ export function HomePage() {
       // 2. Escutar mudanças de auth (OAuth callback via URL hash)
       const { data } = sb().auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN') {
+          gravaOnboarded()
           setEstado('logado')
         } else if (event === 'SIGNED_OUT') {
           setEstado('visitante')

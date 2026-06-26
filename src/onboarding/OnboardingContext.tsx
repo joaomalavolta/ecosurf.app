@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { OnboardingFlow } from '../components/OnboardingFlow'
+import { createContext, useContext, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const ONBOARDED = 'ecosurf:onboarded'
-const VISTO = 'ecosurf:ob_visto'
 
 function ler(k: string): boolean {
   try {
@@ -11,9 +10,9 @@ function ler(k: string): boolean {
     return false
   }
 }
-function grava(k: string) {
+export function gravaOnboarded() {
   try {
-    localStorage.setItem(k, '1')
+    localStorage.setItem(ONBOARDED, '1')
   } catch {
     /* ok */
   }
@@ -21,41 +20,27 @@ function grava(k: string) {
 
 interface Ctx {
   onboarded: boolean
-  abrir: (etapa?: 'boas-vindas' | 'email') => void
+  setOnboarded: (v: boolean) => void
+  abrir: () => void
 }
-const C = createContext<Ctx>({ onboarded: false, abrir: () => {} })
+const C = createContext<Ctx>({ onboarded: false, setOnboarded: () => {}, abrir: () => {} })
 export const useOnboarding = () => useContext(C)
 
 /**
- * Controla o fluxo de boas-vindas. Usa cache em localStorage para decidir
- * sem carregar o SDK do Supabase no boot (o SDK só entra quando o fluxo abre).
+ * Controla estado de onboarding. Ao chamar abrir(), navega para a
+ * LandingPage (/) que contém o fluxo de cadastro.
  */
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [onboarded, setOnboarded] = useState(() => ler(ONBOARDED))
-  const [aberto, setAberto] = useState(false)
-  const [etapa, setEtapa] = useState<'boas-vindas' | 'email'>('boas-vindas')
-
-  // Não abre automaticamente — a LandingPage cuida da primeira visita.
-  // O OnboardingFlow só abre quando chamado via abrir() (ex: botão câmera).
+  const navigate = useNavigate()
 
   return (
-    <C.Provider value={{ onboarded, abrir: (e = 'boas-vindas') => { setEtapa(e); setAberto(true) } }}>
+    <C.Provider value={{
+      onboarded,
+      setOnboarded: (v) => { if (v) gravaOnboarded(); setOnboarded(v) },
+      abrir: () => navigate('/'),
+    }}>
       {children}
-      {aberto && (
-        <OnboardingFlow
-          etapaInicial={etapa}
-          onConcluir={() => {
-            grava(ONBOARDED)
-            grava(VISTO)
-            setOnboarded(true)
-            setAberto(false)
-          }}
-          onExplorar={() => {
-            grava(VISTO)
-            setAberto(false)
-          }}
-        />
-      )}
     </C.Provider>
   )
 }
