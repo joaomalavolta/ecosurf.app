@@ -302,6 +302,7 @@ export async function restInserirPico(dados: {
   lng: number
   municipio: string
   uf: string
+  praia?: string
 }): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb } = await import('./client')
@@ -310,7 +311,7 @@ export async function restInserirPico(dados: {
   const body = {
     id,
     nome,
-    praia: nome,
+    praia: dados.praia ? titleCase(dados.praia) : nome,
     geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
     municipio: titleCase(dados.municipio),
     uf: dados.uf.toUpperCase().slice(0, 2),

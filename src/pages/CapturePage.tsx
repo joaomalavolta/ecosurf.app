@@ -54,12 +54,13 @@ export function CapturePage() {
   const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
   const [carregando, setCarregando] = useState(true)
-  const picoSelecionado = new URLSearchParams(window.location.search).get('pico')
-  const [picosDisponiveis, setPicosDisponiveis] = useState<Array<{id: string, nome: string}>>([])
+  const [picoSelecionado] = useState<string | null>(new URLSearchParams(window.location.search).get('pico'))
   const [blobCapturado, setBlobCapturado] = useState<Blob | undefined>()
   const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number}>({})
+  const [novaPraiaNome, setNovaPraiaNome] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
-  const [buscaPico, setBuscaPico] = useState('')
+  const [novaOndaNome, setNovaOndaNome] = useState('')
+  
   const [picoFinal, setPicoFinal] = useState<string | null>(null)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
@@ -86,22 +87,12 @@ export function CapturePage() {
     setPosCapturada(pos)
 
     if (pos.lat && pos.lng) {
-      const { carregarPicos } = await import('../services/picos')
-      const picos = await carregarPicos()
-      let minD = Infinity
-      let melhorPico: { id: string; nome: string } | null = null
-      for (const p of picos) {
-        const d = haversineKm(pos.lat, pos.lng, p.lat, p.lng)
-        if (d < minD) { minD = d; melhorPico = { id: p.id, nome: p.nome } }
-      }
-      if (melhorPico && minD < 3) {
-        // Pico encontrado! Salvar para uso automático
-        setPicoFinal(melhorPico.id)
-        setPicoAutoNome(melhorPico.nome)
-      } else {
-        // Longe de pico — guardar picos para seleção depois
-        setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
-      }
+      try {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
+        const geo = await geoRes.json()
+        const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
+        if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
+      } catch { /* ignorar */ }
     }
     setDetectandoGps(false)
     abrirCamera()
@@ -150,33 +141,21 @@ export function CapturePage() {
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
-    // Se "estou no local" e pico já detectado → enviar direto!
-    if (noLocal && picoFinal) {
-      await finalizarUpload(picoFinal, blob, posCapturada)
-      return
-    }
+    setBlobCapturado(blob)
 
-    // Se "não estou no local" → buscar picos e deixar escolher
     if (!noLocal) {
       const pos = await obterCoords()
-      setBlobCapturado(blob)
       setPosCapturada(pos)
-      if (picosDisponiveis.length === 0) {
-        const { carregarPicos } = await import('../services/picos')
-        const picos = await carregarPicos()
-        setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
+      if (pos.lat && pos.lng) {
+        try {
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
+          const geo = await geoRes.json()
+          const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
+          if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
+        } catch { /* ignorar */ }
       }
-      setEtapa('selecionar-pico')
-      return
     }
 
-    // Estou no local mas pico não encontrado
-    setBlobCapturado(blob)
-    if (picosDisponiveis.length === 0) {
-      const { carregarPicos } = await import('../services/picos')
-      const picos = await carregarPicos()
-      setPicosDisponiveis(picos.map(p => ({ id: p.id, nome: p.nome })))
-    }
     setEtapa('selecionar-pico')
   }
 
@@ -196,10 +175,6 @@ export function CapturePage() {
     setEtapa('concluido')
   }
 
-  async function selecionarPicoExistente(picoId: string) {
-    await finalizarUpload(picoId, blobCapturado, posCapturada)
-  }
-
   async function criarNovoPico() {
     if (!novoPicoNome.trim()) return
     try {
@@ -214,16 +189,21 @@ export function CapturePage() {
           uf = geo.address?.state_code?.toUpperCase() || geo.address?.['ISO3166-2-lvl4']?.split('-')[1] || 'SP'
         } catch { /* fallback */ }
       }
+      const nomePicoCompleto = novaOndaNome.trim() 
+        ? `${novoPicoNome.trim()} - ${novaOndaNome.trim()}`
+        : novoPicoNome.trim()
+        
       const picoId = await restInserirPico({
-        nome: novoPicoNome.trim(),
+        nome: nomePicoCompleto,
         lat: posCapturada.lat ?? 0,
         lng: posCapturada.lng ?? 0,
         municipio,
         uf,
+        praia: novaPraiaNome.trim(),
       })
       await finalizarUpload(picoId, blobCapturado, posCapturada)
     } catch (e: any) {
-      alert('Erro ao criar pico: ' + (e?.message || 'tente novamente'))
+      alert('Erro ao enviar registro: ' + (e?.message || 'tente novamente'))
     }
   }
 
@@ -519,7 +499,7 @@ export function CapturePage() {
         </div>
       )}
 
-      {/* ETAPA 4: Selecionar pico (só se não detectou automaticamente) */}
+      {/* ETAPA 4: Informar localização (orgânico) */}
       {etapa === 'selecionar-pico' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto', position: 'relative', zIndex: 1 }}>
           {tipoInfo && (
@@ -536,44 +516,51 @@ export function CapturePage() {
 
           <h2 style={{ color: '#fff', marginBottom: 6 }}>Onde foi feito o registro?</h2>
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 16 }}>
-            Selecione o pico mais próximo ou cadastre um novo.
+            Adicione o local exato para que outras pessoas saibam.
           </p>
 
-          <input
-            className="input"
-            placeholder="Buscar pico..."
-            value={buscaPico}
-            onChange={(e) => setBuscaPico(e.target.value)}
-            style={{ marginBottom: 10, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', color: 'rgba(255,255,255,.8)', fontSize: 12, marginBottom: 4, paddingLeft: 4 }}>
+                Praia (ou Cidade)
+              </label>
+              <input
+                className="input"
+                placeholder="Ex: Praia das Pitangueiras"
+                value={novaPraiaNome}
+                onChange={(e) => setNovaPraiaNome(e.target.value)}
+                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+              />
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
-            {picosDisponiveis
-              .filter((p) => !buscaPico || p.nome.toLowerCase().includes(buscaPico.toLowerCase()))
-              .slice(0, 20)
-              .map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => selecionarPicoExistente(p.id)}
-                  style={{ textAlign: 'left', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 12, padding: '10px 14px', color: '#fff', cursor: 'pointer', fontSize: 14 }}
-                >
-                  {p.nome}
-                </button>
-              ))}
-          </div>
+            <div>
+              <label style={{ display: 'block', color: 'rgba(255,255,255,.8)', fontSize: 12, marginBottom: 4, paddingLeft: 4 }}>
+                Nome do Pico / Canto
+              </label>
+              <input
+                className="input"
+                placeholder="Ex: Canto do Maluf"
+                value={novoPicoNome}
+                onChange={(e) => setNovoPicoNome(e.target.value)}
+                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+              />
+            </div>
 
-          <div style={{ marginTop: 20, padding: 16, background: 'rgba(30,203,195,.1)', borderRadius: 16, border: '1px solid rgba(30,203,195,.25)' }}>
-            <b style={{ fontSize: 14 }}>🏖️ Novo pico</b>
-            <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 12, marginTop: 4 }}>Não encontrou? Cadastre a praia.</p>
-            <input
-              className="input"
-              placeholder="Nome da praia (ex: Praia do Tombo)"
-              value={novoPicoNome}
-              onChange={(e) => setNovoPicoNome(e.target.value)}
-              style={{ marginTop: 10, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
-            />
+            <div>
+              <label style={{ display: 'block', color: 'rgba(255,255,255,.8)', fontSize: 12, marginBottom: 4, paddingLeft: 4 }}>
+                Onda (opcional)
+              </label>
+              <input
+                className="input"
+                placeholder="Ex: Direitas do canal"
+                value={novaOndaNome}
+                onChange={(e) => setNovaOndaNome(e.target.value)}
+                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+              />
+            </div>
+
             <button className="btn acento full" onClick={criarNovoPico} disabled={!novoPicoNome.trim()} style={{ marginTop: 10 }}>
-              Criar pico e enviar foto
+              Enviar Foto
             </button>
           </div>
         </div>
