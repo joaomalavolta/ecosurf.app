@@ -38,12 +38,23 @@ export function AlertaPage() {
   const [loading, setLoading] = useState(true)
   const [ver, setVer] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
     import('../services/supabase/client').then(({ sb }) => {
-      sb.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null))
+      sb.auth.getSession().then(({ data }) => {
+        const uid = data.session?.user?.id ?? null
+        setUserId(uid)
+        if (uid && id) {
+          // Verifica diretamente na tabela ameacas (que tem RLS permitindo que o autor se veja)
+          sb.from('ameacas').select('id').eq('id', id).eq('denunciante_id', uid).single()
+            .then(({ data: ameaca }) => {
+              if (ameaca) setIsOwner(true)
+            })
+        }
+      })
     })
-  }, [])
+  }, [id])
 
   useEffect(() => {
     if (!id) return
@@ -236,7 +247,7 @@ export function AlertaPage() {
           >
             <IconArrowLeft size={16} /> Voltar
           </button>
-          {userId === alerta.denunciante_id && (
+          {(isOwner || userId === alerta.denunciante_id) && (
             <button
               className="btn outline full"
               onClick={() => navigate(`/alerta/${alerta.id}/editar`)}
