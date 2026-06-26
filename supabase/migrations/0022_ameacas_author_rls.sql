@@ -1,0 +1,2 @@
+CREATE POLICY ameacas_author_select ON ameacas FOR SELECT TO authenticated USING (auth.uid() = denunciante_id);
+CREATE POLICY ameacas_author_update ON ameacas FOR UPDATE TO authenticated USING (auth.uid() = denunciante_id);
