@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh } from '@tabler/icons-react'
+import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocal } from '../components/MapaLocal'
-import { categoriaPorId } from '../components/SeletorCategoria'
+import { MapaPicker } from '../components/MapaPicker'
+import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
+import { CampoGravidade } from '../components/CampoGravidade'
 import { SUPABASE_URL, SUPABASE_KEY } from '../services/supabase/config'
+import { atualizarAlerta } from '../services/alertas'
+import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
 
 interface AlertaDetalhe {
   id: string
@@ -40,13 +44,24 @@ export function AlertaPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
+  // Edit states
+  const [isEditing, setIsEditing] = useState(false)
+  const [salvando, setSalvando] = useState(false)
+  const [editCategoria, setEditCategoria] = useState<CategoriaAlerta | undefined>()
+  const [editGravidade, setEditGravidade] = useState<GravidadeAlerta | undefined>()
+  const [editDescricao, setEditDescricao] = useState('')
+  const [editLat, setEditLat] = useState<number | undefined>()
+  const [editLng, setEditLng] = useState<number | undefined>()
+  const [editFotos, setEditFotos] = useState<File[]>([])
+  const [keptImages, setKeptImages] = useState<string[]>([])
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
   useEffect(() => {
     import('../services/supabase/client').then(({ sb }) => {
       sb.auth.getSession().then(({ data }) => {
         const uid = data.session?.user?.id ?? null
         setUserId(uid)
         if (uid && id) {
-          // Verifica diretamente na tabela ameacas (que tem RLS permitindo que o autor se veja)
           sb.from('ameacas').select('id').eq('id', id).eq('denunciante_id', uid).single()
             .then(({ data: ameaca }) => {
               if (ameaca) setIsOwner(true)
@@ -64,7 +79,16 @@ export function AlertaPage() {
     })
       .then((r) => r.json())
       .then((rows: AlertaDetalhe[]) => {
-        if (rows.length > 0) setAlerta(rows[0])
+        if (rows.length > 0) {
+          const a = rows[0]
+          setAlerta(a)
+          setEditCategoria(a.categoria as CategoriaAlerta)
+          setEditGravidade(a.gravidade as GravidadeAlerta)
+          setEditDescricao(a.descricao ?? '')
+          setEditLat(a.lat ?? undefined)
+          setEditLng(a.lng ?? undefined)
+          setKeptImages(a.images ?? [])
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -94,8 +118,8 @@ export function AlertaPage() {
     )
   }
 
-  const cat = categoriaPorId(alerta.categoria as any)
-  const CatIcon = cat.icone
+  const cat = categoriaPorId(isEditing ? editCategoria! : (alerta.categoria as any))
+  const CatIcon = cat?.icone ?? IconAlertTriangle
   const imageUrls = (alerta.images ?? []).map(
     (path) => `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`
   )
@@ -121,146 +145,309 @@ export function AlertaPage() {
     }
   }
 
+  function adicionarFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const total = keptImages.length + editFotos.length
+    const files = Array.from(e.target.files ?? []).slice(0, 3 - total)
+    if (files.length === 0) return
+    setEditFotos((prev) => [...prev, ...files])
+    setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    e.target.value = ''
+  }
+
+  function removerKeptImage(path: string) {
+    setKeptImages((prev) => prev.filter((p) => p !== path))
+  }
+
+  function removerNewImage(i: number) {
+    URL.revokeObjectURL(previewUrls[i])
+    setEditFotos((prev) => prev.filter((_, idx) => idx !== i))
+    setPreviewUrls((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  async function salvarEdicao() {
+    if (!editCategoria || !editGravidade || !editLat || !editLng || !id) return
+    setSalvando(true)
+    try {
+      await atualizarAlerta(id, {
+        titulo: `${cat.label} — ${alerta.local_nome || alerta.municipio}`,
+        categoria: editCategoria,
+        gravidade: editGravidade,
+        descricao: editDescricao,
+        localNome: alerta.local_nome ?? undefined,
+        municipio: alerta.municipio,
+        uf: alerta.uf,
+        lat: editLat,
+        lng: editLng,
+        recorrente: alerta.recorrente,
+        checkboxAceite: true,
+        images: editFotos,
+        keptImages: keptImages,
+      })
+      setIsEditing(false)
+      setEditFotos([])
+      setPreviewUrls([])
+      setVer(v => v + 1) // Reload data
+    } catch (e) {
+      alert(`Erro ao salvar: ${e instanceof Error ? e.message : 'desconhecido'}`)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  function cancelarEdicao() {
+    setIsEditing(false)
+    setEditCategoria(alerta!.categoria as CategoriaAlerta)
+    setEditGravidade(alerta!.gravidade as GravidadeAlerta)
+    setEditDescricao(alerta!.descricao ?? '')
+    setEditLat(alerta!.lat ?? undefined)
+    setEditLng(alerta!.lng ?? undefined)
+    setKeptImages(alerta!.images ?? [])
+    setEditFotos([])
+    setPreviewUrls([])
+  }
+
   return (
     <div className="page">
-      <Header title="Registro Ambiental" sub={alerta.titulo} />
+      <Header title={isEditing ? "Editar Registro" : "Registro Ambiental"} sub={isEditing ? "Modifique os dados abaixo" : alerta.titulo} />
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 80 }}>
         {/* Badge categoria + compartilhar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 44, height: 44, borderRadius: 14,
-                background: `${cat.cor}18`, color: cat.cor,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <CatIcon size={24} stroke={2} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
-              <div className="muted" style={{ fontSize: 12 }}>
-                {cat.label} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+        {!isEditing ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                style={{
+                  width: 44, height: 44, borderRadius: 14,
+                  background: `${cat.cor}18`, color: cat.cor,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <CatIcon size={24} stroke={2} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
+                <div className="muted" style={{ fontSize: 12 }}>
+                  {cat.label} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+                </div>
               </div>
             </div>
+            <button
+              className="btn outline"
+              onClick={compartilhar}
+              style={{ fontSize: 12, padding: '6px 14px', flexShrink: 0 }}
+            >
+              <IconShare size={15} /> Compartilhar
+            </button>
           </div>
-          <button
-            className="btn outline"
-            onClick={compartilhar}
-            style={{ fontSize: 12, padding: '6px 14px', flexShrink: 0 }}
-          >
-            <IconShare size={15} /> Compartilhar
-          </button>
-        </div>
-
-        {/* Fotos */}
-        {imageUrls.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-            {imageUrls.map((url, i) => (
-              <img
-                key={i}
-                src={url}
-                alt={`Foto ${i + 1}`}
-                style={{
-                  width: imageUrls.length === 1 ? '100%' : 260,
-                  height: 200,
-                  objectFit: 'cover',
-                  borderRadius: 14,
-                  flexShrink: 0,
-                }}
-              />
-            ))}
+        ) : (
+          <div>
+            <h3 style={{ fontSize: 14, marginBottom: 8 }}>Categoria</h3>
+            <SeletorCategoria selecionada={editCategoria} onSelecionar={setEditCategoria} />
           </div>
         )}
 
-        {/* Info card */}
-        <div className="card pad stack" style={{ gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <IconMapPin size={16} stroke={2} color="var(--turq)" />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{localTexto}</span>
+        {/* Fotos */}
+        {!isEditing ? (
+          imageUrls.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+              {imageUrls.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Foto ${i + 1}`}
+                  style={{
+                    width: imageUrls.length === 1 ? '100%' : 260,
+                    height: 200,
+                    objectFit: 'cover',
+                    borderRadius: 14,
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <div>
+            <h3 style={{ fontSize: 14, marginBottom: 8 }}>Fotos</h3>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+              {keptImages.map((path) => (
+                <div key={path} style={{ position: 'relative', width: 100, height: 100, borderRadius: 12, overflow: 'hidden' }}>
+                  <img src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button
+                    type="button"
+                    onClick={() => removerKeptImage(path)}
+                    style={{
+                      position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%',
+                      background: 'rgba(0,0,0,.6)', color: '#fff', border: 0, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+              {previewUrls.map((url, i) => (
+                <div key={i} style={{ position: 'relative', width: 100, height: 100, borderRadius: 12, overflow: 'hidden' }}>
+                  <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button
+                    type="button"
+                    onClick={() => removerNewImage(i)}
+                    style={{
+                      position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%',
+                      background: 'rgba(0,0,0,.6)', color: '#fff', border: 0, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+                    }}
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+            {keptImages.length + editFotos.length < 3 && (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <label className="btn outline full" style={{ cursor: 'pointer' }}>
+                  <IconCamera size={18} /> Tirar foto
+                  <input type="file" accept="image/*" capture="environment" onChange={adicionarFoto} style={{ display: 'none' }} />
+                </label>
+                <label className="btn outline full" style={{ cursor: 'pointer' }}>
+                  <IconUpload size={18} /> Galeria
+                  <input type="file" accept="image/*" multiple onChange={adicionarFoto} style={{ display: 'none' }} />
+                </label>
+              </div>
+            )}
           </div>
-          {alerta.lat && alerta.lng && (
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 24 }}>
-              Coordenadas: {alerta.lat.toFixed(5)}, {alerta.lng.toFixed(5)}
+        )}
+
+        {/* Info card (only view) */}
+        {!isEditing && (
+          <div className="card pad stack" style={{ gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <IconMapPin size={16} stroke={2} color="var(--turq)" />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{localTexto}</span>
             </div>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <IconCalendar size={16} stroke={2} color="var(--turq)" />
-            <span style={{ fontSize: 13 }}>Registrado em {dataFormatada}</span>
+            {alerta.lat && alerta.lng && (
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 24 }}>
+                Coordenadas: {alerta.lat.toFixed(5)}, {alerta.lng.toFixed(5)}
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <IconCalendar size={16} stroke={2} color="var(--turq)" />
+              <span style={{ fontSize: 13 }}>Registrado em {dataFormatada}</span>
+            </div>
+            {alerta.gravidade && (
+              <div style={{ fontSize: 13 }}>
+                <b>Gravidade:</b> {alerta.gravidade}
+              </div>
+            )}
+            {alerta.recorrente && (
+              <div style={{ fontSize: 13, color: 'var(--perigo)', marginTop: 4 }}>
+                ⚠ Problema recorrente neste local
+              </div>
+            )}
           </div>
-          {alerta.gravidade && (
-            <div style={{ fontSize: 13 }}>
-              <b>Gravidade:</b> {alerta.gravidade}
-            </div>
-          )}
-          {alerta.recorrente && (
-            <div style={{ fontSize: 13, color: 'var(--perigo)', marginTop: 4 }}>
-              ⚠ Problema recorrente neste local
-            </div>
-          )}
-        </div>
+        )}
+
+        {isEditing && (
+          <div>
+            <h3 style={{ fontSize: 14, marginBottom: 8 }}>Gravidade</h3>
+            <CampoGravidade
+              gravidade={editGravidade}
+              onChange={setEditGravidade}
+              cor={cat.cor}
+            />
+          </div>
+        )}
 
         {/* Mapa do local */}
-        {alerta.lat != null && alerta.lng != null && (
+        {!isEditing ? (
+          alerta.lat != null && alerta.lng != null && (
+            <div>
+              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <IconMapPin size={16} stroke={2} color="var(--turq)" /> Local do registro
+              </h3>
+              <MapaLocal
+                lat={alerta.lat}
+                lng={alerta.lng}
+                label={alerta.local_nome ?? alerta.titulo}
+                height={200}
+              />
+              <a
+                href={`https://www.google.com/maps?q=${alerta.lat},${alerta.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: 'var(--turq)',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                <IconMapPin size={14} /> Abrir no Google Maps
+              </a>
+            </div>
+          )
+        ) : (
           <div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <IconMapPin size={16} stroke={2} color="var(--turq)" /> Local do registro
+            <h3 style={{ fontSize: 14, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <IconMapPin size={16} stroke={2} color="var(--turq)" /> Ajustar Localização
             </h3>
-            <MapaLocal
-              lat={alerta.lat}
-              lng={alerta.lng}
-              label={alerta.local_nome ?? alerta.titulo}
+            <MapaPicker
+              lat={editLat}
+              lng={editLng}
               height={200}
-            />
-            <a
-              href={`https://www.google.com/maps?q=${alerta.lat},${alerta.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                marginTop: 8,
-                fontSize: 12,
-                color: 'var(--turq)',
-                textDecoration: 'none',
-                fontWeight: 600,
+              onChange={(newLat, newLng) => {
+                setEditLat(newLat)
+                setEditLng(newLng)
               }}
-            >
-              <IconMapPin size={14} /> Abrir no Google Maps
-            </a>
+            />
           </div>
         )}
 
         {/* Descrição */}
-        {alerta.descricao && (
+        {!isEditing ? (
+          alerta.descricao && (
+            <div>
+              <h3 style={{ fontSize: 14, marginBottom: 6 }}>Descrição</h3>
+              <p style={{ fontSize: 13, color: 'var(--texto)', lineHeight: 1.6 }}>{alerta.descricao}</p>
+            </div>
+          )
+        ) : (
           <div>
             <h3 style={{ fontSize: 14, marginBottom: 6 }}>Descrição</h3>
-            <p style={{ fontSize: 13, color: 'var(--texto)', lineHeight: 1.6 }}>{alerta.descricao}</p>
+            <textarea
+              className="input"
+              style={{ minHeight: 100, width: '100%', resize: 'none' }}
+              placeholder="Descreva a ocorrência detalhadamente..."
+              value={editDescricao}
+              onChange={(e) => setEditDescricao(e.target.value)}
+            />
           </div>
         )}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-          <button
-            className="btn outline full"
-            onClick={() => navigate('/acoes')}
-          >
-            <IconArrowLeft size={16} /> Voltar
-          </button>
-          {(isOwner || userId === alerta.denunciante_id) && (
-            <button
-              className="btn outline full"
-              onClick={() => navigate(`/alerta/${alerta.id}/editar`)}
-            >
-              Editar
-            </button>
+          {!isEditing ? (
+            <>
+              <button className="btn outline full" onClick={() => navigate('/acoes')}>
+                <IconArrowLeft size={16} /> Voltar
+              </button>
+              {(isOwner || userId === alerta.denunciante_id) && (
+                <button className="btn outline full" onClick={() => setIsEditing(true)}>
+                  Editar
+                </button>
+              )}
+              <button className="btn acento full" onClick={() => setVer(v => v + 1)}>
+                <IconRefresh size={16} /> Atualizar
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn outline full" onClick={cancelarEdicao} disabled={salvando}>
+                Cancelar
+              </button>
+              <button className="btn acento full" onClick={salvarEdicao} disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
+            </>
           )}
-          <button
-            className="btn acento full"
-            onClick={() => setVer(v => v + 1)}
-          >
-            <IconRefresh size={16} /> Atualizar
-          </button>
         </div>
       </div>
     </div>

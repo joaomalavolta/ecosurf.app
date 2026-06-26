@@ -31,6 +31,7 @@ export interface DadosAlerta {
   recorrente?: boolean
   checkboxAceite: boolean
   images?: File[]
+  keptImages?: string[]
 }
 
 export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
@@ -107,9 +108,9 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
   const { sb, user } = await authed()
 
   // Upload de novas imagens
-  const imagePaths: string[] = []
+  const imagePaths: string[] = dados.keptImages ? [...dados.keptImages] : []
   if (dados.images && dados.images.length > 0) {
-    for (const file of dados.images.slice(0, 3)) {
+    for (const file of dados.images.slice(0, 3 - imagePaths.length)) {
       const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
       const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
       if (!error) imagePaths.push(path)
@@ -125,10 +126,7 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
     local_nome: dados.localNome ?? null,
     descricao: dados.descricao ?? null,
     recorrente: dados.recorrente ?? false,
-  }
-
-  if (imagePaths.length > 0) {
-    body.images = imagePaths // Substitui ou adiciona ao array, a depender da lógica. Aqui estamos sobrescrevendo.
+    images: imagePaths.length > 0 ? imagePaths : null,
   }
 
   if (dados.lat && dados.lng) {
