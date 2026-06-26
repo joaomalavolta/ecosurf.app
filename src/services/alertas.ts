@@ -71,6 +71,75 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
   return data.id
 }
 
+/** Carrega um alerta ambiental para edição (somente o criador). */
+export async function carregarAlertaParaEdicao(id: string): Promise<DadosAlerta & { id: string; imagesUrl?: string[] }> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  const { data, error } = await sb.from('ameacas')
+    .select('*')
+    .eq('id', id)
+    .eq('denunciante_id', user.id)
+    .single()
+
+  if (error || !data) throw new Error('Registro não encontrado ou sem permissão.')
+
+  return {
+    id: data.id,
+    titulo: data.titulo ?? '',
+    categoria: data.categoria as CategoriaAlerta,
+    gravidade: data.gravidade as GravidadeAlerta,
+    descricao: data.descricao ?? undefined,
+    localNome: data.local_nome ?? undefined,
+    municipio: data.municipio ?? '',
+    uf: data.uf ?? '',
+    lat: data.geom ? 0 : -23.96, // placeholder (a geometria seria parseada se necessário)
+    lng: data.geom ? 0 : -46.33,
+    recorrente: data.recorrente ?? false,
+    checkboxAceite: data.checkbox_aceite ?? true,
+    imagesUrl: data.images ?? undefined,
+  }
+}
+
+/** Atualiza um alerta ambiental existente (somente o criador). */
+export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<void> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb, user } = await authed()
+
+  // Upload de novas imagens
+  const imagePaths: string[] = []
+  if (dados.images && dados.images.length > 0) {
+    for (const file of dados.images.slice(0, 3)) {
+      const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
+      const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
+      if (!error) imagePaths.push(path)
+    }
+  }
+
+  const body: Record<string, unknown> = {
+    titulo: dados.titulo,
+    categoria: dados.categoria,
+    gravidade: dados.gravidade,
+    municipio: dados.municipio,
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    local_nome: dados.localNome ?? null,
+    descricao: dados.descricao ?? null,
+    recorrente: dados.recorrente ?? false,
+  }
+
+  if (imagePaths.length > 0) {
+    body.images = imagePaths // Substitui ou adiciona ao array, a depender da lógica. Aqui estamos sobrescrevendo.
+  }
+
+  if (dados.lat && dados.lng) {
+    body.geom = `SRID=4326;POINT(${dados.lng} ${dados.lat})`
+    body.geom_aprox = `SRID=4326;POINT(${dados.lng + (Math.random() - 0.5) * 0.01} ${dados.lat + (Math.random() - 0.5) * 0.01})`
+  }
+
+  const { error } = await sb.from('ameacas').update(body).eq('id', id).eq('denunciante_id', user.id)
+  if (error) throw new Error(`Erro ao atualizar: ${error.message}`)
+}
+
 /* ─── Mutirão ─── */
 
 export interface DadosMutirao {

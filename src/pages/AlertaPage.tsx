@@ -37,6 +37,13 @@ export function AlertaPage() {
   const [alerta, setAlerta] = useState<AlertaDetalhe | null>(null)
   const [loading, setLoading] = useState(true)
   const [ver, setVer] = useState(0)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    import('../services/supabase/client').then(({ sb }) => {
+      sb.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null))
+    })
+  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -229,6 +236,14 @@ export function AlertaPage() {
           >
             <IconArrowLeft size={16} /> Voltar
           </button>
+          {userId === alerta.denunciante_id && (
+            <button
+              className="btn outline full"
+              onClick={() => navigate(`/alerta/${alerta.id}/editar`)}
+            >
+              Editar
+            </button>
+          )}
           <button
             className="btn acento full"
             onClick={() => setVer(v => v + 1)}

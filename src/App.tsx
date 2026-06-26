@@ -71,6 +71,7 @@ export default function App() {
         <Route path="/nova-acao/pico" element={<FormularioPicoPage />} />
         <Route path="/mutirao/:mutiraoId/editar" element={<FormularioMutiraoPage />} />
         <Route path="/mutirao/:mutiraoId" element={<MutiraoPage />} />
+        <Route path="/alerta/:id/editar" element={<FormularioAlertaPage />} />
         <Route path="/alerta/:id" element={<AlertaPage />} />
         <Route path="/usuario/:userId" element={<UsuarioPage />} />
         </Routes>

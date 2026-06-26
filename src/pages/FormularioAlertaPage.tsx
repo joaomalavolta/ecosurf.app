@@ -9,9 +9,10 @@ import { MapaPicker } from '../components/MapaPicker'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'
-import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
+import { publicarAlerta, atualizarAlerta, carregarAlertaParaEdicao, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
+import { SUPABASE_URL } from '../services/supabase/config'
 
 type Etapa = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -29,10 +30,12 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
 }
 
 export function FormularioAlertaPage() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [etapa, setEtapa] = useState<Etapa>(1)
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
+  const [carregando, setCarregando] = useState(!!id)
 
   // Dados do formulário
   const [categoria, setCategoria] = useState<CategoriaAlerta | undefined>()
@@ -48,15 +51,44 @@ export function FormularioAlertaPage() {
   const [recorrente, setRecorrente] = useState(false)
   const [aceite, setAceite] = useState(false)
 
-  // Auth check
+  // Auth check e Carregamento para edição
   useEffect(() => {
-    statusPerfil().then((s) => {
+    statusPerfil().then(async (s) => {
       if (!s.sessao) {
         window.alert('Faça login para registrar um alerta ambiental.')
         navigate('/perfil', { replace: true })
+        return
+      }
+      
+      if (id) {
+        try {
+          const dados = await carregarAlertaParaEdicao(id)
+          setCategoria(dados.categoria)
+          setGravidade(dados.gravidade)
+          setDescricao(dados.descricao ?? '')
+          setLocalNome(dados.localNome ?? '')
+          setMunicipio(dados.municipio)
+          setUf(dados.uf)
+          setLat(dados.lat)
+          setLng(dados.lng)
+          setRecorrente(dados.recorrente ?? false)
+          setAceite(dados.checkboxAceite)
+          
+          if (dados.imagesUrl && dados.imagesUrl.length > 0) {
+            setPreviewUrls(dados.imagesUrl.map(path => `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`))
+            // Note: We don't populate 'fotos' (File objects) for pre-existing images 
+            // since we can't easily turn URLs back to Files without fetching them.
+            // If they want to change photos, they will have to upload new ones which will overwrite.
+          }
+        } catch (e) {
+          alert('Erro ao carregar registro para edição.')
+          navigate('/acoes', { replace: true })
+        } finally {
+          setCarregando(false)
+        }
       }
     })
-  }, [navigate])
+  }, [id, navigate])
 
   // Auto GPS na etapa 3
   useEffect(() => {
@@ -73,6 +105,7 @@ export function FormularioAlertaPage() {
     if (files.length === 0) return
     setFotos((prev) => [...prev, ...files])
     setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    e.target.value = ''
   }
 
   function removerFoto(i: number) {
@@ -112,7 +145,11 @@ export function FormularioAlertaPage() {
         checkboxAceite: aceite,
         images: fotos.length > 0 ? fotos : undefined,
       }
-      await publicarAlerta(dados)
+      if (id) {
+        await atualizarAlerta(id, dados)
+      } else {
+        await publicarAlerta(dados)
+      }
       setSucesso(true)
     } catch (e) {
       alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
@@ -157,9 +194,20 @@ export function FormularioAlertaPage() {
     )
   }
 
+  if (carregando) {
+    return (
+      <div className="page">
+        <Header title="Carregando..." />
+        <div className="page-pad" style={{ textAlign: 'center', padding: 40 }}>
+          <div className="spinner" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page">
-      <Header title="Registrar Alerta" sub={`Etapa ${etapa} de 6 — ${ETAPA_LABELS[etapa - 1]}`} />
+      <Header title={id ? "Editar Registro" : "Registrar Alerta"} sub={`Etapa ${etapa} de 6 — ${ETAPA_LABELS[etapa - 1]}`} />
 
       {/* Progress bar */}
       <div style={{ height: 4, background: 'var(--cinza)' }}>
@@ -213,11 +261,11 @@ export function FormularioAlertaPage() {
               <div style={{ display: 'flex', gap: 10 }}>
                 <label className="btn outline full" style={{ cursor: 'pointer' }}>
                   <IconCamera size={18} /> Tirar foto
-                  <input type="file" accept="image/*" capture="environment" onChange={adicionarFoto} hidden />
+                  <input type="file" accept="image/*" capture="environment" onChange={adicionarFoto} style={{ display: 'none' }} />
                 </label>
                 <label className="btn outline full" style={{ cursor: 'pointer' }}>
                   <IconUpload size={18} /> Galeria
-                  <input type="file" accept="image/*" multiple onChange={adicionarFoto} hidden />
+                  <input type="file" accept="image/*" multiple onChange={adicionarFoto} style={{ display: 'none' }} />
                 </label>
               </div>
             )}
