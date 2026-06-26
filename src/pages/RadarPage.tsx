@@ -176,12 +176,12 @@ export function RadarPage() {
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
       {/* ─── FEED SECTION ─── */}
+      <div className="pills" role="tablist" aria-label="Filtro do radar" style={{ margin: '0 12px 0' }}>
+        <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
+        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores ondas</Pill>
+        <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
+      </div>
       <div className="page-pad stack" ref={feedRef}>
-        <div className="pills" role="tablist" aria-label="Filtro do radar">
-          <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
-          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores ondas</Pill>
-          <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
-        </div>
 
         {filtro === 'melhores' ? (
           melhoresOndas.length === 0 ? <p className="muted" style={{ textAlign: 'center' }}>Carregando ondas...</p> :
