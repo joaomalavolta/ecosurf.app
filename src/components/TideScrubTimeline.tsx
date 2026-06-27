@@ -257,7 +257,9 @@ export function TideScrubTimeline({
   const topPx = (alt: number) => (y(alt) / VB_H) * SVG_H
   const linha = curvaDoDia.map((p, i) => `${i ? 'L' : 'M'}${x(p.hora).toFixed(2)} ${y(p.alturaM).toFixed(2)}`).join(' ')
   const area = `${linha} L${VB_W} ${VB_H} L0 ${VB_H} Z`
-  const f = ordenadas[ativo] ?? null
+  
+  const safeAtivo = Math.min(ativo, Math.max(0, ordenadas.length - 1))
+  const f = ordenadas[safeAtivo] ?? null
   const fr = f ? frescor(f.capturadaEm) : null
 
   async function denunciar(id: string) {
