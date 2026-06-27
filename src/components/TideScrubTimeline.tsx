@@ -150,6 +150,17 @@ export function TideScrubTimeline({
     return todasHoje
   })
 
+  const hasInitialized = useRef(false)
+  useEffect(() => {
+    if (initialFotoId && !hasInitialized.current) {
+      const ft = fotos.find(f => f.id === initialFotoId)
+      if (ft) {
+        setSelectedDiaKey(dateKey(ft.capturadaEm))
+        hasInitialized.current = true
+      }
+    }
+  }, [initialFotoId, fotos])
+
   const diaIdx = useMemo(() => {
     const idx = dias.findIndex(d => dateKey(d) === selectedDiaKey)
     return idx !== -1 ? idx : dias.findIndex(d => dateKey(d) === todasHoje)
