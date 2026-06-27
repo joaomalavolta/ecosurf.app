@@ -248,12 +248,10 @@ export interface FotoRow {
 
 /** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
 export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
-  const inicio = new Date()
-  inicio.setHours(0, 0, 0, 0)
   const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
-      `&capturada_em=gte.${encodeURIComponent(inicio.toISOString())}&order=capturada_em.asc`,
+      `&order=capturada_em.desc&limit=30`,
   )
 }
 
