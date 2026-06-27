@@ -111,11 +111,40 @@ export function TideScrubTimeline({
   /* ── TODOS OS HOOKS PRIMEIRO (antes de qualquer return condicional) ── */
 
   const hoje = useMemo(() => new Date(), [])
-  const dias = useMemo(() => diasDaSemana(hoje), [hoje])
   const todasHoje = useMemo(() => dateKey(hoje), [hoje])
-  const [diaIdx, setDiaIdx] = useState(3)
 
-  const diaAtual = dias[diaIdx]
+  const dias = useMemo(() => {
+    const dMap = new Map<string, Date>()
+    // 1. Janela padrão (-3 a +3)
+    for (let i = -3; i <= 3; i++) {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() + i)
+      d.setHours(0, 0, 0, 0)
+      dMap.set(dateKey(d), d)
+    }
+    // 2. Dias com fotos
+    fotos.forEach(f => {
+      const dk = f.capturadaEm.slice(0, 10)
+      if (!dMap.has(dk)) {
+        const d = new Date(f.capturadaEm)
+        d.setHours(0, 0, 0, 0)
+        dMap.set(dk, d)
+      }
+    })
+    // 3. Ordenar
+    const arr = Array.from(dMap.values())
+    arr.sort((a, b) => a.getTime() - b.getTime())
+    return arr
+  }, [hoje, fotos])
+
+  const [selectedDiaKey, setSelectedDiaKey] = useState<string>(todasHoje)
+
+  const diaIdx = useMemo(() => {
+    const idx = dias.findIndex(d => dateKey(d) === selectedDiaKey)
+    return idx !== -1 ? idx : dias.findIndex(d => dateKey(d) === todasHoje)
+  }, [dias, selectedDiaKey, todasHoje])
+
+  const diaAtual = dias[diaIdx] ?? hoje
   const diaKey = dateKey(diaAtual)
 
   const curvaDoDia = useMemo(() => {
@@ -123,16 +152,10 @@ export function TideScrubTimeline({
     return curva
   }, [curva, curvasMultiDia, diaKey])
 
-  const fotosDoDia = useMemo(
+  const fotosEfetivas = useMemo(
     () => fotos.filter(f => f.capturadaEm.startsWith(diaKey)),
     [fotos, diaKey],
   )
-
-  const fotosEfetivas = useMemo(() => {
-    if (fotosDoDia.length > 0) return fotosDoDia
-    if (diaKey === todasHoje) return fotos
-    return []
-  }, [fotosDoDia, fotos, diaKey, todasHoje])
 
   const ordenadas = useMemo(
     () => [...fotosEfetivas].sort((a, b) => a.capturadaEm.localeCompare(b.capturadaEm)),
@@ -213,14 +236,7 @@ export function TideScrubTimeline({
 
   /* ── EARLY RETURNS (depois de TODOS os hooks) ── */
 
-  if (fotos.length === 0) {
-    return (
-      <div className="card pad" style={{ textAlign: 'center', margin: '20px 0' }}>
-        <p className="muted" style={{ marginBottom: 16 }}>Nenhuma foto relatada hoje neste pico.</p>
-        <p>Que tal ser o primeiro?</p>
-      </div>
-    )
-  }
+
 
   /* ── RENDER ── */
 
@@ -324,12 +340,53 @@ export function TideScrubTimeline({
           return (
             <button key={key} role="tab" aria-selected={isAtivo}
               className={`tide-day-tab ${isAtivo ? 'active' : ''} ${isHoje ? 'hoje' : ''}`}
-              onClick={() => setDiaIdx(i)}>
+              onClick={() => setSelectedDiaKey(key)}>
               <span className="tide-day-label">{labelDia(d, hoje)}</span>
               {fotosNoDia.length > 0 && <span className="tide-day-badge">{fotosNoDia.length}</span>}
             </button>
           )
         })}
+      </div>
+
+      {/* Date paginator */}
+      <div className="between" style={{ padding: '0 20px', marginTop: 16 }}>
+        <button className="btn outline ic" onClick={() => setSelectedDiaKey(dateKey(dias[Math.max(0, diaIdx - 1)]))} disabled={diaIdx === 0}><IconChevronLeft size={18} /></button>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--azul-escuro)' }}>{labelDia(diaAtual, hoje)}</span>
+        </div>
+        <button className="btn outline ic" onClick={() => setSelectedDiaKey(dateKey(dias[Math.min(dias.length - 1, diaIdx + 1)]))} disabled={diaIdx === dias.length - 1}><IconChevronRight size={18} /></button>
+      </div>
+
+      {/* Bubbles horizontais */}
+      <div style={{ padding: '0 20px', marginTop: 15, zIndex: 10, position: 'relative' }}>
+        {fotosEfetivas.length > 0 ? (
+          <StoryBubbles
+            fotos={ordenadas}
+            ativo={ativo}
+            onSelect={(idx) => {
+              setDir(idx > ativo ? 1 : idx < ativo ? -1 : 0)
+              setAtivo(idx)
+              setScrubHora(horas[idx])
+            }}
+          />
+        ) : (
+          <div style={{ padding: '16px', background: 'rgba(255,255,255,0.7)', borderRadius: 12, textAlign: 'center' }}>
+            <p className="muted" style={{ marginBottom: 10, fontSize: 14 }}>Sem relatos neste dia.</p>
+            {fotos.length > 0 && (() => {
+              const globalOrdenadas = [...fotos].sort((a, b) => b.capturadaEm.localeCompare(a.capturadaEm))
+              const ultimaFoto = globalOrdenadas[0]
+              const dk = ultimaFoto.capturadaEm.slice(0, 10)
+              if (dk !== diaKey) {
+                return (
+                  <button className="btn" onClick={() => setSelectedDiaKey(dk)} style={{ margin: '0 auto' }}>
+                    <IconCamera size={16} /> Ver último relato ({dk.slice(8,10)}/{dk.slice(5,7)})
+                  </button>
+                )
+              }
+              return null
+            })()}
+          </div>
+        )}
       </div>
 
       {/* SCRUB = curva de maré — Immersive Glass v4 */}
