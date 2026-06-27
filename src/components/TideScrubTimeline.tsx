@@ -363,17 +363,7 @@ export function TideScrubTimeline({
 
       {/* Bubbles horizontais */}
       <div style={{ padding: '0 20px', marginTop: 15, zIndex: 10, position: 'relative' }}>
-        {fotosEfetivas.length > 0 ? (
-          <StoryBubbles
-            fotos={ordenadas}
-            ativo={ativo}
-            onSelect={(idx) => {
-              setDir(idx > ativo ? 1 : idx < ativo ? -1 : 0)
-              setAtivo(idx)
-              setScrubHora(horas[idx])
-            }}
-          />
-        ) : (
+        {fotosEfetivas.length > 0 ? null : (
           <div style={{ padding: '16px', background: 'rgba(255,255,255,0.7)', borderRadius: 12, textAlign: 'center' }}>
             <p className="muted" style={{ marginBottom: 10, fontSize: 14 }}>Sem relatos neste dia.</p>
             {fotos.length > 0 && (() => {
