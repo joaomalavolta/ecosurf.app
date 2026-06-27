@@ -104,6 +104,7 @@ export function TideScrubTimeline({
   curva,
   curvasMultiDia,
   eventos,
+  initialFotoId,
 }: {
   picoId?: string
   picoNome?: string
