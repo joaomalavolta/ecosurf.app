@@ -188,7 +188,7 @@ export function RadarPage() {
           melhoresOndas.map(f => {
             const pico = picoMap.get(f.picoId)
             return (
-              <a href={`/pico/${f.picoId}`} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
+              <Link to={`/pico/${f.picoId}?foto=${f.id}`} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
                 <img src={f.url} alt="Onda" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
                 <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -197,7 +197,7 @@ export function RadarPage() {
                   </div>
                   <div className="badge b-good" style={{ fontSize: 15, padding: '4px 10px' }}>🤙 {curtidasMap[f.id] || 0}</div>
                 </div>
-              </a>
+              </Link>
             )
           })
         ) : (

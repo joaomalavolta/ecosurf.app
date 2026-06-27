@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
@@ -14,6 +14,8 @@ import type { Alerta, FeedDia, Forecast, Foto, Pico, PontoMare } from '../types/
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
+  const [searchParams] = useSearchParams()
+  const initialFotoId = searchParams.get('foto') ?? undefined
   const [pico, setPico] = useState<Pico | null | undefined>(undefined) // undefined = carregando
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
@@ -161,7 +163,7 @@ export function PicoPage() {
             <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id)).length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} />
+          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} initialFotoId={initialFotoId} />
         </div>
 
         <div className="card pad">

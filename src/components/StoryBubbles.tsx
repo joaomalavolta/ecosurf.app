@@ -55,7 +55,7 @@ export function StoryBubbles({ fotos, picos }: { fotos: Foto[]; picos: Pico[] })
       {stories.map((s) => (
         <Link
           key={s.key}
-          to={`/pico/${s.foto.picoId}`}
+          to={`/pico/${s.foto.picoId}?foto=${s.foto.id}`}
           className="story-bubble"
           role="listitem"
         >

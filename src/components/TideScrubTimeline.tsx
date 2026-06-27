@@ -111,6 +111,7 @@ export function TideScrubTimeline({
   curva: PontoMare[]
   curvasMultiDia?: Record<string, PontoMare[]>
   eventos: EventoVento[]
+  initialFotoId?: string
 }) {
   /* ── TODOS OS HOOKS PRIMEIRO (antes de qualquer return condicional) ── */
 
@@ -141,7 +142,13 @@ export function TideScrubTimeline({
     return arr
   }, [hoje, fotos])
 
-  const [selectedDiaKey, setSelectedDiaKey] = useState<string>(todasHoje)
+  const [selectedDiaKey, setSelectedDiaKey] = useState<string>(() => {
+    if (initialFotoId) {
+      const ft = fotos.find(f => f.id === initialFotoId)
+      if (ft) return dateKey(ft.capturadaEm)
+    }
+    return todasHoje
+  })
 
   const diaIdx = useMemo(() => {
     const idx = dias.findIndex(d => dateKey(d) === selectedDiaKey)
@@ -179,7 +186,15 @@ export function TideScrubTimeline({
     return best
   }, [horas, agoraH])
 
-  const [ativo, setAtivo] = useState(idxMaisProximoDeAgora)
+  const initAtivo = useMemo(() => {
+    if (initialFotoId && ordenadas.length > 0) {
+      const idx = ordenadas.findIndex(f => f.id === initialFotoId)
+      if (idx !== -1) return idx
+    }
+    return idxMaisProximoDeAgora
+  }, [initialFotoId, ordenadas, idxMaisProximoDeAgora])
+
+  const [ativo, setAtivo] = useState(initAtivo)
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
@@ -207,7 +222,7 @@ export function TideScrubTimeline({
     setAtivo(best)
   }, [horas, ativo])
 
-  useEffect(() => { setAtivo(idxMaisProximoDeAgora) }, [idxMaisProximoDeAgora])
+  useEffect(() => { setAtivo(initAtivo) }, [initAtivo])
 
   useEffect(() => {
     let vivo = true

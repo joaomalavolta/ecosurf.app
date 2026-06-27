@@ -53,7 +53,7 @@ export function FeedCard({
 
   return (
     <Link
-      to={`/pico/${fotos[0].picoId}`}
+      to={`/pico/${fotos[0].picoId}?foto=${fotosComUrl[activeIdx]?.id ?? fotos[0]?.id}`}
       className="card"
       style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
     >
