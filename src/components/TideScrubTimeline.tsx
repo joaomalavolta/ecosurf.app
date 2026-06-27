@@ -68,8 +68,12 @@ function diasDaSemana(hoje: Date): Date[] {
   return dias
 }
 
-function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function dateKey(d: Date | string): string {
+  const date = typeof d === 'string' ? new Date(d) : d
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function fmtHora(h: number): string {
@@ -124,7 +128,7 @@ export function TideScrubTimeline({
     }
     // 2. Dias com fotos
     fotos.forEach(f => {
-      const dk = f.capturadaEm.slice(0, 10)
+      const dk = dateKey(f.capturadaEm)
       if (!dMap.has(dk)) {
         const d = new Date(f.capturadaEm)
         d.setHours(0, 0, 0, 0)
@@ -153,7 +157,7 @@ export function TideScrubTimeline({
   }, [curva, curvasMultiDia, diaKey])
 
   const fotosEfetivas = useMemo(
-    () => fotos.filter(f => f.capturadaEm.startsWith(diaKey)),
+    () => fotos.filter(f => dateKey(f.capturadaEm) === diaKey),
     [fotos, diaKey],
   )
 
@@ -334,9 +338,9 @@ export function TideScrubTimeline({
       <div className="tide-day-tabs" role="tablist" aria-label="Dias da semana">
         {dias.map((d, i) => {
           const key = dateKey(d)
-          const fotosNoDia = fotos.filter(f2 => f2.capturadaEm.startsWith(key))
+          const fotosNoDia = fotos.filter(f2 => dateKey(f2.capturadaEm) === key)
           const isHoje = key === todasHoje
-          const isAtivo = i === diaIdx
+          const isAtivo = key === selectedDiaKey
           return (
             <button key={key} role="tab" aria-selected={isAtivo}
               className={`tide-day-tab ${isAtivo ? 'active' : ''} ${isHoje ? 'hoje' : ''}`}
@@ -375,7 +379,7 @@ export function TideScrubTimeline({
             {fotos.length > 0 && (() => {
               const globalOrdenadas = [...fotos].sort((a, b) => b.capturadaEm.localeCompare(a.capturadaEm))
               const ultimaFoto = globalOrdenadas[0]
-              const dk = ultimaFoto.capturadaEm.slice(0, 10)
+              const dk = dateKey(ultimaFoto.capturadaEm)
               if (dk !== diaKey) {
                 return (
                   <button className="btn" onClick={() => setSelectedDiaKey(dk)} style={{ margin: '0 auto' }}>
