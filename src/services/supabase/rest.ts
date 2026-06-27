@@ -8,9 +8,31 @@ import { SUPABASE_URL, SUPABASE_KEY, TEM_BACKEND } from './config'
 const BASE = SUPABASE_URL
 const KEY = SUPABASE_KEY
 
+function getLocalToken(): string | null {
+  try {
+    let raw = localStorage.getItem(`sb-${new URL(BASE).hostname.split('.')[0]}-auth-token`)
+    if (!raw) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          raw = localStorage.getItem(k)
+          break
+        }
+      }
+    }
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const ses = parsed?.currentSession ?? parsed
+    return ses?.access_token ?? null
+  } catch {
+    return null
+  }
+}
+
 async function rest<T>(path: string): Promise<T> {
+  const token = getLocalToken()
   const r = await fetch(`${BASE}/rest/v1/${path}`, {
-    headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+    headers: { apikey: KEY, Authorization: `Bearer ${token ?? KEY}` },
     cache: 'no-store',
   })
   if (!r.ok) throw new Error(`rest ${r.status}`)
