@@ -57,41 +57,39 @@ export function AlertaPage() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
 
   useEffect(() => {
+    if (!id) return
+    setLoading(true)
+    
     import('../services/supabase/client').then(({ sb }) => {
+      // 1) Verify ownership
       sb().auth.getSession().then(({ data }) => {
         const uid = data.session?.user?.id ?? null
         setUserId(uid)
-        if (uid && id) {
+        if (uid) {
           sb().from('ameacas').select('id').eq('id', id).eq('denunciante_id', uid).single()
             .then(({ data: ameaca }) => {
               if (ameaca) setIsOwner(true)
             })
         }
       })
-    })
-  }, [id])
 
-  useEffect(() => {
-    if (!id) return
-    setLoading(true)
-    fetch(`${SUPABASE_URL}/rest/v1/ameacas_publicas?select=*&id=eq.${encodeURIComponent(id)}`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      // 2) Fetch data as authenticated user so view returns exact coordinates for author
+      sb().from('ameacas_publicas').select('*').eq('id', id)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const a = data[0] as unknown as AlertaDetalhe
+            setAlerta(a)
+            setEditCategoria(a.categoria as CategoriaAlerta)
+            setEditGravidade(a.gravidade as GravidadeAlerta)
+            setEditDescricao(a.descricao ?? '')
+            setEditLat(a.lat ?? undefined)
+            setEditLng(a.lng ?? undefined)
+            setKeptImages(a.images ?? [])
+          }
+          setLoading(false)
+        })
+        .catch(() => setLoading(false))
     })
-      .then((r) => r.json())
-      .then((rows: AlertaDetalhe[]) => {
-        if (rows.length > 0) {
-          const a = rows[0]
-          setAlerta(a)
-          setEditCategoria(a.categoria as CategoriaAlerta)
-          setEditGravidade(a.gravidade as GravidadeAlerta)
-          setEditDescricao(a.descricao ?? '')
-          setEditLat(a.lat ?? undefined)
-          setEditLng(a.lng ?? undefined)
-          setKeptImages(a.images ?? [])
-        }
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
   }, [id, ver])
 
   if (loading) {
