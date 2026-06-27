@@ -118,6 +118,11 @@ export function AlertaPage() {
     )
   }
 
+  const cat = categoriaPorId(isEditing ? editCategoria! : (alerta.categoria as any))
+  const CategoriaIcon = cat?.icone ?? IconAlertTriangle
+  const corCategoria = cat?.cor ?? 'var(--muted)'
+  const isPico = alerta.categoria === 'Pico de surf'
+
   const badgeColor =
     alerta.status === 'resolvido'
       ? 'var(--sucesso)'
@@ -174,16 +179,16 @@ export function AlertaPage() {
     setSalvando(true)
     try {
       await atualizarAlerta(id, {
-        titulo: `${editCategoria} — ${alerta.local_nome || alerta.municipio}`,
+        titulo: `${editCategoria} — ${alerta!.local_nome || alerta!.municipio}`,
         categoria: editCategoria,
         gravidade: editGravidade,
         descricao: editDescricao,
-        localNome: alerta.local_nome ?? undefined,
-        municipio: alerta.municipio,
-        uf: alerta.uf,
+        localNome: alerta!.local_nome ?? undefined,
+        municipio: alerta!.municipio,
+        uf: alerta!.uf,
         lat: editLat,
         lng: editLng,
-        recorrente: alerta.recorrente,
+        recorrente: alerta!.recorrente,
         checkboxAceite: true,
         images: editFotos,
         keptImages: keptImages,

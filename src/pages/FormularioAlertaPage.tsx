@@ -58,36 +58,9 @@ export function FormularioAlertaPage() {
         navigate('/perfil', { replace: true })
         return
       }
-      
-      if (id) {
-        try {
-          const dados = await carregarAlertaParaEdicao(id)
-          setCategoria(dados.categoria)
-          setGravidade(dados.gravidade)
-          setDescricao(dados.descricao ?? '')
-          setLocalNome(dados.localNome ?? '')
-          setMunicipio(dados.municipio)
-          setUf(dados.uf)
-          setLat(dados.lat)
-          setLng(dados.lng)
-          setRecorrente(dados.recorrente ?? false)
-          setAceite(dados.checkboxAceite)
-          
-          if (dados.imagesUrl && dados.imagesUrl.length > 0) {
-            setPreviewUrls(dados.imagesUrl.map(path => `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`))
-            // Note: We don't populate 'fotos' (File objects) for pre-existing images 
-            // since we can't easily turn URLs back to Files without fetching them.
-            // If they want to change photos, they will have to upload new ones which will overwrite.
-          }
-        } catch (e) {
-          alert('Erro ao carregar registro para edição.')
-          navigate('/acoes', { replace: true })
-        } finally {
-          setCarregando(false)
-        }
-      }
+      setCarregando(false)
     })
-  }, [id, navigate])
+  }, [navigate])
 
   // Auto GPS na etapa 3
   useEffect(() => {
@@ -144,11 +117,7 @@ export function FormularioAlertaPage() {
         checkboxAceite: aceite,
         images: fotos.length > 0 ? fotos : undefined,
       }
-      if (id) {
-        await atualizarAlerta(id, dados)
-      } else {
-        await publicarAlerta(dados)
-      }
+      await publicarAlerta(dados)
       setSucesso(true)
     } catch (e) {
       alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
@@ -206,7 +175,7 @@ export function FormularioAlertaPage() {
 
   return (
     <div className="page">
-      <Header title={id ? "Editar Registro" : "Registrar Alerta"} sub={`Etapa ${etapa} de 6 — ${ETAPA_LABELS[etapa - 1]}`} />
+      <Header title="Registrar Alerta" sub={`Etapa ${etapa} de 6 — ${ETAPA_LABELS[etapa - 1]}`} />
 
       {/* Progress bar */}
       <div style={{ height: 4, background: 'var(--cinza)' }}>
