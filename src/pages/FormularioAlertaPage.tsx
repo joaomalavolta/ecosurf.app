@@ -30,12 +30,11 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
 }
 
 export function FormularioAlertaPage() {
-  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [etapa, setEtapa] = useState<Etapa>(1)
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
-  const [carregando, setCarregando] = useState(!!id)
+  const [carregando, setCarregando] = useState(false)
 
   // Dados do formulário
   const [categoria, setCategoria] = useState<CategoriaAlerta | undefined>()

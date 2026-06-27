@@ -23,7 +23,7 @@ interface AlertaDetalhe {
   recorrente: boolean
   images: string[] | null
   criada_em: string
-  denunciante_id: string | null
+  autor_id: string | null
   lat: number | null
   lng: number | null
 }
@@ -58,11 +58,11 @@ export function AlertaPage() {
 
   useEffect(() => {
     import('../services/supabase/client').then(({ sb }) => {
-      sb.auth.getSession().then(({ data }) => {
+      sb().auth.getSession().then(({ data }) => {
         const uid = data.session?.user?.id ?? null
         setUserId(uid)
         if (uid && id) {
-          sb.from('ameacas').select('id').eq('id', id).eq('denunciante_id', uid).single()
+          sb().from('ameacas').select('id').eq('id', id).eq('denunciante_id', uid).single()
             .then(({ data: ameaca }) => {
               if (ameaca) setIsOwner(true)
             })
@@ -118,13 +118,18 @@ export function AlertaPage() {
     )
   }
 
-  const cat = categoriaPorId(isEditing ? editCategoria! : (alerta.categoria as any))
-  const CatIcon = cat?.icone ?? IconAlertTriangle
-  const imageUrls = (alerta.images ?? []).map(
-    (path) => `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`
-  )
+  const badgeColor =
+    alerta.status === 'resolvido'
+      ? 'var(--sucesso)'
+      : alerta.status === 'arquivado'
+        ? 'var(--texto-mutado)'
+        : corCategoria
+
+  // Render variables that are safe now that !alerta is checked
   const dataFormatada = new Date(alerta.criada_em).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   })
   const localTexto = `${alerta.local_nome ? `${alerta.local_nome} — ` : ''}${alerta.municipio}/${alerta.uf}`
 
@@ -133,7 +138,7 @@ export function AlertaPage() {
     const coordsTexto = alerta!.lat && alerta!.lng
       ? `\n📍 Coordenadas: ${alerta!.lat.toFixed(5)}, ${alerta!.lng.toFixed(5)}\n🗺️ Google Maps: https://www.google.com/maps?q=${alerta!.lat},${alerta!.lng}`
       : ''
-    const texto = `⚠️ Registro Ambiental: ${alerta!.titulo}\n📋 ${cat.label} · ${STATUS_LABELS[alerta!.status] ?? alerta!.status}\n📍 ${localTexto}${coordsTexto}\n📅 ${dataFormatada}\n\nVeja o registro completo: ${url}`
+    const texto = `⚠️ Registro Ambiental: ${alerta!.titulo}\n📋 ${alerta!.categoria} · ${STATUS_LABELS[alerta!.status] ?? alerta!.status}\n📍 ${localTexto}${coordsTexto}\n📅 ${dataFormatada}\n\nVeja o registro completo: ${url}`
 
     if (navigator.share) {
       try {
@@ -169,7 +174,7 @@ export function AlertaPage() {
     setSalvando(true)
     try {
       await atualizarAlerta(id, {
-        titulo: `${cat.label} — ${alerta.local_nome || alerta.municipio}`,
+        titulo: `${editCategoria} — ${alerta.local_nome || alerta.municipio}`,
         categoria: editCategoria,
         gravidade: editGravidade,
         descricao: editDescricao,
@@ -217,16 +222,16 @@ export function AlertaPage() {
               <div
                 style={{
                   width: 44, height: 44, borderRadius: 14,
-                  background: `${cat.cor}18`, color: cat.cor,
+                  background: `${corCategoria}18`, color: corCategoria,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <CatIcon size={24} stroke={2} />
+                <CategoriaIcon size={24} stroke={2} />
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
                 <div className="muted" style={{ fontSize: 12 }}>
-                  {cat.label} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+                  {alerta.categoria} · {STATUS_LABELS[alerta.status] ?? alerta.status}
                 </div>
               </div>
             </div>
@@ -247,15 +252,15 @@ export function AlertaPage() {
 
         {/* Fotos */}
         {!isEditing ? (
-          imageUrls.length > 0 && (
+          alerta.images && alerta.images.length > 0 && (
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {imageUrls.map((url, i) => (
+              {alerta.images.map((path, i) => (
                 <img
                   key={i}
-                  src={url}
+                  src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`}
                   alt={`Foto ${i + 1}`}
                   style={{
-                    width: imageUrls.length === 1 ? '100%' : 260,
+                    width: alerta.images!.length === 1 ? '100%' : 260,
                     height: 200,
                     objectFit: 'cover',
                     borderRadius: 14,
@@ -346,9 +351,8 @@ export function AlertaPage() {
           <div>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>Gravidade</h3>
             <CampoGravidade
-              gravidade={editGravidade}
+              valor={editGravidade}
               onChange={setEditGravidade}
-              cor={cat.cor}
             />
           </div>
         )}
@@ -429,7 +433,7 @@ export function AlertaPage() {
               <button className="btn outline full" onClick={() => navigate('/acoes')}>
                 <IconArrowLeft size={16} /> Voltar
               </button>
-              {(isOwner || userId === alerta.denunciante_id) && (
+              {(isOwner || userId === alerta.autor_id) && (
                 <button className="btn outline full" onClick={() => setIsEditing(true)}>
                   Editar
                 </button>

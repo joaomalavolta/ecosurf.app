@@ -123,6 +123,7 @@ export function MutiraoPage() {
   }
 
   async function compartilhar() {
+    if (!mutirao) return
     const url = window.location.href
     const texto = `🌊 ${mutirao.titulo} — ${data}\n📍 ${mutirao.municipio}/${mutirao.uf}\n\nParticipe: ${url}`
     if (navigator.share) {
@@ -133,6 +134,10 @@ export function MutiraoPage() {
       await navigator.clipboard.writeText(texto)
       alert('Link copiado!')
     }
+  }
+
+  if (!mutirao) {
+    return <div style={{ padding: 16 }}>Carregando...</div>
   }
 
   return (
