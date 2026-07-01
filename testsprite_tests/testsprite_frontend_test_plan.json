@@ -1,0 +1,1414 @@
+[
+  {
+    "id": "TC001",
+    "title": "Register and complete access-code login",
+    "description": "This verifies that a new user can register with email, enter an access code, and reach the authenticated experience.",
+    "category": "Authentication and profile setup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the logged-in Radar is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is signed in"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Publish a surf report with a photo and nearest spot",
+    "description": "This verifies that a contributor can create a surf report from a photo, confirm the nearest spot, add observations, and publish it.",
+    "category": "Photo and surf report publishing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Start a quick photo capture"
+      },
+      {
+        "type": "action",
+        "description": "Capture or select an image"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the nearest spot"
+      },
+      {
+        "type": "action",
+        "description": "Classify the post as a surf report"
+      },
+      {
+        "type": "action",
+        "description": "Add observations to the report"
+      },
+      {
+        "type": "action",
+        "description": "Publish the report"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a publish confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot is highlighted on the radar and the photo appears in the spot timeline"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Start contributing from the public app as a new user",
+    "description": "This verifies that a visitor can choose to contribute and is guided toward account creation before publishing.",
+    "category": "Public exploration and entry",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Choose to contribute"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login or account creation is required to continue"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the public app entry remains accessible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Publish an environmental alert with category, severity, and description",
+    "description": "This verifies that a user can create an environmental alert, complete the required details, and publish it publicly.",
+    "category": "Environmental alert publishing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open the actions flow"
+      },
+      {
+        "type": "action",
+        "description": "Start a new action"
+      },
+      {
+        "type": "action",
+        "description": "Choose environmental alert"
+      },
+      {
+        "type": "action",
+        "description": "Select a category"
+      },
+      {
+        "type": "action",
+        "description": "Add evidence to the alert"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the location and city or state"
+      },
+      {
+        "type": "action",
+        "description": "Set the severity"
+      },
+      {
+        "type": "action",
+        "description": "Write a description"
+      },
+      {
+        "type": "action",
+        "description": "Publish the alert"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a publish confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the alert appears on the map and on the related spot page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Explore public Radar content without signing in",
+    "description": "This verifies that a public visitor can open the app, explore the Radar, and see that publishing is gated behind login.",
+    "category": "Public exploration and entry",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Choose to explore first"
+      },
+      {
+        "type": "action",
+        "description": "Open the Radar view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify public Radar content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify publishing actions require login"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Complete profile setup after first login",
+    "description": "This verifies that a new authenticated user can fill in required profile details and finish onboarding.",
+    "category": "Authentication and profile setup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with a valid full name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the CPF field with a valid CPF"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the city field with a valid city"
+      },
+      {
+        "type": "action",
+        "description": "Continue profile setup"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the logged-in Radar is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile setup flow is completed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Explore public Map content without signing in",
+    "description": "This verifies that a public visitor can open the Map and browse public coastal content without an account.",
+    "category": "Public exploration and entry",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Choose to explore first"
+      },
+      {
+        "type": "action",
+        "description": "Open the Map view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify public Map content is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify spot markers or public map content are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Open a public spot from the radar and inspect its timeline",
+    "description": "This verifies that a visitor can open a spot from the Radar, review its current conditions, and inspect the spot timeline.",
+    "category": "Spot page and timeline",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the radar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify current conditions and the daily timeline are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "See sensitive details hidden on a restricted spot",
+    "description": "This test verifies that a user opening a community or muted spot does not see sensitive real-time details that should be hidden by visibility rules.",
+    "category": "Profile and visibility management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the map"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot with restricted visibility"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sensitive real-time details are not exposed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot page remains accessible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Open a spot from the Radar feed",
+    "description": "This verifies that a user can drill into a spot from the Radar and reach the spot page for current conditions.",
+    "category": "Radar dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Open the Radar view"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the feed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify current conditions for the spot are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Open a spot from the Radar map",
+    "description": "This verifies that a user can select a spot from the compact map and open its spot page.",
+    "category": "Radar dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Open the Radar view"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the map"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot timeline is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Create and publish a mutirão",
+    "description": "This verifies that a user can complete a mutirão from the Actions flow and publish it successfully.",
+    "category": "Mutirão creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the required role"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the Actions area"
+      },
+      {
+        "type": "action",
+        "description": "Start a new action"
+      },
+      {
+        "type": "action",
+        "description": "Choose mutirão"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the mutirão type, title, and description"
+      },
+      {
+        "type": "action",
+        "description": "Add the location"
+      },
+      {
+        "type": "action",
+        "description": "Set a valid date and time"
+      },
+      {
+        "type": "action",
+        "description": "Add organization and volunteer details"
+      },
+      {
+        "type": "action",
+        "description": "Add a cover image"
+      },
+      {
+        "type": "action",
+        "description": "Publish the mutirão"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the published mutirão is visible in the Actions area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the published mutirão is visible on the Map"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Browse the Radar dashboard filters",
+    "description": "This verifies that a user can switch between favorite, best-wave, and all feed filters on the Radar dashboard.",
+    "category": "Radar dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Open the Radar view"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the favorites feed filter"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the best waves feed filter"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the all feed filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Radar feed updates for the selected filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify recent spot activity remains visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Browse a spot timeline over the tide curve",
+    "description": "This verifies that a user can inspect the spot timeline positioned against the tide curve and move through different moments.",
+    "category": "Spot page and timeline",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the radar"
+      },
+      {
+        "type": "action",
+        "description": "Move through the timeline slider"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected moment on the timeline changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tide curve remains visible alongside the timeline"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Browse map layers and open a related item",
+    "description": "This verifies that a user can switch map layers, inspect clustered markers, and open a related page from the marker panel.",
+    "category": "Map territory browsing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the required role"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the Map"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the spots layer"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the alerts layer"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the mutirões layer"
+      },
+      {
+        "type": "action",
+        "description": "Zoom into a marker cluster"
+      },
+      {
+        "type": "action",
+        "description": "Select an individual marker"
+      },
+      {
+        "type": "action",
+        "description": "Open the related page from the marker panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the related spot or action page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected item is shown in the marker panel"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Choose a spot manually when publishing a surf report",
+    "description": "This verifies that a contributor can switch from the nearest spot to a manually selected spot before publishing a surf report.",
+    "category": "Photo and surf report publishing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Start a quick photo capture"
+      },
+      {
+        "type": "action",
+        "description": "Capture or select an image"
+      },
+      {
+        "type": "action",
+        "description": "Choose a spot manually"
+      },
+      {
+        "type": "action",
+        "description": "Classify the post as a surf report"
+      },
+      {
+        "type": "action",
+        "description": "Add observations to the report"
+      },
+      {
+        "type": "action",
+        "description": "Publish the report"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a publish confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected spot is highlighted on the radar and the photo appears in that spot timeline"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "View profile summary and history",
+    "description": "This test verifies that a registered user can open their profile, review account statistics and contribution history, and see their privacy settings area.",
+    "category": "Profile and visibility management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account statistics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify contribution history is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Save a mutirão draft and resume it later",
+    "description": "This verifies that a user can save an in-progress mutirão as a draft, return later, continue editing, and publish it.",
+    "category": "Drafts and resume",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the required role"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the Actions area"
+      },
+      {
+        "type": "action",
+        "description": "Start a new action"
+      },
+      {
+        "type": "action",
+        "description": "Choose mutirão"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the mutirão type, title, and description"
+      },
+      {
+        "type": "action",
+        "description": "Save the mutirão as a draft"
+      },
+      {
+        "type": "action",
+        "description": "Leave the Actions area"
+      },
+      {
+        "type": "action",
+        "description": "Return to the Actions area later"
+      },
+      {
+        "type": "action",
+        "description": "Open the saved draft"
+      },
+      {
+        "type": "action",
+        "description": "Continue editing the draft"
+      },
+      {
+        "type": "action",
+        "description": "Publish the mutirão"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the published mutirão is visible in the Actions area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the draft is no longer shown as an incomplete item"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "View spots without a photo today on Radar",
+    "description": "This verifies that a user can find the Radar section showing spots that do not have a photo for the current day.",
+    "category": "Radar dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Open the Radar view"
+      },
+      {
+        "type": "action",
+        "description": "Review the spots without a photo today section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify spots without a photo today are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the section is populated or shows an empty state"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Resume a saved alert draft and publish it",
+    "description": "This verifies that a user can save an environmental alert draft, reopen it later, complete it, and publish it.",
+    "category": "Drafts and resume",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the login credentials for the required role"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the Actions area"
+      },
+      {
+        "type": "action",
+        "description": "Start a new action"
+      },
+      {
+        "type": "action",
+        "description": "Choose environmental alert"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the alert details needed for a draft"
+      },
+      {
+        "type": "action",
+        "description": "Save the alert as a draft"
+      },
+      {
+        "type": "action",
+        "description": "Leave the Actions area"
+      },
+      {
+        "type": "action",
+        "description": "Return to the Actions area later"
+      },
+      {
+        "type": "action",
+        "description": "Open the saved alert draft"
+      },
+      {
+        "type": "action",
+        "description": "Complete the remaining alert details"
+      },
+      {
+        "type": "action",
+        "description": "Publish the alert"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the published alert is visible in the Actions area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the completed alert is visible on the Map"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Like a photo on a spot page",
+    "description": "This verifies that a user can like a photo from the spot timeline and see the like state update.",
+    "category": "Spot page and timeline",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the radar"
+      },
+      {
+        "type": "action",
+        "description": "Like a photo in the timeline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the photo shows an active like state"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot timeline remains visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Report a photo from a spot page",
+    "description": "This verifies that a user can report a photo from the spot timeline and see the report flow complete in the UI.",
+    "category": "Spot page and timeline",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the radar"
+      },
+      {
+        "type": "action",
+        "description": "Report a photo in the timeline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a report confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot page remains visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Review privacy settings from profile",
+    "description": "This test verifies that a user can open the profile privacy area and access privacy and LGPD preferences from their account page.",
+    "category": "Profile and visibility management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile page"
+      },
+      {
+        "type": "action",
+        "description": "Open the privacy and visibility settings area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify privacy preferences are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify LGPD settings are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC024",
+    "title": "Share a photo from a spot page",
+    "description": "This verifies that a user can share a photo from the spot timeline and see the share action complete in the UI.",
+    "category": "Spot page and timeline",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open a spot from the radar"
+      },
+      {
+        "type": "action",
+        "description": "Share a photo in the timeline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a share confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the spot timeline remains visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC025",
+    "title": "Add optional profile details during setup",
+    "description": "This verifies that a user can optionally add a main surf spot and profile photo during onboarding without blocking completion.",
+    "category": "Authentication and profile setup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with a valid full name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the CPF field with a valid CPF"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the city field with a valid city"
+      },
+      {
+        "type": "action",
+        "description": "Optionally select a main surf spot"
+      },
+      {
+        "type": "action",
+        "description": "Optionally add a profile photo"
+      },
+      {
+        "type": "action",
+        "description": "Continue profile setup"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the logged-in Radar is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the optional profile details are saved"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Add main surf spot to profile",
+    "description": "This test verifies that a user can add an optional main surf spot in their profile and save it successfully.",
+    "category": "Profile and visibility management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile page"
+      },
+      {
+        "type": "action",
+        "description": "Edit profile details"
+      },
+      {
+        "type": "action",
+        "description": "Set a main surf spot"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile update is reflected"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the main surf spot is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "Save an environmental alert draft and resume it later",
+    "description": "This verifies that a user can save an incomplete environmental alert draft and return to continue editing it later.",
+    "category": "Environmental alert publishing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Open the actions flow"
+      },
+      {
+        "type": "action",
+        "description": "Start a new action"
+      },
+      {
+        "type": "action",
+        "description": "Choose environmental alert"
+      },
+      {
+        "type": "action",
+        "description": "Select a category"
+      },
+      {
+        "type": "action",
+        "description": "Save the alert as a draft"
+      },
+      {
+        "type": "action",
+        "description": "Open the saved draft"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the draft content is restored"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the alert can be continued from the draft"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Add profile photo to profile",
+    "description": "This test verifies that a user can attach an optional profile photo and see it reflected on the profile page.",
+    "category": "Profile and visibility management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the profile page"
+      },
+      {
+        "type": "action",
+        "description": "Edit profile details"
+      },
+      {
+        "type": "action",
+        "description": "Set a profile photo"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile update is reflected"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile photo is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Grant camera and location permissions during onboarding",
+    "description": "This verifies that a user can allow camera and location access and still complete the login and setup flow.",
+    "category": "Authentication and profile setup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with a valid full name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the CPF field with a valid CPF"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the city field with a valid city"
+      },
+      {
+        "type": "action",
+        "description": "Grant camera access"
+      },
+      {
+        "type": "action",
+        "description": "Grant location access"
+      },
+      {
+        "type": "action",
+        "description": "Continue profile setup"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the logged-in Radar is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the permissions-dependent onboarding is completed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC030",
+    "title": "Resume a saved surf report draft",
+    "description": "This verifies that a contributor can save a partially completed surf report draft and later resume it without losing the entered content.",
+    "category": "Photo and surf report publishing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public radar page"
+      },
+      {
+        "type": "action",
+        "description": "Start a quick photo capture"
+      },
+      {
+        "type": "action",
+        "description": "Capture or select an image"
+      },
+      {
+        "type": "action",
+        "description": "Enter observations for the report"
+      },
+      {
+        "type": "action",
+        "description": "Save the report as a draft"
+      },
+      {
+        "type": "action",
+        "description": "Open the saved draft"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the draft content is restored"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the report can be continued from the draft"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC031",
+    "title": "Show validation when required profile fields are missing",
+    "description": "This verifies that onboarding blocks completion until the required identity and location fields are provided.",
+    "category": "Authentication and profile setup",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Request an access code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the access code field with a valid numeric code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the code"
+      },
+      {
+        "type": "action",
+        "description": "Leave the name, CPF, and city fields empty"
+      },
+      {
+        "type": "action",
+        "description": "Continue profile setup"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile validation errors are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify setup cannot be completed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC032",
+    "title": "Install the app to the home screen",
+    "description": "This test verifies that a visitor can initiate app installation and then launch the app in standalone mode.",
+    "category": "PWA installation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Open the app install prompt"
+      },
+      {
+        "type": "action",
+        "description": "Choose to add the app to the device home screen"
+      },
+      {
+        "type": "action",
+        "description": "Launch the installed app"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the app opens in standalone mode"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the app home experience is displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

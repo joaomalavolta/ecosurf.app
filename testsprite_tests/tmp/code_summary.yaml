@@ -1,0 +1,13 @@
+project_name: Ecosurf App
+tech_stack:
+  - React
+  - Vite
+  - TypeScript
+  - Supabase
+  - MapLibre
+features:
+  - Landing page for unauthenticated users
+  - Authentication flow via Supabase
+  - Interactive map (RadarPage) using MapLibre
+  - Creation of environmental alerts and actions
+  - User profile management

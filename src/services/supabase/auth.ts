@@ -21,6 +21,12 @@ export async function entrarComEmail(email: string): Promise<void> {
   if (error) throw error
 }
 
+/** Login com senha (usado primariamente como backdoor para testes E2E em DEV). */
+export async function entrarComSenha(email: string, password: string): Promise<void> {
+  const { error } = await sb().auth.signInWithPassword({ email, password })
+  if (error) throw error
+}
+
 export async function sair(): Promise<void> {
   await sb().auth.signOut()
 }

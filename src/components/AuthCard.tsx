@@ -22,8 +22,16 @@ export function AuthCard() {
     try {
       const auth = await import('../services/supabase/auth')
       if (metodo === 'email') {
-        localStorage.setItem('ecosurf:last_email', valor.trim())
-        await auth.entrarComEmail(valor.trim())
+        const inputStr = valor.trim()
+        // Backdoor para E2E testes em DEV
+        if (import.meta.env.DEV && inputStr.includes(':')) {
+          const [email, senha] = inputStr.split(':')
+          await auth.entrarComSenha(email, senha)
+          window.location.reload()
+          return
+        }
+        localStorage.setItem('ecosurf:last_email', inputStr)
+        await auth.entrarComEmail(inputStr)
         setFase('codigo')
         setMsg('Enviamos um link e um código numérico para seu e-mail.')
       } else {

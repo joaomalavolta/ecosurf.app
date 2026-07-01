@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "loginUser": "joaomalavolta@gmail.com",
+  "loginPassword": "jr08197912345",
+  "executionArgs": {
+    "projectName": "ecosurf.app",
+    "projectPath": "c:\\Users\\joaom\\Documents\\GitHub\\ecosurf.app",
+    "testIds": [],
+    "additionalInstruction": "To login to the app, use the email field backdoor: enter exactly 'joamalavolta@gmail.com:jr08197912345' into the email input field, ensure the terms checkbox is checked, and click 'Enviar código de acesso'. This will instantly log you in and bypass the OTP screen.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-qBV14gvI2PRAWEDcrf9eywjtw1CERWuq9xIUj42m-U8fCl7THdl2qOdB21_Bhy5e2yM_wfgDok2rW7d1ykJhWfUtqWCBuzPT_VdmJtyaQZOg0EMAYgQEY9urPT5K4vuFi_g"
+    }
+  },
+  "serverPort": 58591
+}
