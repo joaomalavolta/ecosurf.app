@@ -640,7 +640,6 @@ function ModuloAmeacas({ perm }: { perm: Permissoes }) {
 }
 
 // ──────────────────────────────────────────────────────────────────── Picos ──
-const VISIBILIDADES: Array<'publico' | 'comunidade' | 'abafado'> = ['publico', 'comunidade', 'abafado']
 const FUNDOS: Array<'areia' | 'pedra' | 'misto'> = ['areia', 'pedra', 'misto']
 
 function ModuloPicos({ perm }: { perm: Permissoes }) {
@@ -656,11 +655,6 @@ function ModuloPicos({ perm }: { perm: Permissoes }) {
     admin.listarPicosAdmin().then(setPicos).catch((e) => setErro(String(e?.message ?? e)))
   }, [])
   useEffect(() => carregar(), [carregar])
-
-  async function mudarVisibilidade(p: PicoAdm, visibilidade: 'publico' | 'comunidade' | 'abafado') {
-    setPicos((xs) => xs?.map((x) => (x.id === p.id ? { ...x, visibilidade } : x)) ?? null)
-    await admin.definirVisibilidade(p.id, visibilidade)
-  }
 
   function iniciarEdicao(p: PicoAdm) {
     setEditando(p.id)
@@ -698,7 +692,7 @@ function ModuloPicos({ perm }: { perm: Permissoes }) {
     <section className="admin-content">
       <Titulo
         nome="Picos"
-        desc="Catálogo de picos. Edite, exclua ou altere a visibilidade."
+        desc="Catálogo de picos. Todo pico é público — edite ou exclua."
         acao={
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
@@ -711,7 +705,7 @@ function ModuloPicos({ perm }: { perm: Permissoes }) {
       {picos && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Nome</th><th>Praia</th><th>Local</th><th>Fundo</th><th>Visibilidade</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Praia</th><th>Local</th><th>Fundo</th><th>Ações</th></tr></thead>
             <tbody>
               {picos.map((p) => {
                 const isEditing = editando === p.id
@@ -745,11 +739,6 @@ function ModuloPicos({ perm }: { perm: Permissoes }) {
                           </select>
                         : p.fundo
                       }
-                    </td>
-                    <td>
-                      <select className="sel" value={p.visibilidade} onChange={(e) => mudarVisibilidade(p, e.target.value as 'publico' | 'comunidade' | 'abafado')}>
-                        {VISIBILIDADES.map((v) => <option key={v} value={v}>{v}</option>)}
-                      </select>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>

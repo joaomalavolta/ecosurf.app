@@ -116,7 +116,20 @@ export function TermosPage() {
           </section>
 
           <section style={{ marginBottom: 24 }}>
-            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>9. Finalidade informativa e cidadã</h3>
+            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>9. Publicação identificada e transparência</h3>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', marginBottom: 8 }}>
+              Declaro estar ciente de que o Ecosurf.app adota uma política de transparência total: não há publicação anônima. Todo conteúdo que eu publicar — incluindo fotos, alertas ambientais, mutirões e demais registros — será exibido publicamente com meu nome de perfil, minha foto de perfil (quando houver) e a localização exata que eu informar, visíveis a qualquer pessoa que acesse a plataforma.
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', marginBottom: 8 }}>
+              Compreendo que essa política existe para dar credibilidade e valor cívico aos registros da comunidade: quem publica, assina. Antes de publicar, cabe a mim avaliar se desejo associar publicamente meu nome e a localização ao conteúdo, especialmente em registros que envolvam conflitos, denúncias ou situações sensíveis no território.
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
+              Estou ciente de que posso editar ou excluir meus próprios registros a qualquer momento, e que a exclusão da minha conta remove os alertas e mutirões de minha autoria, permanecendo as fotos de forma anonimizada, conforme a Política de Privacidade.
+            </p>
+          </section>
+
+          <section style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>10. Finalidade informativa e cidadã</h3>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', marginBottom: 8 }}>
               Declaro compreender que o Ecosurf.app é uma ferramenta de apoio à cidadania ambiental, educação, mobilização, registro de ocorrências e produção de dados socioambientais colaborativos.
             </p>
@@ -129,14 +142,14 @@ export function TermosPage() {
           </section>
 
           <section style={{ marginBottom: 24 }}>
-            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>10. Responsabilidade por danos</h3>
+            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>11. Responsabilidade por danos</h3>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
               Declaro estar ciente de que poderei ser responsabilizado por danos causados ao Ecosurf.app, ao Instituto Ecosurf, a outros usuários ou a terceiros em razão do uso indevido da plataforma, da publicação de informações falsas, da violação de direitos, da inserção de conteúdos ilegais ou da prática de atos incompatíveis com esta Declaração.
             </p>
           </section>
 
           <section style={{ marginBottom: 24 }}>
-            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>11. Atualizações desta Declaração</h3>
+            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>12. Atualizações desta Declaração</h3>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', marginBottom: 8 }}>
               Declaro estar ciente de que esta Declaração poderá ser atualizada periodicamente para refletir melhorias no Ecosurf.app, mudanças legais, ajustes operacionais, novas funcionalidades ou necessidades de governança da plataforma.
             </p>
@@ -146,7 +159,7 @@ export function TermosPage() {
           </section>
 
           <section style={{ marginBottom: 24 }}>
-            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>12. Declaração final de aceite</h3>
+            <h3 style={{ fontSize: 16, marginBottom: 8, color: 'var(--turq)' }}>13. Declaração final de aceite</h3>
             <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
               Ao marcar a opção "Li e aceito", declaro que:
               <br/>a) li e compreendi esta Declaração de Conformidade, Responsabilidade e Aceite de Uso;

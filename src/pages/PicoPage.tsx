@@ -179,13 +179,6 @@ export function PicoPage() {
           </div>
         </div>
 
-        {pico.visibilidade !== 'publico' && (
-          <div className="card pad" style={{ borderLeft: '4px solid var(--perigo)' }}>
-            <b>Pico em abafamento</b>
-            <p className="muted">A comunidade local optou por não broadcastar a atividade deste pico.</p>
-          </div>
-        )}
-
         <div style={{ display: 'flex', gap: 10 }}>
           <Link to={`/capturar?pico=${pico.id}`} className="btn full" style={{ flex: 1 }}><IconCamera size={18} stroke={2} /> Registrar</Link>
           <button

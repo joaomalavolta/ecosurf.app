@@ -19,7 +19,7 @@ A foto da comunidade lê o mar do dia; o mesmo gesto documenta o conflito costei
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm run build     # typecheck + build de produção
+npm run build     # typecheck (tsc) + build de produção
 ```
 
 ## Decisões de produto já tomadas
@@ -67,7 +67,6 @@ maré do instante.
 | **Mapa** | ✅ picos (azul) + ameaças (índigo) + **mutirões (verde)** filtráveis, com **clusterização** nativa (aglomera de longe, abre em pins ao aproximar; clique no cluster aproxima) | mutirões geridos pelo organizador; H3 fuzzing de pico sensível |
 | **Auth / upload** | ✅ `autor_id` + Storage + **resize ≤1600px WebP** + **coords p/ geofence**; nome no feed | thumbnails |
 | **Pipeline de mídia** | ✅ resize client-side (≤1600px WebP) → Storage (URL assinada) | thumbnails + CDN |
-| **Localização de pico sensível** | flag `visibilidade` + RLS | fuzzing por célula H3 antes de expor no mapa |
 | **Tiles do mapa** | OpenFreeMap (rede, com cache no SW) | PMTiles (Planetiler → R2/Bunny), soberania de dados |
 
 ## Deploy (Vercel)
@@ -92,8 +91,14 @@ maré do instante.
   (Twilio/MessageBird/Vonage) com credencial.
 - Para promover um **moderador**: `update perfis set papel='moderador' where id='<uuid>'`.
 
-## Tensões éticas (decidir antes de escalar)
+## Política de transparência (decisão de produto)
 
-- Expor coordenada exata de pico mata pico secreto → **abafamento** + geometria fuzzy.
-- Mapear conflito pode expor denunciante → **localização grosseira** e anonimato por padrão.
-- Foto identifica pessoas (LGPD) → **borrar rosto** + consentimento no envio.
+**Sem picos secretos e sem anonimato.** A credibilidade do Ecosurf vem de
+gente identificada: todo pico é público e todo alerta mostra autor e
+localização exata (migration `0023`). Quem publica, assina — e os Termos de
+Uso deixam isso explícito no momento do envio.
+
+O que continua protegido:
+- **Terceiros nas fotos** (LGPD): borrar rosto + consentimento no envio.
+- **CPF**: gravado write-only (nenhum cliente lê); avaliar se a coleta é
+  mesmo necessária (minimização de dados).

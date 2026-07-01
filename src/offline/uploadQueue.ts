@@ -13,8 +13,11 @@ function emitir() {
 
 /** Erros que indicam falta de autenticação — não adianta retentar. */
 function ehErroDeAuth(msg: string): boolean {
-  const termos = ['login', 'sessão', 'telefone', 'e-mail', 'publicar', 'anônim', 'auth', 'jwt', 'token']
   const lower = msg.toLowerCase()
+  // Códigos HTTP de autenticação são o sinal mais confiável…
+  if (/\b(401|403)\b/.test(lower)) return true
+  // …com fallback nas mensagens que o próprio app emite ao exigir login.
+  const termos = ['entre com seu telefone', 'sessão', 'anônim', 'jwt expired', 'invalid token']
   return termos.some((t) => lower.includes(t))
 }
 

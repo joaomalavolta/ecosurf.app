@@ -37,8 +37,7 @@ export const supabaseApi: EcosurfApi = {
         observacao: f.observacao,
         captura_lat: f.capturaLat ?? null,
         captura_lng: f.capturaLng ?? null,
-        status: 'aprovada',
-        // procedencia e geofence_ok são definidos pelo trigger anti-fake
+        // status, procedencia e geofence_ok são definidos por triggers no servidor
       })
     if (error) throw error
     return { id: f.id }

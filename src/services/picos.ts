@@ -18,7 +18,7 @@ export async function carregarPicos(): Promise<Pico[]> {
       /* fallback offline */
     }
   }
-  return picosSeed.filter((p) => p.visibilidade === 'publico')
+  return picosSeed
 }
 
 export async function carregarPico(id: string): Promise<Pico | undefined> {

@@ -19,12 +19,6 @@ export interface RegiaoSurf {
   uf: UF;
 }
 
-/** Controle de soberania da comunidade sobre o pico (abafamento). */
-export type VisibilidadePico =
-  | 'publico'     // aparece no radar/mapa nacional
-  | 'comunidade'  // só para o círculo de confiança do pico
-  | 'abafado';    // existe, mas não broadcasta atividade (pico sensível/secreto)
-
 export interface Pico {
   id: string;        // slug estável: "praia-do-sonho"
   nome: string;      // nome local do pico
@@ -37,7 +31,6 @@ export interface Pico {
   /** Direção (graus) para onde a praia "olha" (em direção ao mar aberto). Base p/ terral×maral. */
   orientacaoPraiaDeg: number;
   fundo: 'areia' | 'pedra' | 'misto';
-  visibilidade: VisibilidadePico;
   descricao?: string;
 }
 
@@ -140,8 +133,6 @@ export interface Alerta {
   municipio: string;
   uf: UF;
   localNome?: string;
-  /** Para proteger o autor: localização grosseira por padrão. */
-  precisao: 'exata' | 'aproximada';
   lat?: number;
   lng?: number;
   descricao?: string;

@@ -31,10 +31,18 @@ function getLocalToken(): string | null {
 
 async function rest<T>(path: string): Promise<T> {
   const token = getLocalToken()
-  const r = await fetch(`${BASE}/rest/v1/${path}`, {
+  let r = await fetch(`${BASE}/rest/v1/${path}`, {
     headers: { apikey: KEY, Authorization: `Bearer ${token ?? KEY}` },
     cache: 'no-store',
   })
+  // Token persistido pode estar expirado: cai para leitura anônima
+  // em vez de quebrar o feed (a view pública não exige sessão).
+  if (!r.ok && (r.status === 401 || r.status === 403) && token) {
+    r = await fetch(`${BASE}/rest/v1/${path}`, {
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+      cache: 'no-store',
+    })
+  }
   if (!r.ok) throw new Error(`rest ${r.status}`)
   return (await r.json()) as T
 }
@@ -98,7 +106,6 @@ interface PicoRow {
   lng: number
   orientacao_praia_deg: number
   fundo: string
-  visibilidade: string
   descricao: string | null
 }
 
@@ -115,7 +122,6 @@ export async function restPicos(): Promise<Pico[]> {
     lng: r.lng,
     orientacaoPraiaDeg: r.orientacao_praia_deg,
     fundo: r.fundo as Pico['fundo'],
-    visibilidade: r.visibilidade as Pico['visibilidade'],
     descricao: r.descricao ?? undefined,
   }))
 }
@@ -129,7 +135,6 @@ interface AmeacaRow {
   pico_id: string | null
   municipio: string | null
   uf: string | null
-  precisao: string
   descricao: string | null
   lat: number | null
   lng: number | null
@@ -149,7 +154,6 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     picoId: r.pico_id ?? undefined,
     municipio: r.municipio ?? '',
     uf: r.uf ?? '',
-    precisao: r.precisao as Ameaca['precisao'],
     lat: r.lat ?? undefined,
     lng: r.lng ?? undefined,
     descricao: r.descricao ?? undefined,
@@ -337,7 +341,6 @@ export async function restInserirPico(dados: {
     uf: dados.uf.toUpperCase().slice(0, 2),
     orientacao_praia_deg: 180,
     fundo: 'areia',
-    visibilidade: 'publico',
   }
   const { error } = await sb().from('picos').insert(body)
   if (error) {

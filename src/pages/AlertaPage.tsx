@@ -74,7 +74,7 @@ export function AlertaPage() {
       })
 
       // 2) Fetch data as authenticated user so view returns exact coordinates for author
-      sb().from('ameacas_publicas').select('*').eq('id', id)
+      Promise.resolve(sb().from('ameacas_publicas').select('*').eq('id', id))
         .then(({ data }) => {
           if (data && data.length > 0) {
             const a = data[0] as unknown as AlertaDetalhe

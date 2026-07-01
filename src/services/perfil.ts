@@ -83,7 +83,8 @@ export async function salvarPerfil(d: DadosPerfil): Promise<void> {
 
   let foto_url: string | undefined
   if (d.fotoBlob) {
-    const path = `${u.id}.webp`
+    // Pasta do dono: a policy do bucket exige avatars/<uid>/... (só o dono grava ali)
+    const path = `${u.id}/avatar.webp`
     const up = await sb().storage.from('avatars').upload(path, d.fotoBlob, {
       contentType: 'image/webp',
       upsert: true,

@@ -217,7 +217,7 @@ export async function listarAmeacasAdmin() {
   const c = await sb()
   const { data, error } = await c.rpc('admin_listar_ameacas')
   if (error) throw new Error(error.message)
-  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; precisao: string; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
+  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
 }
 
 export async function atualizarStatusAmeaca(id: string, status: string) {
@@ -242,15 +242,10 @@ export async function editarAmeaca(id: string, campos: { titulo?: string; catego
 // ── Picos ────────────────────────────────────────────────────────────────
 export async function listarPicosAdmin() {
   const c = await sb()
-  const { data } = await c.from('picos').select('id,nome,praia,municipio,uf,visibilidade,fundo').order('uf').limit(500)
-  return (data ?? []) as { id: string; nome: string; praia: string; municipio: string | null; uf: string | null; visibilidade: string; fundo: string }[]
+  const { data } = await c.from('picos').select('id,nome,praia,municipio,uf,fundo').order('uf').limit(500)
+  return (data ?? []) as { id: string; nome: string; praia: string; municipio: string | null; uf: string | null; fundo: string }[]
 }
 
-export async function definirVisibilidade(id: string, visibilidade: 'publico' | 'comunidade' | 'abafado') {
-  const c = await sb()
-  await c.from('picos').update({ visibilidade }).eq('id', id)
-  await log(c, 'pico:visibilidade', 'pico', id, undefined, { visibilidade })
-}
 
 /** Edita campos de um pico existente. */
 export async function editarPico(id: string, campos: { nome?: string; praia?: string; municipio?: string; uf?: string; fundo?: string }) {

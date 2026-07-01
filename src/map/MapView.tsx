@@ -110,7 +110,6 @@ function colecao({ picos, alertas, mutiroes, ativos }: Dados): FeatureCollection
         id: a.id,
         titulo: a.titulo,
         status: a.status,
-        precisao: a.precisao,
         municipio: a.municipio,
         uf: a.uf,
       },
@@ -147,7 +146,6 @@ function popupHtml(p: Record<string, unknown>): string {
   let meta = ''
   if (!isMutirao) {
     meta = `${esc(p.status)} · ${local}`
-    if (p.precisao) meta += ` · local ${esc(p.precisao)}`
   } else {
     const quando = p.horario ? esc(p.horario) : ''
     const gente =
