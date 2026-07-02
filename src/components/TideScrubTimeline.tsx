@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare } from '@tabler/icons-react'
+import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
@@ -59,7 +59,7 @@ function labelDia(date: Date, hoje: Date): string {
 
 function diasDaSemana(hoje: Date): Date[] {
   const dias: Date[] = []
-  for (let i = -3; i <= 3; i++) {
+  for (let i = -30; i <= 30; i++) {
     const d = new Date(hoje)
     d.setDate(d.getDate() + i)
     d.setHours(0, 0, 0, 0)
@@ -105,6 +105,8 @@ export function TideScrubTimeline({
   curvasMultiDia,
   eventos,
   initialFotoId,
+  diasComFoto,
+  onDiaChange,
 }: {
   picoId?: string
   picoNome?: string
@@ -113,6 +115,10 @@ export function TideScrubTimeline({
   curvasMultiDia?: Record<string, PontoMare[]>
   eventos: EventoVento[]
   initialFotoId?: string
+  /** Dias (yyyy-mm-dd) com foto no período — pontinhos e calendário. */
+  diasComFoto?: Set<string>
+  /** Avisa quando o usuário navega para outro dia (para carga sob demanda). */
+  onDiaChange?: (diaKey: string) => void
 }) {
   /* ── TODOS OS HOOKS PRIMEIRO (antes de qualquer return condicional) ── */
 
@@ -143,6 +149,9 @@ export function TideScrubTimeline({
     return arr
   }, [hoje, fotos])
 
+  const [calAberto, setCalAberto] = useState(false)
+  const tabsRef = useRef<HTMLDivElement>(null)
+
   const [selectedDiaKey, setSelectedDiaKey] = useState<string>(() => {
     if (initialFotoId) {
       const ft = fotos.find(f => f.id === initialFotoId)
@@ -150,6 +159,17 @@ export function TideScrubTimeline({
     }
     return todasHoje
   })
+
+  const selecionarDia = useCallback((key: string) => {
+    setSelectedDiaKey(key)
+    onDiaChange?.(key)
+  }, [onDiaChange])
+
+  // Régua de 61 dias: centraliza o dia ativo quando muda (e no primeiro render).
+  useEffect(() => {
+    const el = tabsRef.current?.querySelector('.tide-day-tab.active') as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+  }, [selectedDiaKey])
 
   const hasInitialized = useRef(false)
   useEffect(() => {
@@ -365,31 +385,55 @@ export function TideScrubTimeline({
         </div>
       )}
 
-      {/* TABS DOS DIAS DA SEMANA */}
-      <div className="tide-day-tabs" role="tablist" aria-label="Dias da semana">
-        {dias.map((d, i) => {
-          const key = dateKey(d)
-          const fotosNoDia = fotos.filter(f2 => dateKey(f2.capturadaEm) === key)
-          const isHoje = key === todasHoje
-          const isAtivo = key === selectedDiaKey
-          return (
-            <button key={key} role="tab" aria-selected={isAtivo}
-              className={`tide-day-tab ${isAtivo ? 'active' : ''} ${isHoje ? 'hoje' : ''}`}
-              onClick={() => setSelectedDiaKey(key)}>
-              <span className="tide-day-label">{labelDia(d, hoje)}</span>
-              {fotosNoDia.length > 0 && <span className="tide-day-badge">{fotosNoDia.length}</span>}
-            </button>
-          )
-        })}
+      {/* RÉGUA DE DIAS (±30) + CALENDÁRIO DE SALTO */}
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+        <button
+          className="btn outline ic"
+          aria-label="Escolher dia no calendário"
+          onClick={() => setCalAberto(true)}
+          style={{ flexShrink: 0, alignSelf: 'center' }}
+        >
+          <IconCalendar size={18} stroke={2} />
+        </button>
+        <div className="tide-day-tabs" role="tablist" aria-label="Dias do período" ref={tabsRef} style={{ flex: 1, minWidth: 0 }}>
+          {dias.map((d) => {
+            const key = dateKey(d)
+            const fotosNoDia = fotos.filter(f2 => dateKey(f2.capturadaEm) === key)
+            const temHistorico = fotosNoDia.length === 0 && diasComFoto?.has(key)
+            const isHoje = key === todasHoje
+            const isAtivo = key === selectedDiaKey
+            return (
+              <button key={key} role="tab" aria-selected={isAtivo}
+                className={`tide-day-tab ${isAtivo ? 'active' : ''} ${isHoje ? 'hoje' : ''}`}
+                onClick={() => selecionarDia(key)}>
+                <span className="tide-day-label">{labelDia(d, hoje)}</span>
+                {fotosNoDia.length > 0 && <span className="tide-day-badge">{fotosNoDia.length}</span>}
+                {temHistorico && <span className="tide-day-dot" aria-label="Tem fotos" />}
+              </button>
+            )
+          })}
+        </div>
       </div>
+
+      {calAberto && (
+        <CalendarioSalto
+          dias={dias}
+          hoje={hoje}
+          selecionado={selectedDiaKey}
+          diasComFoto={diasComFoto}
+          fotos={fotos}
+          onEscolher={(k) => { selecionarDia(k); setCalAberto(false) }}
+          onFechar={() => setCalAberto(false)}
+        />
+      )}
 
       {/* Date paginator */}
       <div className="between" style={{ padding: '0 20px', marginTop: 16 }}>
-        <button className="btn outline ic" onClick={() => setSelectedDiaKey(dateKey(dias[Math.max(0, diaIdx - 1)]))} disabled={diaIdx === 0}><IconChevronLeft size={18} /></button>
+        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(dias[Math.max(0, diaIdx - 1)]))} disabled={diaIdx === 0}><IconChevronLeft size={18} /></button>
         <div style={{ textAlign: 'center', flex: 1 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--azul-escuro)' }}>{labelDia(diaAtual, hoje)}</span>
         </div>
-        <button className="btn outline ic" onClick={() => setSelectedDiaKey(dateKey(dias[Math.min(dias.length - 1, diaIdx + 1)]))} disabled={diaIdx === dias.length - 1}><IconChevronRight size={18} /></button>
+        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(dias[Math.min(dias.length - 1, diaIdx + 1)]))} disabled={diaIdx === dias.length - 1}><IconChevronRight size={18} /></button>
       </div>
 
       {/* Bubbles horizontais */}
@@ -403,7 +447,7 @@ export function TideScrubTimeline({
               const dk = dateKey(ultimaFoto.capturadaEm)
               if (dk !== diaKey) {
                 return (
-                  <button className="btn" onClick={() => setSelectedDiaKey(dk)} style={{ margin: '0 auto' }}>
+                  <button className="btn" onClick={() => selecionarDia(dk)} style={{ margin: '0 auto' }}>
                     <IconCamera size={16} /> Ver último relato ({dk.slice(8,10)}/{dk.slice(5,7)})
                   </button>
                 )
@@ -722,6 +766,107 @@ export function TideScrubTimeline({
             })()}
           </span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Calendário de salto: visão mensal do período (±30 dias) para pular direto
+ * a um dia — vendo de relance quais dias têm foto (pontinho). Maré existe
+ * para todos os dias (tábua oficial); foto, só onde a comunidade registrou.
+ */
+function CalendarioSalto({ dias, hoje, selecionado, diasComFoto, fotos, onEscolher, onFechar }: {
+  dias: Date[]
+  hoje: Date
+  selecionado: string
+  diasComFoto?: Set<string>
+  fotos: Foto[]
+  onEscolher: (key: string) => void
+  onFechar: () => void
+}) {
+  const hojeKey = dateKey(hoje)
+  const fotosPorDia = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const f of fotos) {
+      const k = dateKey(f.capturadaEm)
+      m.set(k, (m.get(k) ?? 0) + 1)
+    }
+    return m
+  }, [fotos])
+
+  // agrupa o período por mês, preservando a ordem
+  const meses = useMemo(() => {
+    const m = new Map<string, Date[]>()
+    for (const d of dias) {
+      const k = `${d.getFullYear()}-${d.getMonth()}`
+      if (!m.has(k)) m.set(k, [])
+      m.get(k)!.push(d)
+    }
+    return [...m.values()]
+  }, [dias])
+
+  const nomeMes = (d: Date) =>
+    d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, (c) => c.toUpperCase())
+
+  return (
+    <div
+      role="dialog"
+      aria-label="Escolher dia"
+      onClick={onFechar}
+      style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(4,20,27,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="card"
+        style={{ width: 'min(440px, 100%)', maxHeight: '78dvh', overflowY: 'auto', borderRadius: '18px 18px 0 0', padding: '14px 16px 22px' }}
+      >
+        <div className="between" style={{ marginBottom: 6 }}>
+          <h3 style={{ fontSize: 16 }}>Navegar no tempo</h3>
+          <button onClick={onFechar} aria-label="Fechar" style={{ background: 'none', border: 0, cursor: 'pointer', color: 'var(--muted)' }}>
+            <IconX size={20} stroke={2} />
+          </button>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+          Maré oficial para todos os dias · pontinho = dia com foto da comunidade
+        </p>
+        {meses.map((ds) => (
+          <div key={dateKey(ds[0])} style={{ marginBottom: 14 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>{nomeMes(ds[0])}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+              {/* alinhamento: células vazias até o dia da semana do primeiro dia */}
+              {Array.from({ length: ds[0].getDay() }).map((_, i) => <span key={`v${i}`} />)}
+              {ds.map((d) => {
+                const k = dateKey(d)
+                const n = fotosPorDia.get(k) ?? 0
+                const tem = n > 0 || diasComFoto?.has(k)
+                const ativo = k === selecionado
+                const ehHoje = k === hojeKey
+                return (
+                  <button
+                    key={k}
+                    onClick={() => onEscolher(k)}
+                    aria-label={`${d.getDate()} ${tem ? '(tem fotos)' : ''}`}
+                    style={{
+                      aspectRatio: '1', borderRadius: 10, cursor: 'pointer',
+                      border: ehHoje ? '1.5px solid var(--turq)' : '1px solid var(--line)',
+                      background: ativo ? 'var(--turq)' : 'transparent',
+                      color: ativo ? '#fff' : 'inherit',
+                      fontWeight: ehHoje || ativo ? 700 : 500,
+                      fontSize: 13, position: 'relative',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    {d.getDate()}
+                    {tem && (
+                      <span style={{ position: 'absolute', bottom: 4, width: 5, height: 5, borderRadius: '50%', background: ativo ? '#fff' : 'var(--turq)' }} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

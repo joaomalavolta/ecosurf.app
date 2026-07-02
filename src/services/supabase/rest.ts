@@ -287,12 +287,36 @@ export interface FotoRow {
 }
 
 /** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
-export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
+export async function restFotosDoDia(picoId: string, dia?: Date): Promise<FotoRow[]> {
   const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id'
+  // Sem dia: comportamento clássico (últimas 30 do pico). Com dia: só aquele
+  // dia — é o que permite navegar o histórico sem baixar tudo de uma vez.
+  let filtroDia = ''
+  if (dia) {
+    const ini = new Date(dia); ini.setHours(0, 0, 0, 0)
+    const fim = new Date(ini); fim.setDate(fim.getDate() + 1)
+    filtroDia = `&capturada_em=gte.${encodeURIComponent(ini.toISOString())}` +
+      `&capturada_em=lt.${encodeURIComponent(fim.toISOString())}`
+  }
   return rest<FotoRow[]>(
-    `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
-      `&order=capturada_em.desc&limit=30`,
+    `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}${filtroDia}` +
+      `&order=capturada_em.desc&limit=60`,
   )
+}
+
+/** Datas (yyyy-mm-dd locais) que têm foto no pico dentro do período. */
+export async function restDiasComFoto(picoId: string, de: Date, ate: Date): Promise<string[]> {
+  const rows = await rest<{ capturada_em: string }[]>(
+    `fotos_publicas?select=capturada_em&pico_id=eq.${encodeURIComponent(picoId)}` +
+      `&capturada_em=gte.${encodeURIComponent(de.toISOString())}` +
+      `&capturada_em=lte.${encodeURIComponent(ate.toISOString())}&limit=1000`,
+  )
+  const dias = new Set<string>()
+  for (const r of rows) {
+    const d = new Date(r.capturada_em)
+    dias.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+  }
+  return [...dias]
 }
 
 /** Últimas fotos globais da plataforma, independente do pico. */

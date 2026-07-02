@@ -7,10 +7,10 @@ import { restFotosDoDia } from './supabase/rest'
  * URLs assinadas (bucket privado). Sem fotos reais do dia (ou offline), volta
  * VAZIO — a timeline mostra "ainda sem fotos hoje". Nada de feed simulado.
  */
-export async function carregarFeed(picoId: string): Promise<FeedDia> {
+export async function carregarFeed(picoId: string, dia?: Date): Promise<FeedDia> {
   if (temBackend()) {
     try {
-      const rows = await restFotosDoDia(picoId)
+      const rows = await restFotosDoDia(picoId, dia)
       if (rows.length) {
         const { urlAssinada } = await import('./supabase/storage')
         const fotos: Foto[] = await Promise.all(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -30,6 +30,9 @@ export function PicoPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [feed, setFeed] = useState<FeedDia | null>(null)
   const [fotosOtimistas, setFotosOtimistas] = useState<Foto[]>([])
+  const [fotosHistorico, setFotosHistorico] = useState<Foto[]>([])
+  const [diasComFoto, setDiasComFoto] = useState<Set<string>>(new Set())
+  const diasCarregados = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     let vivo = true
@@ -110,19 +113,46 @@ export function PicoPage() {
     const hoje = new Date()
     tideProvider.curvaDoDia(pico, hoje).then((c) => vivo && setCurva(c))
     const fetchMultiDia = async () => {
+      // ±30 dias: maré vem da tábua oficial (cálculo local, sem rede).
+      // Primeiro a janela próxima (resposta imediata), depois o resto.
       const resultado: Record<string, PontoMare[]> = {}
-      for (let i = -3; i <= 3; i++) {
-        const d = new Date(hoje)
-        d.setDate(d.getDate() + i)
-        const key = d.toISOString().slice(0, 10)
-        resultado[key] = await tideProvider.curvaDoDia(pico, d)
+      const calcular = async (de: number, ate: number) => {
+        for (let i = de; i <= ate; i++) {
+          const d = new Date(hoje)
+          d.setDate(d.getDate() + i)
+          const key = d.toISOString().slice(0, 10)
+          resultado[key] = await tideProvider.curvaDoDia(pico, d)
+        }
+        if (vivo) setCurvasMultiDia({ ...resultado })
       }
-      if (vivo) setCurvasMultiDia(resultado)
+      await calcular(-3, 3)
+      await calcular(-30, -4)
+      await calcular(4, 30)
     }
     fetchMultiDia()
+    // Quais dias dos últimos 30 têm foto? (para os pontinhos e o calendário)
+    import('../services/supabase/rest').then(({ restDiasComFoto }) => {
+      const de = new Date(hoje); de.setDate(de.getDate() - 30); de.setHours(0, 0, 0, 0)
+      restDiasComFoto(pico.id, de, new Date()).then((ds) => vivo && setDiasComFoto(new Set(ds)))
+    }).catch(() => { /* histórico é bônus: sem rede, segue só com hoje */ })
     return () => {
       vivo = false
     }
+  }, [pico])
+
+  const aoMudarDia = useCallback((diaKey: string) => {
+    if (!pico) return
+    const dh = new Date()
+    const hojeKey = `${dh.getFullYear()}-${String(dh.getMonth() + 1).padStart(2, '0')}-${String(dh.getDate()).padStart(2, '0')}`
+    if (diaKey === hojeKey || diasCarregados.current.has(diaKey)) return
+    diasCarregados.current.add(diaKey)
+    const [y, m, dd] = diaKey.split('-').map(Number)
+    void carregarFeed(pico.id, new Date(y, m - 1, dd)).then((f) => {
+      setFotosHistorico((prev) => {
+        const ids = new Set(prev.map((x) => x.id))
+        return [...prev, ...f.fotos.filter((x) => !ids.has(x.id))]
+      })
+    })
   }, [pico])
 
   if (pico === undefined) {
@@ -170,7 +200,7 @@ export function PicoPage() {
             <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id)).length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} initialFotoId={initialFotoId} />
+          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosHistorico.filter(h => !(feed?.fotos ?? []).some(ff => ff.id === h.id)), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} initialFotoId={initialFotoId} diasComFoto={diasComFoto} onDiaChange={aoMudarDia} />
         </div>
 
         <div className="card pad">

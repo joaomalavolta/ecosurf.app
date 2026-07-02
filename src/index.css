@@ -718,6 +718,10 @@ table.adt tr:last-child td { border-bottom: 0; }
   font-weight: 600;
   white-space: nowrap;
 }
+.tide-day-dot {
+  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 5px; border-radius: 50%; background: var(--turq);
+}
 .tide-day-badge {
   font-size: 9px;
   font-weight: 800;
