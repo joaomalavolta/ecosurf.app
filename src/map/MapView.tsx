@@ -260,11 +260,20 @@ export function MapView({
       glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     }
 
+    // Voo cinematográfico (1ª abertura da sessão): o mapa nasce mostrando o
+    // Brasil inteiro com os pontos da rede acesos e, quando o GPS responde,
+    // voa até a praia do usuário — "isso é uma rede nacional, e você é parte".
+    // Nas aberturas seguintes vai direto ao GPS (sem pedágio diário).
+    const vooIntro = (() => {
+      try { return !sessionStorage.getItem('ecosurf.voo-intro') } catch { return false }
+    })()
+    if (vooIntro) { try { sessionStorage.setItem('ecosurf.voo-intro', '1') } catch { /* privado */ } }
+
     const map = new maplibregl.Map({
       container: ref.current,
       style: estiloSatelite,
-      center: [-46.79, -24.19],
-      zoom: 12,
+      center: vooIntro ? [-52.5, -14.5] : [-46.79, -24.19],
+      zoom: vooIntro ? 3.2 : 12,
       attributionControl: false,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
@@ -276,24 +285,31 @@ export function MapView({
     map.on('error', () => {})
     mapRef.current = map
 
-    // Abre no GPS do usuário: o mapa nasce no centro padrão (nunca fica em
-    // branco esperando) e voa até a posição assim que ela chega. Permissão
-    // negada ou GPS indisponível → fica no padrão, em silêncio. maximumAge
-    // aceita posição recente em cache: abre instantâneo na maioria dos casos.
+    // Abre no GPS do usuário: o mapa nasce utilizável (nunca em branco) e voa
+    // até a posição assim que ela chega. Permissão negada ou GPS indisponível
+    // → no voo intro, desce para o litoral padrão; senão, fica onde está.
     let vooCancelado = false
+    const voarPara = (lng: number, lat: number) => {
+      if (vooCancelado) return
+      map.flyTo(
+        vooIntro
+          ? { center: [lng, lat], zoom: 12.5, duration: 3400, curve: 1.6, essential: true }
+          : { center: [lng, lat], zoom: 12.5, speed: 1.4 },
+      )
+    }
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (vooCancelado) return
-          map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12.5, speed: 1.4 })
-        },
-        () => { /* negado/indisponível: mantém o centro padrão */ },
+        (pos) => voarPara(pos.coords.longitude, pos.coords.latitude),
+        () => { if (vooIntro) voarPara(-46.79, -24.19) },
         { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
       )
       // Se o usuário mexer no mapa antes do GPS responder, respeita a vontade
       // dele e cancela o voo (não puxa de volta).
       map.once('dragstart', () => { vooCancelado = true })
       map.once('zoomstart', () => { vooCancelado = true })
+    } else if (vooIntro) {
+      // Sem geolocalização: não deixa o mapa preso no Brasil inteiro.
+      setTimeout(() => voarPara(-46.79, -24.19), 1600)
     }
 
     function aplicar() {
