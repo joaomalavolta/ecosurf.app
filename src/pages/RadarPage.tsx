@@ -56,7 +56,7 @@ export function RadarPage() {
         const { getCurtidas } = await import('../services/supabase/rest')
         const likes = await Promise.all(fs.map(async f => [f.id, await getCurtidas(f.id)] as const))
         if (vivo) setCurtidasMap(Object.fromEntries(likes))
-      } catch {}
+      } catch { /* curtidas são opcionais: segue sem elas */ }
     })
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))

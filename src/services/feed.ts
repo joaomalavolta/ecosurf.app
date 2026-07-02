@@ -60,7 +60,7 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
             if (r.storage_path) {
               try {
                 url = await urlAssinada(r.storage_path)
-              } catch {}
+              } catch { /* sem URL assinada: usa a pública adiante */ }
             }
             return {
               id: r.id,
@@ -79,7 +79,7 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
         )
         return fotos.filter((f) => !!f.url)
       }
-    } catch {}
+    } catch { /* offline/erro: cai para o seed */ }
   }
   return []
 }

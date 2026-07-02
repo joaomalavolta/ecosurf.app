@@ -62,7 +62,7 @@ export async function carregarPicosComRelato(): Promise<string[]> {
     try {
       const { restPicosComRelatoHoje } = await import('./supabase/rest')
       return await restPicosComRelatoHoje()
-    } catch {}
+    } catch { /* offline/erro: cai para o seed */ }
   }
   return [] // Offline fallback
 }

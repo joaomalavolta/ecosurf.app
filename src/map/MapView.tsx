@@ -143,7 +143,7 @@ function popupHtml(p: Record<string, unknown>): string {
   const local = `${esc(p.municipio)}/${esc(p.uf)}`
   const isMutirao = p.tipo === 'mutirao'
   const href = isMutirao ? `/mutirao/${esc(p.id)}` : `/alerta/${esc(p.id)}`
-  let meta = ''
+  let meta: string
   if (!isMutirao) {
     meta = `${esc(p.status)} · ${local}`
   } else {

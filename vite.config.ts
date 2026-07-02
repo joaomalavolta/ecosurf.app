@@ -21,8 +21,10 @@ export default defineConfig({
         background_color: '#F5FAFC',
         theme_color: '#0A3A4C',
         icons: [
-          { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'any' },
-          { src: '/atalho_icone_celular.png', sizes: '376x376', type: 'image/png', purpose: 'maskable' },
+          { src: '/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
