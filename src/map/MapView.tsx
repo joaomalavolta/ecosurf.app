@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useNavigate } from 'react-router-dom'
@@ -210,11 +210,18 @@ function filtroLayer(filtro?: string): maplibregl.ExpressionSpecification | null
  * Pins circulares coloridos por categoria.
  * Filtragem instantânea via setFilter (sem rebuild).
  */
+const JANELAS: { h: number | null; rotulo: string }[] = [
+  { h: 0.5, rotulo: '30 min' }, { h: 1, rotulo: '1h' }, { h: 3, rotulo: '3h' },
+  { h: 6, rotulo: '6h' }, { h: 12, rotulo: '12h' }, { h: 24, rotulo: '24h' },
+  { h: 48, rotulo: '48h' }, { h: 168, rotulo: '7 dias' }, { h: null, rotulo: 'tudo' },
+]
+
 export function MapView({
   picos,
   alertas = [],
   mutiroes = [],
   ativos,
+  atividade,
   filtro,
   onSelectPico,
   className,
@@ -224,16 +231,32 @@ export function MapView({
   alertas?: Alerta[]
   mutiroes?: Mutirao[]
   ativos?: Set<string>
+  /** Eventos de foto (picoId + quando) — liga o scrubber temporal do mapa. */
+  atividade?: { picoId: string; em: string }[]
   filtro?: 'tudo' | 'picos' | 'alertas' | 'mutiroes'
   onSelectPico?: (p: Pico) => void
   className?: string
   style?: React.CSSProperties
 }) {
+  // Scrubber temporal: qual janela de frescor "acende" um pico no mapa.
+  const [janelaIdx, setJanelaIdx] = useState(JANELAS.length - 1) // padrão: tudo
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const prontoRef = useRef(false)
-  const dadosRef = useRef<Dados>({ picos, alertas, mutiroes, ativos })
-  dadosRef.current = { picos, alertas, mutiroes, ativos }
+  const janelaH = JANELAS[janelaIdx].h
+  const [ativosEfetivos, setAtivosEfetivos] = useState<Set<string> | undefined>(ativos)
+  useEffect(() => {
+    if (janelaH == null || !atividade) { setAtivosEfetivos(ativos); return }
+    const corte = Date.now() - janelaH * 3600_000
+    const s = new Set<string>()
+    for (const a of atividade) {
+      if (new Date(a.em).getTime() >= corte) s.add(a.picoId)
+    }
+    setAtivosEfetivos(s)
+  }, [janelaH, atividade, ativos])
+
+  const dadosRef = useRef<Dados>({ picos, alertas, mutiroes, ativos: ativosEfetivos })
+  dadosRef.current = { picos, alertas, mutiroes, ativos: ativosEfetivos }
   const navigate = useNavigate()
   const navRef = useRef(navigate)
   navRef.current = navigate
@@ -324,8 +347,50 @@ export function MapView({
       map.addSource(SRC, {
         type: 'geojson',
         data: colecao(dadosRef.current),
-        cluster: false,
+        // Agrupamento (manual §7.3): muitos pinos próximos viram uma bolha
+        // com contagem; o zoom abre. Evita sobreposição em visão afastada.
+        cluster: true,
+        clusterRadius: 46,
+        clusterMaxZoom: 11,
       })
+
+      map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: SRC,
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': ['step', ['get', 'point_count'], '#2E9BD6', 10, '#0E7FA8', 25, '#0B5E7C'],
+          'circle-radius': ['step', ['get', 'point_count'], 16, 10, 21, 25, 26],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      })
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: SRC,
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': 12,
+        },
+        paint: { 'text-color': '#ffffff' },
+      })
+      map.on('click', 'clusters', async (e) => {
+        const f = e.features?.[0]
+        const clusterId = f?.properties?.cluster_id as number | undefined
+        const srcC = map.getSource(SRC) as maplibregl.GeoJSONSource
+        if (clusterId == null || !srcC) return
+        try {
+          const zoom = await srcC.getClusterExpansionZoom(clusterId)
+          const [lng, lat] = (f!.geometry as GeoJSON.Point).coordinates
+          map.easeTo({ center: [lng, lat], zoom })
+        } catch { /* expandir falhou: usuário pode dar zoom manual */ }
+      })
+      map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer' })
+      map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = '' })
 
       map.addLayer({
         id: 'pontos-icone',
@@ -430,22 +495,51 @@ export function MapView({
     const map = mapRef.current
     if (!map || !prontoRef.current) return
     const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
-    if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos }))
-  }, [picos, alertas, mutiroes, ativos])
+    if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos: ativosEfetivos }))
+  }, [picos, alertas, mutiroes, ativosEfetivos])
 
   // Filtro INSTANTÂNEO por tipo (sem rebuild de dados)
   useEffect(() => {
     const map = mapRef.current
     if (!map || !prontoRef.current) return
     const expr = filtroLayer(filtro)
-    map.setFilter('pontos-icone', expr)
+    const semCluster: maplibregl.ExpressionSpecification = ['!', ['has', 'point_count']]
+    map.setFilter('pontos-icone', expr ? ['all', semCluster, expr] : semCluster)
     const picoVisivel = !filtro || filtro === 'tudo' || filtro === 'picos'
     if (picoVisivel) {
-      map.setFilter('pico-labels', ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']])
+      map.setFilter('pico-labels', ['all', semCluster, ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']]])
     } else {
       map.setFilter('pico-labels', ['==', ['get', 'tipo'], '__none__'])
     }
   }, [filtro])
 
-  return <div ref={ref} className={className} style={{ position: 'absolute', inset: 0, background: '#0a1929', ...style }} />
+  return (
+    <div className={className} style={{ position: 'absolute', inset: 0, ...style }}>
+      <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#0a1929' }} />
+      {atividade && atividade.length > 0 && (
+        <div
+          style={{
+            position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)',
+            zIndex: 3, background: 'rgba(4,20,27,.66)', backdropFilter: 'blur(6px)',
+            borderRadius: 999, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 10,
+            width: 'min(320px, calc(100% - 24px))',
+          }}
+        >
+          <span className="dado" style={{ fontSize: 11, color: '#7FDCD4', whiteSpace: 'nowrap', minWidth: 84 }}>
+            🌊 {JANELAS[janelaIdx].h == null ? 'todas as fotos' : `últimas ${JANELAS[janelaIdx].rotulo}`}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={JANELAS.length - 1}
+            step={1}
+            value={janelaIdx}
+            onChange={(e) => setJanelaIdx(Number(e.target.value))}
+            aria-label="Janela de tempo dos reports de onda"
+            style={{ flex: 1, accentColor: '#3BE0C4' }}
+          />
+        </div>
+      )}
+    </div>
+  )
 }

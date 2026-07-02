@@ -137,6 +137,7 @@ export function RadarPage() {
               alertas={alertas}
               mutiroes={mutiroes}
               ativos={ativos}
+              atividade={feed.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))}
               filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
             />

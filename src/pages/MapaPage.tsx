@@ -4,6 +4,7 @@ import { IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
+import { carregarFeedGlobal } from '../services/feed'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 
@@ -12,6 +13,7 @@ type Filtro = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
+  const [atividade, setAtividade] = useState<{ picoId: string; em: string }[]>([])
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [filtro, setFiltro] = useState<Filtro>('tudo')
@@ -26,6 +28,7 @@ export function MapaPage() {
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
+    carregarFeedGlobal(120).then((fs) => vivo && setAtividade(fs.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))))
     return () => {
       vivo = false
     }
@@ -82,6 +85,7 @@ export function MapaPage() {
           alertas={alertas}
           mutiroes={mutiroes}
           ativos={ativos}
+          atividade={atividade}
           filtro={filtro}
           onSelectPico={setSel}
         />
