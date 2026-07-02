@@ -314,7 +314,7 @@ export function TideScrubTimeline({
 
           <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
             <span className="tag" style={{ background: 'rgba(11,58,83,.72)', color: '#fff' }}>
-              {horaCurta(f.capturadaEm)} · {f.autorId ? (
+              <span className="dado">{horaCurta(f.capturadaEm)}</span> · {f.autorId ? (
                 <Link to={`/usuario/${f.autorId}`} style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 2 }}>{f.autorNome}</Link>
               ) : f.autorNome}
             </span>
@@ -324,7 +324,7 @@ export function TideScrubTimeline({
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 12px 12px', color: '#fff', background: 'linear-gradient(to top, rgba(11,58,83,.88), transparent)' }}>
             <div style={{ display: 'flex', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
               <ProvenanceBadge p={f.procedencia} />
-              {f.alturaMareM != null && <span className="tag mar"><IconWaveSine size={13} stroke={2.2} /> {f.alturaMareM.toFixed(1)}m</span>}
+              {f.alturaMareM != null && <span className="tag mar dado"><IconWaveSine size={13} stroke={2.2} /> {f.alturaMareM.toFixed(1)}m</span>}
               {f.ventoTipo && <span className="tag" style={{ background: 'rgba(255,255,255,.9)', color: 'var(--azul-abissal)' }}><IconWind size={13} stroke={2.2} /> {rotuloVento(f.ventoTipo)}</span>}
             </div>
             <div className="between">
@@ -434,7 +434,7 @@ export function TideScrubTimeline({
                 const pct = (1 - (v - min) / ((max - min) || 1)) * 100
                 const yPctClamped = Math.max(2, Math.min(98, (6 / VB_H + pct / 100 * 30 / VB_H) * 100))
                 return (
-                  <span key={v} style={{
+                  <span key={v} className="dado" style={{
                     position: 'absolute',
                     right: 4,
                     top: `${yPctClamped}%`,
@@ -602,7 +602,7 @@ export function TideScrubTimeline({
                       zIndex: 3,
                     }}
                   >
-                    {p.alturaM.toFixed(1)}m · {fmtHora(p.hora)}
+                    <span className="dado">{p.alturaM.toFixed(1)}m · {fmtHora(p.hora)}</span>
                   </span>
                 )
               })
@@ -680,7 +680,7 @@ export function TideScrubTimeline({
                 boxShadow: '0 2px 10px rgba(0,0,0,.25)',
                 border: '1px solid rgba(30,203,195,.3)',
               }}>
-                {fmtHora(scrubHora)} · {alturaNaHora(curvaDoDia, scrubHora).toFixed(1)}m
+                <span className="dado">{fmtHora(scrubHora)} · {alturaNaHora(curvaDoDia, scrubHora).toFixed(1)}m</span>
               </span>
             )}
           </div>
@@ -692,7 +692,7 @@ export function TideScrubTimeline({
             background: 'rgba(30,203,195,.1)', border: '1px solid rgba(30,203,195,.25)',
             color: '#1ECBC3', fontWeight: 700,
           }}>
-            <IconWaveSine size={13} stroke={2.2} /> {alturaNaHora(curvaDoDia, scrubHora ?? agoraH).toFixed(1)}m
+            <IconWaveSine size={13} stroke={2.2} /> <span className="dado">{alturaNaHora(curvaDoDia, scrubHora ?? agoraH).toFixed(1)}m</span>
           </span>
           <span className="tide-info-chip" style={{
             background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)',

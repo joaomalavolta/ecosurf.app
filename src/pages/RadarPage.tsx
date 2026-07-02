@@ -145,7 +145,7 @@ export function RadarPage() {
               <div className="muted" style={{ fontSize: 12 }}>{selPico.municipio} · {selPico.uf}</div>
             </Link>
             {fc[selPico.id] && (
-              <span className="badge b-info" style={{ fontSize: 11 }}>
+              <span className="badge b-info dado" style={{ fontSize: 11 }}>
                 {fc[selPico.id].ondaM.toFixed(1)}m · {fc[selPico.id].periodoS}s
               </span>
             )}
@@ -242,7 +242,7 @@ export function RadarPage() {
                           <div className="muted" style={{ fontSize: 12 }}>{p.praia} · {p.municipio}/{p.uf}</div>
                         </div>
                         {fc[p.id] && (
-                          <span className="badge b-info" style={{ fontSize: 10 }}>
+                          <span className="badge b-info dado" style={{ fontSize: 10 }}>
                             {fc[p.id].ondaM.toFixed(1)}m
                           </span>
                         )}
