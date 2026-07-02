@@ -155,7 +155,7 @@ export function RadarPage() {
       </div>
 
       {/* ─── FILTRO MAPA ─── */}
-      <div className="seg-filter" style={{ margin: '10px 12px 0' }}>
+      <div className="seg-filter" style={{ margin: '10px 12px' }}>
         <div
           className="seg-filter-thumb"
           style={{
@@ -176,9 +176,9 @@ export function RadarPage() {
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
       {/* ─── FEED SECTION ─── */}
-      <div className="pills" role="tablist" aria-label="Filtro do radar" style={{ margin: '0 12px 0' }}>
+      <div className="pills full" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px' }}>
         <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
-        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores ondas</Pill>
+        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores</Pill>
         <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
       </div>
       <div className="page-pad stack" ref={feedRef}>

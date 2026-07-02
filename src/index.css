@@ -319,6 +319,14 @@ input, select, textarea { accent-color: var(--turq); }
 /* pílulas / chips */
 .pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
 .pills::-webkit-scrollbar { display: none; }
+/* Fileira de largura cheia: pills dividem o espaço igualmente (Radar/Ações).
+   Alinha com o seg-filter e os botões grandes — mesma régua, alvos maiores. */
+.pills.full { overflow-x: visible; }
+.pills.full .pill {
+  flex: 1; justify-content: center; min-width: 0;
+  padding-left: 8px; padding-right: 8px;
+  overflow: hidden; text-overflow: ellipsis;
+}
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   white-space: nowrap; border: 1px solid var(--line); cursor: pointer;
@@ -497,7 +505,7 @@ table.adt tr:last-child td { border-bottom: 0; }
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 16px 4px;
+  padding: 6px 16px 4px;
 }
 .story-track::-webkit-scrollbar { display: none; }
 

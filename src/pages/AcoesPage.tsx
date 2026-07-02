@@ -124,7 +124,7 @@ export function AcoesPage() {
       <Header title="Ações" sub="Registrar, defender a costa e mobilizar." />
       <div className="page-pad stack">
         {/* Botões principais */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
           <Link to="/capturar" className="btn acento full" style={{ minHeight: 50, fontSize: 14 }}>
             <IconCamera size={18} stroke={2} /> Foto rápida
           </Link>
@@ -134,7 +134,7 @@ export function AcoesPage() {
         </div>
 
         {/* Tabs de filtro */}
-        <div className="pills" style={{ marginBottom: 8 }}>
+        <div className="pills full" style={{ marginBottom: 10 }}>
           <Pill on={tab === 'tudo'} onClick={() => setTab('tudo')}>Tudo</Pill>
           <Pill on={tab === 'alertas'} onClick={() => setTab('alertas')}><IconAlertTriangle size={14} stroke={2} /> Alertas</Pill>
           <Pill on={tab === 'mutiroes'} onClick={() => setTab('mutiroes')}><IconHeartHandshake size={14} stroke={2} /> Mutirões</Pill>
