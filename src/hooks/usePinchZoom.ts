@@ -82,16 +82,52 @@ export function usePinchZoom(
       if (e.touches.length < 2) distInicial.current = null
     }
 
+    // ── iOS Safari: usa eventos PRÓPRIOS da Apple (gesture*) para o pinça,
+    // independentes de touch-action e dos touchevents. Sem bloquear estes,
+    // o Safari dá zoom na página inteira (a tela "foge"). ──
+    function onGestureStart(e: Event) {
+      e.preventDefault()
+      zoomInicial.current = zoomAtual
+    }
+    async function onGestureChange(e: Event) {
+      e.preventDefault() // impede o zoom-de-página do Safari, sempre
+      const caps = capsRef.current
+      const track = streamRef.current?.getVideoTracks?.()[0]
+      // `scale` é a razão do pinça desde o início do gesto (propriedade iOS).
+      const scale = (e as unknown as { scale?: number }).scale
+      if (!caps || !track || !scale) return // sem zoom de lente: só bloqueia
+      let novo = zoomInicial.current * scale
+      novo = Math.min(caps.max, Math.max(caps.min, novo))
+      try {
+        await track.applyConstraints({ advanced: [{ zoom: novo } as unknown as MediaTrackConstraintSet] })
+        setZoomAtual(novo)
+      } catch {
+        /* aplicar zoom falhou — ignora, sem quebrar a captura */
+      }
+    }
+    function onGestureEnd(e: Event) {
+      e.preventDefault()
+    }
+
     // passive:false é essencial para o preventDefault valer no gesto de zoom.
     alvo.addEventListener('touchstart', onStart, { passive: false })
     alvo.addEventListener('touchmove', onMove, { passive: false })
     alvo.addEventListener('touchend', onEnd)
     alvo.addEventListener('touchcancel', onEnd)
+    // Os eventos gesture* do iOS precisam ser bloqueados no documento para o
+    // Safari respeitar o preventDefault de forma confiável. A tela da câmera é
+    // um takeover de tela cheia, então bloquear durante ela é seguro.
+    document.addEventListener('gesturestart', onGestureStart, { passive: false })
+    document.addEventListener('gesturechange', onGestureChange, { passive: false })
+    document.addEventListener('gestureend', onGestureEnd, { passive: false })
     return () => {
       alvo.removeEventListener('touchstart', onStart)
       alvo.removeEventListener('touchmove', onMove)
       alvo.removeEventListener('touchend', onEnd)
       alvo.removeEventListener('touchcancel', onEnd)
+      document.removeEventListener('gesturestart', onGestureStart)
+      document.removeEventListener('gesturechange', onGestureChange)
+      document.removeEventListener('gestureend', onGestureEnd)
     }
   }, [ativo, alvoRef, streamRef, zoomAtual])
 
