@@ -68,7 +68,10 @@ export function usePinchZoom(
       if (!caps || !track) return // sem zoom de lente: só bloqueia a página
 
       const fator = distancia(e.touches) / (distInicial.current || 1)
-      let novo = zoomInicial.current * fator
+      // Curva suavizada (expoente < 1): o zoom avança mais devagar que os
+      // dedos — fácil de parar no nível certo, perto da sensação da câmera
+      // nativa. Linear (fator puro) era nervoso demais.
+      let novo = zoomInicial.current * Math.pow(fator, 0.6)
       novo = Math.min(caps.max, Math.max(caps.min, novo))
       try {
         await track.applyConstraints({ advanced: [{ zoom: novo } as unknown as MediaTrackConstraintSet] })
@@ -96,7 +99,7 @@ export function usePinchZoom(
       // `scale` é a razão do pinça desde o início do gesto (propriedade iOS).
       const scale = (e as unknown as { scale?: number }).scale
       if (!caps || !track || !scale) return // sem zoom de lente: só bloqueia
-      let novo = zoomInicial.current * scale
+      let novo = zoomInicial.current * Math.pow(scale, 0.6) // curva suavizada
       novo = Math.min(caps.max, Math.max(caps.min, novo))
       try {
         await track.applyConstraints({ advanced: [{ zoom: novo } as unknown as MediaTrackConstraintSet] })
