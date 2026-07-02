@@ -151,7 +151,19 @@ export function FormularioAlertaPage() {
             <br /><br />
             Caso a situação exija providência oficial, procure diretamente os órgãos públicos competentes.
           </p>
-          <button className="btn acento full" style={{ marginTop: 24 }} onClick={() => navigate('/mapa')}>
+          <button
+            className="btn full"
+            style={{ marginTop: 24, background: '#2E9B6B', color: '#fff', fontWeight: 700 }}
+            onClick={() => {
+              const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos'].includes(categoria ?? '')
+              const onde = (localNome || municipio).trim()
+              const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
+              navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+            }}
+          >
+            🤝 Criar mutirão e convidar a comunidade
+          </button>
+          <button className="btn acento full" style={{ marginTop: 8 }} onClick={() => navigate('/mapa')}>
             Ver no mapa
           </button>
           <button className="btn outline full" style={{ marginTop: 8 }} onClick={() => navigate('/acoes')}>
