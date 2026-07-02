@@ -104,6 +104,12 @@ input, select, textarea { accent-color: var(--turq); }
    pan-x/pan-y mantém o scroll normal mas bloqueia pinça e duplo-toque
    de zoom NA PÁGINA. Elementos com gesto próprio (mapa MapLibre, câmera)
    declaram seu touch-action e continuam com pinch interno funcionando. */
+/* Barras de rolagem ocultas em todo o app: o scroll continua normal
+   (dedo, roda do mouse, trackpad) — só a barra visual some, como em app
+   nativo. Vale para páginas, feeds, listas e o portal desktop. */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
 html, body {
   touch-action: pan-x pan-y;
   overscroll-behavior-y: none;

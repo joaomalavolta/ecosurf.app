@@ -430,6 +430,21 @@ export function AlertaPage() {
           </div>
         )}
 
+        {!isEditing && (
+          <button
+            className="btn full"
+            style={{ marginTop: 12, background: '#2E9B6B', color: '#fff', fontWeight: 700 }}
+            onClick={() => {
+              const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos', 'Lixo na praia', 'Lixo no rio', 'Entulho', 'Microplásticos'].includes(alerta.categoria)
+              const onde = alerta.local_nome || alerta.municipio || ''
+              const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
+              navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+            }}
+          >
+            🤝 Criar mutirão para esta ocorrência
+          </button>
+        )}
+
         <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
           {!isEditing ? (
             <>
