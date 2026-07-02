@@ -32,6 +32,7 @@ export function UsuarioPage() {
   const [perfil, setPerfil] = useState<PerfilPublico | null | undefined>(undefined)
   const [contribs, setContribs] = useState<ContribsUsuario | null>(null)
   const [picoMap, setPicoMap] = useState<Map<string, Pico>>(new Map())
+  const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
 
   useEffect(() => {
     if (!userId || !temBackend()) {
@@ -39,7 +40,17 @@ export function UsuarioPage() {
       return
     }
     restPerfilPublico(userId).then(setPerfil).catch(() => setPerfil(null))
-    restContribuicoesUsuario(userId).then(setContribs).catch(() => setContribs(null))
+    restContribuicoesUsuario(userId).then(async (c) => {
+      setContribs(c)
+      // Resolve as miniaturas em LOTE: preferir thumb, cair na foto cheia.
+      const paths = c.fotos.map((f) => f.thumbPath ?? f.storagePath).filter((p): p is string => !!p)
+      if (paths.length) {
+        try {
+          const { urlsAssinadas } = await import('../services/supabase/storage')
+          setThumbs(await urlsAssinadas(paths))
+        } catch { /* sem URLs: grade cai nos placeholders */ }
+      }
+    }).catch(() => setContribs(null))
     carregarPicos().then((ps) => setPicoMap(new Map(ps.map((p) => [p.id, p])))).catch(() => {})
   }, [userId])
 
@@ -117,7 +128,7 @@ export function UsuarioPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
               {contribs.fotos.map((f) => (
                 <Link key={f.id} to={`/pico/${f.picoId}?foto=${f.id}`} style={{ aspectRatio: '1', borderRadius: 12, overflow: 'hidden', display: 'block' }}>
-                  <Photo seed={f.id} alt={`Foto em ${nomePico(f.picoId)}`} style={{ width: '100%', height: '100%' }} />
+                  <Photo seed={f.id} url={thumbs.get(f.thumbPath ?? f.storagePath ?? '')} alt={`Foto em ${nomePico(f.picoId)}`} style={{ width: '100%', height: '100%' }} />
                 </Link>
               ))}
             </div>
