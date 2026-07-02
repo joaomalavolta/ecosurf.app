@@ -701,6 +701,8 @@ table.adt tr:last-child td { border-bottom: 0; }
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;            /* o dedo manda no eixo x, sempre */
+  overscroll-behavior-x: contain; /* swipe da régua não vaza pra página */
   gap: 2px;
   padding: 8px 14px 0;
   border-top: 1px solid var(--line);

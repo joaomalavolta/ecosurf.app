@@ -165,10 +165,21 @@ export function TideScrubTimeline({
     onDiaChange?.(key)
   }, [onDiaChange])
 
-  // Régua de 61 dias: centraliza o dia ativo quando muda (e no primeiro render).
+  // Régua de 61 dias: centraliza o dia ativo. Scroll direto no CONTAINER
+  // (não scrollIntoView): (a) nunca rola a página junto; (b) no iOS a
+  // animação suave de scrollIntoView não é interrompível pelo dedo — a
+  // régua "ignorava" o swipe do usuário até terminar. Instantâneo no
+  // primeiro render; suave nas trocas seguintes; e nunca durante um toque.
+  const tocandoRegua = useRef(false)
+  const jaCentralizou = useRef(false)
   useEffect(() => {
-    const el = tabsRef.current?.querySelector('.tide-day-tab.active') as HTMLElement | null
-    el?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+    const cont = tabsRef.current
+    if (!cont || tocandoRegua.current) return
+    const el = cont.querySelector('.tide-day-tab.active') as HTMLElement | null
+    if (!el) return
+    const destino = el.offsetLeft - (cont.clientWidth - el.clientWidth) / 2
+    cont.scrollTo({ left: Math.max(0, destino), behavior: jaCentralizou.current ? 'smooth' : 'auto' })
+    jaCentralizou.current = true
   }, [selectedDiaKey])
 
   const hasInitialized = useRef(false)
@@ -395,7 +406,15 @@ export function TideScrubTimeline({
         >
           <IconCalendar size={18} stroke={2} />
         </button>
-        <div className="tide-day-tabs" role="tablist" aria-label="Dias do período" ref={tabsRef} style={{ flex: 1, minWidth: 0 }}>
+        <div
+          className="tide-day-tabs"
+          role="tablist"
+          aria-label="Dias do período"
+          ref={tabsRef}
+          style={{ flex: 1, minWidth: 0 }}
+          onTouchStart={() => { tocandoRegua.current = true }}
+          onTouchEnd={() => { setTimeout(() => { tocandoRegua.current = false }, 400) }}
+        >
           {dias.map((d) => {
             const key = dateKey(d)
             const fotosNoDia = fotos.filter(f2 => dateKey(f2.capturadaEm) === key)

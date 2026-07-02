@@ -519,14 +519,17 @@ export function MapView({
       {atividade && atividade.length > 0 && (
         <div
           style={{
-            position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)',
-            zIndex: 3, background: 'rgba(4,20,27,.66)', backdropFilter: 'blur(6px)',
-            borderRadius: 999, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 10,
-            width: 'min(320px, calc(100% - 24px))',
+            position: 'absolute', left: 10, top: 10,
+            zIndex: 3,
+            background: 'rgba(28,32,36,.44)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,.16)',
+            borderRadius: 999, padding: '5px 12px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            width: 'min(232px, 56%)',
           }}
         >
-          <span className="dado" style={{ fontSize: 11, color: '#7FDCD4', whiteSpace: 'nowrap', minWidth: 84 }}>
-            🌊 {JANELAS[janelaIdx].h == null ? 'todas as fotos' : `últimas ${JANELAS[janelaIdx].rotulo}`}
+          <span className="dado" style={{ fontSize: 10.5, color: 'rgba(255,255,255,.85)', whiteSpace: 'nowrap', minWidth: 66 }}>
+            {JANELAS[janelaIdx].h == null ? 'tudo' : `≤ ${JANELAS[janelaIdx].rotulo}`}
           </span>
           <input
             type="range"
@@ -536,7 +539,7 @@ export function MapView({
             value={janelaIdx}
             onChange={(e) => setJanelaIdx(Number(e.target.value))}
             aria-label="Janela de tempo dos reports de onda"
-            style={{ flex: 1, accentColor: '#3BE0C4' }}
+            style={{ flex: 1, accentColor: 'rgba(230,235,238,.9)', height: 4 }}
           />
         </div>
       )}
