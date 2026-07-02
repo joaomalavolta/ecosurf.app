@@ -23,8 +23,14 @@ describe('estacaoMaisProxima', () => {
     expect(estacaoMaisProxima(-24.73, -47.55).id).toBe('cananeia') // Ilha Comprida
   })
 
-  it('liga o litoral norte à estação de Ubatuba', () => {
-    expect(estacaoMaisProxima(-23.62, -45.41).id).toBe('ubatuba') // Caraguatatuba
+  it('liga o litoral norte à estação oficial mais próxima (CHM São Sebastião)', () => {
+    // Caraguatatuba fica mais perto do Porto de São Sebastião (CHM nº 45),
+    // estação oficial da publicação 2026, que do placeholder de Ubatuba.
+    expect(estacaoMaisProxima(-23.62, -45.41).id).toBe('porto-de-sao-sebastiao')
+  })
+
+  it('leva picos de outros estados à estação CHM da região (escala nacional)', () => {
+    expect(estacaoMaisProxima(-8.11, -34.89).id).toContain('recife') // Recife/PE
   })
 })
 

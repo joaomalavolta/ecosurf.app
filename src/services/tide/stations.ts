@@ -1,4 +1,5 @@
 import type { Constituinte } from '../../lib/tide'
+import { ESTACOES_CHM_2026 } from './estacoes-chm'
 
 /**
  * ESTAÇÕES MAREGRÁFICAS DE REFERÊNCIA (fonte: Catálogo de Estações
@@ -124,6 +125,23 @@ export function estacaoMaisProxima(lat: number, lng: number): EstacaoMare {
     if (d < menor) {
       menor = d
       melhor = e
+    }
+  }
+  // Registro nacional CHM: 55 estações oficiais extras como candidatas.
+  // Sem tábua ingerida elas caem no modelo genérico — mas já ancoram o pico
+  // à estação certa em qualquer ponto da costa (pronto pra escala nacional).
+  for (const e of ESTACOES_CHM_2026) {
+    const d = distanciaKm(lat, lng, e.lat, e.lng)
+    if (d < menor) {
+      menor = d
+      melhor = {
+        id: e.id,
+        nome: e.nome,
+        nivelMedioM: 0.78, // genérico até a tábua da estação ser ingerida
+        lat: e.lat,
+        lng: e.lng,
+        constituintes: [],
+      }
     }
   }
   return melhor
