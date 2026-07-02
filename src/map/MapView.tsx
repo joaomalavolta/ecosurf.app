@@ -276,6 +276,26 @@ export function MapView({
     map.on('error', () => {})
     mapRef.current = map
 
+    // Abre no GPS do usuário: o mapa nasce no centro padrão (nunca fica em
+    // branco esperando) e voa até a posição assim que ela chega. Permissão
+    // negada ou GPS indisponível → fica no padrão, em silêncio. maximumAge
+    // aceita posição recente em cache: abre instantâneo na maioria dos casos.
+    let vooCancelado = false
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (vooCancelado) return
+          map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12.5, speed: 1.4 })
+        },
+        () => { /* negado/indisponível: mantém o centro padrão */ },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+      )
+      // Se o usuário mexer no mapa antes do GPS responder, respeita a vontade
+      // dele e cancela o voo (não puxa de volta).
+      map.once('dragstart', () => { vooCancelado = true })
+      map.once('zoomstart', () => { vooCancelado = true })
+    }
+
     function aplicar() {
       const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
       if (src) src.setData(colecao(dadosRef.current))
