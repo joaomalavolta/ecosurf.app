@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
+import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -288,6 +289,9 @@ export function RadarPage() {
         </p>
       </div>
 
+      <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
+        <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
+      </div>
       {mutiroes.length > 0 && (
         <div className="so-desktop card pad" style={{ margin: '0 16px 16px' }}>
           <span className="eyebrow">🤝 Próximos mutirões</span>

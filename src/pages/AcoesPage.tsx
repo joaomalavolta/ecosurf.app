@@ -11,6 +11,7 @@ import {
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { categoriaPorId } from '../components/SeletorCategoria'
 import { carregarAmeacas, carregarMutiroes } from '../services/picos'
 import { listarRascunhos, excluirRascunho } from '../services/alertas'
@@ -134,6 +135,9 @@ export function AcoesPage() {
         </div>
 
         {/* Tabs de filtro */}
+        <div style={{ marginBottom: 10 }}>
+          <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
+        </div>
         <div className="pills full" style={{ marginBottom: 10 }}>
           <Pill on={tab === 'tudo'} onClick={() => setTab('tudo')}>Tudo</Pill>
           <Pill on={tab === 'alertas'} onClick={() => setTab('alertas')}><IconAlertTriangle size={14} stroke={2} /> Alertas</Pill>
