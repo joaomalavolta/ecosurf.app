@@ -27,6 +27,7 @@ const MapaPage = lazy(() => import('./pages/MapaPage').then((m) => ({ default: m
 // Painel admin: isolado do app público (fora do app-shell e do onboarding) e
 // fora do bundle principal — só carrega quando alguém abre /admin.
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })))
+const EstiloDemoPage = lazy(() => import('./pages/EstiloDemoPage').then((m) => ({ default: m.EstiloDemoPage })))
 
 export default function App() {
   const { pathname } = useLocation()
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/mutirao/:mutiraoId" element={<MutiraoPage />} />
         <Route path="/alerta/:id" element={<AlertaPage />} />
         <Route path="/usuario/:userId" element={<UsuarioPage />} />
+        <Route path="/estilo" element={<Suspense fallback={<div className="page page-pad"><p className="muted">Carregando…</p></div>}><EstiloDemoPage /></Suspense>} />
         </Routes>
         {!semNav && <BottomNav />}
         <UpdatePrompt />
