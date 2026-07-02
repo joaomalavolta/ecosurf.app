@@ -158,7 +158,12 @@ export function FormularioAlertaPage() {
               const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos'].includes(categoria ?? '')
               const onde = (localNome || municipio).trim()
               const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
-              navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+              const qs = new URLSearchParams({ titulo })
+              if (municipio) qs.set('municipio', municipio)
+              if (uf) qs.set('uf', uf)
+              if (localNome) qs.set('local', localNome)
+              if (lat != null && lng != null) { qs.set('lat', String(lat)); qs.set('lng', String(lng)) }
+              navigate(`/nova-acao/mutirao?${qs.toString()}`)
             }}
           >
             🤝 Criar mutirão e convidar a comunidade

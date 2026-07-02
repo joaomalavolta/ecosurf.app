@@ -40,11 +40,22 @@ export function FormularioMutiraoPage() {
   const [titulo, setTitulo] = useState(() =>
     new URLSearchParams(window.location.search).get('titulo') ?? '')
   const [descricao, setDescricao] = useState('')
-  const [municipio, setMunicipio] = useState('')
-  const [uf, setUf] = useState('')
-  const [lat, setLat] = useState<number | undefined>()
-  const [lng, setLng] = useState<number | undefined>()
-  const [pontoEncontro, setPontoEncontro] = useState('')
+  // Vindo de uma ocorrência ("criar mutirão para esta ocorrência"), o local
+  // da ação chega pronto pela URL — o ponto do problema é o ponto do mutirão.
+  const [municipio, setMunicipio] = useState(() =>
+    new URLSearchParams(window.location.search).get('municipio') ?? '')
+  const [uf, setUf] = useState(() =>
+    new URLSearchParams(window.location.search).get('uf') ?? '')
+  const [lat, setLat] = useState<number | undefined>(() => {
+    const v = new URLSearchParams(window.location.search).get('lat')
+    return v ? Number(v) : undefined
+  })
+  const [lng, setLng] = useState<number | undefined>(() => {
+    const v = new URLSearchParams(window.location.search).get('lng')
+    return v ? Number(v) : undefined
+  })
+  const [pontoEncontro, setPontoEncontro] = useState(() =>
+    new URLSearchParams(window.location.search).get('local') ?? '')
   const [quando, setQuando] = useState(() => {
     const d = new Date()
     d.setDate(d.getDate() + 1)

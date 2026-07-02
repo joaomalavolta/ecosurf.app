@@ -692,7 +692,16 @@ export function CapturePage() {
                   const titulo = tipo === 'lixo'
                     ? `Mutirão de limpeza${nomePico ? ` — ${nomePico}` : ''}`
                     : `Mutirão${nomePico ? ` — ${nomePico}` : ''}`
-                  navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+                  const qs = new URLSearchParams({ titulo })
+                  const p = picosExistentes.find((x) => x.id === picoFinal)
+                  if (p) {
+                    qs.set('municipio', p.municipio); qs.set('uf', p.uf)
+                    qs.set('local', p.nome)
+                    qs.set('lat', String(p.lat)); qs.set('lng', String(p.lng))
+                  } else if (posCapturada.lat && posCapturada.lng) {
+                    qs.set('lat', String(posCapturada.lat)); qs.set('lng', String(posCapturada.lng))
+                  }
+                  navigate(`/nova-acao/mutirao?${qs.toString()}`)
                 }}
               >
                 🤝 Criar mutirão e convidar a comunidade

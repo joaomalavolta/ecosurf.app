@@ -438,7 +438,12 @@ export function AlertaPage() {
               const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos', 'Lixo na praia', 'Lixo no rio', 'Entulho', 'Microplásticos'].includes(alerta.categoria)
               const onde = alerta.local_nome || alerta.municipio || ''
               const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
-              navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+              const qs = new URLSearchParams({ titulo })
+              if (alerta.municipio) qs.set('municipio', alerta.municipio)
+              if (alerta.uf) qs.set('uf', alerta.uf)
+              if (alerta.local_nome) qs.set('local', alerta.local_nome)
+              if (alerta.lat != null && alerta.lng != null) { qs.set('lat', String(alerta.lat)); qs.set('lng', String(alerta.lng)) }
+              navigate(`/nova-acao/mutirao?${qs.toString()}`)
             }}
           >
             🤝 Criar mutirão para esta ocorrência
