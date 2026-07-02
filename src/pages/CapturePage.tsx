@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePinchZoom } from '../hooks/usePinchZoom'
 import {
   IconX,
   IconCamera,
@@ -51,6 +52,7 @@ export function CapturePage() {
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const cameraBoxRef = useRef<HTMLDivElement>(null)
   const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
   const [carregando, setCarregando] = useState(true)
@@ -119,6 +121,9 @@ export function CapturePage() {
       videoRef.current.srcObject = streamRef.current
     }
   }, [etapa])
+
+  // Pinça para zoom na câmera (e impede o zoom-de-página que movia a tela).
+  const { zoomDisponivel, zoomAtual } = usePinchZoom(cameraBoxRef, streamRef, etapa === 'camera')
 
   useEffect(() => {
     return () => {
@@ -430,8 +435,13 @@ export function CapturePage() {
             )}
           </div>
 
-          <div style={{ flex: 1, position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden' }}>
+          <div ref={cameraBoxRef} style={{ flex: 1, position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden', touchAction: 'none' }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {zoomDisponivel && zoomAtual > 1.05 && (
+              <div className="dado" style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 3, background: 'rgba(4,20,27,.6)', color: '#fff', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, pointerEvents: 'none' }}>
+                {zoomAtual.toFixed(1)}×
+              </div>
+            )}
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%)', zIndex: 1 }} />
             {erro && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 24, color: 'rgba(255,255,255,.8)', background: 'linear-gradient(160deg,#0b3a53,#04141d)', zIndex: 10 }}>
