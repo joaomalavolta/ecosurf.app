@@ -303,6 +303,17 @@ export async function listarLogs() {
   return (data ?? []) as { id: string; papel: string; acao: string; item_tipo: string; item_id: string; motivo: string | null; criado_em: string }[]
 }
 
+export async function listarErrosFront() {
+  const c = await sb()
+  const { data } = await c.from('erros_front').select('*').order('criado_em', { ascending: false }).limit(200)
+  return (data ?? []) as { id: string; criado_em: string; mensagem: string; stack: string | null; rota: string | null; user_agent: string | null; versao_app: string | null }[]
+}
+
+export async function limparErrosFront() {
+  const c = await sb()
+  await c.from('erros_front').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+}
+
 export async function excluirLog(id: string) {
   const c = await sb()
   await c.from('admin_logs').delete().eq('id', id)

@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import {
   IconLayoutDashboard, IconPhoto, IconClipboardList, IconUsers, IconAlertTriangle,
-  IconMapPin, IconReportAnalytics, IconHistory, IconSettings,
+  IconMapPin, IconReportAnalytics, IconHistory, IconSettings, IconBug,
 } from '@tabler/icons-react'
 import * as admin from '../services/admin'
 import { type Papel, type Permissoes } from '../services/admin'
@@ -10,7 +10,7 @@ import { type Papel, type Permissoes } from '../services/admin'
 export type Eu = { id?: string; papel: Papel; email?: string }
 export type ModId =
   | 'dashboard' | 'fotos' | 'registros' | 'usuarios' | 'ameacas'
-  | 'picos' | 'relatorios' | 'logs' | 'mutiroes' | 'config'
+  | 'picos' | 'relatorios' | 'logs' | 'mutiroes' | 'config' | 'erros'
 
 export type Ameaca = Awaited<ReturnType<typeof admin.listarAmeacasAdmin>>[number]
 export type PicoAdm = Awaited<ReturnType<typeof admin.listarPicosAdmin>>[number]
@@ -30,6 +30,7 @@ export const MODULOS: {
   { id: 'picos', rotulo: 'Picos', Icone: IconMapPin, pode: (p) => p.gerenciaPicos },
   { id: 'relatorios', rotulo: 'Relatórios', Icone: IconReportAnalytics, pode: (p) => p.acessa },
   { id: 'logs', rotulo: 'Logs', Icone: IconHistory, pode: (p) => p.veLogs },
+  { id: 'erros', rotulo: 'Erros do app', Icone: IconBug, pode: (p) => p.veLogs },
   { id: 'mutiroes', rotulo: 'Mutirões', Icone: IconUsers, pode: (p) => p.acessa },
   { id: 'config', rotulo: 'Configurações', Icone: IconSettings, pode: (p) => p.acessa },
 ]

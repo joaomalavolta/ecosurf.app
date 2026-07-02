@@ -18,6 +18,7 @@ import { ModuloRelatorios } from '../admin/modulos/ModuloRelatorios'
 import { ModuloLogs } from '../admin/modulos/ModuloLogs'
 import { ModuloMutiroes } from '../admin/modulos/ModuloMutiroes'
 import { ModuloConfig } from '../admin/modulos/ModuloConfig'
+import { ModuloErros } from '../admin/modulos/ModuloErros'
 import { LoginAdmin } from '../admin/modulos/LoginAdmin'
 import { NaoAutorizado } from '../admin/modulos/NaoAutorizado'
 
@@ -100,6 +101,7 @@ export function AdminPage() {
           {abaAtiva === 'picos' && <ModuloPicos perm={perm} />}
           {abaAtiva === 'relatorios' && <ModuloRelatorios />}
           {abaAtiva === 'logs' && <ModuloLogs perm={perm} />}
+          {abaAtiva === 'erros' && <ModuloErros />}
           {abaAtiva === 'mutiroes' && <ModuloMutiroes perm={perm} />}
           {abaAtiva === 'config' && <ModuloConfig eu={eu} onSair={sair} />}
         </main>
