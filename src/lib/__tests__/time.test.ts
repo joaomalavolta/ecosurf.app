@@ -1,43 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cpfValido, formatCpf } from '../cpf'
 import { frescor, rotuloFrescor, corFrescor, horaDoDia } from '../time'
-
-describe('cpfValido', () => {
-  it('aceita CPF válido, com ou sem máscara', () => {
-    // CPF de exemplo público, com dígitos verificadores corretos
-    expect(cpfValido('529.982.247-25')).toBe(true)
-    expect(cpfValido('52998224725')).toBe(true)
-  })
-
-  it('rejeita dígito verificador errado', () => {
-    expect(cpfValido('529.982.247-26')).toBe(false)
-    expect(cpfValido('52998224726')).toBe(false)
-  })
-
-  it('rejeita sequências repetidas (armadilha clássica)', () => {
-    for (const d of '0123456789') expect(cpfValido(d.repeat(11))).toBe(false)
-  })
-
-  it('rejeita comprimento errado e entrada vazia', () => {
-    expect(cpfValido('')).toBe(false)
-    expect(cpfValido('1234567890')).toBe(false)   // 10 dígitos
-    expect(cpfValido('123456789012')).toBe(false) // 12 dígitos
-  })
-})
-
-describe('formatCpf', () => {
-  it('aplica a máscara progressivamente enquanto digita', () => {
-    expect(formatCpf('529')).toBe('529')
-    expect(formatCpf('5299')).toBe('529.9')
-    expect(formatCpf('5299822')).toBe('529.982.2')
-    expect(formatCpf('52998224725')).toBe('529.982.247-25')
-  })
-
-  it('ignora não-dígitos e trunca em 11', () => {
-    expect(formatCpf('529.982.247-25xx')).toBe('529.982.247-25')
-    expect(formatCpf('529982247259999')).toBe('529.982.247-25')
-  })
-})
 
 describe('frescor', () => {
   const agora = new Date('2026-07-01T12:00:00')

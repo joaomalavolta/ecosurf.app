@@ -68,13 +68,12 @@ export async function confirmarCodigo(email: string, token: string): Promise<voi
 
 export interface DadosPerfil {
   nome: string
-  cpf: string
   cidade: string
   picoPrincipal: string
   fotoBlob?: Blob
 }
 
-/** Grava o perfil e marca onboarded. CPF é gravado mas nunca lido pela API (LGPD). */
+/** Grava o perfil e marca onboarded. Coleta mínima (LGPD): sem CPF desde 2026-07. */
 export async function salvarPerfil(d: DadosPerfil): Promise<void> {
   const { sb } = await import('./supabase/client')
   const { data } = await sb().auth.getSession()
@@ -98,7 +97,6 @@ export async function salvarPerfil(d: DadosPerfil): Promise<void> {
     .from('perfis')
     .update({
       nome: d.nome.trim(),
-      cpf: d.cpf.replace(/\D/g, ''),
       cidade: d.cidade.trim(),
       pico_principal: d.picoPrincipal || null,
       foto_url,

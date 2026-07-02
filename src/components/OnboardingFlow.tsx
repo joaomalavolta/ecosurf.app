@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { IconRipple, IconMail, IconUser, IconMapPin, IconCamera, IconCheck, IconChevronLeft } from '@tabler/icons-react'
 import { statusPerfil, enviarCodigo, confirmarCodigo, salvarPerfil } from '../services/perfil'
 import { carregarPicos } from '../services/picos'
-import { cpfValido, formatCpf } from '../lib/cpf'
 import type { Pico } from '../types/domain'
 
 type Etapa = 'boas-vindas' | 'email' | 'codigo' | 'perfil' | 'pronto'
@@ -28,7 +27,6 @@ export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vi
   const [email, setEmail] = useState(() => localStorage.getItem('ecosurf:last_email') || '')
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
-  const [cpf, setCpf] = useState('')
   const [cidade, setCidade] = useState('')
   const [picoPrincipal, setPicoPrincipal] = useState('')
   const [picos, setPicos] = useState<Pico[]>([])
@@ -80,8 +78,7 @@ export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vi
     onConcluir()
   }
 
-  const cpfOk = cpfValido(cpf)
-  const perfilOk = nome.trim().length > 1 && cpfOk && cidade.trim().length > 1
+  const perfilOk = nome.trim().length > 1 && cidade.trim().length > 1
 
   return (
     <div className="onboarding-shell">
@@ -169,9 +166,6 @@ export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vi
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)' }}>Toque pra adicionar sua foto (opcional).</div>
             </div>
             <input className="input" placeholder="Seu nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-            <input className="input" inputMode="numeric" placeholder="CPF" value={cpf} onChange={(e) => setCpf(formatCpf(e.target.value))}
-              style={{ borderColor: cpf && !cpfOk ? 'var(--por-do-sol,#e07)' : undefined }} />
-            {cpf && !cpfOk && <span style={{ fontSize: 12, color: '#ffd9c9' }}>CPF inválido</span>}
             <input className="input" placeholder="Sua cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} />
             <select className="input" value={picoPrincipal} onChange={(e) => setPicoPrincipal(e.target.value)}>
               <option value="">Pico de surf principal (opcional)</option>
@@ -179,10 +173,7 @@ export function OnboardingFlow({ onConcluir, onExplorar, etapaInicial = 'boas-vi
                 <option key={p.id} value={p.id}>{p.nome} · {p.municipio}</option>
               ))}
             </select>
-            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.6)' }}>
-              Seu CPF é usado só para validar contas reais (anti-fake) e não fica visível para ninguém.
-            </p>
-            <button className="btn acento full" disabled={!perfilOk || carregando} onClick={() => acao(() => salvarPerfil({ nome, cpf, cidade, picoPrincipal, fotoBlob: foto?.blob }), () => setEtapa('pronto'))}>
+            <button className="btn acento full" disabled={!perfilOk || carregando} onClick={() => acao(() => salvarPerfil({ nome, cidade, picoPrincipal, fotoBlob: foto?.blob }), () => setEtapa('pronto'))}>
               {carregando ? 'Salvando…' : 'Salvar e continuar'}
             </button>
             {msg && <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 13 }}>{msg}</p>}

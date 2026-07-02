@@ -24,7 +24,7 @@ export function ModuloRelatorios() {
   ]
   return (
     <section className="admin-content">
-      <Titulo nome="Relatórios" desc="Exporte os dados em CSV. Dados sensíveis (CPF, localização exata) ficam de fora." />
+      <Titulo nome="Relatórios" desc="Exporte os dados em CSV. Dados sensíveis (localização exata) ficam de fora." />
       <div className="admin-grid">
         {itens.map((it) => (
           <button key={it.nome} className="stat" style={{ textAlign: 'left', cursor: 'pointer', border: 0 }} disabled={!!carregando} onClick={() => exportar(it.nome, it.fn)}>

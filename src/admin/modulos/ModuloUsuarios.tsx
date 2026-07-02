@@ -68,7 +68,7 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
     <section className="admin-content">
       <Titulo
         nome="Usuários"
-        desc="Gestão de papéis, bloqueio e exclusão de contas. CPF e dados sensíveis não são exibidos (LGPD)."
+        desc="Gestão de papéis, bloqueio e exclusão de contas. Dados sensíveis não são exibidos (LGPD)."
         acao={
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
