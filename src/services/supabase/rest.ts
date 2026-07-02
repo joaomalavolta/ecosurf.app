@@ -349,7 +349,7 @@ function titleCase(s: string): string {
 }
 
 /** Gera um slug a partir do nome: "Praia dos Pescadores" → "praia-dos-pescadores" */
-function slug(nome: string): string {
+export function slug(nome: string): string {
   return nome.trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')

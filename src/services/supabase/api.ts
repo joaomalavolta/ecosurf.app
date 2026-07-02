@@ -18,8 +18,16 @@ async function usuarioAtual(): Promise<string> {
 export const supabaseApi: EcosurfApi = {
   async enviarFoto(f: NovaFoto) {
     const autorId = await usuarioAtual()
-    const path = `${f.picoId}/${f.id}.webp`
-    const thumbPath = `${f.picoId}/${f.id}.thumb.webp`
+    // Pico ainda não existe? Cria agora (com retry embutido) e usa o id gerado.
+    // Assim o registro inteiro — criar pico + subir foto — é uma unidade na fila
+    // offline: some o sinal na praia, tudo sobe junto quando a internet volta.
+    let picoId = f.picoId
+    if (f.picoNovo) {
+      const { restInserirPico } = await import('./rest')
+      picoId = await restInserirPico(f.picoNovo)
+    }
+    const path = `${picoId}/${f.id}.webp`
+    const thumbPath = `${picoId}/${f.id}.thumb.webp`
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
         contentType: 'image/webp',
@@ -40,7 +48,7 @@ export const supabaseApi: EcosurfApi = {
       .from('fotos')
       .insert({
         id: f.id,
-        pico_id: f.picoId,
+        pico_id: picoId,
         autor_id: autorId,
         capturada_em: f.capturadaEm,
         storage_path: f.blob ? path : null,

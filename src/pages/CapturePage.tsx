@@ -162,7 +162,7 @@ export function CapturePage() {
     setEtapa('selecionar-pico')
   }
 
-  async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob) {
+  async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob, picoNovo?: import('../services/api').PicoNovo) {
     const id = crypto.randomUUID()
     uploadId.current = id
     await enfileirar({
@@ -173,6 +173,7 @@ export function CapturePage() {
       thumbBlob: thumb,
       capturaLat: pos?.lat,
       capturaLng: pos?.lng,
+      picoNovo,
     })
     if (tipo) await definirTipo(id, tipo)
     setPicoFinal(picoId)
@@ -182,7 +183,6 @@ export function CapturePage() {
   async function criarNovoPico() {
     if (!novoPicoNome.trim()) return
     try {
-      const { restInserirPico } = await import('../services/supabase/rest')
       let municipio = ''
       let uf = 'SP'
       if (posCapturada.lat && posCapturada.lng) {
@@ -191,13 +191,18 @@ export function CapturePage() {
           const geo = await geoRes.json()
           municipio = geo.address?.city || geo.address?.town || geo.address?.village || geo.address?.municipality || ''
           uf = geo.address?.state_code?.toUpperCase() || geo.address?.['ISO3166-2-lvl4']?.split('-')[1] || 'SP'
-        } catch { /* fallback */ }
+        } catch { /* sem geocode: segue sem município, resolve no envio */ }
       }
-      const nomePicoCompleto = novaOndaNome.trim() 
+      const nomePicoCompleto = novaOndaNome.trim()
         ? `${novoPicoNome.trim()} - ${novaOndaNome.trim()}`
         : novoPicoNome.trim()
-        
-      const picoId = await restInserirPico({
+
+      // Não cria o pico aqui: enfileira o registro com os dados do pico. O
+      // envio (que roda pela fila offline, com retry e sync) cria o pico e sobe
+      // a foto como uma unidade. Resultado: registrar funciona 100% offline.
+      const { slug } = await import('../services/supabase/rest')
+      const picoIdPrevisto = slug(nomePicoCompleto)
+      await finalizarUpload(picoIdPrevisto, blobCapturado, posCapturada, thumbCapturado, {
         nome: nomePicoCompleto,
         lat: posCapturada.lat ?? 0,
         lng: posCapturada.lng ?? 0,
@@ -205,15 +210,9 @@ export function CapturePage() {
         uf,
         praia: novaPraiaNome.trim(),
       })
-      await finalizarUpload(picoId, blobCapturado, posCapturada, thumbCapturado)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
-      const ehRede = /load failed|failed to fetch|network|timeout|fetch|sem conexão/i.test(msg)
-      alert(
-        ehRede
-          ? 'Sem conexão estável agora. Sua foto não foi perdida — tente enviar de novo em um lugar com melhor sinal.'
-          : 'Não foi possível criar o pico agora. Tente novamente.',
-      )
+      alert('Não foi possível preparar o registro: ' + msg)
     }
   }
 

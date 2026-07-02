@@ -14,6 +14,8 @@ export interface UploadPendente {
   thumbBlob?: Blob
   capturaLat?: number
   capturaLng?: number
+  /** Se preenchido, o pico é criado no envio (permite registrar 100% offline). */
+  picoNovo?: import('../services/api').PicoNovo
   status: 'na-fila' | 'enviando' | 'enviado' | 'falhou' | 'bloqueado'
   erro?: string
   criadoEm: number

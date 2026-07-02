@@ -4,6 +4,16 @@ import { TEM_BACKEND } from './supabase/config'
  * Contrato da API do Ecosurf. Hoje só existe o mock; o backend real
  * (PostGIS/Supabase) implementa a mesma interface — a UI não muda.
  */
+/** Dados para criar um pico que ainda não existe — permite registrar offline. */
+export interface PicoNovo {
+  nome: string
+  lat: number
+  lng: number
+  municipio: string
+  uf: string
+  praia?: string
+}
+
 export interface NovaFoto {
   id: string
   picoId: string
@@ -16,6 +26,8 @@ export interface NovaFoto {
   /** Coordenadas do device na captura — o servidor decide a procedência. */
   capturaLat?: number
   capturaLng?: number
+  /** Se preenchido, o pico é criado no envio (antes da foto). Vazio = pico já existe. */
+  picoNovo?: PicoNovo
 }
 
 export interface EcosurfApi {
