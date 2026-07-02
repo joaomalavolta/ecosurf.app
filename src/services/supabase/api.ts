@@ -19,12 +19,22 @@ export const supabaseApi: EcosurfApi = {
   async enviarFoto(f: NovaFoto) {
     const autorId = await usuarioAtual()
     const path = `${f.picoId}/${f.id}.webp`
+    const thumbPath = `${f.picoId}/${f.id}.thumb.webp`
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
         contentType: 'image/webp',
         upsert: false,
       })
       if (up.error) throw up.error
+    }
+    // Miniatura é opcional: se falhar, o feed cai na foto cheia — não derruba o envio.
+    let thumbEnviado = false
+    if (f.thumbBlob) {
+      const upThumb = await sb().storage.from('fotos').upload(thumbPath, f.thumbBlob, {
+        contentType: 'image/webp',
+        upsert: false,
+      })
+      if (!upThumb.error) thumbEnviado = true
     }
     const { error } = await sb()
       .from('fotos')
@@ -34,6 +44,7 @@ export const supabaseApi: EcosurfApi = {
         autor_id: autorId,
         capturada_em: f.capturadaEm,
         storage_path: f.blob ? path : null,
+        thumb_path: thumbEnviado ? thumbPath : null,
         observacao: f.observacao,
         captura_lat: f.capturaLat ?? null,
         captura_lng: f.capturaLng ?? null,

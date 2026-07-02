@@ -641,8 +641,8 @@ export function TideScrubTimeline({
                     padding: 0, cursor: 'pointer', overflow: 'hidden',
                     transition: 'all .15s ease-out', zIndex: 4,
                   }}>
-                  {ft.url && (
-                    <img src={ft.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: '50%' }} />
+                  {(ft.thumbUrl ?? ft.url) && (
+                    <img src={ft.thumbUrl ?? ft.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: '50%' }} />
                   )}
                 </button>
               )

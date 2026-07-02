@@ -11,6 +11,8 @@ export interface NovaFoto {
   tipo?: 'report' | 'alerta' | 'lixo'
   observacao?: string
   blob?: Blob
+  /** Miniatura (~400px WebP) gerada no upload; feed usa esta versão leve. */
+  thumbBlob?: Blob
   /** Coordenadas do device na captura — o servidor decide a procedência. */
   capturaLat?: number
   capturaLng?: number

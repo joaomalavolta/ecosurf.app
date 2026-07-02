@@ -189,7 +189,7 @@ export function RadarPage() {
             const pico = picoMap.get(f.picoId)
             return (
               <Link to={`/pico/${f.picoId}?foto=${f.id}`} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
-                <img src={f.url} alt="Onda" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
+                <img src={f.thumbUrl ?? f.url} alt="Onda" loading="lazy" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
                 <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 16 }}>{pico?.nome || f.picoId}</div>

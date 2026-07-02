@@ -243,6 +243,7 @@ export interface FotoRow {
   pico_id: string
   capturada_em: string
   storage_path: string | null
+  thumb_path: string | null
   altura_mare_m: number | null
   vento_tipo: string | null
   observacao: string | null
@@ -252,7 +253,7 @@ export interface FotoRow {
 
 /** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
 export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
       `&order=capturada_em.desc&limit=30`,
@@ -261,7 +262,7 @@ export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
 
 /** Últimas fotos globais da plataforma, independente do pico. */
 export async function restUltimasFotosGlobais(limite = 10): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&storage_path=not.is.null&order=capturada_em.desc&limit=${limite}`
   )

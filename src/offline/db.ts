@@ -11,6 +11,7 @@ export interface UploadPendente {
   tipo?: 'report' | 'alerta' | 'lixo'
   observacao?: string
   blob?: Blob
+  thumbBlob?: Blob
   capturaLat?: number
   capturaLng?: number
   status: 'na-fila' | 'enviando' | 'enviado' | 'falhou' | 'bloqueado'

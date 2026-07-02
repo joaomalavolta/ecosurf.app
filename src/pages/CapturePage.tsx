@@ -56,6 +56,7 @@ export function CapturePage() {
   const [carregando, setCarregando] = useState(true)
   const [picoSelecionado] = useState<string | null>(new URLSearchParams(window.location.search).get('pico'))
   const [blobCapturado, setBlobCapturado] = useState<Blob | undefined>()
+  const [thumbCapturado, setThumbCapturado] = useState<Blob | undefined>()
   const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number}>({})
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
@@ -128,19 +129,16 @@ export function CapturePage() {
   async function disparar() {
     const v = videoRef.current
     let blob: Blob | undefined
+    let thumb: Blob | undefined
     if (v && v.videoWidth > 0) {
-      const maxDim = 1600
-      const escala = Math.min(1, maxDim / Math.max(v.videoWidth, v.videoHeight))
-      const w = Math.round(v.videoWidth * escala)
-      const h = Math.round(v.videoHeight * escala)
-      const c = document.createElement('canvas')
-      c.width = w
-      c.height = h
-      c.getContext('2d')?.drawImage(v, 0, 0, w, h)
-      blob = await new Promise<Blob | undefined>((res) => c.toBlob((b) => res(b ?? undefined), 'image/webp', 0.8))
+      const { versoesDeVideo } = await import('../lib/imagem')
+      const versoes = await versoesDeVideo(v)
+      blob = versoes.full
+      thumb = versoes.thumb
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
+    setThumbCapturado(thumb)
     setBlobCapturado(blob)
 
     if (!noLocal) {
@@ -159,7 +157,7 @@ export function CapturePage() {
     setEtapa('selecionar-pico')
   }
 
-  async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}) {
+  async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob) {
     const id = crypto.randomUUID()
     uploadId.current = id
     await enfileirar({
@@ -167,6 +165,7 @@ export function CapturePage() {
       picoId,
       capturadaEm: new Date().toISOString(),
       blob,
+      thumbBlob: thumb,
       capturaLat: pos?.lat,
       capturaLng: pos?.lng,
     })
@@ -201,7 +200,7 @@ export function CapturePage() {
         uf,
         praia: novaPraiaNome.trim(),
       })
-      await finalizarUpload(picoId, blobCapturado, posCapturada)
+      await finalizarUpload(picoId, blobCapturado, posCapturada, thumbCapturado)
     } catch (e: any) {
       alert('Erro ao enviar registro: ' + (e?.message || 'tente novamente'))
     }

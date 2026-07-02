@@ -16,11 +16,19 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
         const fotos: Foto[] = await Promise.all(
           rows.map(async (r) => {
             let url: string | undefined
+            let thumbUrl: string | undefined
             if (r.storage_path) {
               try {
                 url = await urlAssinada(r.storage_path)
               } catch {
                 /* URL assinada falhou — foto ficará sem imagem mas não derruba a página */
+              }
+            }
+            if (r.thumb_path) {
+              try {
+                thumbUrl = await urlAssinada(r.thumb_path)
+              } catch {
+                /* sem thumb: o feed usa a foto cheia como fallback */
               }
             }
             return {
@@ -30,6 +38,7 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
               autorNome: r.autor_nome ?? 'anônimo',
               capturadaEm: r.capturada_em,
               url,
+              thumbUrl,
               alturaMareM: r.altura_mare_m ?? undefined,
               ventoTipo: (r.vento_tipo ?? undefined) as Foto['ventoTipo'],
               observacao: r.observacao ?? undefined,
@@ -57,10 +66,16 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
         const fotos: Foto[] = await Promise.all(
           rows.map(async (r) => {
             let url: string | undefined
+            let thumbUrl: string | undefined
             if (r.storage_path) {
               try {
                 url = await urlAssinada(r.storage_path)
               } catch { /* sem URL assinada: usa a pública adiante */ }
+            }
+            if (r.thumb_path) {
+              try {
+                thumbUrl = await urlAssinada(r.thumb_path)
+              } catch { /* sem thumb: usa a foto cheia */ }
             }
             return {
               id: r.id,
@@ -69,6 +84,7 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
               autorNome: r.autor_nome ?? 'anônimo',
               capturadaEm: r.capturada_em,
               url,
+              thumbUrl,
               alturaMareM: r.altura_mare_m ?? undefined,
               ventoTipo: (r.vento_tipo ?? undefined) as Foto['ventoTipo'],
               observacao: r.observacao ?? undefined,

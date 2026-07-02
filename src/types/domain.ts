@@ -72,7 +72,8 @@ export interface Foto {
   autorId: string;
   autorNome: string;
   capturadaEm: string; // ISO — hora real da captura
-  url?: string;        // ausente no scaffold → render como gradiente determinístico
+  url?: string;        // foto cheia (página do pico); ausente → gradiente determinístico
+  thumbUrl?: string;   // miniatura leve para o feed/listas
   alturaMareM?: number; // maré no instante da foto (sobreposição na timeline)
   ventoTipo?: TipoVento;
   observacao?: string;
