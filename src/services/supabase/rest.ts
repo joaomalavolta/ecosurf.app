@@ -195,6 +195,7 @@ export async function restMutiroes(): Promise<Mutirao[]> {
   return rows
     .filter((r) => r.lat != null && r.lng != null)
     .map((r) => ({
+      alertaId: (r as { alerta_id?: string | null }).alerta_id ?? null,
       id: r.id,
       titulo: r.titulo,
       tipoAcao: (r.tipo_acao ?? 'limpeza') as Mutirao['tipoAcao'],

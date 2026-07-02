@@ -56,6 +56,9 @@ export function FormularioMutiraoPage() {
   })
   const [pontoEncontro, setPontoEncontro] = useState(() =>
     new URLSearchParams(window.location.search).get('local') ?? '')
+  // Vínculo com a ocorrência de origem (rastreabilidade problema→ação).
+  const [alertaOrigemId] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('alerta'))
   const [quando, setQuando] = useState(() => {
     const d = new Date()
     d.setDate(d.getDate() + 1)
@@ -139,6 +142,7 @@ export function FormularioMutiraoPage() {
       const dados: DadosMutirao = {
         titulo: titulo.trim(),
         tipoAcao,
+        alertaOrigemId: alertaOrigemId,
         descricao: descricao.trim() || undefined,
         municipio: municipio.trim(),
         uf: uf.toUpperCase(),

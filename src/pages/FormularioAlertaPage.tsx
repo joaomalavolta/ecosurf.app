@@ -34,6 +34,7 @@ export function FormularioAlertaPage() {
   const [etapa, setEtapa] = useState<Etapa>(1)
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
+  const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
 
   // Dados do formulário
@@ -117,7 +118,8 @@ export function FormularioAlertaPage() {
         checkboxAceite: aceite,
         images: fotos.length > 0 ? fotos : undefined,
       }
-      await publicarAlerta(dados)
+      const idCriado = await publicarAlerta(dados)
+      setAlertaCriadoId(idCriado)
       setSucesso(true)
     } catch (e) {
       alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
@@ -159,6 +161,7 @@ export function FormularioAlertaPage() {
               const onde = (localNome || municipio).trim()
               const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
               const qs = new URLSearchParams({ titulo })
+              if (alertaCriadoId) qs.set('alerta', alertaCriadoId)
               if (municipio) qs.set('municipio', municipio)
               if (uf) qs.set('uf', uf)
               if (localNome) qs.set('local', localNome)

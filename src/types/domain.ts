@@ -160,6 +160,8 @@ export type StatusMutirao = 'rascunho' | 'agendado' | 'realizado' | 'cancelado';
 export interface Mutirao {
   id: string;
   titulo: string;
+  /** Ocorrência que originou a ação (rastreabilidade problema→ação). */
+  alertaId?: string | null;
   tipoAcao?: TipoAcaoMutirao;
   picoId?: string;
   municipio: string;

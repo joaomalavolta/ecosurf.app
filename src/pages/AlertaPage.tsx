@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocal } from '../components/MapaLocal'
@@ -41,6 +41,7 @@ export function AlertaPage() {
   const [alerta, setAlerta] = useState<AlertaDetalhe | null>(null)
   const [loading, setLoading] = useState(true)
   const [ver, setVer] = useState(0)
+  const [acoesVinculadas, setAcoesVinculadas] = useState<import('../types/domain').Mutirao[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
@@ -55,6 +56,17 @@ export function AlertaPage() {
   const [editFotos, setEditFotos] = useState<File[]>([])
   const [keptImages, setKeptImages] = useState<string[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!id) return
+    let vivo = true
+    import('../services/picos').then(({ carregarMutiroes }) =>
+      carregarMutiroes().then((ms) => {
+        if (vivo) setAcoesVinculadas(ms.filter((m) => m.alertaId === id))
+      })
+    ).catch(() => {})
+    return () => { vivo = false }
+  }, [id, ver])
 
   useEffect(() => {
     if (!id) return
@@ -430,6 +442,20 @@ export function AlertaPage() {
           </div>
         )}
 
+        {!isEditing && acoesVinculadas.length > 0 && (
+          <div className="card pad" style={{ marginTop: 12, borderLeft: '3px solid #2E9B6B' }}>
+            <span className="eyebrow" style={{ color: '#2E9B6B' }}>🌱 Esta ocorrência gerou ação</span>
+            <div className="stack" style={{ marginTop: 8 }}>
+              {acoesVinculadas.map((m) => (
+                <Link key={m.id} to={`/mutirao/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{m.titulo}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>{m.quando}{m.horario ? ` · ${m.horario}` : ''} — toque para participar</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {!isEditing && (
           <button
             className="btn full"
@@ -438,7 +464,7 @@ export function AlertaPage() {
               const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos', 'Lixo na praia', 'Lixo no rio', 'Entulho', 'Microplásticos'].includes(alerta.categoria)
               const onde = alerta.local_nome || alerta.municipio || ''
               const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
-              const qs = new URLSearchParams({ titulo })
+              const qs = new URLSearchParams({ titulo, alerta: alerta.id })
               if (alerta.municipio) qs.set('municipio', alerta.municipio)
               if (alerta.uf) qs.set('uf', alerta.uf)
               if (alerta.local_nome) qs.set('local', alerta.local_nome)

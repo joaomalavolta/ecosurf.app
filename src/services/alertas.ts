@@ -160,6 +160,8 @@ export interface DadosMutirao {
   infoVoluntarios?: string
   imagemCapa?: File
   rascunho?: boolean
+  /** Ocorrência (ameaça) que originou este mutirão. */
+  alertaOrigemId?: string | null
 }
 
 export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
@@ -198,6 +200,7 @@ export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
     status: dados.rascunho ? 'rascunho' : 'agendado',
     rascunho: dados.rascunho ?? false,
     descricao: dados.descricao ?? null,
+    alerta_id: dados.alertaOrigemId ?? null,
   }
 
   const { data, error } = await sb.from('mutiroes').insert(body).select('id').single()
