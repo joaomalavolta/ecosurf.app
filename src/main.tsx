@@ -4,8 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { iniciarMonitorDeErros } from './lib/monitorErros'
+import { iniciarPaginaEstatica } from './lib/paginaEstatica'
 
 iniciarMonitorDeErros()
+iniciarPaginaEstatica()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

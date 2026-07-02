@@ -99,6 +99,17 @@ h1, h2, h3 { font-family: var(--fonte-titulo); font-weight: 700; letter-spacing:
 button { font-family: inherit; }
 input, select, textarea { accent-color: var(--turq); }
 
+/* ═══ Página estática (comportamento de app nativo) ═══
+   O zoom de página movia a tela e atrapalhava o toque nos botões.
+   pan-x/pan-y mantém o scroll normal mas bloqueia pinça e duplo-toque
+   de zoom NA PÁGINA. Elementos com gesto próprio (mapa MapLibre, câmera)
+   declaram seu touch-action e continuam com pinch interno funcionando. */
+html, body {
+  touch-action: pan-x pan-y;
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+}
+
 /* shell do app */
 .app-shell {
   position: relative;
