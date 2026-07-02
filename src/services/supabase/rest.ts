@@ -378,12 +378,28 @@ export async function restInserirPico(dados: {
     orientacao_praia_deg: 180,
     fundo: 'areia',
   }
-  const { error } = await sb().from('picos').insert(body)
-  if (error) {
-    if (error.message.includes('duplicate key')) return id
-    throw new Error(`Erro ao criar pico: ${JSON.stringify(error)}`)
+
+  // A praia tem conexão instável (4G/5G). Uma falha de rede ("Load failed" no
+  // iOS) não deve derrubar o registro — tenta de novo com espera crescente.
+  let ultimoErro: unknown
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    try {
+      const { error } = await sb().from('picos').insert(body)
+      if (error) {
+        if (error.message.includes('duplicate key')) return id // pico já existe: ok
+        throw new Error(error.message || 'Erro ao criar pico')
+      }
+      return id
+    } catch (e) {
+      ultimoErro = e
+      const msg = e instanceof Error ? e.message : String(e)
+      // Erros de rede transitórios valem retentar; erros de banco, não.
+      const ehRede = /load failed|failed to fetch|network|timeout|fetch/i.test(msg)
+      if (!ehRede) throw e
+      if (tentativa < 2) await new Promise((r) => setTimeout(r, 800 * (tentativa + 1)))
+    }
   }
-  return id
+  throw ultimoErro instanceof Error ? ultimoErro : new Error('Sem conexão')
 }
 
 export interface MinhaFotoRow {

@@ -206,8 +206,14 @@ export function CapturePage() {
         praia: novaPraiaNome.trim(),
       })
       await finalizarUpload(picoId, blobCapturado, posCapturada, thumbCapturado)
-    } catch (e: any) {
-      alert('Erro ao enviar registro: ' + (e?.message || 'tente novamente'))
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      const ehRede = /load failed|failed to fetch|network|timeout|fetch|sem conexão/i.test(msg)
+      alert(
+        ehRede
+          ? 'Sem conexão estável agora. Sua foto não foi perdida — tente enviar de novo em um lugar com melhor sinal.'
+          : 'Não foi possível criar o pico agora. Tente novamente.',
+      )
     }
   }
 
