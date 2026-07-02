@@ -184,7 +184,7 @@ export function RadarPage() {
       {/* ─── FEED SECTION ─── */}
       <div className="pills full" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px' }}>
         <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
-        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Melhores</Pill>
+        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Mais Curtidas</Pill>
         <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
       </div>
       <div className="page-pad stack" ref={feedRef}>

@@ -64,10 +64,18 @@ export function CapturePage() {
   const [novoPicoNome, setNovoPicoNome] = useState('')
   const [novaOndaNome, setNovaOndaNome] = useState('')
   
+  const [picosExistentes, setPicosExistentes] = useState<import('../types/domain').Pico[]>([])
+  const [modoNovoPico, setModoNovoPico] = useState(false)
   const [picoFinal, setPicoFinal] = useState<string | null>(null)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
   const [detectandoGps, setDetectandoGps] = useState(false)
+
+  useEffect(() => {
+    import('../services/picos').then(({ carregarPicos }) =>
+      carregarPicos().then(setPicosExistentes)
+    ).catch(() => { /* sem lista: o formulário de novo local cobre */ })
+  }, [])
 
   useEffect(() => {
     let vivo = true
@@ -146,8 +154,9 @@ export function CapturePage() {
     setThumbCapturado(thumb)
     setBlobCapturado(blob)
 
+    let pos: { lat?: number; lng?: number } = {}
     if (!noLocal) {
-      const pos = await obterCoords()
+      pos = await obterCoords()
       setPosCapturada(pos)
       if (pos.lat && pos.lng) {
         try {
@@ -159,6 +168,12 @@ export function CapturePage() {
       }
     }
 
+    // Registro iniciado na página de um pico já nasce vinculado a ele —
+    // sem formulário nenhum (o parâmetro existia mas nunca era usado).
+    if (picoSelecionado) {
+      await finalizarUpload(picoSelecionado, blob, pos, thumb)
+      return
+    }
     setEtapa('selecionar-pico')
   }
 
@@ -530,9 +545,55 @@ export function CapturePage() {
 
           <h2 style={{ color: '#fff', marginBottom: 6 }}>Onde foi feito o registro?</h2>
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 16 }}>
-            Adicione o local exato para que outras pessoas saibam.
+            {modoNovoPico || picosExistentes.length === 0
+              ? 'Adicione o local exato para que outras pessoas saibam.'
+              : 'Escolha um pico já cadastrado — ou reporte um local novo.'}
           </p>
 
+          {/* Picos já cadastrados primeiro: evita locais duplicados no mapa */}
+          {!modoNovoPico && picosExistentes.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+              {[...picosExistentes]
+                .map((p) => ({
+                  p,
+                  dist: posCapturada.lat && posCapturada.lng
+                    ? haversineKm(posCapturada.lat, posCapturada.lng, p.lat, p.lng)
+                    : null,
+                }))
+                .sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity) || a.p.nome.localeCompare(b.p.nome))
+                .slice(0, 8)
+                .map(({ p, dist }) => (
+                  <button
+                    key={p.id}
+                    onClick={() => finalizarUpload(p.id, blobCapturado, posCapturada, thumbCapturado)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                      background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.18)',
+                      borderRadius: 14, padding: '13px 14px', cursor: 'pointer', textAlign: 'left', color: '#fff',
+                    }}
+                  >
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: 'block', fontWeight: 600, fontSize: 14.5 }}>{p.nome}</span>
+                      <span style={{ display: 'block', fontSize: 11.5, opacity: .65 }}>{p.municipio}/{p.uf}</span>
+                    </span>
+                    {dist != null && (
+                      <span className="dado" style={{ fontSize: 11.5, color: dist <= 0.6 ? '#1ECBC3' : 'rgba(255,255,255,.6)', flexShrink: 0, fontWeight: 700 }}>
+                        {dist <= 0.6 ? '📍 aqui' : dist < 10 ? `${dist.toFixed(1)} km` : `${Math.round(dist)} km`}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              <button
+                onClick={() => setModoNovoPico(true)}
+                className="btn outline full"
+                style={{ marginTop: 4, color: '#fff', borderColor: 'rgba(255,255,255,.35)' }}
+              >
+                ➕ Reportar um local novo
+              </button>
+            </div>
+          )}
+
+          {(modoNovoPico || picosExistentes.length === 0) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={{ display: 'block', color: 'rgba(255,255,255,.8)', fontSize: 12, marginBottom: 4, paddingLeft: 4 }}>
@@ -576,7 +637,13 @@ export function CapturePage() {
             <button className="btn acento full" onClick={criarNovoPico} disabled={!novoPicoNome.trim()} style={{ marginTop: 10 }}>
               Enviar Foto
             </button>
+            {picosExistentes.length > 0 && (
+              <button onClick={() => setModoNovoPico(false)} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.6)', fontSize: 13, cursor: 'pointer', marginTop: 2 }}>
+                ← Voltar aos picos cadastrados
+              </button>
+            )}
           </div>
+          )}
         </div>
       )}
 
@@ -615,6 +682,22 @@ export function CapturePage() {
             Sua foto está sendo enviada em background. Obrigado por contribuir!
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24, width: '100%', maxWidth: 320 }}>
+            {(tipo === 'lixo' || tipo === 'alerta') && (
+              <button
+                className="btn full"
+                style={{ background: '#2E9B6B', color: '#fff', fontWeight: 700 }}
+                onClick={() => {
+                  const nomePico = picosExistentes.find((p) => p.id === picoFinal)?.nome
+                    ?? picoAutoNome ?? novoPicoNome ?? ''
+                  const titulo = tipo === 'lixo'
+                    ? `Mutirão de limpeza${nomePico ? ` — ${nomePico}` : ''}`
+                    : `Mutirão${nomePico ? ` — ${nomePico}` : ''}`
+                  navigate(`/nova-acao/mutirao?titulo=${encodeURIComponent(titulo)}`)
+                }}
+              >
+                🤝 Criar mutirão e convidar a comunidade
+              </button>
+            )}
             {picoFinal && (
               <button className="btn acento full" onClick={() => navigate(`/pico/${picoFinal}`)}>
                 <IconPhoto size={18} /> Ver pico

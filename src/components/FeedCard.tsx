@@ -91,11 +91,8 @@ export function FeedCard({
               </span>
             )}
           </span>
-          {forecast && (
-            <span className="badge b-info">
-              {rotularCondicao(forecast.ondaM, forecast.vento.tipo)}
-            </span>
-          )}
+          {/* condição vive no gradiente de baixo — aqui só a procedência,
+              senão o selo briga com a estrela de favorito no canto direito */}
         </div>
 
         {/* Dots */}

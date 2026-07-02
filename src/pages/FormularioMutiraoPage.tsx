@@ -36,7 +36,9 @@ export function FormularioMutiraoPage() {
 
   // Campos
   const [tipoAcao, setTipoAcao] = useState('limpeza')
-  const [titulo, setTitulo] = useState('')
+  // Vindo do registro de lixo/alerta ("criar mutirão"), o título chega pronto.
+  const [titulo, setTitulo] = useState(() =>
+    new URLSearchParams(window.location.search).get('titulo') ?? '')
   const [descricao, setDescricao] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [uf, setUf] = useState('')
