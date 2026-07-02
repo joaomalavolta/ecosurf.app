@@ -7,8 +7,6 @@ import { restPicos, restAmeacas, restMutiroes } from './supabase/rest'
  * Acesso a dados. Com backend, lê do Supabase (REST, sem SDK); senão usa o
  * seed. Sempre cai no seed se a rede falhar — offline-first.
  */
-const FAVORITOS = ['praia-do-sonho', 'praia-dos-pescadores']
-
 export async function carregarPicos(): Promise<Pico[]> {
   if (temBackend()) {
     try {
@@ -24,10 +22,6 @@ export async function carregarPicos(): Promise<Pico[]> {
 export async function carregarPico(id: string): Promise<Pico | undefined> {
   const picos = await carregarPicos()
   return picos.find((p) => p.id === id) ?? picosSeed.find((p) => p.id === id)
-}
-
-export function ehFavorito(id: string): boolean {
-  return FAVORITOS.includes(id)
 }
 
 export async function carregarAmeacas(): Promise<Ameaca[]> {

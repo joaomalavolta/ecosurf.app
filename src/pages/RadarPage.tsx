@@ -4,7 +4,8 @@ import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearc
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { FeedCard } from '../components/FeedCard'
-import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato, ehFavorito } from '../services/picos'
+import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
+import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
 import { buscarForecast } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
@@ -37,8 +38,13 @@ export function RadarPage() {
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [selPico, setSelPico] = useState<Pico | null>(null)
   const [mapaExpandido, setMapaExpandido] = useState(false)
+  const [favoritos, setFavoritos] = useState<Set<string>>(new Set())
   const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
   const feedRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    void carregarFavoritos().then(setFavoritos)
+  }, [])
 
   useEffect(() => {
     let vivo = true
@@ -75,10 +81,10 @@ export function RadarPage() {
   const feedCards = useMemo(() => {
     const entries = Array.from(fotosPorPico.entries())
     if (filtro === 'favoritos') {
-      return entries.filter(([picoId]) => ehFavorito(picoId))
+      return entries.filter(([picoId]) => favoritos.has(picoId))
     }
     return entries
-  }, [filtro, fotosPorPico])
+  }, [filtro, fotosPorPico, favoritos])
 
   const melhoresOndas = useMemo(() => {
     return [...feed].sort((a, b) => {
@@ -219,6 +225,15 @@ export function RadarPage() {
                   fotos={fotos}
                   pico={picoMap.get(picoId)}
                   forecast={fc[picoId]}
+                  favorito={favoritos.has(picoId)}
+                  onToggleFavorito={() => {
+                    toggleFavorito(picoId)
+                    setFavoritos((s) => {
+                      const n = new Set(s)
+                      if (n.has(picoId)) n.delete(picoId); else n.add(picoId)
+                      return n
+                    })
+                  }}
                 />
               </div>
             ))}

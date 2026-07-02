@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { IconCamera, IconAlertTriangle, IconShare } from '@tabler/icons-react'
+import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
 import { TideScrubTimeline, compartilharPico } from '../components/TideScrubTimeline'
 import { carregarPico, carregarAmeacas } from '../services/picos'
+import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
 import { carregarFeed } from '../services/feed'
 import { buscarForecast } from '../services/forecast'
 import { rotuloFase } from '../lib/tide'
@@ -17,6 +18,12 @@ export function PicoPage() {
   const [searchParams] = useSearchParams()
   const initialFotoId = searchParams.get('foto') ?? undefined
   const [pico, setPico] = useState<Pico | null | undefined>(undefined) // undefined = carregando
+  const [fav, setFav] = useState(false)
+
+  useEffect(() => {
+    if (!pico) return
+    void carregarFavoritos().then((f) => setFav(f.has(pico.id)))
+  }, [pico])
   const [fc, setFc] = useState<Forecast | null>(null)
   const [curva, setCurva] = useState<PontoMare[]>([])
   const [curvasMultiDia, setCurvasMultiDia] = useState<Record<string, PontoMare[]>>({})
@@ -181,6 +188,14 @@ export function PicoPage() {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <Link to={`/capturar?pico=${pico.id}`} className="btn full" style={{ flex: 1 }}><IconCamera size={18} stroke={2} /> Registrar</Link>
+          <button
+            onClick={() => setFav(toggleFavorito(pico.id))}
+            className="btn outline"
+            aria-label={fav ? 'Remover dos favoritos' : 'Favoritar pico'}
+            style={{ flex: 0, minWidth: 56, color: fav ? '#E0A800' : undefined }}
+          >
+            <IconStar size={18} stroke={2} fill={fav ? '#FFD34D' : 'none'} />
+          </button>
           <button
             onClick={() => compartilharPico(pico.id, pico.nome, fc ? rotularCondicao(fc.ondaM, fc.vento.tipo) : undefined)}
             className="btn outline"

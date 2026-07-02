@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconShieldCheck, IconPhoto, IconShare } from '@tabler/icons-react'
+import { IconShieldCheck, IconPhoto, IconShare, IconStar } from '@tabler/icons-react'
 import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
@@ -14,10 +14,14 @@ export function FeedCard({
   fotos,
   pico,
   forecast,
+  favorito,
+  onToggleFavorito,
 }: {
   fotos: Foto[]
   pico?: Pico
   forecast?: Forecast
+  favorito?: boolean
+  onToggleFavorito?: () => void
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIdx, setActiveIdx] = useState(0)
@@ -66,6 +70,20 @@ export function FeedCard({
         </div>
 
         {/* Badges overlay */}
+        {onToggleFavorito && (
+          <button
+            aria-label={favorito ? 'Remover dos favoritos' : 'Favoritar pico'}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorito() }}
+            style={{
+              position: 'absolute', top: 10, right: 10, zIndex: 3,
+              width: 36, height: 36, borderRadius: 12, border: 0, cursor: 'pointer',
+              background: 'rgba(4,20,27,.5)', color: favorito ? '#FFD34D' : 'rgba(255,255,255,.85)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <IconStar size={19} stroke={2} fill={favorito ? '#FFD34D' : 'none'} />
+          </button>
+        )}
         <div className="feed-overlay-badges">
           <span>
             {fotosComUrl[activeIdx]?.procedencia === 'no-local' && (

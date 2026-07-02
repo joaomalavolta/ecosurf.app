@@ -25,7 +25,7 @@ export function PerfilPage() {
   const [painel, setPainel] = useState(false)
   const [borrarFotos, setBorrarFotos] = useState(() => localStorage.getItem('borrarRostos') !== 'false')
   const [loading, setLoading] = useState(true)
-  const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null}>>([])
+  const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -207,7 +207,13 @@ export function PerfilPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               <Stat icon={IconMapPin} k="Picos" v={new Set(minhasFotos.map(f => f.pico_id)).size} />
               <Stat icon={IconPhoto} k="Fotos" v={minhasFotos.length} />
-              <Stat icon={IconTargetArrow} k="Precisão" v="—" />
+              <Stat
+                icon={IconTargetArrow}
+                k="Precisão"
+                v={minhasFotos.length === 0
+                  ? '—'
+                  : `${Math.round((minhasFotos.filter(f => f.procedencia === 'no-local').length / minhasFotos.length) * 100)}%`}
+              />
             </div>
 
             <NomeCard defaultNome={perfil.nome || ''} defaultAvatar={perfil.avatarUrl || ''} />
