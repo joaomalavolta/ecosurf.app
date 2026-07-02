@@ -24,10 +24,14 @@ export const CONSTITUINTES_PADRAO: Constituinte[] = [
   { nome: 'K1', periodoH: 23.9345, amp: 0.06, faseDeg: 320 },
 ]
 
-const NIVEL_MEDIO = 0.7
+export const NIVEL_MEDIO = 0.78 // nível médio de Santos (DHN); antes 0.7 genérico
 
-export function alturaMare(horaDoDia: number, cs: Constituinte[] = CONSTITUINTES_PADRAO): number {
-  let h = NIVEL_MEDIO
+export function alturaMare(
+  horaDoDia: number,
+  cs: Constituinte[] = CONSTITUINTES_PADRAO,
+  nivelMedio: number = NIVEL_MEDIO,
+): number {
+  let h = nivelMedio
   for (const c of cs) {
     h += c.amp * Math.cos((2 * Math.PI * horaDoDia) / c.periodoH - (c.faseDeg * Math.PI) / 180)
   }

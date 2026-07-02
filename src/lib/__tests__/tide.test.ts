@@ -7,17 +7,17 @@ const LAB: Constituinte[] = [{ nome: 'LAB', periodoH: 12, amp: 1, faseDeg: 0 }]
 
 describe('alturaMare', () => {
   it('reproduz o cosseno analítico com constituinte de laboratório', () => {
-    expect(alturaMare(0, LAB)).toBeCloseTo(1.7, 10)
-    expect(alturaMare(6, LAB)).toBeCloseTo(-0.3, 10)
-    expect(alturaMare(3, LAB)).toBeCloseTo(0.7, 10) // quarto de período: cos(π/2)=0
-    expect(alturaMare(12, LAB)).toBeCloseTo(1.7, 10)
+    expect(alturaMare(0, LAB)).toBeCloseTo(1.78, 10)
+    expect(alturaMare(6, LAB)).toBeCloseTo(-0.22, 10)
+    expect(alturaMare(3, LAB)).toBeCloseTo(0.78, 10) // quarto de período: cos(π/2)=0
+    expect(alturaMare(12, LAB)).toBeCloseTo(1.78, 10)
   })
 
   it('aplica a fase em graus (90° desloca o pico em -T/4)', () => {
     const fase90: Constituinte[] = [{ nome: 'F', periodoH: 12, amp: 1, faseDeg: 90 }]
     // cos(2πt/12 - π/2) tem pico em t=3
-    expect(alturaMare(3, fase90)).toBeCloseTo(1.7, 10)
-    expect(alturaMare(0, fase90)).toBeCloseTo(0.7, 10)
+    expect(alturaMare(3, fase90)).toBeCloseTo(1.78, 10)
+    expect(alturaMare(0, fase90)).toBeCloseTo(0.78, 10)
   })
 
   it('é periódica no período da constituinte', () => {
@@ -27,11 +27,12 @@ describe('alturaMare', () => {
   })
 
   it('fica sempre dentro do envelope físico (nível médio ± soma das amplitudes)', () => {
+    const NM = 0.78
     const somaAmp = CONSTITUINTES_PADRAO.reduce((s, c) => s + c.amp, 0)
     for (let t = 0; t <= 48; t += 0.1) {
       const h = alturaMare(t)
-      expect(h).toBeGreaterThanOrEqual(0.7 - somaAmp - 1e-9)
-      expect(h).toBeLessThanOrEqual(0.7 + somaAmp + 1e-9)
+      expect(h).toBeGreaterThanOrEqual(NM - somaAmp - 1e-9)
+      expect(h).toBeLessThanOrEqual(NM + somaAmp + 1e-9)
     }
   })
 

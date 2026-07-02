@@ -53,6 +53,8 @@ export function daFicha(nome: string, ampCm: number, faseDeg: number): Constitui
 export interface EstacaoMare {
   id: string
   nome: string
+  /** Nível médio da estação (m). Oficial só onde há tábua DHN (Santos); demais usam o genérico até ter fonte. */
+  nivelMedioM: number
   /** Nº da estação no Catálogo FEMAR, para auditoria/rastreabilidade. */
   femarId?: string
   lat: number
@@ -65,6 +67,7 @@ export const ESTACOES: EstacaoMare[] = [
   {
     id: 'santos',
     nome: 'Porto de Santos (Ilha Barnabé)',
+    nivelMedioM: 0.78,
     femarId: '', // preencher com o nº da ficha FEMAR
     lat: -23.9619,
     lng: -46.3042,
@@ -82,6 +85,7 @@ export const ESTACOES: EstacaoMare[] = [
   {
     id: 'cananeia',
     nome: 'Cananéia (IO-USP)',
+    nivelMedioM: 0.78, // TODO: sem tábua DHN própria ainda; usa genérico
     femarId: '',
     lat: -25.0186,
     lng: -47.9256,
@@ -91,6 +95,7 @@ export const ESTACOES: EstacaoMare[] = [
   {
     id: 'ubatuba',
     nome: 'Ubatuba',
+    nivelMedioM: 0.78, // TODO: sem tábua DHN própria ainda; usa genérico
     femarId: '',
     lat: -23.4983,
     lng: -45.1189,
