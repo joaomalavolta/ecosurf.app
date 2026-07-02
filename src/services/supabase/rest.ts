@@ -238,6 +238,40 @@ export async function restPerfilPublico(userId: string): Promise<import('../../t
   }
 }
 
+export interface ContribsUsuario {
+  fotos: { id: string; picoId: string; capturadaEm: string; thumbPath: string | null; storagePath: string | null }[]
+  alertas: { id: string; titulo: string; categoria: string; municipio: string | null; uf: string | null; criadaEm: string }[]
+  mutiroes: { id: string; titulo: string; tipoAcao: string | null; municipio: string | null; uf: string | null; quando: string | null }[]
+  totalFotos: number
+  totalAlertas: number
+  totalMutiroes: number
+}
+
+/** Contribuições públicas de um usuário: fotos, alertas e mutirões que assinou. */
+export async function restContribuicoesUsuario(userId: string): Promise<ContribsUsuario> {
+  const uid = encodeURIComponent(userId)
+  const [fotosR, alertasR, mutiroesR] = await Promise.all([
+    rest<{ id: string; pico_id: string; capturada_em: string; thumb_path: string | null; storage_path: string | null }[]>(
+      `fotos_publicas?autor_id=eq.${uid}&select=id,pico_id,capturada_em,thumb_path,storage_path&order=capturada_em.desc&limit=48`,
+    ).catch(() => []),
+    rest<{ id: string; titulo: string; categoria: string; municipio: string | null; uf: string | null; criada_em: string }[]>(
+      `ameacas_publicas?autor_id=eq.${uid}&select=id,titulo,categoria,municipio,uf,criada_em&order=criada_em.desc&limit=48`,
+    ).catch(() => []),
+    rest<{ id: string; titulo: string; tipo_acao: string | null; municipio: string | null; uf: string | null; quando: string | null }[]>(
+      `mutiroes_publicos?autor_id=eq.${uid}&select=id,titulo,tipo_acao,municipio,uf,quando&order=quando.desc&limit=48`,
+    ).catch(() => []),
+  ])
+  return {
+    fotos: fotosR.map((r) => ({ id: r.id, picoId: r.pico_id, capturadaEm: r.capturada_em, thumbPath: r.thumb_path, storagePath: r.storage_path })),
+    alertas: alertasR.map((r) => ({ id: r.id, titulo: r.titulo, categoria: r.categoria, municipio: r.municipio, uf: r.uf, criadaEm: r.criada_em })),
+    mutiroes: mutiroesR.map((r) => ({ id: r.id, titulo: r.titulo, tipoAcao: r.tipo_acao, municipio: r.municipio, uf: r.uf, quando: r.quando })),
+    totalFotos: fotosR.length,
+    totalAlertas: alertasR.length,
+    totalMutiroes: mutiroesR.length,
+  }
+}
+
+
 export interface FotoRow {
   id: string
   pico_id: string
@@ -249,11 +283,12 @@ export interface FotoRow {
   observacao: string | null
   procedencia: string
   autor_nome: string | null
+  autor_id: string | null
 }
 
 /** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
 export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&pico_id=eq.${encodeURIComponent(picoId)}` +
       `&order=capturada_em.desc&limit=30`,
@@ -262,7 +297,7 @@ export async function restFotosDoDia(picoId: string): Promise<FotoRow[]> {
 
 /** Últimas fotos globais da plataforma, independente do pico. */
 export async function restUltimasFotosGlobais(limite = 10): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&storage_path=not.is.null&order=capturada_em.desc&limit=${limite}`
   )

@@ -34,7 +34,7 @@ export async function carregarFeed(picoId: string): Promise<FeedDia> {
             return {
               id: r.id,
               picoId: r.pico_id,
-              autorId: '',
+              autorId: r.autor_id ?? '',
               autorNome: r.autor_nome ?? 'anônimo',
               capturadaEm: r.capturada_em,
               url,
@@ -80,7 +80,7 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
             return {
               id: r.id,
               picoId: r.pico_id,
-              autorId: '',
+              autorId: r.autor_id ?? '',
               autorNome: r.autor_nome ?? 'anônimo',
               capturadaEm: r.capturada_em,
               url,

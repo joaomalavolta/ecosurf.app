@@ -314,7 +314,9 @@ export function TideScrubTimeline({
 
           <div style={{ position: 'absolute', top: 10, left: 10, right: 10, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
             <span className="tag" style={{ background: 'rgba(11,58,83,.72)', color: '#fff' }}>
-              {horaCurta(f.capturadaEm)} · {f.autorNome}
+              {horaCurta(f.capturadaEm)} · {f.autorId ? (
+                <Link to={`/usuario/${f.autorId}`} style={{ color: '#fff', textDecoration: 'underline', textUnderlineOffset: 2 }}>{f.autorNome}</Link>
+              ) : f.autorNome}
             </span>
             {fr && <span className="tag" style={{ background: 'rgba(255,255,255,.92)', color: corFrescor(fr) }}>● {rotuloFrescor(fr)}</span>}
           </div>
