@@ -121,6 +121,7 @@ export interface FotoAdmin {
   observacao: string | null
   procedencia: string
   geofence_ok: boolean
+  suspeita_motivo?: string | null
   deleted_at: string | null
   url?: string
 }
@@ -129,7 +130,7 @@ export async function listarFotos(): Promise<FotoAdmin[]> {
   const c = await sb()
   const { data } = await c
     .from('fotos')
-    .select('id,pico_id,capturada_em,storage_path,status,observacao,procedencia,geofence_ok,deleted_at')
+    .select('id,pico_id,capturada_em,storage_path,status,observacao,procedencia,geofence_ok,suspeita_motivo,deleted_at')
     .order('criada_em', { ascending: false })
     .limit(120)
   const fotos = (data ?? []) as FotoAdmin[]

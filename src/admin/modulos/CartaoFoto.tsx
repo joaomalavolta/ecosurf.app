@@ -33,6 +33,11 @@ export function CartaoFoto({
         <div className="muted" style={{ fontSize: 11.5 }}>
           procedência: {f.procedencia} · geofence: {f.geofence_ok ? 'ok' : 'não'}
         </div>
+        {f.suspeita_motivo && (
+          <div style={{ fontSize: 11.5, color: 'var(--perigo)', fontWeight: 600, marginTop: 4 }}>
+            ⚠ {f.suspeita_motivo}
+          </div>
+        )}
         {f.observacao && <div style={{ fontSize: 12.5 }}>{f.observacao}</div>}
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
