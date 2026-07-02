@@ -3,6 +3,27 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { Brand } from './Brand'
 import { AccountMenu } from './AccountMenu'
+import { useState } from 'react'
+import { IconSun, IconMoon } from '@tabler/icons-react'
+import { temaAtual, aplicarTema } from '../theme'
+
+/** Sol/lua num toque — atalho de tema para o portal desktop. */
+function TemaRapido() {
+  const [tema, setTema] = useState(temaAtual())
+  return (
+    <button
+      aria-label={tema === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+      onClick={() => { const t = tema === 'dark' ? 'light' : 'dark'; aplicarTema(t); setTema(t) }}
+      style={{
+        width: 34, height: 34, borderRadius: 12, border: 0, cursor: 'pointer',
+        background: 'rgba(255,255,255,.18)', color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      {tema === 'dark' ? <IconSun size={17} stroke={2} /> : <IconMoon size={17} stroke={2} />}
+    </button>
+  )
+}
 
 export function Header({
   title,
@@ -25,7 +46,8 @@ export function Header({
       style={brand ? { textAlign: 'center' } : undefined}
     >
       {/* Menu de conta — sempre presente no topo direito */}
-      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 14, zIndex: 2 }}>
+      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 14, zIndex: 2, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <span className="so-desktop"><TemaRapido /></span>
         <AccountMenu />
       </div>
       {showBack && (
