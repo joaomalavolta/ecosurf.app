@@ -210,10 +210,12 @@ function filtroLayer(filtro?: string): maplibregl.ExpressionSpecification | null
  * Pins circulares coloridos por categoria.
  * Filtragem instantânea via setFilter (sem rebuild).
  */
-const JANELAS: { h: number | null; rotulo: string }[] = [
-  { h: 0.5, rotulo: '30 min' }, { h: 1, rotulo: '1h' }, { h: 3, rotulo: '3h' },
-  { h: 6, rotulo: '6h' }, { h: 12, rotulo: '12h' }, { h: 24, rotulo: '24h' },
-  { h: 48, rotulo: '48h' }, { h: 168, rotulo: '7 dias' }, { h: null, rotulo: 'tudo' },
+const JANELAS: { h: number | null; rotulo: string; curto: string }[] = [
+  { h: 0.5, rotulo: '30 min', curto: '30m' }, { h: 1, rotulo: '1h', curto: '1h' },
+  { h: 3, rotulo: '3h', curto: '3h' }, { h: 6, rotulo: '6h', curto: '6h' },
+  { h: 12, rotulo: '12h', curto: '12h' }, { h: 24, rotulo: '24h', curto: '24h' },
+  { h: 48, rotulo: '48h', curto: '48h' }, { h: 168, rotulo: '7 dias', curto: '7d' },
+  { h: null, rotulo: 'todas', curto: 'tudo' },
 ]
 
 export function MapView({
@@ -519,18 +521,20 @@ export function MapView({
       {atividade && atividade.length > 0 && (
         <div
           style={{
-            position: 'absolute', left: 10, top: 10,
+            position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)',
             zIndex: 3,
-            background: 'rgba(28,32,36,.44)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
             border: '1px solid rgba(255,255,255,.16)',
-            borderRadius: 999, padding: '5px 12px',
-            display: 'flex', alignItems: 'center', gap: 8,
-            width: 'min(232px, 56%)',
+            borderRadius: 12, padding: '7px 14px 5px',
+            width: 'min(380px, 86%)',
           }}
         >
-          <span className="dado" style={{ fontSize: 10.5, color: 'rgba(255,255,255,.85)', whiteSpace: 'nowrap', minWidth: 66 }}>
-            {JANELAS[janelaIdx].h == null ? 'tudo' : `≤ ${JANELAS[janelaIdx].rotulo}`}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,.85)', fontWeight: 600 }}>📷 Fotos de onda:</span>
+            <span className="dado" style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>
+              {JANELAS[janelaIdx].h == null ? 'todas' : `últimas ${JANELAS[janelaIdx].rotulo}`}
+            </span>
+          </div>
           <input
             type="range"
             min={0}
@@ -538,9 +542,28 @@ export function MapView({
             step={1}
             value={janelaIdx}
             onChange={(e) => setJanelaIdx(Number(e.target.value))}
-            aria-label="Janela de tempo dos reports de onda"
-            style={{ flex: 1, accentColor: 'rgba(230,235,238,.9)', height: 4 }}
+            aria-label="Janela de tempo das fotos de onda"
+            style={{ width: '100%', accentColor: 'rgba(230,235,238,.92)', height: 4, display: 'block' }}
           />
+          {/* escala fixa: guia o dedo e dá sentido às paradas */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+            {JANELAS.map((j, i) => (
+              <span
+                key={j.curto}
+                className="dado"
+                onClick={() => setJanelaIdx(i)}
+                style={{
+                  fontSize: 8.5,
+                  color: i === janelaIdx ? '#fff' : 'rgba(255,255,255,.55)',
+                  fontWeight: i === janelaIdx ? 700 : 400,
+                  cursor: 'pointer',
+                  padding: '1px 2px',
+                }}
+              >
+                {j.curto}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
