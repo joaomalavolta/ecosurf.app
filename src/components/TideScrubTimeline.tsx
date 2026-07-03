@@ -57,6 +57,7 @@ function labelDia(date: Date, hoje: Date): string {
   return `${nomeDiaCurto(date)} ${date.getDate()}`
 }
 
+/** Janela navegável da timeline: ±30 dias em torno de hoje. */
 function diasDaSemana(hoje: Date): Date[] {
   const dias: Date[] = []
   for (let i = -30; i <= 30; i++) {
@@ -127,11 +128,8 @@ export function TideScrubTimeline({
 
   const dias = useMemo(() => {
     const dMap = new Map<string, Date>()
-    // 1. Janela padrão (-3 a +3)
-    for (let i = -3; i <= 3; i++) {
-      const d = new Date(hoje)
-      d.setDate(d.getDate() + i)
-      d.setHours(0, 0, 0, 0)
+    // 1. Janela padrão: ±30 dias (a máquina do tempo da maré/fotos)
+    for (const d of diasDaSemana(hoje)) {
       dMap.set(dateKey(d), d)
     }
     // 2. Dias com fotos
