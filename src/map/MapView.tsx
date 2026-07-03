@@ -11,8 +11,8 @@ import type { Alerta, Mutirao, Pico } from '../types/domain'
  * Cria pin estilo ZUrb — círculo colorido sólido + ponteira triangular.
  * Cada SVG tem filter ID ÚNICO (sufixo cor hex) para evitar conflito no MapLibre.
  */
-const ZURB_PIN = (bg: string, paths: string, size = 48) => {
-  const uid = bg.replace('#', '')
+const ZURB_PIN = (bg: string, paths: string, size = 48, contorno = '#fff', contornoW = 3) => {
+  const uid = bg.replace('#', '') + contorno.replace('#', '')
   const r = size / 2
   const svgH = size + 12
   const cy = r
@@ -26,8 +26,8 @@ const ZURB_PIN = (bg: string, paths: string, size = 48) => {
     `<defs><filter id="s${uid}" x="-30%" y="-20%" width="160%" height="160%">` +
     `<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/>` +
     `</filter></defs>` +
-    `<polygon points="${r - 5},${size - 4} ${r},${tipY} ${r + 5},${size - 4}" fill="${bg}" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>` +
-    `<circle cx="${r}" cy="${cy}" r="${r - 3}" fill="${bg}" stroke="#fff" stroke-width="3" filter="url(#s${uid})"/>` +
+    `<polygon points="${r - 5},${size - 4} ${r},${tipY} ${r + 5},${size - 4}" fill="${bg}" stroke="${contorno}" stroke-width="2" stroke-linejoin="round"/>` +
+    `<circle cx="${r}" cy="${cy}" r="${r - 3}" fill="${bg}" stroke="${contorno}" stroke-width="${contornoW}" filter="url(#s${uid})"/>` +
     `<g transform="translate(${ix}, ${iy}) scale(${s})" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">` +
     paths +
     `</g></svg>`
@@ -48,16 +48,10 @@ const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-
 const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
 const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
 
-/** Pin com badge verde "ativo" — checkmark no canto superior direito */
-const ZURB_PIN_ATIVO = (bg: string, paths: string, size = 48) => {
-  const base = ZURB_PIN(bg, paths, size)
-  const bx = size - 6
-  const by = 8
-  const badge =
-    `<circle cx="${bx}" cy="${by}" r="7" fill="#22c55e" stroke="#fff" stroke-width="2"/>` +
-    `<path d="M${bx - 3} ${by}l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-  return base.replace('</svg>', badge + '</svg>')
-}
+/** Pin "aceso" — contorno verde vibrante no lugar do antigo badge de check
+ *  (o badge era desenhado fora do viewBox e aparecia com o círculo cortado). */
+const ZURB_PIN_ATIVO = (bg: string, paths: string, size = 48) =>
+  ZURB_PIN(bg, paths, size, '#22c55e', 3.5)
 
 /** Ícones — modelo ZUrb: círculos sólidos com ponteira + sombra forte */
 const ICONES: Record<string, string> = {
