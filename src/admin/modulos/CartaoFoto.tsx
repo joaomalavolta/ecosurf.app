@@ -1,17 +1,19 @@
 import {
-  IconCheck, IconEyeOff, IconTrash,
+  IconCheck, IconEdit, IconEyeOff, IconTrash,
 } from '@tabler/icons-react'
 import { IconArrowBackUp as IconRestaurar } from '@tabler/icons-react'
 import { type Permissoes, type FotoAdmin } from '../../services/admin'
 import { StatusBadge } from '../ui'
-import { fmtData } from '../shared'
+import { fmtDataHora } from '../shared'
 
 export function CartaoFoto({
-  f, perm, onModerar, onExcluir, onRestaurar,
+  f, perm, nomePico, onModerar, onEditar, onExcluir, onRestaurar,
 }: {
   f: FotoAdmin
   perm: Permissoes
+  nomePico?: string
   onModerar: (f: FotoAdmin, status: 'aprovada' | 'ocultada' | 'rejeitada') => void
+  onEditar: (f: FotoAdmin) => void
   onExcluir: (f: FotoAdmin) => void
   onRestaurar: (f: FotoAdmin) => void
 }) {
@@ -27,8 +29,11 @@ export function CartaoFoto({
         <div style={{ position: 'absolute', top: 8, left: 8 }}><StatusBadge status={f.status} /></div>
       </div>
       <div className="pad" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>
+          {nomePico ?? f.pico_id}
+        </div>
         <div className="muted" style={{ fontSize: 12 }}>
-          {f.pico_id} · {fmtData(f.capturada_em)}
+          {fmtDataHora(f.capturada_em)}
         </div>
         <div className="muted" style={{ fontSize: 11.5 }}>
           procedência: {f.procedencia} · geofence: {f.geofence_ok ? 'ok' : 'não'}
@@ -59,6 +64,9 @@ export function CartaoFoto({
                   <IconEyeOff size={15} /> Ocultar
                 </button>
               )}
+              <button className="btn outline" style={{ minHeight: 36, padding: '0 12px', fontSize: 13 }} onClick={() => onEditar(f)}>
+                <IconEdit size={15} /> Editar
+              </button>
               <button className="btn outline" style={{ minHeight: 36, padding: '0 12px', fontSize: 13, color: 'var(--perigo)', borderColor: 'var(--perigo-bg)' }} onClick={() => onExcluir(f)}>
                 <IconTrash size={15} /> Excluir
               </button>
@@ -69,4 +77,3 @@ export function CartaoFoto({
     </div>
   )
 }
-

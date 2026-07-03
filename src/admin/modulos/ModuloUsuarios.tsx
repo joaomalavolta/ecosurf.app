@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  IconBan, IconDownload, IconRefresh, IconUserX,
+  IconBan, IconCheck, IconDownload, IconEdit, IconRefresh, IconUserX,
 } from '@tabler/icons-react'
 import * as admin from '../../services/admin'
 import { type Permissoes, type Papel, type UsuarioAdmin } from '../../services/admin'
@@ -15,6 +15,26 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
   const [dlgBloquear, setDlgBloquear] = useState<{ user: UsuarioAdmin; motivo: string } | null>(null)
   const [dlgExcluir, setDlgExcluir] = useState<{ user: UsuarioAdmin; motivo: string } | null>(null)
   const [trabalhando, setTrabalhando] = useState(false)
+  const [editando, setEditando] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{ nome: string; cidade: string }>({ nome: '', cidade: '' })
+
+  function iniciarEdicao(u: UsuarioAdmin) {
+    setEditando(u.id)
+    setEditForm({ nome: u.nome ?? '', cidade: u.cidade ?? '' })
+  }
+
+  async function salvarEdicao(u: UsuarioAdmin) {
+    setTrabalhando(true)
+    try {
+      await admin.editarUsuario(u.id, { nome: editForm.nome.trim(), cidade: editForm.cidade.trim() })
+      setUsers((xs) => xs?.map((x) => (x.id === u.id ? { ...x, nome: editForm.nome.trim(), cidade: editForm.cidade.trim() } : x)) ?? null)
+      setEditando(null)
+    } catch (e) {
+      setErro(String((e as Error)?.message ?? e))
+    } finally {
+      setTrabalhando(false)
+    }
+  }
 
   const carregar = useCallback(() => {
     setErro('')
@@ -90,10 +110,20 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
                 return (
                   <tr key={u.id} style={{ opacity: bloqueado ? 0.55 : undefined }}>
                     <td>
-                      {u.nome || <span className="muted">sem nome</span>}
-                      {!u.onboarded && <span className="muted" style={{ fontSize: 11 }}> · incompleto</span>}
+                      {editando === u.id
+                        ? <input className="input" value={editForm.nome} onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })} style={{ minWidth: 120, padding: '4px 8px', fontSize: 13 }} />
+                        : <>
+                            {u.nome || <span className="muted">sem nome</span>}
+                            {!u.onboarded && <span className="muted" style={{ fontSize: 11 }}> · incompleto</span>}
+                          </>
+                      }
                     </td>
-                    <td>{u.cidade || '—'}</td>
+                    <td>
+                      {editando === u.id
+                        ? <input className="input" value={editForm.cidade} onChange={(e) => setEditForm({ ...editForm, cidade: e.target.value })} style={{ minWidth: 100, padding: '4px 8px', fontSize: 13 }} />
+                        : u.cidade || '—'
+                      }
+                    </td>
                     <td>{fmtData(u.criado_em)}</td>
                     <td>
                       {bloqueado
@@ -108,8 +138,27 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
                       </select>
                     </td>
                     <td>
-                      {!proprio && (
+                      {editando === u.id ? (
                         <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }} disabled={trabalhando} onClick={() => salvarEdicao(u)}>
+                            <IconCheck size={14} /> Salvar
+                          </button>
+                          <button className="btn outline" style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }} onClick={() => setEditando(null)}>
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            className="btn outline"
+                            style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5 }}
+                            title="Corrigir nome e cidade"
+                            onClick={() => iniciarEdicao(u)}
+                          >
+                            <IconEdit size={14} /> Editar
+                          </button>
+                          {!proprio && (
+                            <>
                           <button
                             className="btn outline"
                             style={{ minHeight: 34, padding: '0 10px', fontSize: 12.5, color: bloqueado ? 'var(--turq)' : '#d97706', borderColor: bloqueado ? 'rgba(30,203,195,.3)' : '#d9770630' }}
@@ -127,6 +176,8 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
                             >
                               <IconUserX size={14} /> Excluir
                             </button>
+                          )}
+                            </>
                           )}
                         </div>
                       )}

@@ -1,23 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   IconDownload,
 } from '@tabler/icons-react'
 import * as admin from '../../services/admin'
 import { type FotoAdmin } from '../../services/admin'
 import { StatusBadge, Estado } from '../ui'
-import { Titulo, fmtData } from '../shared'
+import { Titulo, fmtData, type PicoAdm } from '../shared'
 
 export function ModuloRegistros() {
   const [fotos, setFotos] = useState<FotoAdmin[] | null>(null)
+  const [picos, setPicos] = useState<PicoAdm[]>([])
   const [erro, setErro] = useState('')
   useEffect(() => {
     admin.listarFotos().then(setFotos).catch((e) => setErro(String(e?.message ?? e)))
+    admin.listarPicosAdmin().then(setPicos).catch(() => { /* fallback: UUID */ })
   }, [])
+
+  const nomesPicos = useMemo(() => new Map(picos.map((p) => [p.id, p.nome])), [picos])
 
   function exportar() {
     if (!fotos) return
     admin.baixarCSV('registros', fotos.map((f) => ({
-      id: f.id, pico: f.pico_id, capturada_em: f.capturada_em, status: f.status,
+      id: f.id, pico: nomesPicos.get(f.pico_id) ?? f.pico_id, capturada_em: f.capturada_em, status: f.status,
       procedencia: f.procedencia, geofence_ok: f.geofence_ok, observacao: f.observacao ?? '',
     })))
   }
@@ -39,7 +43,7 @@ export function ModuloRegistros() {
             <tbody>
               {fotos.map((f) => (
                 <tr key={f.id}>
-                  <td>{f.pico_id}</td>
+                  <td>{nomesPicos.get(f.pico_id) ?? f.pico_id}</td>
                   <td>{fmtData(f.capturada_em)}</td>
                   <td>{f.procedencia}</td>
                   <td>{f.geofence_ok ? 'ok' : 'não'}</td>
@@ -53,6 +57,3 @@ export function ModuloRegistros() {
     </section>
   )
 }
-
-// ──────────────────────────────────────────────────────────────── Usuários ──
-

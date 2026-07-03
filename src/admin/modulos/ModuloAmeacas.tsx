@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { Fragment, useState, useEffect, useCallback } from 'react'
 import {
   IconCheck, IconDownload, IconEdit, IconRefresh, IconTrash,
 } from '@tabler/icons-react'
@@ -17,7 +17,7 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
   const [dlg, setDlg] = useState<{ a: Ameaca; motivo: string } | null>(null)
   const [trabalhando, setTrabalhando] = useState(false)
   const [editando, setEditando] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<{ titulo: string; categoria: string; gravidade: string; municipio: string; uf: string; descricao: string }>({ titulo: '', categoria: '', gravidade: '', municipio: '', uf: '', descricao: '' })
+  const [editForm, setEditForm] = useState<{ titulo: string; categoria: string; gravidade: string; municipio: string; uf: string; descricao: string; local_nome: string }>({ titulo: '', categoria: '', gravidade: '', municipio: '', uf: '', descricao: '', local_nome: '' })
 
   const carregar = useCallback(() => {
     setErro('')
@@ -39,6 +39,7 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
       municipio: a.municipio ?? '',
       uf: a.uf ?? '',
       descricao: (a as any).descricao ?? '',
+      local_nome: (a as any).local_nome ?? '',
     })
   }
 
@@ -92,7 +93,8 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
               {itens.map((a) => {
                 const isEditing = editando === a.id
                 return (
-                  <tr key={a.id}>
+                  <Fragment key={a.id}>
+                  <tr>
                     <td>
                       {isEditing
                         ? <input className="input" value={editForm.titulo} onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })} style={{ minWidth: 140, padding: '4px 8px', fontSize: 13 }} />
@@ -153,6 +155,23 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
                       </div>
                     </td>
                   </tr>
+                  {isEditing && (
+                    <tr>
+                      <td colSpan={6} style={{ background: 'var(--cinza, rgba(0,0,0,.03))' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 4px' }}>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>
+                            Nome do local
+                            <input className="input" placeholder="Ex.: Foz do Rio Itanhaém" value={editForm.local_nome} onChange={(e) => setEditForm({ ...editForm, local_nome: e.target.value })} style={{ width: '100%', marginTop: 4, padding: '6px 8px', fontSize: 13 }} />
+                          </label>
+                          <label style={{ fontSize: 12, fontWeight: 600 }}>
+                            Descrição
+                            <textarea className="input" placeholder="Descrição do problema" value={editForm.descricao} onChange={(e) => setEditForm({ ...editForm, descricao: e.target.value })} style={{ width: '100%', marginTop: 4, minHeight: 70, resize: 'vertical', padding: '6px 8px', fontSize: 13 }} />
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 )
               })}
             </tbody>

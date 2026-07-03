@@ -170,6 +170,15 @@ export async function restaurarFoto(id: string) {
   await log(c, 'foto:restaurar', 'foto', id)
 }
 
+/** Edita campos corrigíveis de uma foto (legenda, pico vinculado, horário).
+ *  Procedência e geofence NÃO são editáveis: são selos do servidor. */
+export async function editarFoto(id: string, campos: { observacao?: string | null; pico_id?: string; capturada_em?: string }) {
+  const c = await sb()
+  const { error } = await c.from('fotos').update(campos).eq('id', id)
+  if (error) throw new Error(error.message)
+  await log(c, 'foto:editar', 'foto', id, undefined, campos)
+}
+
 // ── Usuários ─────────────────────────────────────────────────────────────
 export interface UsuarioAdmin {
   id: string
@@ -191,6 +200,14 @@ export async function definirPapel(id: string, papel: Papel) {
   const c = await sb()
   await c.from('perfis').update({ papel }).eq('id', id)
   await log(c, 'usuario:papel', 'usuario', id, undefined, { papel })
+}
+
+/** Corrige nome público e cidade de um usuário (ex.: erro de digitação, dado ofensivo). */
+export async function editarUsuario(id: string, campos: { nome?: string; cidade?: string }) {
+  const c = await sb()
+  const { error } = await c.from('perfis').update(campos).eq('id', id)
+  if (error) throw new Error(error.message)
+  await log(c, 'usuario:editar', 'usuario', id, undefined, campos)
 }
 
 /** Bloqueia ou desbloqueia um usuário (impede login e contribuições). */
