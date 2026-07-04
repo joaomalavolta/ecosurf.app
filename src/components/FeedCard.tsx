@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconShieldCheck, IconPhoto, IconShare, IconStar } from '@tabler/icons-react'
+import { IconShieldCheck, IconPhoto, IconShare, IconStar, IconClock } from '@tabler/icons-react'
 import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
@@ -142,8 +142,8 @@ export function FeedCard({
                   </span>
                 )}
                 {fotosComUrl[activeIdx]?.capturadaEm && (
-                  <span className="dado" style={{ fontSize: 11, opacity: .9 }}>
-                    🕐 {rotuloQuando(fotosComUrl[activeIdx].capturadaEm)}
+                  <span className="dado" style={{ fontSize: 11, opacity: .9, display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <IconClock size={12} stroke={2} /> {rotuloQuando(fotosComUrl[activeIdx].capturadaEm)}
                   </span>
                 )}
                 {fotosComUrl.length > 1 && (
