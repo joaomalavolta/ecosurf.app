@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
+import { IconAlertTriangle,
   IconCheck, IconDownload, IconEdit, IconRefresh, IconTrash,
 } from '@tabler/icons-react'
 import * as admin from '../../services/admin'
@@ -151,7 +151,7 @@ export function ModuloPicos({ perm }: { perm: Permissoes }) {
         >
           <textarea className="input" placeholder="Motivo obrigatório (registrado na auditoria)" value={dlgExcluir.motivo} onChange={(e) => setDlgExcluir({ ...dlgExcluir, motivo: e.target.value })} style={{ marginTop: 12, minHeight: 60, resize: 'vertical' }} />
           <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', fontSize: 12, color: 'var(--perigo)', lineHeight: 1.4 }}>
-            ⚠️ Isto exclui o pico + todas as fotos e alertas vinculados. Não é possível desfazer.
+            <IconAlertTriangle size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Isto exclui o pico + todas as fotos e alertas vinculados. Não é possível desfazer.
           </div>
         </ConfirmDialog>
       )}

@@ -99,7 +99,7 @@ export function FormularioPicoPage() {
           <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(30,203,195,0.15)', color: '#1ECBC3', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
             <IconCheck size={36} stroke={2} />
           </div>
-          <h2 style={{ fontSize: 20, marginTop: 16 }}>🏖️ {nome.trim()}</h2>
+          <h2 style={{ fontSize: 20, marginTop: 16 }}>{nome.trim()}</h2>
           <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
             O pico foi adicionado ao mapa e já está disponível para a comunidade registrar fotos, reports e alertas.
           </p>
@@ -135,7 +135,7 @@ export function FormularioPicoPage() {
 
         {/* Local */}
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
-          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>📍 Localização</legend>
+          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}><IconMapPin size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> Localização</legend>
 
           <MapaPicker
             lat={lat}
@@ -223,7 +223,7 @@ export function FormularioPicoPage() {
         zIndex: 40,
       }}>
         <button className="btn acento full" disabled={!podePublicar() || enviando} onClick={publicar}>
-          {enviando ? 'Cadastrando...' : '🏖️ Cadastrar Pico'}
+          {enviando ? 'Cadastrando...' : <><IconBeach size={16} stroke={2} /> Cadastrar Pico</>}
         </button>
       </div>
     </div>

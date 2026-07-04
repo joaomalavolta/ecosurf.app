@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePinchZoom } from '../hooks/usePinchZoom'
-import {
+import { IconUsers, IconPlus,
   IconX,
   IconCamera,
   IconMapPin,
@@ -349,7 +349,7 @@ export function CapturePage() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 20 }}>
               <div className="spinner" />
               <p style={{ color: 'rgba(255,255,255,.7)', fontSize: 13, animation: 'pulse 2s ease-in-out infinite' }}>
-                📍 Detectando sua localização...
+                Detectando sua localização...
               </p>
             </div>
           )}
@@ -477,7 +477,7 @@ export function CapturePage() {
                   background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                   borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 500, color: '#1ECBC3',
                 }}>
-                  <IconCurrentLocation size={14} stroke={2} /> 📍 Localização detectada
+                  <IconCurrentLocation size={14} stroke={2} /> Localização detectada
                 </span>
               </div>
             )}
@@ -578,7 +578,7 @@ export function CapturePage() {
                     </span>
                     {dist != null && (
                       <span className="dado" style={{ fontSize: 11.5, color: dist <= 0.6 ? '#1ECBC3' : 'rgba(255,255,255,.6)', flexShrink: 0, fontWeight: 700 }}>
-                        {dist <= 0.6 ? '📍 aqui' : dist < 10 ? `${dist.toFixed(1)} km` : `${Math.round(dist)} km`}
+                        {dist <= 0.6 ? <><IconMapPin size={11} stroke={2.5} style={{ verticalAlign: '-1px' }} /> aqui</> : dist < 10 ? `${dist.toFixed(1)} km` : `${Math.round(dist)} km`}
                       </span>
                     )}
                   </button>
@@ -588,7 +588,7 @@ export function CapturePage() {
                 className="btn outline full"
                 style={{ marginTop: 4, color: '#fff', borderColor: 'rgba(255,255,255,.35)' }}
               >
-                ➕ Reportar um local novo
+                <IconPlus size={16} stroke={2} /> Reportar um local novo
               </button>
             </div>
           )}
@@ -704,7 +704,7 @@ export function CapturePage() {
                   navigate(`/nova-acao/mutirao?${qs.toString()}`)
                 }}
               >
-                🤝 Criar mutirão e convidar a comunidade
+                <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
               </button>
             )}
             {picoFinal && (

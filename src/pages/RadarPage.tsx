@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconCompass, IconThumbUp, IconCamera, IconWaveSine, IconSeeding, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
@@ -171,7 +171,7 @@ export function RadarPage() {
                 >
                   <div className="between" style={{ padding: '0 6px 8px' }}>
                     <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>
-                      {ufMenu ? `📍 ${ufMenu}` : '📍 Litoral por região'}
+                      <IconMapPin size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> {ufMenu ?? 'Litoral por região'}
                     </span>
                     {ufMenu && (
                       <button onClick={() => setUfMenu(null)} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.7)', fontSize: 12, cursor: 'pointer' }}>← UFs</button>
@@ -203,7 +203,7 @@ export function RadarPage() {
                     to={ufMenu ? `/explorar?uf=${encodeURIComponent(ufMenu)}` : '/explorar'}
                     style={{ display: 'block', textAlign: 'center', color: '#7FDCD4', fontSize: 12, padding: '12px 6px 6px', textDecoration: 'none' }}
                   >
-                    🧭 Abrir Explorar completo →
+                    <IconCompass size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Abrir Explorar completo →
                   </Link>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export function RadarPage() {
                     <div style={{ fontWeight: 600, fontSize: 16 }}>{pico?.nome || f.picoId}</div>
                     <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>Por {f.autorNome}</div>
                   </div>
-                  <div className="badge b-good" style={{ fontSize: 15, padding: '4px 10px' }}>🤙 {curtidasMap[f.id] || 0}</div>
+                  <div className="badge b-good" style={{ fontSize: 15, padding: '4px 10px' }}><IconThumbUp size={15} stroke={2} /> {curtidasMap[f.id] || 0}</div>
                 </div>
               </Link>
             )
@@ -308,12 +308,12 @@ export function RadarPage() {
             )}
 
             <div style={{ padding: '10px 16px 2px' }}>
-              <span className="eyebrow">🌊 O mar agora · fotos da comunidade nos picos</span>
+              <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconRipple size={12} stroke={2} /> O mar agora · fotos da comunidade nos picos</span>
             </div>
 
             {feed.length === 0 && picosTodos.length > 0 && (
               <div className="card pad" style={{ textAlign: 'center', padding: '28px 16px' }}>
-                <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>📷 Sem fotos hoje</p>
+                <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Sem fotos hoje</p>
                 <p className="muted">Seja o primeiro a registrar o mar! As fotos da comunidade aparecem aqui em tempo real.</p>
               </div>
             )}
@@ -338,7 +338,7 @@ export function RadarPage() {
             ))}
 
             <Link to="/explorar" className="btn outline full" style={{ margin: '4px 16px 0', width: 'calc(100% - 32px)' }}>
-              🧭 Explorar o litoral por estado e cidade
+              <IconCompass size={16} stroke={2} /> Explorar o litoral por estado e cidade
             </Link>
 
             {picosSemFoto.length > 0 && (
@@ -348,7 +348,7 @@ export function RadarPage() {
                   onClick={() => setListaPicosAberta(!listaPicosAberta)}
                 >
                   <IconList size={16} stroke={2} />
-                  📋 Todos os picos ({picosSemFoto.length} sem foto)
+                  <IconList size={15} stroke={2} style={{ verticalAlign: '-2px' }} /> Todos os picos ({picosSemFoto.length} sem foto)
                   <IconChevronRight size={14} stroke={2.5} />
                 </button>
                 {listaPicosAberta && (
@@ -411,7 +411,7 @@ function TideStripRadar({ pico }: { pico: Pico | null }) {
   return (
     <div className="so-desktop card" style={{ margin: '12px 12px 0', padding: '10px 14px 8px' }}>
       <div className="between" style={{ marginBottom: 2 }}>
-        <span className="eyebrow">🌊 Maré do dia · {pico.nome}</span>
+        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconWaveSine size={12} stroke={2} /> Maré do dia · {pico.nome}</span>
         <span className="dado" style={{ fontSize: 12, fontWeight: 700, color: 'var(--turq)' }}>agora ≈ {perto.alturaM.toFixed(1)}m</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 54, display: 'block' }} aria-label="Curva de maré do dia">

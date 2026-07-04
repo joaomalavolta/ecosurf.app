@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
+import { IconAlertTriangle,
   IconBan, IconCheck, IconDownload, IconEdit, IconRefresh, IconUserX,
 } from '@tabler/icons-react'
 import * as admin from '../../services/admin'
@@ -231,7 +231,7 @@ export function ModuloUsuarios({ eu, perm }: { eu: Eu; perm: Permissoes }) {
             style={{ marginTop: 12, minHeight: 70, resize: 'vertical' }}
           />
           <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', fontSize: 12, color: 'var(--perigo)', lineHeight: 1.4 }}>
-            ⚠️ Esta ação exclui todas as fotos, alertas e mutirões criados por este usuário. Não é possível desfazer.
+            <IconAlertTriangle size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Esta ação exclui todas as fotos, alertas e mutirões criados por este usuário. Não é possível desfazer.
           </div>
         </ConfirmDialog>
       )}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
+import { IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocal } from '../components/MapaLocal'
 import { MapaPicker } from '../components/MapaPicker'
@@ -448,13 +448,13 @@ export function AlertaPage() {
             className="muted"
             style={{ display: 'block', fontSize: 12.5, marginTop: 10, textDecoration: 'underline', textDecorationColor: 'var(--line)', textUnderlineOffset: 3 }}
           >
-            👤 Ver perfil de quem registrou · seguir →
+            <IconUser size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Ver perfil de quem registrou · seguir →
           </Link>
         )}
 
         {!isEditing && acoesVinculadas.length > 0 && (
           <div className="card pad" style={{ marginTop: 12, borderLeft: '3px solid #2E9B6B' }}>
-            <span className="eyebrow" style={{ color: '#2E9B6B' }}>🌱 Esta ocorrência gerou ação</span>
+            <span className="eyebrow" style={{ color: '#2E9B6B', display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Esta ocorrência gerou ação</span>
             <div className="stack" style={{ marginTop: 8 }}>
               {acoesVinculadas.map((m) => (
                 <Link key={m.id} to={`/mutirao/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -482,7 +482,7 @@ export function AlertaPage() {
               navigate(`/nova-acao/mutirao?${qs.toString()}`)
             }}
           >
-            🤝 Criar mutirão para esta ocorrência
+            <IconUsers size={17} stroke={2} /> Criar mutirão para esta ocorrência
           </button>
         )}
 

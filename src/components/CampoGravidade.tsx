@@ -73,7 +73,7 @@ export function CampoGravidade({
           color: 'var(--text)',
           lineHeight: 1.4,
         }}>
-          ⚠️ Se a situação exige ação imediata, procure os órgãos públicos competentes (Ibama, ICMBio, Defesa Civil, Ministério Público).
+          <IconAlertTriangle size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Se a situação exige ação imediata, procure os órgãos públicos competentes (Ibama, ICMBio, Defesa Civil, Ministério Público).
           O Ecosurf.app publica o registro colaborativo, mas não encaminha providências oficiais.
         </div>
       )}

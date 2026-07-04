@@ -127,7 +127,7 @@ export function ExplorarPage() {
                   {p.praia && <span className="muted" style={{ fontSize: 12 }}>{p.praia}</span>}
                 </span>
                 <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  {fotosDoPico > 0 && <span className="badge b-good" style={{ fontSize: 10 }}>📷 {fotosDoPico} hoje</span>}
+                  {fotosDoPico > 0 && <span className="badge b-good" style={{ fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3 }}><IconCamera size={11} stroke={2} /> {fotosDoPico} hoje</span>}
                   <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
                 </span>
               </Link>
@@ -140,7 +140,7 @@ export function ExplorarPage() {
           <>
             {alertas.filter((a) => a.uf === uf && a.municipio === cidade).length > 0 && (
               <div className="card pad" style={{ marginTop: 12 }}>
-                <span className="eyebrow" style={{ color: '#E8734A' }}>⚠️ Alertas ativos</span>
+                <span className="eyebrow" style={{ color: '#E8734A', display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconAlertTriangle size={12} stroke={2} /> Alertas ativos</span>
                 <div className="stack" style={{ marginTop: 8 }}>
                   {alertas.filter((a) => a.uf === uf && a.municipio === cidade).slice(0, 5).map((a) => (
                     <Link key={a.id} to={`/alerta/${a.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -153,7 +153,7 @@ export function ExplorarPage() {
             )}
             {mutiroes.filter((m) => m.uf === uf && m.municipio === cidade).length > 0 && (
               <div className="card pad" style={{ marginTop: 12 }}>
-                <span className="eyebrow" style={{ color: '#2E9B6B' }}>🤝 Mutirões</span>
+                <span className="eyebrow" style={{ color: '#2E9B6B', display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconUsers size={12} stroke={2} /> Mutirões</span>
                 <div className="stack" style={{ marginTop: 8 }}>
                   {mutiroes.filter((m) => m.uf === uf && m.municipio === cidade).slice(0, 5).map((m) => (
                     <Link key={m.id} to={`/mutirao/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>

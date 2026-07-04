@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
+import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPicker } from '../components/MapaPicker'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
@@ -243,7 +243,7 @@ export function FormularioMutiraoPage() {
 
         {/* Local */}
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
-          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>📍 Local da ação</legend>
+          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}><IconMapPin size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> Local da ação</legend>
 
           <MapaPicker
             lat={lat}
@@ -280,7 +280,7 @@ export function FormularioMutiraoPage() {
 
         {/* Data e horário */}
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
-          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>📅 Data e horário</legend>
+          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}><IconCalendar size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> Data e horário</legend>
           <div>
             <label className="form-label">Data *</label>
             <input className="input" type="date" value={quando} onChange={(e) => setQuando(e.target.value)} />
@@ -299,7 +299,7 @@ export function FormularioMutiraoPage() {
 
         {/* Organizador */}
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
-          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>👤 Organizador</legend>
+          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}><IconUser size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> Organizador</legend>
           <div>
             <label className="form-label">Nome</label>
             <input className="input" placeholder="Seu nome ou apelido" value={organizador} onChange={(e) => setOrganizador(e.target.value)} />
@@ -316,7 +316,7 @@ export function FormularioMutiraoPage() {
 
         {/* Vagas e info */}
         <fieldset style={{ border: '1px solid var(--line)', borderRadius: 14, padding: 14, margin: 0 }}>
-          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>🙋 Voluntários</legend>
+          <legend style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}><IconUsers size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> Voluntários</legend>
           <div>
             <label className="form-label">Número estimado de vagas</label>
             <input className="input" type="number" min={1} placeholder="30" value={vagas ?? ''} onChange={(e) => setVagas(e.target.value ? Number(e.target.value) : undefined)} />
@@ -384,7 +384,7 @@ export function FormularioMutiraoPage() {
             </button>
           )}
           <button className="btn acento full" disabled={!podePublicar() || enviando || excluindo} onClick={() => publicar(false)}>
-            {enviando ? 'Salvando...' : modoEdicao ? '✅ Salvar Alterações' : 'Publicar Mutirão'}
+            {enviando ? 'Salvando...' : modoEdicao ? <><IconCheck size={16} stroke={2} /> Salvar Alterações</> : 'Publicar Mutirão'}
           </button>
         </div>
 
@@ -393,7 +393,7 @@ export function FormularioMutiraoPage() {
           <button
             className="btn full"
             onClick={async () => {
-              if (!confirm('⚠️ Tem certeza que deseja EXCLUIR este mutirão?\n\nEssa ação não pode ser desfeita.')) return
+              if (!confirm('Tem certeza que deseja EXCLUIR este mutirão?\n\nEssa ação não pode ser desfeita.')) return
               setExcluindo(true)
               try {
                 await excluirMutirao(mutiraoId!)

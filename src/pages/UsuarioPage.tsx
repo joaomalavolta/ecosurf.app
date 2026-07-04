@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import {
+import { IconCheck,
   IconMapPin, IconCalendar, IconUser, IconPhoto, IconAlertTriangle, IconHeartHandshake,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -116,7 +116,7 @@ export function UsuarioPage() {
                 import('../services/seguindo').then(({ toggleSeguir }) => setSeguindo(toggleSeguir(userId)))
               }}
             >
-              {seguindo ? '✓ Seguindo' : '+ Seguir'}
+              {seguindo ? <><IconCheck size={15} stroke={2} /> Seguindo</> : '+ Seguir'}
             </button>
           )}
         </div>

@@ -187,7 +187,7 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
       <div style={{ marginTop: 12 }}>
         {temAlteracao ? (
           <button className="btn full" onClick={salvar} disabled={salvando || !nome.trim()}>
-            {salvando ? 'Salvando...' : '✅ Salvar perfil'}
+            {salvando ? 'Salvando...' : <><IconCheck size={16} stroke={2} /> Salvar perfil</>}
           </button>
         ) : salvoComo ? (
           <div className="muted" style={{ textAlign: 'center', fontSize: 13, padding: '6px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>

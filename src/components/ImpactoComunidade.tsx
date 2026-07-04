@@ -1,3 +1,4 @@
+import { IconSeeding } from '@tabler/icons-react'
 import type { Alerta, Mutirao } from '../types/domain'
 
 /**
@@ -21,7 +22,7 @@ export function ImpactoComunidade({ alertas, mutiroes }: { alertas: Alerta[]; mu
 
   return (
     <div className="card pad" aria-label="Impacto da comunidade">
-      <span className="eyebrow">🌱 Impacto da comunidade</span>
+      <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Impacto da comunidade</span>
       <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'flex-start' }}>
         <Num v={alertas.length} rotulo={'registros\nambientais'} />
         <Num v={mutiroes.length} rotulo={'mutirões\norganizados'} />

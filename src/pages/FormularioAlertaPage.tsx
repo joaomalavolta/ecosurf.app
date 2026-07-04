@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
+import { IconUsers,
   IconArrowLeft, IconArrowRight, IconCheck, IconMapPin,
   IconCamera, IconUpload, IconBookmark,
 } from '@tabler/icons-react'
@@ -169,7 +169,7 @@ export function FormularioAlertaPage() {
               navigate(`/nova-acao/mutirao?${qs.toString()}`)
             }}
           >
-            🤝 Criar mutirão e convidar a comunidade
+            <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
           </button>
           <button className="btn acento full" style={{ marginTop: 8 }} onClick={() => navigate('/mapa')}>
             Ver no mapa

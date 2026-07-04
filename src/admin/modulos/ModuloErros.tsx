@@ -59,7 +59,7 @@ export function ModuloErros() {
       />
       {erro && <Estado>Erro ao carregar: {erro}</Estado>}
       {!erros && !erro && <Estado>Carregando…</Estado>}
-      {erros && erros.length === 0 && <Estado>Nenhum erro registrado. Mar limpo. 🌊</Estado>}
+      {erros && erros.length === 0 && <Estado>Nenhum erro registrado. Mar limpo.</Estado>}
 
       {erros && erros.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

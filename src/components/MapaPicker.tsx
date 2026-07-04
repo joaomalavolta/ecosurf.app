@@ -286,7 +286,7 @@ export function MapaPicker({
           pointerEvents: 'none',
         }}
       >
-        📍 Toque, arraste o pin ou busque o endereço
+        <IconMapPin size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Toque, arraste o pin ou busque o endereço
       </div>
 
       {/* Keyframe para spinner */}

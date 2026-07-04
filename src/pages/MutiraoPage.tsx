@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import {
+import { IconCheck,
   IconCalendar,
   IconMapPin,
   IconUser,
@@ -168,7 +168,7 @@ export function MutiraoPage() {
             background: mutirao.status === 'agendado' ? 'var(--tag-ok-bg)' : mutirao.status === 'realizado' ? 'var(--cinza)' : 'var(--tag-warn-bg)',
             color: mutirao.status === 'agendado' ? 'var(--tag-ok-fg)' : mutirao.status === 'realizado' ? 'var(--muted)' : 'var(--tag-warn-fg)',
           }}>
-            {mutirao.status === 'agendado' ? '📅 Agendado' : mutirao.status === 'realizado' ? '✅ Realizado' : mutirao.status}
+            {mutirao.status === 'agendado' ? 'Agendado' : mutirao.status === 'realizado' ? 'Realizado' : mutirao.status}
           </span>
           <button
             className="btn outline"
@@ -246,7 +246,7 @@ export function MutiraoPage() {
             onClick={participar}
             disabled={participando || jaParticipou}
           >
-            {jaParticipou ? '✅ Participação confirmada!' : participando ? 'Confirmando...' : '🙋 Quero participar'}
+            {jaParticipou ? <><IconCheck size={16} stroke={2} /> Participação confirmada!</> : participando ? 'Confirmando...' : 'Quero participar'}
           </button>
         )}
 

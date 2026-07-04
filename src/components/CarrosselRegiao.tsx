@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { IconAlertTriangle, IconUsers } from '@tabler/icons-react'
+import { IconSeeding, IconAlertTriangle, IconUsers } from '@tabler/icons-react'
 import type { Alerta, Mutirao } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
 import { categoriaPorId } from './SeletorCategoria'
@@ -27,7 +27,7 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
   return (
     <>
       <div className="between" style={{ padding: '6px 16px 0' }}>
-        <span className="eyebrow">🌱 Agir local · alertas e mutirões</span>
+        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Agir local · alertas e mutirões</span>
       </div>
       <div className="carrossel-regiao">
       {alertasOrd.map((a) => {

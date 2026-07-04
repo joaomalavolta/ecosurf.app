@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX } from '@tabler/icons-react'
+import { IconThumbUp, IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
@@ -361,7 +361,7 @@ export function TideScrubTimeline({
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <button onClick={async () => { try { const { curtirFoto } = await import('../services/supabase/rest'); await curtirFoto(f.id); setCurtidasMap(m => ({ ...m, [f.id]: (m[f.id] || 0) + 1 })) } catch (e: any) { alert(e.message) } }} aria-label="Curtir foto"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  <span style={{ fontSize: 14 }}>🤙</span> {curtidasMap[f.id] || 0}
+                  <IconThumbUp size={14} stroke={2} /> {curtidasMap[f.id] || 0}
                 </button>
                 <button onClick={() => compartilharPico(picoId || f.picoId, picoNome || f.picoId)} aria-label="Compartilhar"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>

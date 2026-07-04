@@ -1,3 +1,4 @@
+import { IconCamera } from '@tabler/icons-react'
 import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -534,7 +535,7 @@ export function MapView({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,.85)', fontWeight: 600 }}>📷 Fotos de onda:</span>
+            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,.85)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}><IconCamera size={12} stroke={2} /> Fotos de onda:</span>
             <span className="dado" style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>
               {JANELAS[janelaIdx].h == null ? 'todas' : `últimas ${JANELAS[janelaIdx].rotulo}`}
             </span>
