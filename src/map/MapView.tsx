@@ -218,6 +218,7 @@ export function MapView({
   mutiroes = [],
   ativos,
   atividade,
+  destino,
   filtro,
   onSelectPico,
   className,
@@ -229,6 +230,8 @@ export function MapView({
   ativos?: Set<string>
   /** Eventos de foto (picoId + quando) — liga o scrubber temporal do mapa. */
   atividade?: { picoId: string; em: string }[]
+  /** Voo comandado de fora (ex.: menu territorial escolheu uma cidade). */
+  destino?: { lng: number; lat: number; zoom?: number } | null
   filtro?: 'tudo' | 'picos' | 'alertas' | 'mutiroes'
   onSelectPico?: (p: Pico) => void
   className?: string
@@ -494,6 +497,13 @@ export function MapView({
     if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos: ativosEfetivos }))
   }, [picos, alertas, mutiroes, ativosEfetivos])
 
+  // Voo comandado (menu territorial): escolheu a cidade, o mapa vai até ela.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !destino) return
+    map.flyTo({ center: [destino.lng, destino.lat], zoom: destino.zoom ?? 12, speed: 1.6 })
+  }, [destino])
+
   // Filtro INSTANTÂNEO por tipo (sem rebuild de dados)
   useEffect(() => {
     const map = mapRef.current
@@ -520,7 +530,7 @@ export function MapView({
             background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
             border: '1px solid rgba(255,255,255,.16)',
             borderRadius: 12, padding: '7px 14px 5px',
-            width: 'min(380px, 86%)',
+            width: 'min(340px, 68%)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>

@@ -160,6 +160,7 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     autorId: r.autor_id ?? undefined,
     autorNome: r.autor_nome ?? undefined,
     autorFoto: r.autor_foto ?? undefined,
+    images: (r as { images?: string[] | null }).images ?? undefined,
   }))
 }
 

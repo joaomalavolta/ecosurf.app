@@ -16,8 +16,10 @@ export function ExplorarPage() {
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [fotos, setFotos] = useState<Foto[]>([])
-  const [uf, setUf] = useState<string | null>(null)
-  const [cidade, setCidade] = useState<string | null>(null)
+  const [uf, setUf] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('uf'))
+  const [cidade, setCidade] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('cidade'))
 
   useEffect(() => {
     let vivo = true

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
-import { FaixaAlertas, FaixaMutiroes } from '../components/FaixasFeed'
+import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -41,11 +41,16 @@ export function RadarPage() {
   const [selPico, setSelPico] = useState<Pico | null>(null)
   const [mapaExpandido, setMapaExpandido] = useState(false)
   const [favoritos, setFavoritos] = useState<Set<string>>(new Set())
+  const [seguidos, setSeguidos] = useState<Set<string>>(new Set())
+  const [menuTerritorio, setMenuTerritorio] = useState(false)
+  const [ufMenu, setUfMenu] = useState<string | null>(null)
+  const [destinoMapa, setDestinoMapa] = useState<{ lng: number; lat: number; zoom?: number } | null>(null)
   const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
   const feedRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     void carregarFavoritos().then(setFavoritos)
+    import('../services/seguindo').then(({ carregarSeguindo }) => carregarSeguindo().then(setSeguidos)).catch(() => {})
   }, [])
 
   // Modo portal (desktop): só esta rota alarga o shell — as outras páginas
@@ -92,8 +97,13 @@ export function RadarPage() {
     if (filtro === 'favoritos') {
       return entries.filter(([picoId]) => favoritos.has(picoId))
     }
+    if (filtro === 'seguindo') {
+      return entries
+        .map(([picoId, fotos]) => [picoId, fotos.filter((f) => f.autorId && seguidos.has(f.autorId))] as [string, typeof fotos])
+        .filter(([, fotos]) => fotos.length > 0)
+    }
     return entries
-  }, [filtro, fotosPorPico, favoritos])
+  }, [filtro, fotosPorPico, favoritos, seguidos])
 
   const melhoresOndas = useMemo(() => {
     return [...feed].sort((a, b) => {
@@ -133,11 +143,78 @@ export function RadarPage() {
       <div className={`radar-map-container ${mapaExpandido ? 'expanded' : ''}`}>
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <Suspense fallback={<div style={{ background: 'var(--map-bg)', width: '100%', height: '100%' }} />}>
+            <button
+              aria-label="Navegar por estado e cidade"
+              onClick={() => { setMenuTerritorio(true); setUfMenu(null) }}
+              style={{
+                position: 'absolute', top: 10, left: 10, zIndex: 4,
+                width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,.16)',
+                background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
+                color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <IconMenu2 size={19} stroke={2} />
+            </button>
+
+            {menuTerritorio && (
+              <div
+                onClick={() => setMenuTerritorio(false)}
+                style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'rgba(4,20,27,.45)', display: 'flex' }}
+              >
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: 'min(240px, 76%)', height: '100%', overflowY: 'auto',
+                    background: 'rgba(24,28,32,.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    borderRight: '1px solid rgba(255,255,255,.14)', padding: '12px 10px',
+                  }}
+                >
+                  <div className="between" style={{ padding: '0 6px 8px' }}>
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>
+                      {ufMenu ? `📍 ${ufMenu}` : '📍 Litoral por região'}
+                    </span>
+                    {ufMenu && (
+                      <button onClick={() => setUfMenu(null)} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.7)', fontSize: 12, cursor: 'pointer' }}>← UFs</button>
+                    )}
+                  </div>
+                  {!ufMenu && [...new Set(picosTodos.map((p) => p.uf))].sort().map((u) => (
+                    <button key={u} className="menu-terr-item" onClick={() => setUfMenu(u)}>
+                      {u} <span style={{ opacity: .55, fontSize: 11 }}>{picosTodos.filter((p) => p.uf === u).length} picos</span>
+                    </button>
+                  ))}
+                  {ufMenu && [...new Set(picosTodos.filter((p) => p.uf === ufMenu).map((p) => p.municipio))].sort().map((c) => (
+                    <button
+                      key={c}
+                      className="menu-terr-item"
+                      onClick={() => {
+                        const ps = picosTodos.filter((p) => p.uf === ufMenu && p.municipio === c)
+                        if (ps.length > 0) {
+                          const lng = ps.reduce((sm, p) => sm + p.lng, 0) / ps.length
+                          const lat = ps.reduce((sm, p) => sm + p.lat, 0) / ps.length
+                          setDestinoMapa({ lng, lat, zoom: 12 })
+                        }
+                        setMenuTerritorio(false)
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                  <Link
+                    to={ufMenu ? `/explorar?uf=${encodeURIComponent(ufMenu)}` : '/explorar'}
+                    style={{ display: 'block', textAlign: 'center', color: '#7FDCD4', fontSize: 12, padding: '12px 6px 6px', textDecoration: 'none' }}
+                  >
+                    🧭 Abrir Explorar completo →
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <MapView
               picos={picosTodos}
               alertas={alertas}
               mutiroes={mutiroes}
               ativos={ativos}
+              destino={destinoMapa}
               atividade={feed.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))}
               filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
@@ -197,12 +274,14 @@ export function RadarPage() {
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
       {/* ─── FEED SECTION ─── */}
-      <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px' }}>
+      <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px 6px' }}>
         <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
         <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Mais Curtidas</Pill>
           <Pill on={filtro === 'seguindo'} onClick={() => setFiltro('seguindo')}><IconUserHeart size={15} stroke={2} /> Seguindo</Pill>
         <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
       </div>
+
+      <CarrosselRegiao alertas={alertas} mutiroes={mutiroes} />
       <div className="page-pad stack" ref={feedRef}>
 
         {filtro === 'melhores' ? (
@@ -235,10 +314,8 @@ export function RadarPage() {
               </div>
             )}
 
-            {feedCards.map(([picoId, fotos], idx) => (
+            {feedCards.map(([picoId, fotos]) => (
               <div key={picoId} id={`feed-card-${picoId}`}>
-                {idx === 1 && <FaixaAlertas alertas={alertas} />}
-                {idx === 2 && mutiroes.length > 0 && <FaixaMutiroes mutiroes={mutiroes} />}
                 <FeedCard
                   fotos={fotos}
                   pico={picoMap.get(picoId)}
@@ -255,9 +332,6 @@ export function RadarPage() {
                 />
               </div>
             ))}
-
-            {feedCards.length <= 1 && <FaixaAlertas alertas={alertas} />}
-            {feedCards.length <= 2 && mutiroes.length > 0 && <FaixaMutiroes mutiroes={mutiroes} />}
 
             <Link to="/explorar" className="btn outline full" style={{ margin: '4px 16px 0', width: 'calc(100% - 32px)' }}>
               🧭 Explorar o litoral por estado e cidade
@@ -304,19 +378,6 @@ export function RadarPage() {
       <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
         <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
       </div>
-      {mutiroes.length > 0 && (
-        <div className="so-desktop card pad" style={{ margin: '0 16px 16px' }}>
-          <span className="eyebrow">🤝 Próximos mutirões</span>
-          <div className="stack" style={{ marginTop: 10 }}>
-            {mutiroes.slice(0, 3).map((m) => (
-              <Link key={m.id} to={`/mutirao/${m.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{m.titulo}</div>
-                <div className="muted" style={{ fontSize: 12 }}>{m.municipio}/{m.uf} · {m.quando}{m.horario ? ` · ${m.horario}` : ''}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
       </div>
     </div>
   )
