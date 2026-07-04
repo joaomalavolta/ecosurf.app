@@ -1176,3 +1176,50 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   border-radius: 10px;
 }
 .menu-terr-item:active { background: rgba(255,255,255,.08); }
+
+/* ═══ Portal fase 3: Ações e Perfil em duas colunas (desktop) ═══ */
+@media (min-width: 1024px) {
+  body[data-portal-acoes] .page { max-width: 1180px; }
+  body[data-portal-acoes] .acoes-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 380px);
+    grid-template-areas:
+      "pills  botoes"
+      "lista1 impacto"
+      "lista2 ."
+    ;
+    gap: 12px 20px;
+    align-items: start;
+  }
+  body[data-portal-acoes] .g-pills   { grid-area: pills; }
+  body[data-portal-acoes] .g-botoes  { grid-area: botoes; margin-bottom: 0 !important; }
+  body[data-portal-acoes] .g-impacto { grid-area: impacto; position: sticky; top: 12px; }
+  body[data-portal-acoes] .g-lista1  { grid-area: lista1; min-width: 0; }
+  body[data-portal-acoes] .g-lista2  { grid-area: lista2; min-width: 0; }
+
+  body[data-portal-perfil] .page { max-width: 1180px; }
+  body[data-portal-perfil] .perfil-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1.7fr);
+    grid-template-areas:
+      "ident     pubs"
+      "stats     pubs"
+      "editor    pubs"
+      "aparencia pubs"
+      "lgpd      pubs"
+      "conta     pubs"
+      ".         pubs"
+    ;
+    gap: 12px 20px;
+    align-items: start;
+  }
+  body[data-portal-perfil] .g-ident     { grid-area: ident; }
+  body[data-portal-perfil] .g-stats     { grid-area: stats; }
+  body[data-portal-perfil] .g-editor    { grid-area: editor; }
+  body[data-portal-perfil] .g-pubs      { grid-area: pubs; min-width: 0; }
+  body[data-portal-perfil] .g-aparencia { grid-area: aparencia; }
+  body[data-portal-perfil] .g-lgpd      { grid-area: lgpd; }
+  body[data-portal-perfil] .g-conta     { grid-area: conta; }
+  /* a grade de fotos aproveita a coluna larga (o grid é inline no JSX) */
+  body[data-portal-perfil] .g-pubs > div[style*="grid"] { grid-template-columns: repeat(4, 1fr) !important; }
+}

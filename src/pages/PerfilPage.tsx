@@ -29,6 +29,11 @@ export function PerfilPage() {
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    document.body.dataset.portalPerfil = '1'
+    return () => { delete document.body.dataset.portalPerfil }
+  }, [])
+
+  useEffect(() => {
     let vivo = true
     Promise.all([ehModerador(), meuStatus(), carregarPerfilAtual()]).then(([m, s, p]) => {
       if (vivo) {
@@ -158,7 +163,7 @@ export function PerfilPage() {
   return (
     <div className="page">
       <Header title="Seu perfil" sub={perfil ? "Reputação e histórico na comunidade." : "Faça parte do monitoramento das ondas e da proteção dos ambientes de surf."} />
-      <div className="page-pad stack">
+      <div className="page-pad stack perfil-grid">
         
         {/* VIEW DO VISITANTE */}
         {!perfil && (
@@ -176,7 +181,7 @@ export function PerfilPage() {
         {/* VIEW DO USUÁRIO LOGADO */}
         {perfil && (
           <>
-            <div className="card pad row">
+            <div className="card pad row g-ident">
               <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
                   const f = e.target.files?.[0]
@@ -204,7 +209,7 @@ export function PerfilPage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+            <div className="g-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               <Stat icon={IconMapPin} k="Picos" v={new Set(minhasFotos.map(f => f.pico_id)).size} />
               <Stat icon={IconPhoto} k="Fotos" v={minhasFotos.length} />
               <Stat
@@ -216,10 +221,10 @@ export function PerfilPage() {
               />
             </div>
 
-            <NomeCard defaultNome={perfil.nome || ''} defaultAvatar={perfil.avatarUrl || ''} />
+            <div className="g-editor"><NomeCard defaultNome={perfil.nome || ''} defaultAvatar={perfil.avatarUrl || ''} /></div>
 
             {/* Minhas publicações */}
-            <div className="card pad">
+            <div className="card pad g-pubs">
               <span className="eyebrow"><IconPhoto size={14} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />Minhas publicações ({minhasFotos.length})</span>
               {minhasFotos.length === 0 ? (
                 <p className="muted" style={{ marginTop: 10, textAlign: 'center' }}>Você ainda não publicou nenhuma foto. Vá até um pico e registre as ondas!</p>
@@ -250,12 +255,12 @@ export function PerfilPage() {
               )}
             </div>
 
-            <div className="card pad">
+            <div className="card pad g-aparencia">
               <span className="eyebrow">Aparência</span>
               <div style={{ marginTop: 10 }}><ThemeToggle /></div>
             </div>
 
-            <div className="card pad">
+            <div className="card pad g-lgpd">
               <span className="eyebrow">Privacidade & LGPD</span>
               <div className="stack" style={{ marginTop: 10 }}>
                 <label className="between" style={{ cursor: 'pointer' }}>
@@ -265,7 +270,7 @@ export function PerfilPage() {
               </div>
             </div>
 
-            <div className="card pad">
+            <div className="card pad g-conta">
               <span className="eyebrow">Conta</span>
               <div className="stack" style={{ marginTop: 10 }}>
                 <button className="row" onClick={acaoEmBreve} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>

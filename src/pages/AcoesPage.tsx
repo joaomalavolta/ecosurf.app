@@ -106,6 +106,11 @@ export function AcoesPage() {
   const [tab, setTab] = useState<'tudo' | 'alertas' | 'mutiroes'>('tudo')
 
   useEffect(() => {
+    document.body.dataset.portalAcoes = '1'
+    return () => { delete document.body.dataset.portalAcoes }
+  }, [])
+
+  useEffect(() => {
     let vivo = true
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
@@ -123,9 +128,9 @@ export function AcoesPage() {
   return (
     <div className="page">
       <Header title="Ações" sub="Registrar, defender a costa e mobilizar." />
-      <div className="page-pad stack">
+      <div className="page-pad stack acoes-grid">
         {/* Botões principais */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <div className="g-botoes" style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
           <Link to="/capturar" className="btn acento full" style={{ minHeight: 50, fontSize: 14 }}>
             <IconCamera size={18} stroke={2} /> Foto rápida
           </Link>
@@ -135,16 +140,16 @@ export function AcoesPage() {
         </div>
 
         {/* Tabs de filtro */}
-        <div style={{ marginBottom: 10 }}>
+        <div className="g-impacto" style={{ marginBottom: 10 }}>
           <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
         </div>
-        <div className="pills full" style={{ marginBottom: 10 }}>
+        <div className="pills full g-pills" style={{ marginBottom: 10 }}>
           <Pill on={tab === 'tudo'} onClick={() => setTab('tudo')}>Tudo</Pill>
           <Pill on={tab === 'alertas'} onClick={() => setTab('alertas')}><IconAlertTriangle size={14} stroke={2} /> Alertas</Pill>
           <Pill on={tab === 'mutiroes'} onClick={() => setTab('mutiroes')}><IconHeartHandshake size={14} stroke={2} /> Mutirões</Pill>
         </div>
 
-        {(tab === 'tudo' || tab === 'alertas') && (
+        <div className="g-lista1">{(tab === 'tudo' || tab === 'alertas') && (
         <Secao titulo={<><IconAlertTriangle size={19} stroke={2} color="var(--perigo)" /> Registros ambientais</>}>
           {alertas.length === 0 && <p className="muted">Nenhum registro ambiental no momento.</p>}
           {alertas.map((a) => {
@@ -164,9 +169,9 @@ export function AcoesPage() {
             )
           })}
         </Secao>
-        )}
+        )}</div>
 
-        {(tab === 'tudo' || tab === 'mutiroes') && (
+        <div className="g-lista2">{(tab === 'tudo' || tab === 'mutiroes') && (
         <Secao titulo={<><IconHeartHandshake size={19} stroke={2} color="#FF8C42" /> Mutirões</>}>
           {mutiroes.length === 0 && <p className="muted">Nenhum mutirão agendado no momento.</p>}
           {mutiroes.map((m) => (
@@ -209,7 +214,7 @@ export function AcoesPage() {
               )
             })}
           </Secao>
-        )}
+        )}</div>
       </div>
     </div>
   )
