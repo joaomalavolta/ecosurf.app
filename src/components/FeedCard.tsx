@@ -9,6 +9,17 @@ import { rotularCondicao } from '../lib/surf'
  * Card feed-first: a foto é protagonista, o pico é metadata.
  * Carrossel swipeable com dots quando há mais de uma foto.
  */
+function rotuloQuando(iso: string): string {
+  const d = new Date(iso)
+  const hoje = new Date()
+  const ontem = new Date(hoje); ontem.setDate(ontem.getDate() - 1)
+  const hora = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  if (d.toDateString() === hoje.toDateString()) return `hoje · ${hora}`
+  if (d.toDateString() === ontem.toDateString()) return `ontem · ${hora}`
+  const dia = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }).replace('.', '')
+  return `${dia} · ${hora}`
+}
+
 export function FeedCard({
   fotos,
   pico,
@@ -128,6 +139,11 @@ export function FeedCard({
                 {forecast && (
                   <span className="dado" style={{ fontSize: 13, fontWeight: 700 }}>
                     {forecast.ondaM.toFixed(1)}m · {forecast.periodoS}s · {forecast.vento.tipo}
+                  </span>
+                )}
+                {fotosComUrl[activeIdx]?.capturadaEm && (
+                  <span className="dado" style={{ fontSize: 11, opacity: .9 }}>
+                    🕐 {rotuloQuando(fotosComUrl[activeIdx].capturadaEm)}
                   </span>
                 )}
                 {fotosComUrl.length > 1 && (

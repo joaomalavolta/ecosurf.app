@@ -307,6 +307,10 @@ export function RadarPage() {
               <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>
             )}
 
+            <div style={{ padding: '10px 16px 2px' }}>
+              <span className="eyebrow">🌊 O mar agora · fotos da comunidade nos picos</span>
+            </div>
+
             {feed.length === 0 && picosTodos.length > 0 && (
               <div className="card pad" style={{ textAlign: 'center', padding: '28px 16px' }}>
                 <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>📷 Sem fotos hoje</p>

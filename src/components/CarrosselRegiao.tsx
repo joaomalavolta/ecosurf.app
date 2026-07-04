@@ -37,7 +37,11 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
     .slice(0, 8)
 
   return (
-    <div className="carrossel-regiao">
+    <>
+      <div className="between" style={{ padding: '6px 16px 0' }}>
+        <span className="eyebrow">🌱 Agir local · alertas e mutirões</span>
+      </div>
+      <div className="carrossel-regiao">
       {alertasOrd.map((a) => {
         const visual = VISUAL_CATEGORIA[a.categoria] ?? VISUAL_CATEGORIA.outro
         const img = a.images?.[0]
@@ -68,6 +72,7 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
           <span className="cr-sub">{m.municipio}/{m.uf}</span>
         </Link>
       ))}
-    </div>
+      </div>
+    </>
   )
 }
