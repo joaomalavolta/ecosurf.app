@@ -5,6 +5,7 @@ import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
+import { PainelComunidade } from '../components/PainelComunidade'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -381,6 +382,9 @@ export function RadarPage() {
 
       <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
         <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
+      </div>
+      <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
+        <PainelComunidade fotos={feed} alertas={alertas} mutiroes={mutiroes} />
       </div>
       </div>
     </div>

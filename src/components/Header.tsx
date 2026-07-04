@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { Brand } from './Brand'
+import { NavLink } from 'react-router-dom'
+import { IconRipple, IconMap2, IconHeartHandshake, IconUserCircle } from '@tabler/icons-react'
 import { AccountMenu } from './AccountMenu'
 import { useState } from 'react'
 import { IconSun, IconMoon } from '@tabler/icons-react'
@@ -46,6 +48,12 @@ export function Header({
       style={brand ? { textAlign: 'center' } : undefined}
     >
       {/* Menu de conta — sempre presente no topo direito */}
+      <nav className="nav-portal" aria-label="Navegação do portal">
+        <NavLink to="/" end className={({ isActive }) => isActive ? 'ativo' : ''}><IconRipple size={16} stroke={2} /> Radar</NavLink>
+        <NavLink to="/mapa" className={({ isActive }) => isActive ? 'ativo' : ''}><IconMap2 size={16} stroke={2} /> Mapa</NavLink>
+        <NavLink to="/acoes" className={({ isActive }) => isActive ? 'ativo' : ''}><IconHeartHandshake size={16} stroke={2} /> Ações</NavLink>
+        <NavLink to="/perfil" className={({ isActive }) => isActive ? 'ativo' : ''}><IconUserCircle size={16} stroke={2} /> Perfil</NavLink>
+      </nav>
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 14, zIndex: 2, display: 'flex', gap: 8, alignItems: 'center' }}>
         <span className="so-desktop"><TemaRapido /></span>
         <AccountMenu />

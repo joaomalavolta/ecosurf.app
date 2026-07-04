@@ -1047,6 +1047,38 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
 .radar-col-mapa, .radar-col-feed { display: contents; }
 .so-desktop { display: none !important; }
 
+/* ═══ PORTAL UNIVERSAL (fase 1): todo o app ganha corpo de desktop ═══ */
+@media (min-width: 1024px) {
+  .so-desktop { display: block !important; }
+  /* a nav de celular sai de cena; a navegação vive no header */
+  nav[aria-label="Navegação principal"] { display: none !important; }
+  .app-shell { max-width: none; box-shadow: none; padding-bottom: 24px !important; }
+  /* páginas comuns: coluna confortável de leitura (não a coluna do telefone) */
+  .page { max-width: 780px; margin: 0 auto; }
+  /* o Radar-portal cancela o limite: o grid dele manda */
+  body[data-portal] .page { max-width: none; }
+  /* nav horizontal do header */
+  .nav-portal {
+    display: flex !important;
+    gap: 4px;
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 16px);
+    left: 18px;
+    z-index: 2;
+  }
+  .nav-portal a {
+    display: flex; align-items: center; gap: 6px;
+    color: rgba(255,255,255,.82); text-decoration: none;
+    font-size: 13.5px; font-weight: 600;
+    padding: 7px 13px; border-radius: 999px;
+  }
+  .nav-portal a.ativo { background: rgba(255,255,255,.18); color: #fff; backdrop-filter: blur(6px); }
+  .nav-portal a:hover { background: rgba(255,255,255,.1); }
+  /* mapa da página Mapa cresce no desktop */
+  body[data-pagina-mapa] .page { max-width: 1100px; }
+}
+.nav-portal { display: none; }
+
 @media (min-width: 1024px) {
   body[data-portal] .so-desktop { display: block !important; }
   body[data-portal] .app-shell { max-width: none; box-shadow: none; }

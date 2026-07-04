@@ -23,6 +23,11 @@ export function MapaPage() {
   const { onboarded, abrir } = useOnboarding()
 
   useEffect(() => {
+    document.body.dataset.paginaMapa = '1'
+    return () => { delete document.body.dataset.paginaMapa }
+  }, [])
+
+  useEffect(() => {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAlertas(a))
