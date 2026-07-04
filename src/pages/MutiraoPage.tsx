@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import {
   IconCalendar,
   IconMapPin,
@@ -183,7 +183,23 @@ export function MutiraoPage() {
         <div className="card pad stack" style={{ gap: 12 }}>
           <InfoLinha icon={IconCalendar} label="Data" value={`${data}${mutirao.horario ? ` · ${mutirao.horario}` : ''}`} />
           <InfoLinha icon={IconMapPin} label="Local" value={`${mutirao.municipio}/${mutirao.uf}${mutirao.pontoEncontro ? ` — ${mutirao.pontoEncontro}` : ''}`} />
-          {mutirao.organizador && <InfoLinha icon={IconUser} label="Organizador" value={mutirao.organizador} />}
+          {mutirao.organizador && (
+            mutirao.autorId ? (
+              <Link to={`/usuario/${mutirao.autorId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <IconUser size={18} stroke={2} color="var(--turq)" style={{ marginTop: 2, flex: '0 0 auto' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="muted" style={{ fontSize: 11.5 }}>Organizador</div>
+                    <div style={{ fontSize: 13.5, textDecoration: 'underline', textDecorationColor: 'var(--line)', textUnderlineOffset: 3 }}>
+                      {mutirao.organizador} <span className="muted" style={{ fontSize: 11 }}>· ver perfil e seguir →</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <InfoLinha icon={IconUser} label="Organizador" value={mutirao.organizador} />
+            )
+          )}
           {mutirao.instituicao && <InfoLinha icon={IconBuilding} label="Instituição" value={mutirao.instituicao} />}
           {mutirao.contato && <InfoLinha icon={IconPhone} label="Contato" value={mutirao.contato} />}
           {mutirao.vagas && <InfoLinha icon={IconUsers} label="Vagas" value={`${mutirao.inscritos ?? 0} / ${mutirao.vagas}`} />}

@@ -1085,7 +1085,9 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 6px 16px 4px;
+  margin: 0 12px;
+  border-radius: 12px;
+  padding: 6px 4px 4px;
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;

@@ -442,6 +442,16 @@ export function AlertaPage() {
           </div>
         )}
 
+        {!isEditing && alerta.autor_id && (
+          <Link
+            to={`/usuario/${alerta.autor_id}`}
+            className="muted"
+            style={{ display: 'block', fontSize: 12.5, marginTop: 10, textDecoration: 'underline', textDecorationColor: 'var(--line)', textUnderlineOffset: 3 }}
+          >
+            👤 Ver perfil de quem registrou · seguir →
+          </Link>
+        )}
+
         {!isEditing && acoesVinculadas.length > 0 && (
           <div className="card pad" style={{ marginTop: 12, borderLeft: '3px solid #2E9B6B' }}>
             <span className="eyebrow" style={{ color: '#2E9B6B' }}>🌱 Esta ocorrência gerou ação</span>
