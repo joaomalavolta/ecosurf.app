@@ -1073,3 +1073,34 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   /* no desktop o mouse tem scroll próprio: a nav de baixo fica discreta */
   body[data-portal] nav[aria-label="Navegação principal"] { max-width: 480px; }
 }
+
+/* ═══ Faixas do feed (alertas e mutirões em trilho deslizável) ═══ */
+.faixa-rolo {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 16px 2px;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+.faixa-chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.faixa-chip-verde { background: color-mix(in srgb, #2E9B6B 8%, var(--card)); border-color: #2E9B6B55; }
+.faixa-chip-titulo { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.faixa-chip-sub { display: block; font-size: 10.5px; color: var(--muted); }
+
+/* Pills deslizáveis (linha do feed com 4 filtros): rola no eixo x em telas
+   estreitas em vez de espremer os rótulos em reticências. */
+.pills.rolavel { overflow-x: auto; touch-action: pan-x; overscroll-behavior-x: contain; }
+.pills.rolavel > * { flex: 0 0 auto; min-width: max-content; }

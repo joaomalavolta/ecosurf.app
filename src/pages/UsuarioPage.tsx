@@ -30,9 +30,21 @@ function Metrica({ n, rotulo, Icone }: { n: number; rotulo: string; Icone: typeo
 export function UsuarioPage() {
   const { userId } = useParams<{ userId: string }>()
   const [perfil, setPerfil] = useState<PerfilPublico | null | undefined>(undefined)
+  const [seguindo, setSeguindo] = useState(false)
+  const [meuId, setMeuId] = useState<string | null>(null)
   const [contribs, setContribs] = useState<ContribsUsuario | null>(null)
   const [picoMap, setPicoMap] = useState<Map<string, Pico>>(new Map())
   const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
+
+  useEffect(() => {
+    if (!userId) return
+    import('../services/seguindo').then(({ carregarSeguindo }) =>
+      carregarSeguindo().then((set) => setSeguindo(set.has(userId)))
+    ).catch(() => {})
+    import('../services/supabase/client').then(({ sb }) =>
+      sb().auth.getSession().then(({ data }) => setMeuId(data.session?.user?.id ?? null))
+    ).catch(() => {})
+  }, [userId])
 
   useEffect(() => {
     if (!userId || !temBackend()) {
@@ -92,10 +104,21 @@ export function UsuarioPage() {
               {perfil.nome ? perfil.nome.charAt(0).toUpperCase() : <IconUser size={28} />}
             </div>
           )}
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 20, fontWeight: 700 }}>{perfil.nome ?? 'Usuário'}</div>
             <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Nível: {perfil.nivel || "1 - Gota d'Água"}</div>
           </div>
+          {meuId && userId && meuId !== userId && (
+            <button
+              className={seguindo ? 'btn outline' : 'btn acento'}
+              style={{ flexShrink: 0 }}
+              onClick={() => {
+                import('../services/seguindo').then(({ toggleSeguir }) => setSeguindo(toggleSeguir(userId)))
+              }}
+            >
+              {seguindo ? '✓ Seguindo' : '+ Seguir'}
+            </button>
+          )}
         </div>
 
         {/* Métricas de contribuição */}

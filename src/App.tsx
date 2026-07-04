@@ -17,6 +17,7 @@ import { FormularioAlertaPage } from './pages/FormularioAlertaPage'
 import { FormularioMutiraoPage } from './pages/FormularioMutiraoPage'
 import { FormularioPicoPage } from './pages/FormularioPicoPage'
 import { MutiraoPage } from './pages/MutiraoPage'
+import { ExplorarPage } from './pages/ExplorarPage'
 import { UsuarioPage } from './pages/UsuarioPage'
 import { AlertaPage } from './pages/AlertaPage'
 
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/termos" element={<TermosPage />} />
         <Route path="/nova-acao" element={<NovaAcaoPage />} />
         <Route path="/nova-acao/alerta" element={<FormularioAlertaPage />} />
+        <Route path="/explorar" element={<ExplorarPage />} />
         <Route path="/nova-acao/mutirao" element={<FormularioMutiraoPage />} />
         <Route path="/nova-acao/pico" element={<FormularioPicoPage />} />
         <Route path="/mutirao/:mutiraoId/editar" element={<FormularioMutiraoPage />} />

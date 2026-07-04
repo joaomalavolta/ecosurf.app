@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
+import { FaixaAlertas, FaixaMutiroes } from '../components/FaixasFeed'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -13,7 +14,7 @@ import { temBackend } from '../services/api'
 import { MapView } from '../map/MapView'
 import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
-type Filtro = 'favoritos' | 'melhores' | 'todos'
+type Filtro = 'favoritos' | 'melhores' | 'todos' | 'seguindo'
 type FiltroMapa = 'ecosurf' | 'eco' | 'surf'
 
 /** Agrupa fotos por picoId, preservando ordem (mais recentes primeiro). */
@@ -196,9 +197,10 @@ export function RadarPage() {
       <StoryBubbles fotos={feed} picos={picosTodos} />
 
       {/* ─── FEED SECTION ─── */}
-      <div className="pills full" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px' }}>
+      <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px' }}>
         <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
         <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Mais Curtidas</Pill>
+          <Pill on={filtro === 'seguindo'} onClick={() => setFiltro('seguindo')}><IconUserHeart size={15} stroke={2} /> Seguindo</Pill>
         <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
       </div>
       <div className="page-pad stack" ref={feedRef}>
@@ -233,8 +235,10 @@ export function RadarPage() {
               </div>
             )}
 
-            {feedCards.map(([picoId, fotos]) => (
+            {feedCards.map(([picoId, fotos], idx) => (
               <div key={picoId} id={`feed-card-${picoId}`}>
+                {idx === 1 && <FaixaAlertas alertas={alertas} />}
+                {idx === 2 && mutiroes.length > 0 && <FaixaMutiroes mutiroes={mutiroes} />}
                 <FeedCard
                   fotos={fotos}
                   pico={picoMap.get(picoId)}
@@ -251,6 +255,13 @@ export function RadarPage() {
                 />
               </div>
             ))}
+
+            {feedCards.length <= 1 && <FaixaAlertas alertas={alertas} />}
+            {feedCards.length <= 2 && mutiroes.length > 0 && <FaixaMutiroes mutiroes={mutiroes} />}
+
+            <Link to="/explorar" className="btn outline full" style={{ margin: '4px 16px 0', width: 'calc(100% - 32px)' }}>
+              🧭 Explorar o litoral por estado e cidade
+            </Link>
 
             {picosSemFoto.length > 0 && (
               <div style={{ marginTop: 8 }}>
