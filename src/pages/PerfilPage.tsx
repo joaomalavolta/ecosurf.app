@@ -274,7 +274,20 @@ export function PerfilPage() {
                 <button className="row" onClick={acaoEmBreve} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
                   <IconAward size={20} stroke={2} /> Conquistas e reputação
                 </button>
-                <button className="row" onClick={acaoEmBreve} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                <button
+                  className="row"
+                  onClick={async () => {
+                    try {
+                      const { exportarMeusDadosGeoJSON } = await import('../services/exportarGeojson')
+                      const r = await exportarMeusDadosGeoJSON()
+                      if (!r) { alert('Entre na sua conta para exportar seus dados.'); return }
+                      alert(`Exportado: ${r.fotos} fotos, ${r.alertas} alertas e ${r.mutiroes} mutirões.\nArquivo: ${r.arquivo}\n\nO GeoJSON abre em QGIS, geojson.io e Google Earth. Os dados são seus.`)
+                    } catch {
+                      alert('Não foi possível exportar agora. Verifique a conexão e tente de novo.')
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}
+                >
                   <IconDownload size={20} stroke={2} /> Exportar meus dados (GeoJSON)
                 </button>
                 {mod && (

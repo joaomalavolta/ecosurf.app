@@ -29,7 +29,7 @@ function getLocalToken(): string | null {
   }
 }
 
-async function rest<T>(path: string): Promise<T> {
+export async function rest<T>(path: string): Promise<T> {
   const token = getLocalToken()
   let r = await fetch(`${BASE}/rest/v1/${path}`, {
     headers: { apikey: KEY, Authorization: `Bearer ${token ?? KEY}` },
@@ -434,6 +434,8 @@ export interface MinhaFotoRow {
   capturada_em: string
   storage_path: string | null
   procedencia?: string | null
+  captura_lat?: number | null
+  captura_lng?: number | null
   pico_nome?: string
 }
 
@@ -446,7 +448,7 @@ export async function restMinhasFotos(): Promise<MinhaFotoRow[]> {
     const u = sess.session?.user
     if (!u) return []
     return rest<MinhaFotoRow[]>(
-      `fotos?select=id,pico_id,capturada_em,storage_path,procedencia&autor_id=eq.${u.id}&order=capturada_em.desc&limit=100`
+      `fotos?select=id,pico_id,capturada_em,storage_path,procedencia,captura_lat,captura_lng&autor_id=eq.${u.id}&order=capturada_em.desc&limit=500`
     )
   } catch {
     return []
