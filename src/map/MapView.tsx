@@ -166,14 +166,6 @@ function popupHtml(p: Record<string, unknown>): string {
 }
 
 /** Reusa uma fonte que o basemap já carrega — garante que o glyph existe. */
-function fonteRotulo(map: maplibregl.Map): string[] {
-  for (const l of map.getStyle().layers ?? []) {
-    const f = (l as { layout?: { 'text-font'?: unknown } }).layout?.['text-font']
-    if (Array.isArray(f) && f.every((x) => typeof x === 'string')) return f as string[]
-  }
-  return ['Noto Sans Regular']
-}
-
 function carregarIcone(map: maplibregl.Map, nome: string, svg: string): Promise<void> {
   return new Promise((resolve) => {
     const img = new Image()

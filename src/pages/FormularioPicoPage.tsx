@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
-import { IconCheck, IconMapPin, IconBeach, IconWaveSine } from '@tabler/icons-react'
+import { IconCheck, IconMapPin, IconBeach } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPicker } from '../components/MapaPicker'
 import { statusPerfil } from '../services/perfil'

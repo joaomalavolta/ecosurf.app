@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { IconRipple, IconMail, IconUser, IconMapPin, IconCamera, IconCheck, IconChevronLeft } from '@tabler/icons-react'
+import { IconMail, IconUser, IconMapPin, IconCamera, IconCheck, IconChevronLeft } from '@tabler/icons-react'
 import { statusPerfil, enviarCodigo, confirmarCodigo, salvarPerfil } from '../services/perfil'
 import { carregarPicos } from '../services/picos'
 import type { Pico } from '../types/domain'

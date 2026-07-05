@@ -39,14 +39,8 @@ export function MapaPage() {
     }
   }, [])
 
-  const verPicos = filtro === 'tudo' || filtro === 'picos'
-  const verAlertas = filtro === 'tudo' || filtro === 'alertas'
-  const verMutiroes = filtro === 'tudo' || filtro === 'mutiroes'
 
   // Quando toggle "Só com foto recente" está ON, mostra só os picos ativos
-  const picosNoMapa = verPicos
-    ? (soRecentes ? picos.filter((p) => ativos.has(p.id)) : picos)
-    : []
 
   const numAlertas = sel ? alertas.filter((a) => a.picoId === sel.id).length : 0
 

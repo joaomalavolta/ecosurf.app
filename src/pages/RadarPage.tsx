@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconCompass, IconThumbUp, IconCamera, IconWaveSine, IconSeeding, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconSearch, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconCompass, IconThumbUp, IconWaveSine, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
@@ -128,11 +128,6 @@ export function RadarPage() {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 100)
   }
-
-  const picosAtivos = useMemo(
-    () => picosTodos.filter((p) => ativos.has(p.id)),
-    [picosTodos, ativos],
-  )
 
   return (
     <div className="radar-map-first">

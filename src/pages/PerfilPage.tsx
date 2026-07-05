@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow, IconCamera, IconPhoto } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -160,9 +160,6 @@ export function PerfilPage() {
     }
   }
 
-  function acaoEmBreve() {
-    toast('Esta funcionalidade estará disponível na próxima atualização!')
-  }
 
   async function fazerLogout() {
     if (confirm('Tem certeza que deseja sair?')) {

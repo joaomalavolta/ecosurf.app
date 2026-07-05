@@ -10,7 +10,9 @@ import { MapaPicker } from '../components/MapaPicker'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'
-import { publicarAlerta, atualizarAlerta, carregarAlertaParaEdicao, salvarRascunho, type DadosAlerta } from '../services/alertas'
+// TODO(edição-alerta): atualizarAlerta + carregarAlertaParaEdicao existem no serviço
+// e no admin; falta ligar o modo edição pelo autor (rota /alerta/:id/editar).
+import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'

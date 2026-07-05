@@ -74,13 +74,6 @@ async function log(c: SupabaseClient, acao: string, itemTipo: string, itemId: st
 }
 
 // ── Dashboard ────────────────────────────────────────────────────────────
-async function contar(c: SupabaseClient, tabela: string, filtro?: (q: any) => any): Promise<number> {
-  let q = c.from(tabela).select('*', { count: 'exact', head: true })
-  if (filtro) q = filtro(q)
-  const { count } = await q
-  return count ?? 0
-}
-
 export interface Indicadores {
   usuarios: number
   picos: number

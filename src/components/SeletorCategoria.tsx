@@ -4,7 +4,6 @@ import {
   IconDroplet,
   IconMountain,
   IconFlame,
-  IconSkull,
   IconBuildingFactory,
   IconCircleDot,
   IconWaveSine,

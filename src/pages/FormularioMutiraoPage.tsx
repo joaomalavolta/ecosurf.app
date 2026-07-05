@@ -163,6 +163,7 @@ export function FormularioMutiraoPage() {
       }
 
       if (comoRascunho) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- descarta a capa (não vai pro rascunho)
         const { imagemCapa: _, ...rest } = dados
         await salvarRascunho('mutirao', rest as Record<string, unknown>)
         toast('Rascunho salvo com sucesso!')

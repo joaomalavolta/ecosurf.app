@@ -7,7 +7,7 @@ import { MapaLocal } from '../components/MapaLocal'
 import { MapaPicker } from '../components/MapaPicker'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
-import { SUPABASE_URL, SUPABASE_KEY } from '../services/supabase/config'
+import { SUPABASE_URL } from '../services/supabase/config'
 import { atualizarAlerta } from '../services/alertas'
 import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
 
@@ -132,15 +132,6 @@ export function AlertaPage() {
   const cat = categoriaPorId(isEditing ? editCategoria! : (alerta.categoria as any))
   const CategoriaIcon = cat?.icone ?? IconAlertTriangle
   const corCategoria = cat?.cor ?? 'var(--muted)'
-  const isPico = alerta.categoria === 'Pico de surf'
-
-  const badgeColor =
-    alerta.status === 'resolvido'
-      ? 'var(--sucesso)'
-      : alerta.status === 'arquivado'
-        ? 'var(--texto-mutado)'
-        : corCategoria
-
   // Render variables that are safe now that !alerta is checked
   const dataFormatada = new Date(alerta.criada_em).toLocaleDateString('pt-BR', {
     day: 'numeric',
