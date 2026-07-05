@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -161,7 +162,7 @@ export function AlertaPage() {
       } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(texto)
-      alert('Link e localização copiados!')
+      toast('Link e localização copiados!')
     }
   }
 
@@ -208,7 +209,7 @@ export function AlertaPage() {
       setPreviewUrls([])
       setVer(v => v + 1) // Reload data
     } catch (e) {
-      alert(`Erro ao salvar: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      toast(`Erro ao salvar: ${e instanceof Error ? e.message : 'desconhecido'}`)
     } finally {
       setSalvando(false)
     }
@@ -500,8 +501,8 @@ export function AlertaPage() {
                     if (!confirm('Apagar este registro? A ocorrência e a foto saem do mapa e do carrossel. Mutirões já criados a partir dele permanecem, apenas sem o vínculo. Esta ação não pode ser desfeita.')) return
                     const { excluirAlertaProprio } = await import('../services/excluirProprio')
                     const ok = await excluirAlertaProprio(id!)
-                    if (ok) { alert('Registro apagado.'); navigate('/acoes') }
-                    else alert('Não foi possível apagar. Verifique a conexão e tente de novo.')
+                    if (ok) { toast('Registro apagado.'); navigate('/acoes') }
+                    else toast('Não foi possível apagar. Verifique a conexão e tente de novo.')
                   }}
                 >
                   Excluir registro

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { usePinchZoom } from '../hooks/usePinchZoom'
 import { IconUsers, IconPlus,
@@ -102,7 +103,7 @@ export function CapturePage() {
     statusPerfil().then((s) => {
       if (!vivo) return
       if (!s.sessao) {
-        window.alert('Faça login para poder registrar.')
+        toast('Faça login para poder registrar.')
         navigate('/perfil', { replace: true })
       } else {
         setCarregando(false)
@@ -259,7 +260,7 @@ export function CapturePage() {
       setAlertaCriadoId(id)
       setEtapa('concluido')
     } catch {
-      alert('Não foi possível publicar o alerta. Verifique a conexão e tente de novo.')
+      toast('Não foi possível publicar o alerta. Verifique a conexão e tente de novo.')
     } finally {
       setPublicandoAlerta(false)
     }
@@ -315,7 +316,7 @@ export function CapturePage() {
       })
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
-      alert('Não foi possível preparar o registro: ' + msg)
+      toast('Não foi possível preparar o registro: ' + msg)
     }
   }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconCheck,
   IconCalendar,
@@ -97,7 +98,7 @@ export function MutiraoPage() {
       const session = await sb().auth.getSession()
       const user = session.data.session?.user
       if (!user) {
-        alert('Faça login para participar.')
+        toast('Faça login para participar.')
         setParticipando(false)
         return
       }
@@ -116,7 +117,7 @@ export function MutiraoPage() {
         { user_id: user.id, nome: perfil.data?.nome ?? user.email ?? 'Voluntário', foto_url: perfil.data?.foto_url ?? null },
       ])
     } catch {
-      alert('Erro ao participar. Tente novamente.')
+      toast('Erro ao participar. Tente novamente.')
     } finally {
       setParticipando(false)
     }
@@ -132,7 +133,7 @@ export function MutiraoPage() {
       } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(texto)
-      alert('Link copiado!')
+      toast('Link copiado!')
     }
   }
 

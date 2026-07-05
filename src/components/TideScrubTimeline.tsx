@@ -359,7 +359,7 @@ export function TideScrubTimeline({
             <div className="between">
               {f.observacao ? <div style={{ fontSize: 14, fontWeight: 600 }}>{f.observacao}</div> : <span />}
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button onClick={async () => { try { const { curtirFoto } = await import('../services/supabase/rest'); await curtirFoto(f.id); setCurtidasMap(m => ({ ...m, [f.id]: (m[f.id] || 0) + 1 })) } catch (e: any) { alert(e.message) } }} aria-label="Curtir foto"
+                <button onClick={async () => { try { const { curtirFoto } = await import('../services/supabase/rest'); await curtirFoto(f.id); setCurtidasMap(m => ({ ...m, [f.id]: (m[f.id] || 0) + 1 })) } catch { const { toast } = await import('../lib/toast'); toast('Entre na sua conta para curtir — e tente de novo.', 'info') } }} aria-label="Curtir foto"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.16)', border: 0, color: '#fff', borderRadius: 999, padding: '4px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   <IconThumbUp size={14} stroke={2} /> {curtidasMap[f.id] || 0}
                 </button>

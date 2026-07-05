@@ -1223,3 +1223,43 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   /* a grade de fotos aproveita a coluna larga (o grid é inline no JSX) */
   body[data-portal-perfil] .g-pubs > div[style*="grid"] { grid-template-columns: repeat(4, 1fr) !important; }
 }
+
+/* ═══ Toasts (aposentam os alert nativos) ═══ */
+.toast-recipiente {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--altura-nav) + 14px);
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+  width: min(420px, calc(100vw - 32px));
+}
+@media (min-width: 1024px) {
+  .toast-recipiente { bottom: 28px; }
+}
+.toast {
+  background: rgba(24, 30, 34, .92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.45;
+  padding: 11px 16px;
+  border-radius: 13px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-left-width: 3px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  max-width: 100%;
+  white-space: pre-line;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .3s ease, transform .3s ease;
+}
+.toast.visivel { opacity: 1; transform: translateY(0); }
+.toast-sucesso { border-left-color: #2E9B6B; }
+.toast-erro    { border-left-color: #D64045; }
+.toast-info    { border-left-color: #1ECBC3; }

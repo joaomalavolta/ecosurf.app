@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
 import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconUsers, IconTargetArrow, IconCamera, IconPhoto } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -86,7 +87,7 @@ export function PerfilPage() {
     const val = !borrarFotos
     setBorrarFotos(val)
     localStorage.setItem('borrarRostos', val ? 'true' : 'false')
-    alert('Preferência de privacidade salva no dispositivo.')
+    toast('Preferência de privacidade salva no dispositivo.')
   }
 
   async function uploadAvatar(file: File) {
@@ -112,7 +113,7 @@ export function PerfilPage() {
       const { sb } = await import('../services/supabase/client')
       const { data } = await sb().auth.getSession()
       const u = data.session?.user
-      if (!u) { alert('Você precisa estar logado para alterar o avatar.'); return }
+      if (!u) { toast('Você precisa estar logado para alterar o avatar.'); return }
       
       const path = `${u.id}/avatar.webp`
       
@@ -133,15 +134,15 @@ export function PerfilPage() {
       if (upd.error) throw new Error(`Salvar perfil falhou: ${upd.error.message}`)
       
       setPerfil(p => p ? { ...p, avatarUrl: url } : p)
-      alert('Avatar atualizado com sucesso!')
+      toast('Avatar atualizado com sucesso!')
     } catch (e: any) {
       console.error('Avatar upload error:', e)
-      alert('Erro ao enviar avatar: ' + (e?.message || 'erro desconhecido'))
+      toast('Erro ao enviar avatar: ' + (e?.message || 'erro desconhecido'))
     }
   }
 
   function acaoEmBreve() {
-    alert('Esta funcionalidade estará disponível na próxima atualização!')
+    toast('Esta funcionalidade estará disponível na próxima atualização!')
   }
 
   async function fazerLogout() {
@@ -285,10 +286,10 @@ export function PerfilPage() {
                     try {
                       const { exportarMeusDadosGeoJSON } = await import('../services/exportarGeojson')
                       const r = await exportarMeusDadosGeoJSON()
-                      if (!r) { alert('Entre na sua conta para exportar seus dados.'); return }
-                      alert(`Exportado: ${r.fotos} fotos, ${r.alertas} alertas e ${r.mutiroes} mutirões.\nArquivo: ${r.arquivo}\n\nO GeoJSON abre em QGIS, geojson.io e Google Earth. Os dados são seus.`)
+                      if (!r) { toast('Entre na sua conta para exportar seus dados.'); return }
+                      toast(`Exportado: ${r.fotos} fotos, ${r.alertas} alertas e ${r.mutiroes} mutirões.\nArquivo: ${r.arquivo}\n\nO GeoJSON abre em QGIS, geojson.io e Google Earth. Os dados são seus.`)
                     } catch {
-                      alert('Não foi possível exportar agora. Verifique a conexão e tente de novo.')
+                      toast('Não foi possível exportar agora. Verifique a conexão e tente de novo.')
                     }
                   }}
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}

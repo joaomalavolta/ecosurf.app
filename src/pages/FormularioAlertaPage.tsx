@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { IconUsers,
   IconArrowLeft, IconArrowRight, IconCheck, IconMapPin,
@@ -55,7 +56,7 @@ export function FormularioAlertaPage() {
   useEffect(() => {
     statusPerfil().then(async (s) => {
       if (!s.sessao) {
-        window.alert('Faça login para registrar um alerta ambiental.')
+        toast('Faça login para registrar um alerta ambiental.')
         navigate('/perfil', { replace: true })
         return
       }
@@ -122,7 +123,7 @@ export function FormularioAlertaPage() {
       setAlertaCriadoId(idCriado)
       setSucesso(true)
     } catch (e) {
-      alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      toast(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
     } finally {
       setEnviando(false)
     }
@@ -133,9 +134,9 @@ export function FormularioAlertaPage() {
       await salvarRascunho('alerta', {
         categoria, localNome, municipio, uf, lat, lng, gravidade, descricao, recorrente,
       })
-      alert('Rascunho salvo com sucesso!')
+      toast('Rascunho salvo com sucesso!')
     } catch (e) {
-      alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      toast(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
     }
   }
 
@@ -292,7 +293,7 @@ export function FormularioAlertaPage() {
                       setLat(pos.lat)
                       setLng(pos.lng)
                     } else {
-                      alert('Não foi possível obter GPS.')
+                      toast('Não foi possível obter GPS.')
                     }
                   })
                 }}

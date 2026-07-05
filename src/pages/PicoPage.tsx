@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -231,8 +232,8 @@ export function PicoPage() {
                 if (!confirm(`Apagar o pico "${pico.nome}"? Ele sai do radar e do mapa, junto com as SUAS fotos dele. Se houver fotos de outras pessoas, a exclusão será bloqueada. Esta ação não pode ser desfeita.`)) return
                 const { excluirPicoProprio } = await import('../services/excluirProprio')
                 const ok = await excluirPicoProprio(pico.id)
-                if (ok) { alert('Pico apagado.'); navigate('/') }
-                else alert('Não foi possível apagar: este pico já tem fotos de outras pessoas (patrimônio da comunidade) ou houve falha de conexão. Fale com a moderação se necessário.')
+                if (ok) { toast('Pico apagado.'); navigate('/') }
+                else toast('Não foi possível apagar: este pico já tem fotos de outras pessoas (patrimônio da comunidade) ou houve falha de conexão. Fale com a moderação se necessário.')
               }}
               style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' }}
             >

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { IconCheck, IconMapPin, IconBeach, IconWaveSine } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -41,7 +42,7 @@ export function FormularioPicoPage() {
   useEffect(() => {
     statusPerfil().then((s) => {
       if (!s.sessao) {
-        window.alert('Faça login para cadastrar um pico.')
+        toast('Faça login para cadastrar um pico.')
         navigate('/perfil', { replace: true })
       }
     })
@@ -62,7 +63,7 @@ export function FormularioPicoPage() {
 
   async function publicar() {
     if (!lat || !lng) {
-      alert('Selecione a localização no mapa.')
+      toast('Selecione a localização no mapa.')
       return
     }
     setEnviando(true)
@@ -85,7 +86,7 @@ export function FormularioPicoPage() {
       setPicoId(id)
       setSucesso(true)
     } catch (e) {
-      alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      toast(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
     } finally {
       setEnviando(false)
     }

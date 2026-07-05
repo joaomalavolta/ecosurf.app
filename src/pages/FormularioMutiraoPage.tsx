@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from '../lib/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -77,7 +78,7 @@ export function FormularioMutiraoPage() {
   useEffect(() => {
     statusPerfil().then((s) => {
       if (!s.sessao) {
-        window.alert('Faça login para continuar.')
+        toast('Faça login para continuar.')
         navigate('/perfil', { replace: true })
       }
     })
@@ -106,7 +107,7 @@ export function FormularioMutiraoPage() {
         setCarregandoEdicao(false)
       })
       .catch((e) => {
-        alert(e instanceof Error ? e.message : 'Erro ao carregar mutirão')
+        toast(e instanceof Error ? e.message : 'Erro ao carregar mutirão')
         navigate(-1)
       })
   }, [modoEdicao, mutiraoId, navigate])
@@ -134,7 +135,7 @@ export function FormularioMutiraoPage() {
 
   async function publicar(comoRascunho = false) {
     if (!modoEdicao && (!lat || !lng)) {
-      alert('Aguarde a localização GPS ou informe manualmente.')
+      toast('Aguarde a localização GPS ou informe manualmente.')
       return
     }
     setEnviando(true)
@@ -164,7 +165,7 @@ export function FormularioMutiraoPage() {
       if (comoRascunho) {
         const { imagemCapa: _, ...rest } = dados
         await salvarRascunho('mutirao', rest as Record<string, unknown>)
-        alert('Rascunho salvo com sucesso!')
+        toast('Rascunho salvo com sucesso!')
         setEnviando(false)
         return
       }
@@ -176,7 +177,7 @@ export function FormularioMutiraoPage() {
       }
       setSucesso(true)
     } catch (e) {
-      alert(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      toast(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
     } finally {
       setEnviando(false)
     }
@@ -397,10 +398,10 @@ export function FormularioMutiraoPage() {
               setExcluindo(true)
               try {
                 await excluirMutirao(mutiraoId!)
-                alert('Mutirão excluído.')
+                toast('Mutirão excluído.')
                 navigate('/acoes', { replace: true })
               } catch (e) {
-                alert('Erro ao excluir: ' + (e instanceof Error ? e.message : 'desconhecido'))
+                toast('Erro ao excluir: ' + (e instanceof Error ? e.message : 'desconhecido'))
               } finally {
                 setExcluindo(false)
               }
