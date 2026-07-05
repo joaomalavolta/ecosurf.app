@@ -36,6 +36,7 @@ export default function App() {
 
   useEffect(() => {
     iniciarSincronizacao()
+    import('./offline/alertaQueue').then(({ iniciarSincronizacaoAlertas }) => iniciarSincronizacaoAlertas()).catch(() => {})
   }, [])
 
   if (pathname.startsWith('/admin')) {

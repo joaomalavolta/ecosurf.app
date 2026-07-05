@@ -87,6 +87,7 @@ export function CapturePage() {
   const [ufAlerta, setUfAlerta] = useState('')
   const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [publicandoAlerta, setPublicandoAlerta] = useState(false)
+  const [alertaNaFila, setAlertaNaFila] = useState(false)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [picoAutoId, setPicoAutoId] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
@@ -241,26 +242,44 @@ export function CapturePage() {
   async function publicarAlertaDaCamera() {
     if (!catAlerta || !gravAlerta || !posCapturada.lat || !posCapturada.lng || !blobCapturado) return
     setPublicandoAlerta(true)
+    const { categoriaPorId } = await import('../components/SeletorCategoria')
+    const rotulo = categoriaPorId(catAlerta).label
+    const dados = {
+      titulo: `${rotulo} — ${novaPraiaNome || municipioAlerta || 'local registrado'}`,
+      categoria: catAlerta,
+      gravidade: gravAlerta,
+      localNome: novaPraiaNome || undefined,
+      municipio: municipioAlerta || 'Não informado',
+      uf: ufAlerta || 'SP',
+      lat: posCapturada.lat,
+      lng: posCapturada.lng,
+    }
+
+    // Sem sinal? Direto pra fila — denúncia não espera rede.
+    if (!navigator.onLine) {
+      const { enfileirarAlerta } = await import('../offline/alertaQueue')
+      await enfileirarAlerta({ id: crypto.randomUUID(), ...dados, blob: blobCapturado })
+      setAlertaNaFila(true)
+      setEtapa('concluido')
+      setPublicandoAlerta(false)
+      return
+    }
+
     try {
       const { publicarAlerta } = await import('../services/alertas')
-      const { categoriaPorId } = await import('../components/SeletorCategoria')
-      const rotulo = categoriaPorId(catAlerta).label
       const id = await publicarAlerta({
-        titulo: `${rotulo} — ${novaPraiaNome || municipioAlerta || 'local registrado'}`,
-        categoria: catAlerta,
-        gravidade: gravAlerta,
-        localNome: novaPraiaNome || undefined,
-        municipio: municipioAlerta || 'Não informado',
-        uf: ufAlerta || 'SP',
-        lat: posCapturada.lat,
-        lng: posCapturada.lng,
+        ...dados,
         checkboxAceite: aceiteAlerta,
         images: [new File([blobCapturado], `alerta-${Date.now()}.webp`, { type: 'image/webp' })],
       })
       setAlertaCriadoId(id)
       setEtapa('concluido')
     } catch {
-      toast('Não foi possível publicar o alerta. Verifique a conexão e tente de novo.')
+      // rede caiu no meio do envio: mesma rede de proteção
+      const { enfileirarAlerta } = await import('../offline/alertaQueue')
+      await enfileirarAlerta({ id: crypto.randomUUID(), ...dados, blob: blobCapturado })
+      setAlertaNaFila(true)
+      setEtapa('concluido')
     } finally {
       setPublicandoAlerta(false)
     }
@@ -847,6 +866,11 @@ export function CapturePage() {
               >
                 <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
               </button>
+            )}
+            {alertaNaFila && (
+              <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5, textAlign: 'center', lineHeight: 1.55, background: 'rgba(30,203,195,.12)', border: '1px solid rgba(30,203,195,.35)', borderRadius: 12, padding: '12px 14px' }}>
+                Sem sinal por aqui — seu alerta ficou <b style={{ color: '#1ECBC3' }}>guardado na fila</b> e será publicado sozinho assim que a conexão voltar. A denúncia não se perde.
+              </p>
             )}
             {alertaCriadoId && (
               <button className="btn acento full" onClick={() => navigate(`/alerta/${alertaCriadoId}`)}>
