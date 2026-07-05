@@ -463,7 +463,8 @@ export function MapView({
           const pico = dadosRef.current.picos.find((x) => x.id === p.id)
           if (pico && onSelRef.current) {
             onSelRef.current(pico)
-            map.flyTo({ center: [pico.lng, pico.lat], zoom: Math.max(map.getZoom(), 13), speed: 0.8 })
+            map.flyTo({ /* respeita 'reduzir animações' */
+        ...(document.documentElement.dataset.reduzAnimacao ? { duration: 0 } : {}), center: [pico.lng, pico.lat], zoom: Math.max(map.getZoom(), 13), speed: 0.8 })
           } else {
             navRef.current(`/pico/${p.id}`)
           }

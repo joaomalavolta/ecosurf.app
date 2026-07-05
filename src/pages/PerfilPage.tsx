@@ -5,6 +5,7 @@ import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconSh
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
+import { PainelPreferencias, CardConquistas } from '../components/PreferenciasEConquistas'
 import { ehModerador } from '../services/moderacao'
 import { meuStatus, permissoes, sair } from '../services/admin'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
@@ -25,6 +26,10 @@ export function PerfilPage() {
   const [mod, setMod] = useState(false)
   const [painel, setPainel] = useState(false)
   const [borrarFotos, setBorrarFotos] = useState(() => localStorage.getItem('borrarRostos') !== 'false')
+  const [verPrefs, setVerPrefs] = useState(false)
+  const [verConquistas, setVerConquistas] = useState(false)
+  const [nAlertas, setNAlertas] = useState(0)
+  const [nMutiroes, setNMutiroes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
@@ -44,6 +49,20 @@ export function PerfilPage() {
         setLoading(false)
         // Carregar fotos do usuário
         if (p) {
+          import('../services/supabase/client').then(({ sb }) =>
+            sb().auth.getSession().then(({ data }) => {
+              const uid = data.session?.user?.id
+              if (!uid) return
+              import('../services/supabase/rest').then(async ({ rest }) => {
+                try {
+                  const a = await rest<unknown[]>(`ameacas_publicas?denunciante_id=eq.${uid}&select=id`)
+                  if (vivo) setNAlertas(a.length)
+                  const m = await rest<unknown[]>(`mutiroes_publicos?autor_id=eq.${uid}&select=id`)
+                  if (vivo) setNMutiroes(m.length)
+                } catch { /* silencioso */ }
+              })
+            })
+          ).catch(() => {})
           import('../services/supabase/rest').then(({ restMinhasFotos }) =>
             restMinhasFotos().then(fotos => {
               if (vivo) setMinhasFotos(fotos)
@@ -271,13 +290,24 @@ export function PerfilPage() {
               </div>
             </div>
 
+            {verPrefs && <PainelPreferencias onFechar={() => setVerPrefs(false)} />}
+            {verConquistas && (
+              <CardConquistas dados={{
+                fotos: minhasFotos.length,
+                picos: new Set(minhasFotos.map(f => f.pico_id)).size,
+                precisao: minhasFotos.length === 0 ? 0 : Math.round((minhasFotos.filter(f => f.procedencia === 'no-local').length / minhasFotos.length) * 100),
+                alertas: nAlertas,
+                mutiroes: nMutiroes,
+              }} />
+            )}
+
             <div className="card pad g-conta">
               <span className="eyebrow">Conta</span>
               <div className="stack" style={{ marginTop: 10 }}>
-                <button className="row" onClick={acaoEmBreve} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                <button className="row" onClick={() => setVerPrefs(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
                   <IconSettings size={20} stroke={2} /> Preferências do app
                 </button>
-                <button className="row" onClick={acaoEmBreve} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                <button className="row" onClick={() => setVerConquistas(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit' }}>
                   <IconAward size={20} stroke={2} /> Conquistas e reputação
                 </button>
                 <button

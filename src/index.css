@@ -1263,3 +1263,20 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
 .toast-sucesso { border-left-color: #2E9B6B; }
 .toast-erro    { border-left-color: #D64045; }
 .toast-info    { border-left-color: #1ECBC3; }
+
+/* ═══ Toggle switch (preferências) ═══ */
+.switch { width: 40px; height: 23px; border-radius: 99px; background: var(--line); position: relative; flex-shrink: 0; transition: background .2s; }
+.switch.on { background: var(--turq); }
+.switch .knob { position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.switch.on .knob { transform: translateX(17px); }
+
+/* Preferência: texto grande (+10% na base — tudo em rem/em acompanha) */
+html[data-texto-grande] { font-size: 110%; }
+
+/* Preferência: reduzir animações */
+html[data-reduz-animacao] *,
+html[data-reduz-animacao] *::before,
+html[data-reduz-animacao] *::after {
+  animation-duration: .001ms !important;
+  transition-duration: .001ms !important;
+}
