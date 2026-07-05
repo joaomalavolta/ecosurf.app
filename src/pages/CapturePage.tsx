@@ -87,6 +87,7 @@ export function CapturePage() {
   const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [publicandoAlerta, setPublicandoAlerta] = useState(false)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
+  const [picoAutoId, setPicoAutoId] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
   const [detectandoGps, setDetectandoGps] = useState(false)
 
@@ -115,6 +116,19 @@ export function CapturePage() {
     setDetectandoGps(true)
     const pos = await obterCoords()
     setPosCapturada(pos)
+
+    // A promessa do manual, enfim ligada: "estou no local" + pico a ≤600m
+    // = vínculo automático. A UI desta detecção sempre existiu (selo na
+    // câmera, "enviada direto para X") — mas picoAutoNome nunca era setado.
+    if (pos.lat && pos.lng && picosExistentes.length > 0) {
+      const maisPerto = picosExistentes
+        .map((p) => ({ p, d: haversineKm(pos.lat!, pos.lng!, p.lat, p.lng) }))
+        .sort((a, b) => a.d - b.d)[0]
+      if (maisPerto && maisPerto.d <= 0.6) {
+        setPicoAutoId(maisPerto.p.id)
+        setPicoAutoNome(maisPerto.p.nome)
+      }
+    }
 
     if (pos.lat && pos.lng) {
       try {
@@ -205,9 +219,19 @@ export function CapturePage() {
       return
     }
 
+    // FIX: nos caminhos diretos, o GPS pode ter vindo ANTES da câmera
+    // (detectarLocalEAbrir) — o pos local fica vazio e as coordenadas se
+    // perdiam, derrubando o selo de procedência. Prioriza o mais fresco.
+    const coordsEnvio = pos.lat ? pos : posCapturada
+
     // Registro iniciado na página de um pico já nasce vinculado a ele.
     if (picoSelecionado) {
-      await finalizarUpload(picoSelecionado, blob, pos, thumb)
+      await finalizarUpload(picoSelecionado, blob, coordsEnvio, thumb)
+      return
+    }
+    // "Estou no local" + pico detectado ao lado: direto, como prometido.
+    if (noLocal && picoAutoId) {
+      await finalizarUpload(picoAutoId, blob, coordsEnvio, thumb)
       return
     }
     setEtapa('selecionar-pico')
@@ -660,7 +684,9 @@ export function CapturePage() {
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 16 }}>
             {modoNovoPico || picosExistentes.length === 0
               ? 'Adicione o local exato para que outras pessoas saibam.'
-              : 'Escolha um pico já cadastrado — ou reporte um local novo.'}
+              : noLocal
+                ? 'Nenhum pico cadastrado aqui pertinho — escolha o mais próximo ou reporte este local.'
+                : 'Escolha o pico deste registro — ou reporte um local novo.'}
           </p>
 
           {/* Picos já cadastrados primeiro: evita locais duplicados no mapa */}
