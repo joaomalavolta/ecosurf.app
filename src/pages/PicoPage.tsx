@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { ForecastStrip } from '../components/ForecastStrip'
@@ -140,6 +140,14 @@ export function PicoPage() {
     }
   }, [pico])
 
+  const navigate = useNavigate()
+  const [meuId, setMeuId] = useState<string | null>(null)
+  useEffect(() => {
+    import('../services/supabase/client').then(({ sb }) =>
+      sb().auth.getSession().then(({ data }) => setMeuId(data.session?.user?.id ?? null))
+    ).catch(() => {})
+  }, [])
+
   const aoMudarDia = useCallback((diaKey: string) => {
     if (!pico) return
     const dh = new Date()
@@ -216,6 +224,22 @@ export function PicoPage() {
           </div>
         </div>
 
+        {meuId && pico.criadoPor === meuId && (
+          <p style={{ textAlign: 'center', margin: '2px 0 0' }}>
+            <button
+              onClick={async () => {
+                if (!confirm(`Apagar o pico "${pico.nome}"? Ele sai do radar e do mapa, junto com as SUAS fotos dele. Se houver fotos de outras pessoas, a exclusão será bloqueada. Esta ação não pode ser desfeita.`)) return
+                const { excluirPicoProprio } = await import('../services/excluirProprio')
+                const ok = await excluirPicoProprio(pico.id)
+                if (ok) { alert('Pico apagado.'); navigate('/') }
+                else alert('Não foi possível apagar: este pico já tem fotos de outras pessoas (patrimônio da comunidade) ou houve falha de conexão. Fale com a moderação se necessário.')
+              }}
+              style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 12, textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Você reportou este pico · excluir
+            </button>
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 10 }}>
           <Link to={`/capturar?pico=${pico.id}`} className="btn full" style={{ flex: 1 }}><IconCamera size={18} stroke={2} /> Registrar</Link>
           <button

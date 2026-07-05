@@ -117,6 +117,7 @@ export async function restPicos(): Promise<Pico[]> {
     praia: r.praia,
     municipio: r.municipio ?? '',
     uf: r.uf ?? '',
+    criadoPor: (r as { criado_por?: string | null }).criado_por ?? undefined,
     regiaoSurfId: r.regiao_surf_id ?? '',
     lat: r.lat,
     lng: r.lng,

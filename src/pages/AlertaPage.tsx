@@ -493,6 +493,21 @@ export function AlertaPage() {
                 <IconArrowLeft size={16} /> Voltar
               </button>
               {(isOwner || userId === alerta.autor_id) && (
+                <button
+                  className="btn outline"
+                  style={{ borderColor: 'var(--perigo)', color: 'var(--perigo)' }}
+                  onClick={async () => {
+                    if (!confirm('Apagar este registro? A ocorrência e a foto saem do mapa e do carrossel. Mutirões já criados a partir dele permanecem, apenas sem o vínculo. Esta ação não pode ser desfeita.')) return
+                    const { excluirAlertaProprio } = await import('../services/excluirProprio')
+                    const ok = await excluirAlertaProprio(id!)
+                    if (ok) { alert('Registro apagado.'); navigate('/acoes') }
+                    else alert('Não foi possível apagar. Verifique a conexão e tente de novo.')
+                  }}
+                >
+                  Excluir registro
+                </button>
+              )}
+              {(isOwner || userId === alerta.autor_id) && (
                 <button className="btn outline full" onClick={() => setIsEditing(true)}>
                   Editar
                 </button>

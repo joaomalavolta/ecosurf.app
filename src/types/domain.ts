@@ -21,6 +21,7 @@ export interface RegiaoSurf {
 
 export interface Pico {
   id: string;        // slug estável: "praia-do-sonho"
+  criadoPor?: string; // autor do cadastro (0034) — habilita "excluir meu pico"
   nome: string;      // nome local do pico
   praia: string;     // praia à qual pertence (uma praia agrega vários picos)
   municipio: string; // DERIVADO via PostGIS — aqui no seed é manual

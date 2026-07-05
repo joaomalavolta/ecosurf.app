@@ -75,7 +75,7 @@ export function ModuloLogs({ perm }: { perm: Permissoes }) {
                   <td>{l.motivo || '—'}</td>
                   {perm.excluiPermanente && (
                     <td>
-                      <button className="btn outline" style={{ minHeight: 30, padding: '0 8px', fontSize: 12, color: 'var(--perigo)' }} onClick={() => excluirUm(l.id)} title="Excluir log">
+                      <button className="btn outline" style={{ minHeight: 30, padding: '0 8px', fontSize: 12, color: 'var(--perigo)' }} onClick={() => { if (confirm('Excluir este registro da trilha de auditoria? Esta ação não pode ser desfeita.')) excluirUm(l.id) }} title="Excluir log">
                         <IconTrash size={13} />
                       </button>
                     </td>
