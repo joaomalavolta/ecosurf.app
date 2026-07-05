@@ -1,4 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/pico/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|googlebot).*" }],
+      "destination": "/api/og?tipo=pico&id=:id"
+    },
+    {
+      "source": "/alerta/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|googlebot).*" }],
+      "destination": "/api/og?tipo=alerta&id=:id"
+    },
+    {
+      "source": "/mutirao/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|googlebot).*" }],
+      "destination": "/api/og?tipo=mutirao&id=:id"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
