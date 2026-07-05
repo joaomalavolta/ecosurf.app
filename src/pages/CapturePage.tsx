@@ -14,10 +14,22 @@ import { IconUsers, IconPlus,
   IconMap2,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
+import { SeletorCategoria } from '../components/SeletorCategoria'
+import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
 
 type TipoRegistro = 'report' | 'alerta' | 'lixo'
-type Etapa = 'tipo' | 'localizacao' | 'camera' | 'selecionar-pico' | 'concluido'
+const SIGLA_UF: Record<string, string> = {
+  'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
+  'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
+  'Maranhão': 'MA', 'Mato Grosso': 'MT', 'Mato Grosso do Sul': 'MS', 'Minas Gerais': 'MG',
+  'Pará': 'PA', 'Paraíba': 'PB', 'Paraná': 'PR', 'Pernambuco': 'PE', 'Piauí': 'PI',
+  'Rio de Janeiro': 'RJ', 'Rio Grande do Norte': 'RN', 'Rio Grande do Sul': 'RS',
+  'Rondônia': 'RO', 'Roraima': 'RR', 'Santa Catarina': 'SC', 'São Paulo': 'SP',
+  'Sergipe': 'SE', 'Tocantins': 'TO',
+}
+
+type Etapa = 'tipo' | 'localizacao' | 'camera' | 'selecionar-pico' | 'classificar-alerta' | 'concluido'
 
 function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   return new Promise((res) => {
@@ -67,6 +79,13 @@ export function CapturePage() {
   const [picosExistentes, setPicosExistentes] = useState<import('../types/domain').Pico[]>([])
   const [modoNovoPico, setModoNovoPico] = useState(false)
   const [picoFinal, setPicoFinal] = useState<string | null>(null)
+  const [catAlerta, setCatAlerta] = useState<import('../types/domain').CategoriaAlerta | undefined>()
+  const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
+  const [aceiteAlerta, setAceiteAlerta] = useState(false)
+  const [municipioAlerta, setMunicipioAlerta] = useState('')
+  const [ufAlerta, setUfAlerta] = useState('')
+  const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
+  const [publicandoAlerta, setPublicandoAlerta] = useState(false)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
   const [detectandoGps, setDetectandoGps] = useState(false)
@@ -154,8 +173,11 @@ export function CapturePage() {
     setThumbCapturado(thumb)
     setBlobCapturado(blob)
 
+    // Alerta/lixo: o GPS é essencial (denúncia sem lugar não existe),
+    // então buscamos mesmo se a pessoa marcou "estou em casa".
+    const precisaGPS = !noLocal || tipo === 'alerta' || tipo === 'lixo'
     let pos: { lat?: number; lng?: number } = {}
-    if (!noLocal) {
+    if (precisaGPS) {
       pos = await obterCoords()
       setPosCapturada(pos)
       if (pos.lat && pos.lng) {
@@ -164,17 +186,59 @@ export function CapturePage() {
           const geo = await geoRes.json()
           const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
           if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
+          const cidade = geo.address?.city || geo.address?.town || geo.address?.municipality || ''
+          if (cidade) setMunicipioAlerta(cidade)
+          const uf = SIGLA_UF[geo.address?.state ?? ''] ?? ''
+          if (uf) setUfAlerta(uf)
         } catch { /* ignorar */ }
       }
     }
 
-    // Registro iniciado na página de um pico já nasce vinculado a ele —
-    // sem formulário nenhum (o parâmetro existia mas nunca era usado).
+    // ── BIFURCAÇÃO POR NATUREZA ──
+    // Report do mar → foto de pico (timeline). Alerta/lixo → registro de
+    // AMEAÇA com a foto anexa: nasce no carrossel, no mapa e nas Ações —
+    // nunca na tábua de marés. (Antes, tudo virava foto de pico: o tipo
+    // escolhido era descartado no salvamento.)
+    if (tipo === 'alerta' || tipo === 'lixo') {
+      if (tipo === 'lixo' && !catAlerta) setCatAlerta('lixo-praia')
+      setEtapa('classificar-alerta')
+      return
+    }
+
+    // Registro iniciado na página de um pico já nasce vinculado a ele.
     if (picoSelecionado) {
       await finalizarUpload(picoSelecionado, blob, pos, thumb)
       return
     }
     setEtapa('selecionar-pico')
+  }
+
+  async function publicarAlertaDaCamera() {
+    if (!catAlerta || !gravAlerta || !posCapturada.lat || !posCapturada.lng || !blobCapturado) return
+    setPublicandoAlerta(true)
+    try {
+      const { publicarAlerta } = await import('../services/alertas')
+      const { categoriaPorId } = await import('../components/SeletorCategoria')
+      const rotulo = categoriaPorId(catAlerta).label
+      const id = await publicarAlerta({
+        titulo: `${rotulo} — ${novaPraiaNome || municipioAlerta || 'local registrado'}`,
+        categoria: catAlerta,
+        gravidade: gravAlerta,
+        localNome: novaPraiaNome || undefined,
+        municipio: municipioAlerta || 'Não informado',
+        uf: ufAlerta || 'SP',
+        lat: posCapturada.lat,
+        lng: posCapturada.lng,
+        checkboxAceite: aceiteAlerta,
+        images: [new File([blobCapturado], `alerta-${Date.now()}.webp`, { type: 'image/webp' })],
+      })
+      setAlertaCriadoId(id)
+      setEtapa('concluido')
+    } catch {
+      alert('Não foi possível publicar o alerta. Verifique a conexão e tente de novo.')
+    } finally {
+      setPublicandoAlerta(false)
+    }
   }
 
   async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob, picoNovo?: import('../services/api').PicoNovo) {
@@ -529,6 +593,55 @@ export function CapturePage() {
       )}
 
       {/* ETAPA 4: Informar localização (orgânico) */}
+      {etapa === 'classificar-alerta' && (
+        <div style={{ position: 'fixed', inset: 0, background: '#06222E', zIndex: 50, overflowY: 'auto', padding: '24px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+          <h2 style={{ color: '#fff', marginBottom: 4 }}>Classifique o alerta</h2>
+          <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 14 }}>
+            Sua foto vira um registro ambiental oficial no mapa da comunidade.
+          </p>
+
+          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+            <SeletorCategoria selecionada={catAlerta} onSelecionar={setCatAlerta} />
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+            <CampoGravidade valor={gravAlerta} onChange={setGravAlerta} />
+          </div>
+
+          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+            <label style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, display: 'block', marginBottom: 6 }}>Nome do local</label>
+            <input
+              value={novaPraiaNome}
+              onChange={(e) => setNovaPraiaNome(e.target.value)}
+              placeholder="Ex.: Rio Itanhaém, Baixio"
+              style={{ width: '100%', background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14 }}
+            />
+            {posCapturada.lat && posCapturada.lng ? (
+              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11.5, marginTop: 6 }}>
+                <IconCurrentLocation size={12} stroke={2} style={{ verticalAlign: '-2px' }} /> Ponto marcado pelo GPS da captura{municipioAlerta ? ` · ${municipioAlerta}${ufAlerta ? `/${ufAlerta}` : ''}` : ''}
+              </p>
+            ) : (
+              <p style={{ color: '#F0A05A', fontSize: 11.5, marginTop: 6 }}>
+                Sem GPS não dá para marcar o ponto. Ative a localização e capture de novo, ou use o formulário completo em Ações.
+              </p>
+            )}
+          </div>
+
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', color: 'rgba(255,255,255,.75)', fontSize: 12.5, marginBottom: 16, cursor: 'pointer' }}>
+            <input type="checkbox" checked={aceiteAlerta} onChange={(e) => setAceiteAlerta(e.target.checked)} style={{ marginTop: 2 }} />
+            Declaro que o registro é verdadeiro e feito de forma segura, sem me expor a riscos.
+          </label>
+
+          <button
+            className="btn acento full"
+            disabled={!catAlerta || !gravAlerta || !aceiteAlerta || !posCapturada.lat || publicandoAlerta}
+            onClick={publicarAlertaDaCamera}
+          >
+            {publicandoAlerta ? 'Publicando…' : 'Publicar alerta'}
+          </button>
+        </div>
+      )}
+
       {etapa === 'selecionar-pico' && (
         <div style={{ flex: 1, padding: 20, overflow: 'auto', position: 'relative', zIndex: 1 }}>
           {tipoInfo && (
@@ -693,6 +806,7 @@ export function CapturePage() {
                     ? `Mutirão de limpeza${nomePico ? ` — ${nomePico}` : ''}`
                     : `Mutirão${nomePico ? ` — ${nomePico}` : ''}`
                   const qs = new URLSearchParams({ titulo })
+                  if (alertaCriadoId) qs.set('alerta', alertaCriadoId)
                   const p = picosExistentes.find((x) => x.id === picoFinal)
                   if (p) {
                     qs.set('municipio', p.municipio); qs.set('uf', p.uf)
@@ -705,6 +819,11 @@ export function CapturePage() {
                 }}
               >
                 <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
+              </button>
+            )}
+            {alertaCriadoId && (
+              <button className="btn acento full" onClick={() => navigate(`/alerta/${alertaCriadoId}`)}>
+                <IconAlertTriangle size={18} stroke={2} /> Ver alerta no mapa
               </button>
             )}
             {picoFinal && (
