@@ -69,8 +69,8 @@ export function Header({
     >
       {/* Menu de conta — sempre presente no topo direito */}
       <nav className="nav-portal" aria-label="Navegação do portal">
-        <NavLink to="/" end className={({ isActive }) => isActive ? 'ativo' : ''}><IconRipple size={16} stroke={2} /> Radar</NavLink>
-        <NavLink to="/mapa" className={({ isActive }) => isActive ? 'ativo' : ''}><IconMap2 size={16} stroke={2} /> Mapa</NavLink>
+        <NavLink to="/" end className={({ isActive }) => isActive ? 'ativo' : ''}><IconMap2 size={16} stroke={2} /> Mapa</NavLink>
+        <NavLink to="/radar" className={({ isActive }) => isActive ? 'ativo' : ''}><IconRipple size={16} stroke={2} /> Radar</NavLink>
         <NavLink to="/acoes" className={({ isActive }) => isActive ? 'ativo' : ''}><IconHeartHandshake size={16} stroke={2} /> Ações</NavLink>
         <NavLink to="/perfil" className={({ isActive }) => isActive ? 'ativo' : ''}><IconUserCircle size={16} stroke={2} /> Perfil</NavLink>
       </nav>

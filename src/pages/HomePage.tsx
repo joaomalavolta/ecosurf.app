@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { temBackend } from '../services/api'
-import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'
 import { gravaOnboarded } from '../onboarding/OnboardingContext'
+
+// O dashboard-mapa é a Home logada (modelo ZUrb): mapa como espinha dorsal.
+// Lazy porque carrega o MapLibre (pesado) — só quando há sessão.
+const MapaPage = lazy(() => import('./MapaPage').then((m) => ({ default: m.MapaPage })))
 
 /**
  * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
@@ -59,5 +62,7 @@ export function HomePage() {
     return <div className="page" style={{ minHeight: '100dvh' }} />
   }
 
-  return estado === 'logado' ? <RadarPage /> : <LandingPage />
+  return estado === 'logado'
+    ? <Suspense fallback={<div className="page" style={{ minHeight: '100dvh' }} />}><MapaPage /></Suspense>
+    : <LandingPage />
 }
