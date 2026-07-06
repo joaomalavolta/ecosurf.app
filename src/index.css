@@ -1517,3 +1517,32 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
     padding-right: 24px !important;
   }
 }
+
+/* ═══ Abas do painel de inteligência (dashboard-mapa, desktop) ═══ */
+.mapa-intel-abas {
+  display: flex;
+  gap: 4px;
+  background: var(--card-soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.mapa-intel-aba {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 12px;
+  border: none; background: transparent; cursor: pointer;
+  border-radius: 9px;
+  font-family: inherit; font-size: 13.5px; font-weight: 600;
+  color: var(--muted);
+  transition: background .15s, color .15s;
+}
+.mapa-intel-aba:hover { color: var(--text); }
+.mapa-intel-aba.ativa {
+  background: var(--card);
+  color: var(--turq);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}

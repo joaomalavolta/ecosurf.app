@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight } from '@tabler/icons-react'
+import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight, IconChartBar } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { PainelComunidade } from '../components/PainelComunidade'
+import { FeedFotosCompacto } from '../components/FeedFotosCompacto'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFeedGlobal } from '../services/feed'
 import { useOnboarding } from '../onboarding/OnboardingContext'
@@ -15,6 +16,12 @@ export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [fotosFeed, setFotosFeed] = useState<Foto[]>([])
+  const [abaPainel, setAbaPainel] = useState<'dados' | 'fotos'>('dados')
+  const picoMap = useMemo(() => {
+    const m = new Map<string, Pico>()
+    for (const p of picos) m.set(p.id, p)
+    return m
+  }, [picos])
   const [atividade, setAtividade] = useState<{ picoId: string; em: string }[]>([])
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
@@ -170,6 +177,25 @@ export function MapaPage() {
 
       {/* Painel de inteligência — só no desktop (o mobile não muda) */}
       <aside className="mapa-intel so-desktop">
+        <div className="mapa-intel-abas">
+          <button
+            className={`mapa-intel-aba ${abaPainel === 'dados' ? 'ativa' : ''}`}
+            onClick={() => setAbaPainel('dados')}
+          >
+            <IconChartBar size={15} stroke={2} /> Inteligência
+          </button>
+          <button
+            className={`mapa-intel-aba ${abaPainel === 'fotos' ? 'ativa' : ''}`}
+            onClick={() => setAbaPainel('fotos')}
+          >
+            <IconCamera size={15} stroke={2} /> Fotos
+          </button>
+        </div>
+
+        {abaPainel === 'fotos' ? (
+          <FeedFotosCompacto fotos={fotosFeed} picoMap={picoMap} />
+        ) : (
+          <>
         <div className="card pad">
           <span className="eyebrow">Resumo da costa</span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginTop: 10 }}>
@@ -212,6 +238,8 @@ export function MapaPage() {
             </Link>
           </div>
         </div>
+          </>
+        )}
       </aside>
       </div>
     </div>
