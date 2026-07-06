@@ -37,7 +37,7 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
         const cor = COR_GRAVIDADE[a.gravidade ?? 'media'] ?? '#8FA6AD'
         return (
           <Link key={`a-${a.id}`} to={`/alerta/${a.id}`} className="cr-card">
-            <div className="cr-foto" style={{ background: `linear-gradient(150deg, ${cat.cor}, rgba(6,34,46,.92))` }}>
+            <div className="cr-foto" style={{ background: 'linear-gradient(135deg, #0D6EA8, #2E9BD6)' }}>
               {img
                 ? <img src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${img}`} alt="" loading="lazy" />
                 : <IconeCat size={30} stroke={1.8} color="rgba(255,255,255,.92)" />}
@@ -53,7 +53,7 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
 
       {mutiroes.slice(0, 8).map((m) => (
         <Link key={`m-${m.id}`} to={`/mutirao/${m.id}`} className="cr-card">
-          <div className="cr-foto" style={{ background: 'linear-gradient(150deg,#2E9B6B,#1a6b48)' }}>
+          <div className="cr-foto" style={{ background: 'linear-gradient(135deg, #0D6EA8, #2E9BD6)' }}>
             {m.imagemUrl
               ? <img src={m.imagemUrl} alt="" loading="lazy" />
               : <IconUsers size={30} stroke={1.8} color="rgba(255,255,255,.92)" />}
