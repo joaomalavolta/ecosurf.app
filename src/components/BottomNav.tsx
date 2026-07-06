@@ -13,8 +13,8 @@ import { useOnboarding } from '../onboarding/OnboardingContext'
 type Item = { to: string; Icon: ComponentType<IconProps>; label: string; end: boolean }
 
 const itens: Item[] = [
-  { to: '/', Icon: IconMap2, label: 'Mapa', end: true },
-  { to: '/radar', Icon: IconRipple, label: 'Radar', end: false },
+  { to: '/', Icon: IconRipple, label: 'Radar', end: true },
+  { to: '/mapa', Icon: IconMap2, label: 'Mapa', end: false },
   { to: '/acoes', Icon: IconHeartHandshake, label: 'Ações', end: false },
   { to: '/perfil', Icon: IconUser, label: 'Perfil', end: false },
 ]

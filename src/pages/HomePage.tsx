@@ -1,10 +1,12 @@
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { temBackend } from '../services/api'
+import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'
 import { gravaOnboarded } from '../onboarding/OnboardingContext'
+import { useEhDesktop } from '../hooks/useEhDesktop'
 
-// O dashboard-mapa é a Home logada (modelo ZUrb): mapa como espinha dorsal.
-// Lazy porque carrega o MapLibre (pesado) — só quando há sessão.
+// Só o DESKTOP usa o dashboard-mapa como Home (modelo ZUrb). O mobile
+// permanece com a Radar como inicial — a experiência de celular não muda.
 const MapaPage = lazy(() => import('./MapaPage').then((m) => ({ default: m.MapaPage })))
 
 /**
@@ -13,6 +15,7 @@ const MapaPage = lazy(() => import('./MapaPage').then((m) => ({ default: m.MapaP
  * via hash na URL após redirect.
  */
 export function HomePage() {
+  const ehDesktop = useEhDesktop()
   const [estado, setEstado] = useState<'loading' | 'logado' | 'visitante'>('loading')
 
   useEffect(() => {
@@ -62,7 +65,10 @@ export function HomePage() {
     return <div className="page" style={{ minHeight: '100dvh' }} />
   }
 
-  return estado === 'logado'
+  if (estado !== 'logado') return <LandingPage />
+
+  // Desktop → dashboard-mapa (ZUrb). Mobile → Radar, como sempre foi.
+  return ehDesktop
     ? <Suspense fallback={<div className="page" style={{ minHeight: '100dvh' }} />}><MapaPage /></Suspense>
-    : <LandingPage />
+    : <RadarPage />
 }
