@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconRipple } from '@tabler/icons-react'
+import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
+import { PainelComunidade } from '../components/PainelComunidade'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFeedGlobal } from '../services/feed'
 import { useOnboarding } from '../onboarding/OnboardingContext'
-import type { Alerta, Mutirao, Pico } from '../types/domain'
+import type { Alerta, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
+  const [fotosFeed, setFotosFeed] = useState<Foto[]>([])
   const [atividade, setAtividade] = useState<{ picoId: string; em: string }[]>([])
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
@@ -33,7 +35,11 @@ export function MapaPage() {
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
-    carregarFeedGlobal(120).then((fs) => vivo && setAtividade(fs.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))))
+    carregarFeedGlobal(120).then((fs) => {
+      if (!vivo) return
+      setAtividade(fs.map((f) => ({ picoId: f.picoId, em: f.capturadaEm })))
+      setFotosFeed(fs)
+    })
     return () => {
       vivo = false
     }
@@ -45,12 +51,13 @@ export function MapaPage() {
   const numAlertas = sel ? alertas.filter((a) => a.picoId === sel.id).length : 0
 
   return (
-    <div className="page" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <div className="page mapa-dashboard" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* Header padrão — mesmo tamanho de todas as páginas */}
       <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
 
+      <div className="mapa-corpo">
       {/* Mapa ocupa todo espaço restante */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
+      <div className="mapa-painel" style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
         {/* Filtros flutuantes sobre o mapa */}
         <div className="map-filter-bar">
           <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
@@ -119,6 +126,65 @@ export function MapaPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Painel de inteligência — só no desktop (o mobile não muda) */}
+      <aside className="mapa-intel so-desktop">
+        <div className="card pad">
+          <span className="eyebrow">Resumo da costa</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginTop: 10 }}>
+            <ResumoItem n={picos.length} rotulo="picos" cor="var(--turq)" Icone={IconRipple} />
+            <ResumoItem n={alertas.length} rotulo="alertas" cor="#E8734A" Icone={IconAlertTriangle} />
+            <ResumoItem n={mutiroes.length} rotulo="mutirões" cor="#2E9B6B" Icone={IconUsers} />
+            <ResumoItem n={ativos.size} rotulo="picos ativos hoje" cor="var(--turq)" Icone={IconCamera} />
+          </div>
+        </div>
+
+        <PainelComunidade fotos={fotosFeed} alertas={alertas} mutiroes={mutiroes} />
+
+        {alertas.length > 0 && (
+          <div className="card pad">
+            <span className="eyebrow" style={{ color: '#E8734A', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <IconAlertTriangle size={12} stroke={2} /> Alertas ativos
+            </span>
+            <div className="stack" style={{ marginTop: 8 }}>
+              {alertas.slice(0, 4).map((a) => (
+                <Link key={a.id} to={`/alerta/${a.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13.5 }}>{a.titulo}</div>
+                  <div className="muted" style={{ fontSize: 11.5 }}>{a.municipio ?? ''}{a.uf ? `/${a.uf}` : ''} · {a.gravidade ?? 'média'}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="card pad">
+          <span className="eyebrow">Ações rápidas</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+            <button className="btn acento full" onClick={() => (onboarded ? navigate('/capturar') : abrir())}>
+              <IconCamera size={17} stroke={2} /> Registrar foto ou alerta
+            </button>
+            <Link to="/nova-acao/mutirao" className="btn outline full">
+              <IconUsers size={17} stroke={2} /> Criar mutirão
+            </Link>
+            <Link to="/explorar" className="btn outline full">
+              <IconCompass size={17} stroke={2} /> Explorar por cidade
+            </Link>
+          </div>
+        </div>
+      </aside>
+      </div>
+    </div>
+  )
+}
+
+function ResumoItem({ n, rotulo, cor, Icone }: { n: number; rotulo: string; cor: string; Icone: typeof IconRipple }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 12 }}>
+      <Icone size={18} stroke={2} color={cor} style={{ flexShrink: 0 }} />
+      <div style={{ minWidth: 0 }}>
+        <div className="dado" style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{n}</div>
+        <div className="muted" style={{ fontSize: 10.5 }}>{rotulo}</div>
       </div>
     </div>
   )
