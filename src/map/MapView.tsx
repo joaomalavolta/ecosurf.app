@@ -292,17 +292,19 @@ export function MapView({
       attributionControl: false,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
-    map.addControl(new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
+    const geolocate = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
       trackUserLocation: true,
       showAccuracyCircle: false,
-    }), 'top-right')
+    })
+    map.addControl(geolocate, 'top-right')
     map.on('error', () => {})
     mapRef.current = map
 
-    // Abre no GPS do usuário: o mapa nasce utilizável (nunca em branco) e voa
-    // até a posição assim que ela chega. Permissão negada ou GPS indisponível
-    // → no voo intro, desce para o litoral padrão; senão, fica onde está.
+    // GPS com DONO ÚNICO: o voo de abertura reusa o próprio GeolocateControl
+    // em vez de um getCurrentPosition paralelo. No iOS, dois consumidores de
+    // geolocalização disputavam o recurso e o toque no botão era sorteado —
+    // daí a intermitência. Agora há uma só fonte de verdade: o controle.
     let vooCancelado = false
     const voarPara = (lng: number, lat: number) => {
       if (vooCancelado) return
@@ -312,18 +314,30 @@ export function MapView({
           : { center: [lng, lat], zoom: 12.5, speed: 1.4 },
       )
     }
+
+    // A primeira posição emitida pelo controle comanda o voo (uma vez).
+    let primeiraPosicao = true
+    geolocate.on('geolocate', (e: { coords: { longitude: number; latitude: number } }) => {
+      if (!primeiraPosicao) return
+      primeiraPosicao = false
+      voarPara(e.coords.longitude, e.coords.latitude)
+    })
+    // Permissão negada / GPS indisponível: no voo intro, desce ao litoral.
+    geolocate.on('error', () => {
+      if (primeiraPosicao && vooIntro) { primeiraPosicao = false; voarPara(-46.79, -24.19) }
+    })
+
     if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => voarPara(pos.coords.longitude, pos.coords.latitude),
-        () => { if (vooIntro) voarPara(-46.79, -24.19) },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
-      )
-      // Se o usuário mexer no mapa antes do GPS responder, respeita a vontade
-      // dele e cancela o voo (não puxa de volta).
+      // Dispara o MESMO controle programaticamente após o mapa carregar: o
+      // voo automático e o toque no botão passam a compartilhar um único
+      // watch, sem corrida. (trigger precisa do controle já montado no mapa.)
+      map.once('load', () => {
+        if (!descartado) setTimeout(() => { try { geolocate.trigger() } catch { /* iOS pode exigir gesto: botão cobre */ } }, 300)
+      })
+      // Se o usuário mexer antes do GPS responder, respeita e cancela o voo.
       map.once('dragstart', () => { vooCancelado = true })
       map.once('zoomstart', () => { vooCancelado = true })
     } else if (vooIntro) {
-      // Sem geolocalização: não deixa o mapa preso no Brasil inteiro.
       setTimeout(() => voarPara(-46.79, -24.19), 1600)
     }
 
