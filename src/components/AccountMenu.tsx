@@ -194,7 +194,7 @@ export function AccountMenu() {
                       width: 44,
                       height: 44,
                       borderRadius: 14,
-                      background: '#fff',
+                      background: 'var(--card)',
                       border: '1px solid var(--line)',
                       color: 'var(--text)',
                       display: 'flex',

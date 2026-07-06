@@ -8,6 +8,7 @@ import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { PainelComunidade } from '../components/PainelComunidade'
 import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
+import { VazioFeed } from '../components/VazioFeed'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -323,6 +324,12 @@ export function RadarPage() {
               <div className="card pad" style={{ textAlign: 'center', padding: '28px 16px' }}>
                 <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Sem fotos hoje</p>
                 <p className="muted">Seja o primeiro a registrar o mar! As fotos da comunidade aparecem aqui em tempo real.</p>
+              </div>
+            )}
+
+            {feedCards.length === 0 && feed.length > 0 && filtro !== 'todos' && (
+              <div style={{ margin: '0 16px' }}>
+                <VazioFeed filtro={filtro} feed={feed} seguidos={seguidos} />
               </div>
             )}
 
