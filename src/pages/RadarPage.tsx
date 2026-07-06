@@ -222,6 +222,7 @@ export function RadarPage() {
               ativos={ativos}
               destino={destinoMapa}
               atividade={feed.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))}
+              scrubberAncora="rodape-esq"
               filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
             />

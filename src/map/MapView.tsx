@@ -211,6 +211,7 @@ export function MapView({
   mutiroes = [],
   ativos,
   atividade,
+  scrubberAncora = 'topo',
   destino,
   filtro,
   onSelectPico,
@@ -223,6 +224,8 @@ export function MapView({
   ativos?: Set<string>
   /** Eventos de foto (picoId + quando) — liga o scrubber temporal do mapa. */
   atividade?: { picoId: string; em: string }[]
+  /** Onde ancorar o scrubber, para não colidir com controles de cada tela. */
+  scrubberAncora?: 'topo' | 'rodape' | 'rodape-esq'
   /** Voo comandado de fora (ex.: menu territorial escolheu uma cidade). */
   destino?: { lng: number; lat: number; zoom?: number } | null
   filtro?: 'tudo' | 'picos' | 'alertas' | 'mutiroes'
@@ -533,12 +536,16 @@ export function MapView({
       {atividade && atividade.length > 0 && (
         <div
           style={{
-            position: 'absolute', left: '50%', bottom: 12, top: 'auto', transform: 'translateX(-50%)',
-            zIndex: 3,
+            position: 'absolute', zIndex: 3,
+            ...(scrubberAncora === 'topo'
+              ? { left: '50%', top: 10, transform: 'translateX(-50%)' }
+              : scrubberAncora === 'rodape-esq'
+                ? { left: 10, bottom: 12 }
+                : { left: '50%', bottom: 12, transform: 'translateX(-50%)' }),
             background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
             border: '1px solid rgba(255,255,255,.16)',
             borderRadius: 12, padding: '7px 14px 5px',
-            width: 'min(340px, 78%)',
+            width: scrubberAncora === 'rodape-esq' ? 'min(300px, 62%)' : 'min(340px, 78%)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
