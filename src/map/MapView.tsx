@@ -304,6 +304,21 @@ export function MapView({
     map.on('error', () => {})
     mapRef.current = map
 
+    // FIX mapa preto/cortado: quando o container muda de tamanho (ex.: entrar
+    // no grid de dashboard, sidebar abrir, janela redimensionar), o MapLibre
+    // mantém as dimensões antigas e renderiza só uma fatia. O ResizeObserver
+    // força o recálculo. É a diferença entre o mapa cheio e o mapa quebrado.
+    const container = ref.current
+    let ro: ResizeObserver | null = null
+    if (container && 'ResizeObserver' in window) {
+      ro = new ResizeObserver(() => {
+        requestAnimationFrame(() => { try { map.resize() } catch { /* mapa já destruído */ } })
+      })
+      ro.observe(container)
+    }
+    // resize extra logo após o load, cobrindo o primeiro paint no dashboard
+    map.on('load', () => { setTimeout(() => { try { map.resize() } catch { /**/ } }, 60) })
+
     // GPS com DONO ÚNICO: o voo de abertura reusa o próprio GeolocateControl
     // em vez de um getCurrentPosition paralelo. No iOS, dois consumidores de
     // geolocalização disputavam o recurso e o toque no botão era sorteado —
@@ -495,6 +510,7 @@ export function MapView({
     return () => {
       descartado = true
       prontoRef.current = false
+      ro?.disconnect()
       map.remove()
       mapRef.current = null
     }

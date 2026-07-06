@@ -1071,15 +1071,19 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
 
   /* ═══ TOPBAR COMPACTA: o hero da onda dá lugar a uma barra sóbria ═══ */
   .header {
+    position: sticky;
+    top: 0;
     background: var(--card) !important;
     color: var(--text) !important;
     text-shadow: none !important;
     padding: 0 24px !important;
     height: 64px;
+    min-height: 64px;
     display: flex;
     align-items: center;
     border-bottom: 1px solid var(--line);
     box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    z-index: 100;
   }
   /* logo/título à esquerda, discreto */
   .header h1 { font-size: 17px !important; margin: 0 !important; padding: 0 !important; color: var(--text) !important; }
@@ -1133,15 +1137,15 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
     gap: 0 22px;
     max-width: 1440px;
     margin: 0 auto;
-    padding: 20px 24px 34px;
+    padding: 0 24px 34px;
     align-items: start;
     min-height: auto;
   }
-  /* topbar compacta ocupa a largura toda, sem arredondar (não é mais hero) */
+  /* topbar compacta ocupa a largura toda, naturalmente acima das colunas */
   body[data-portal] .radar-map-first > .header {
     grid-column: 1 / -1;
     border-radius: 0;
-    margin: -20px -24px 4px;
+    margin: 0 0 12px;
     width: auto;
   }
   body[data-portal] .radar-col-mapa { display: block; position: sticky; top: 80px; min-width: 0; }
@@ -1497,5 +1501,19 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   body[data-portal-perfil] .perfil-grid { max-width: 1400px; }
   body[data-portal-perfil] .g-pubs > div[style*="grid"] {
     grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+/* Reconstrução desktop · correções de renderização */
+@media (min-width: 1024px) {
+  /* colunas do Radar ganham respiro no topo (o header é flush) */
+  body[data-portal] .radar-col-mapa,
+  body[data-portal] .radar-col-feed { padding-top: 16px; }
+  /* o header full-bleed dentro do grid com padding lateral */
+  body[data-portal] .radar-map-first > .header {
+    margin-left: -24px;
+    margin-right: -24px;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
   }
 }
