@@ -538,7 +538,7 @@ export function MapView({
           style={{
             position: 'absolute', zIndex: 3,
             ...(scrubberAncora === 'topo'
-              ? { left: 'calc(50% + 26px)', top: 10, transform: 'translateX(-50%)' }
+              ? { left: 'calc(50% + 29px)', top: 10, transform: 'translateX(-50%)' }
               : scrubberAncora === 'rodape-esq'
                 ? { left: 10, bottom: 12 }
                 : { left: '50%', bottom: 12, transform: 'translateX(-50%)' }),
