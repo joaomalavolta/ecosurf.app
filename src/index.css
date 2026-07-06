@@ -1307,10 +1307,10 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
 /* ═══ Página Mapa como dashboard (desktop) ═══ */
 /* Mobile: o corpo é só o mapa em coluna, como sempre — nada muda. */
 .mapa-corpo { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.mapa-intel { display: none; }
+.mapa-intel, .mapa-sidebar { display: none; }
 
 @media (min-width: 1024px) {
-  /* dashboard sem scroll global: mapa 65% + inteligência 35% */
+  /* dashboard sem scroll global: sidebar + mapa dominante + inteligência */
   .mapa-dashboard { overflow: hidden; }
   .mapa-corpo {
     flex-direction: row;
@@ -1318,6 +1318,17 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
     padding: 0 16px 16px;
     min-height: 0;
     overflow: hidden;
+  }
+  .mapa-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 280px;
+    flex-shrink: 0;
+    margin-top: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 2px;
   }
   .mapa-painel {
     flex: 1.9 !important;
@@ -1327,7 +1338,7 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 380px;
+    width: 360px;
     flex-shrink: 0;
     margin-top: 16px;
     overflow-y: auto;      /* scroll só aqui dentro, nunca na página */
@@ -1336,8 +1347,32 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   }
 }
 
-/* Desktop grande: painel um pouco mais largo, respiro maior */
+/* Telas médias (1024–1279): esconde a sidebar, mantém 2 colunas
+   (mapa + inteligência) — evita apertar o mapa. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .mapa-sidebar { display: none; }
+}
+
+/* Desktop grande: três colunas com respiro maior */
 @media (min-width: 1440px) {
-  .mapa-intel { width: 420px; }
+  .mapa-sidebar { width: 300px; }
+  .mapa-intel { width: 400px; }
   .mapa-painel { flex: 2.2 !important; }
 }
+
+/* ── Sidebar de navegação (dashboard do mapa) ── */
+.mapa-sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
+.sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left; cursor: pointer;
+  padding: 12px 14px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  color: var(--text); font-size: 14px; font-weight: 600;
+  font-family: inherit; text-decoration: none;
+  transition: background .15s, border-color .15s;
+}
+.sidebar-link span { flex: 1; }
+.sidebar-link .seta { color: var(--muted); }
+.sidebar-link:hover { background: var(--card-soft); border-color: var(--turq); }
+.sidebar-link.ativo { background: color-mix(in srgb, var(--turq) 12%, var(--card)); border-color: var(--turq); }
+.sidebar-link.ativo .seta { color: var(--turq); }

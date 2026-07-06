@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass } from '@tabler/icons-react'
+import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { PainelComunidade } from '../components/PainelComunidade'
@@ -56,6 +56,45 @@ export function MapaPage() {
       <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
 
       <div className="mapa-corpo">
+      {/* Sidebar de navegação — só no desktop (o mobile não muda) */}
+      <aside className="mapa-sidebar so-desktop">
+        <div className="card pad">
+          <span className="eyebrow">Centro de inteligência</span>
+          <h2 style={{ fontSize: 18, lineHeight: 1.2, margin: '8px 0 6px' }}>Monitoramento costeiro em tempo real</h2>
+          <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+            Mapa vivo de picos, alertas, fotos e mutirões para apoiar decisões e mobilizar ação local.
+          </p>
+        </div>
+
+        <nav className="mapa-sidebar-nav">
+          <SidebarLink to="/" Icone={IconRipple} label="Radar da costa" />
+          <button className="sidebar-link ativo" onClick={() => setFiltro('picos')}>
+            <IconMapPin size={18} stroke={2} /> <span>Mapa de picos</span> <IconChevronRight size={15} stroke={2} className="seta" />
+          </button>
+          <button className="sidebar-link" onClick={() => setFiltro('alertas')}>
+            <IconAlertTriangle size={18} stroke={2} /> <span>Alertas ambientais</span> <IconChevronRight size={15} stroke={2} className="seta" />
+          </button>
+          <button className="sidebar-link" onClick={() => setFiltro('mutiroes')}>
+            <IconUsers size={18} stroke={2} /> <span>Mutirões abertos</span> <IconChevronRight size={15} stroke={2} className="seta" />
+          </button>
+          <SidebarLink to="/explorar" Icone={IconCompass} label="Explorar litoral" />
+        </nav>
+
+        <div className="card pad">
+          <span className="eyebrow">Resumo rápido</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+            <div style={{ textAlign: 'center', padding: '10px 6px', border: '1px solid var(--line)', borderRadius: 12 }}>
+              <div className="dado" style={{ fontSize: 22, fontWeight: 700, color: 'var(--turq)' }}>{picos.length}</div>
+              <div className="muted" style={{ fontSize: 10.5 }}>picos</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '10px 6px', border: '1px solid var(--line)', borderRadius: 12 }}>
+              <div className="dado" style={{ fontSize: 22, fontWeight: 700, color: '#E8734A' }}>{alertas.length}</div>
+              <div className="muted" style={{ fontSize: 10.5 }}>alertas</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
       {/* Mapa ocupa todo espaço restante */}
       <div className="mapa-painel" style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
         {/* Filtros flutuantes sobre o mapa */}
@@ -187,6 +226,14 @@ function ResumoItem({ n, rotulo, cor, Icone }: { n: number; rotulo: string; cor:
         <div className="muted" style={{ fontSize: 10.5 }}>{rotulo}</div>
       </div>
     </div>
+  )
+}
+
+function SidebarLink({ to, Icone, label }: { to: string; Icone: typeof IconRipple; label: string }) {
+  return (
+    <Link to={to} className="sidebar-link">
+      <Icone size={18} stroke={2} /> <span>{label}</span> <IconChevronRight size={15} stroke={2} className="seta" />
+    </Link>
   )
 }
 
