@@ -1065,26 +1065,60 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   nav[aria-label="Navegação principal"] { display: none !important; }
   .app-shell { max-width: none; box-shadow: none; padding-bottom: 24px !important; }
   /* páginas comuns: coluna confortável de leitura (não a coluna do telefone) */
-  .page { max-width: 780px; margin: 0 auto; }
+  .page { max-width: 980px; margin: 0 auto; }
   /* o Radar-portal cancela o limite: o grid dele manda */
   body[data-portal] .page { max-width: none; }
-  /* nav horizontal do header */
+
+  /* ═══ TOPBAR COMPACTA: o hero da onda dá lugar a uma barra sóbria ═══ */
+  .header {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    text-shadow: none !important;
+    padding: 0 24px !important;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  /* logo/título à esquerda, discreto */
+  .header h1 { font-size: 17px !important; margin: 0 !important; padding: 0 !important; color: var(--text) !important; }
+  .header .sub { display: none !important; }         /* subtítulo some na topbar */
+  .header > div:first-of-type { position: static !important; }  /* brand não-centralizado */
+  .header .brand-wrap, .header > div { text-align: left; }
+
+  /* nav horizontal — centralizada na barra */
   .nav-portal {
     display: flex !important;
     gap: 4px;
     position: absolute;
-    top: calc(env(safe-area-inset-top, 0px) + 16px);
-    left: 18px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     z-index: 2;
   }
   .nav-portal a {
     display: flex; align-items: center; gap: 6px;
-    color: rgba(255,255,255,.82); text-decoration: none;
-    font-size: 13.5px; font-weight: 600;
-    padding: 7px 13px; border-radius: 999px;
+    color: var(--muted); text-decoration: none;
+    font-size: 14px; font-weight: 600;
+    padding: 8px 15px; border-radius: 999px;
+    transition: background .15s, color .15s;
   }
-  .nav-portal a.ativo { background: rgba(255,255,255,.18); color: #fff; backdrop-filter: blur(6px); }
-  .nav-portal a:hover { background: rgba(255,255,255,.1); }
+  .nav-portal a.ativo { background: color-mix(in srgb, var(--turq) 14%, transparent); color: var(--turq); }
+  .nav-portal a:hover { background: var(--card-soft); color: var(--text); }
+
+  /* ações à direita: tema + avatar, alinhados à barra */
+  .header > div[style*="right: 14"] {
+    top: 50% !important;
+    transform: translateY(-50%);
+    right: 24px !important;
+  }
+  /* botão voltar (quando houver) some — a nav horizontal já orienta */
+  .header > button[aria-label="Voltar"] { display: none !important; }
+
+  /* o hero não empurra mais o conteúdo: páginas colam no topo */
+  .header + * { margin-top: 0; }
+
   /* mapa da página Mapa cresce no desktop */
   body[data-pagina-mapa] .page { max-width: 1600px; }
 }
@@ -1376,3 +1410,16 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
 .sidebar-link:hover { background: var(--card-soft); border-color: var(--turq); }
 .sidebar-link.ativo { background: color-mix(in srgb, var(--turq) 12%, var(--card)); border-color: var(--turq); }
 .sidebar-link.ativo .seta { color: var(--turq); }
+
+/* Topbar: logo pequeno à esquerda nas páginas internas (desktop) */
+.brand-desktop { display: none; }
+@media (min-width: 1024px) {
+  .header:not([style*="center"]) .brand-desktop {
+    display: inline-flex;
+    margin-right: 14px;
+    padding-right: 14px;
+    border-right: 1px solid var(--line);
+  }
+  /* nas internas o h1 fica ao lado do logo, à esquerda */
+  .header h1 { display: inline-flex; align-items: center; }
+}

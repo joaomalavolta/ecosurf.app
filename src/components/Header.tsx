@@ -109,7 +109,10 @@ export function Header({
           <Brand height={26} />
         </div>
       ) : (
-        <h1 style={showBack ? { paddingLeft: 56 } : undefined}>{title}</h1>
+        <>
+          <span className="brand-desktop so-desktop" aria-hidden><Brand height={22} /></span>
+          <h1 style={showBack ? { paddingLeft: 56 } : undefined}>{title}</h1>
+        </>
       )}
       {sub && <div className="sub" style={showBack ? { paddingLeft: 56 } : undefined}>{sub}</div>}
       {children}
