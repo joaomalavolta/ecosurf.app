@@ -110,7 +110,7 @@ export function MapaPage() {
           <button
             onClick={() => setSoRecentes(!soRecentes)}
             style={{
-              position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+              position: 'absolute', bottom: 62, left: '50%', transform: 'translateX(-50%)',
               zIndex: 10, display: 'flex', alignItems: 'center', gap: 6,
               padding: '6px 14px', borderRadius: 20,
               background: soRecentes ? 'rgba(34,197,94,0.9)' : 'rgba(20,32,42,0.75)',

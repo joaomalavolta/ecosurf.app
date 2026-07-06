@@ -533,12 +533,12 @@ export function MapView({
       {atividade && atividade.length > 0 && (
         <div
           style={{
-            position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)',
+            position: 'absolute', left: '50%', bottom: 12, top: 'auto', transform: 'translateX(-50%)',
             zIndex: 3,
             background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
             border: '1px solid rgba(255,255,255,.16)',
             borderRadius: 12, padding: '7px 14px 5px',
-            width: 'min(340px, 68%)',
+            width: 'min(340px, 78%)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
