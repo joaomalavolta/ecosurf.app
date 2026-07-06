@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight, IconChartBar } from '@tabler/icons-react'
+import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight, IconSeeding } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { PainelComunidade } from '../components/PainelComunidade'
-import { FeedFotosCompacto } from '../components/FeedFotosCompacto'
+import { FeedFotosCarrossel } from '../components/FeedFotosCompacto'
+import { StoryBubbles } from '../components/StoryBubbles'
+import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFeedGlobal } from '../services/feed'
 import { useOnboarding } from '../onboarding/OnboardingContext'
@@ -16,7 +18,6 @@ export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
   const [fotosFeed, setFotosFeed] = useState<Foto[]>([])
-  const [abaPainel, setAbaPainel] = useState<'dados' | 'fotos'>('dados')
   const picoMap = useMemo(() => {
     const m = new Map<string, Pico>()
     for (const p of picos) m.set(p.id, p)
@@ -103,6 +104,8 @@ export function MapaPage() {
       </aside>
 
       {/* Mapa ocupa todo espaço restante */}
+      {/* Coluna central: mapa + carrosséis abaixo (desktop) */}
+      <div className="mapa-centro">
       <div className="mapa-painel" style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
         {/* Filtros flutuantes sobre o mapa */}
         <div className="map-filter-bar">
@@ -175,27 +178,25 @@ export function MapaPage() {
         )}
       </div>
 
+      {/* Carrosséis abaixo do mapa (desktop) — o conteúdo do Radar mesclado */}
+      <div className="mapa-carrosseis so-desktop">
+        <section>
+          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, margin: '0 0 8px 4px' }}>
+            <IconSeeding size={13} stroke={2} /> Agir local · alertas e mutirões
+          </span>
+          <CarrosselRegiao alertas={alertas} mutiroes={mutiroes} />
+        </section>
+        <section style={{ marginTop: 14 }}>
+          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, margin: '0 0 8px 4px' }}>
+            <IconRipple size={13} stroke={2} /> O mar agora · fotos da comunidade nos picos
+          </span>
+          <FeedFotosCarrossel fotos={fotosFeed} picoMap={picoMap} />
+        </section>
+      </div>
+      </div>
+
       {/* Painel de inteligência — só no desktop (o mobile não muda) */}
       <aside className="mapa-intel so-desktop">
-        <div className="mapa-intel-abas">
-          <button
-            className={`mapa-intel-aba ${abaPainel === 'dados' ? 'ativa' : ''}`}
-            onClick={() => setAbaPainel('dados')}
-          >
-            <IconChartBar size={15} stroke={2} /> Inteligência
-          </button>
-          <button
-            className={`mapa-intel-aba ${abaPainel === 'fotos' ? 'ativa' : ''}`}
-            onClick={() => setAbaPainel('fotos')}
-          >
-            <IconCamera size={15} stroke={2} /> Fotos
-          </button>
-        </div>
-
-        {abaPainel === 'fotos' ? (
-          <FeedFotosCompacto fotos={fotosFeed} picoMap={picoMap} />
-        ) : (
-          <>
         <div className="card pad">
           <span className="eyebrow">Resumo da costa</span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginTop: 10 }}>
@@ -204,6 +205,12 @@ export function MapaPage() {
             <ResumoItem n={mutiroes.length} rotulo="mutirões" cor="#2E9B6B" Icone={IconUsers} />
             <ResumoItem n={ativos.size} rotulo="picos ativos hoje" cor="var(--turq)" Icone={IconCamera} />
           </div>
+        </div>
+
+        {/* Stories dos picos, logo abaixo do resumo */}
+        <div className="card pad">
+          <span className="eyebrow" style={{ display: 'block', marginBottom: 10 }}>Picos com registro</span>
+          <StoryBubbles fotos={fotosFeed} picos={picos} />
         </div>
 
         <PainelComunidade fotos={fotosFeed} alertas={alertas} mutiroes={mutiroes} />
@@ -238,8 +245,6 @@ export function MapaPage() {
             </Link>
           </div>
         </div>
-          </>
-        )}
       </aside>
       </div>
     </div>

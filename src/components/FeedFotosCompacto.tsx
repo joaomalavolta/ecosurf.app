@@ -19,52 +19,30 @@ const tempoRelativo = (iso: string): string => {
   return `${Math.floor(h / 24)}d`
 }
 
-export function FeedFotosCompacto({ fotos, picoMap }: { fotos: Foto[]; picoMap: Map<string, Pico> }) {
+export function FeedFotosCarrossel({ fotos, picoMap }: { fotos: Foto[]; picoMap: Map<string, Pico> }) {
   const comUrl = fotos.filter((f) => f.url)
-
   if (comUrl.length === 0) {
     return (
-      <div className="card pad" style={{ textAlign: 'center', padding: '28px 18px' }}>
-        <IconCamera size={28} stroke={1.7} style={{ color: 'var(--turq)', marginBottom: 8 }} />
-        <p style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 4 }}>Sem fotos ainda hoje</p>
-        <p className="muted" style={{ fontSize: 12.5 }}>
-          As fotos da comunidade nos picos aparecem aqui em tempo real.
-        </p>
+      <div className="card pad" style={{ textAlign: 'center', padding: '22px 18px' }}>
+        <IconCamera size={26} stroke={1.7} style={{ color: 'var(--turq)', marginBottom: 6 }} />
+        <p className="muted" style={{ fontSize: 13 }}>Sem fotos ainda hoje. As fotos da comunidade nos picos aparecem aqui.</p>
       </div>
     )
   }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="feed-carrossel">
       {comUrl.map((f) => {
         const pico = picoMap.get(f.picoId)
         return (
-          <Link
-            key={f.id}
-            to={`/pico/${f.picoId}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <div className="card" style={{ overflow: 'hidden', padding: 0 }}>
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: 'linear-gradient(135deg, #0D6EA8, #2E9BD6)' }}>
-                <img
-                  src={f.url}
-                  alt={pico ? `Foto em ${pico.nome}` : 'Foto da comunidade'}
-                  loading="lazy"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0,
-                  padding: '18px 12px 8px',
-                  background: 'linear-gradient(transparent, rgba(6,34,46,.82))',
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8,
-                }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 5, textShadow: '0 1px 3px rgba(0,0,0,.4)' }}>
-                    <IconRipple size={13} stroke={2} /> {pico?.nome ?? 'Pico'}
-                  </span>
-                  <span className="dado" style={{ color: 'rgba(255,255,255,.9)', fontSize: 11, textShadow: '0 1px 3px rgba(0,0,0,.4)' }}>
-                    {tempoRelativo(f.capturadaEm)}
-                  </span>
-                </div>
+          <Link key={f.id} to={`/pico/${f.picoId}`} className="feed-carrossel-item">
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: 'linear-gradient(135deg, #0D6EA8, #2E9BD6)' }}>
+              <img src={f.url} alt={pico ? `Foto em ${pico.nome}` : 'Foto da comunidade'} loading="lazy"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '16px 10px 7px', background: 'linear-gradient(transparent, rgba(6,34,46,.82))', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6 }}>
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, textShadow: '0 1px 3px rgba(0,0,0,.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <IconRipple size={12} stroke={2} style={{ flexShrink: 0 }} /> {pico?.nome ?? 'Pico'}
+                </span>
+                <span className="dado" style={{ color: 'rgba(255,255,255,.9)', fontSize: 10.5, textShadow: '0 1px 3px rgba(0,0,0,.4)', flexShrink: 0 }}>{tempoRelativo(f.capturadaEm)}</span>
               </div>
             </div>
           </Link>

@@ -1546,3 +1546,55 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   color: var(--turq);
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
+
+/* ═══ Coluna central do dashboard-mapa: mapa + carrosséis (desktop) ═══ */
+.mapa-centro { display: contents; }  /* mobile: transparente ao layout atual */
+.mapa-carrosseis { display: none; }
+
+@media (min-width: 1024px) {
+  /* a coluna central vira flex-column: mapa em cima, carrosséis abaixo */
+  .mapa-centro {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    flex: 1.9;
+  }
+  .mapa-centro .mapa-painel {
+    flex: 1 1 auto;
+    margin: 16px 0 0 !important;
+    min-height: 300px;
+  }
+  .mapa-carrosseis {
+    display: block;
+    padding: 14px 2px 0;
+    flex-shrink: 0;
+  }
+  /* dentro da coluna central, o mapa não é mais o flex:1.9 direto */
+  body[data-pagina-mapa] .mapa-corpo > .mapa-centro { flex: 1.9; }
+}
+
+/* Feed de fotos como carrossel horizontal (abaixo do mapa) */
+.feed-carrossel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.feed-carrossel::-webkit-scrollbar { height: 6px; }
+.feed-carrossel::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+.feed-carrossel-item {
+  flex: 0 0 auto;
+  width: 168px;
+  scroll-snap-align: start;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: transform .15s;
+}
+.feed-carrossel-item:hover { transform: translateY(-2px); }
