@@ -171,7 +171,7 @@ export function PerfilPage() {
   if (loading) {
     return (
       <div className="page">
-        <Header title="Seu perfil" sub="Carregando..." />
+        <Header title="Seu perfil" sub="Reputação e histórico na comunidade." />
         <div className="page-pad"><p className="muted" style={{ textAlign: 'center' }}>Aguarde...</p></div>
       </div>
     )

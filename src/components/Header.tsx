@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { Brand } from './Brand'
 import { NavLink } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { IconRipple, IconMap2, IconHeartHandshake, IconUserCircle } from '@tabler/icons-react'
 import { AccountMenu } from './AccountMenu'
 import { useState } from 'react'
@@ -41,9 +42,28 @@ export function Header({
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const showBack = !brand && pathname !== '/'
+  const refHeader = useRef<HTMLElement>(null)
+
+  // Encolhe ao rolar: devolve tela ao conteúdo sem sumir com a navegação.
+  useEffect(() => {
+    const alvo = document.querySelector('.app-shell') ?? window
+    let ultimo = false
+    const aoRolar = () => {
+      const y = alvo === window ? window.scrollY : (alvo as HTMLElement).scrollTop
+      const compacto = y > 40
+      if (compacto !== ultimo) {
+        ultimo = compacto
+        refHeader.current?.setAttribute('data-compacto', compacto ? '1' : '0')
+      }
+    }
+    alvo.addEventListener('scroll', aoRolar, { passive: true })
+    aoRolar()
+    return () => alvo.removeEventListener('scroll', aoRolar)
+  }, [])
 
   return (
     <header
+      ref={refHeader}
       className="header"
       style={brand ? { textAlign: 'center' } : undefined}
     >

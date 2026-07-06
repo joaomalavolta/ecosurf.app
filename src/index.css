@@ -164,7 +164,18 @@ html, body {
   color: #fff;
   padding: calc(env(safe-area-inset-top, 0px) + 22px) 18px 20px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: padding .25s ease;
 }
+/* Compacto: some ao rolar, devolvendo tela ao conteúdo (só no mobile) */
+@media (max-width: 1023px) {
+  .header[data-compacto="1"] {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 9px);
+    padding-bottom: 9px;
+  }
+  .header[data-compacto="1"] h1 { font-size: 18px; transition: font-size .25s ease; }
+  .header[data-compacto="1"] .sub { opacity: 0; height: 0; overflow: hidden; margin: 0; transition: opacity .2s ease; }
+}
+.header h1, .header .sub { transition: font-size .25s ease, opacity .2s ease; }
 .header::before {
   content: "";
   position: absolute;
@@ -1280,3 +1291,15 @@ html[data-reduz-animacao] *::after {
   animation-duration: .001ms !important;
   transition-duration: .001ms !important;
 }
+
+/* ═══ Skeletons de carregamento ═══ */
+.skeleton {
+  background: linear-gradient(100deg, var(--line) 30%, color-mix(in srgb, var(--line) 40%, transparent) 50%, var(--line) 70%);
+  background-size: 200% 100%;
+  animation: skeleton-brilho 1.3s ease-in-out infinite;
+}
+@keyframes skeleton-brilho {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }

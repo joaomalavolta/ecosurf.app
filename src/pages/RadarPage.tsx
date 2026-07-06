@@ -6,6 +6,8 @@ import { StoryBubbles } from '../components/StoryBubbles'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { PainelComunidade } from '../components/PainelComunidade'
+import { SkeletonFeedCard } from '../components/Skeleton'
+import { TourInicial } from '../components/TourInicial'
 import { FeedCard } from '../components/FeedCard'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
@@ -43,6 +45,8 @@ export function RadarPage() {
   const [mapaExpandido, setMapaExpandido] = useState(false)
   const [favoritos, setFavoritos] = useState<Set<string>>(new Set())
   const [seguidos, setSeguidos] = useState<Set<string>>(new Set())
+  const [carregandoFeed, setCarregandoFeed] = useState(true)
+  const [verTour, setVerTour] = useState(false)
   const [menuTerritorio, setMenuTerritorio] = useState(false)
   const [ufMenu, setUfMenu] = useState<string | null>(null)
   const [destinoMapa, setDestinoMapa] = useState<{ lng: number; lat: number; zoom?: number } | null>(null)
@@ -73,15 +77,20 @@ export function RadarPage() {
     carregarFeedGlobal(50).then(async (fs) => {
       if (!vivo) return
       setFeed(fs)
+      setCarregandoFeed(false)
       try {
         const { getCurtidas } = await import('../services/supabase/rest')
         const likes = await Promise.all(fs.map(async f => [f.id, await getCurtidas(f.id)] as const))
         if (vivo) setCurtidasMap(Object.fromEntries(likes))
       } catch { /* curtidas são opcionais: segue sem elas */ }
     })
+    carregarFeedGlobal(50).catch(() => vivo && setCarregandoFeed(false))
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
+    import('../components/TourInicial').then(({ jaViuTour }) => {
+      if (!jaViuTour()) setTimeout(() => vivo && setVerTour(true), 1400)
+    })
     return () => { vivo = false }
   }, [])
 
@@ -307,7 +316,10 @@ export function RadarPage() {
               <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconRipple size={12} stroke={2} /> O mar agora · fotos da comunidade nos picos</span>
             </div>
 
-            {feed.length === 0 && picosTodos.length > 0 && (
+            {carregandoFeed && feed.length === 0 && (
+              <><SkeletonFeedCard /><SkeletonFeedCard /></>
+            )}
+            {!carregandoFeed && feed.length === 0 && picosTodos.length > 0 && (
               <div className="card pad" style={{ textAlign: 'center', padding: '28px 16px' }}>
                 <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Sem fotos hoje</p>
                 <p className="muted">Seja o primeiro a registrar o mar! As fotos da comunidade aparecem aqui em tempo real.</p>
@@ -382,6 +394,7 @@ export function RadarPage() {
         <PainelComunidade fotos={feed} alertas={alertas} mutiroes={mutiroes} />
       </div>
       </div>
+      {verTour && <TourInicial onFechar={() => setVerTour(false)} />}
     </div>
   )
 }
