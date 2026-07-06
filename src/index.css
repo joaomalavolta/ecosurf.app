@@ -1131,21 +1131,28 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(360px, 470px);
     gap: 0 22px;
-    max-width: 1380px;
+    max-width: 1440px;
     margin: 0 auto;
-    padding: 0 22px 34px;
+    padding: 20px 24px 34px;
     align-items: start;
     min-height: auto;
   }
-  body[data-portal] .radar-map-first > .header { grid-column: 1 / -1; border-radius: 0 0 18px 18px; }
-  body[data-portal] .radar-col-mapa { display: block; position: sticky; top: 12px; min-width: 0; }
+  /* topbar compacta ocupa a largura toda, sem arredondar (não é mais hero) */
+  body[data-portal] .radar-map-first > .header {
+    grid-column: 1 / -1;
+    border-radius: 0;
+    margin: -20px -24px 4px;
+    width: auto;
+  }
+  body[data-portal] .radar-col-mapa { display: block; position: sticky; top: 80px; min-width: 0; }
   body[data-portal] .radar-col-feed { display: block; min-width: 0; }
   body[data-portal] .radar-col-mapa .radar-map-container {
-    height: calc(100dvh - 260px);
+    height: calc(100dvh - 200px);
     min-height: 460px;
     max-height: none;
     border-radius: 18px;
-    margin: 12px 12px 0;
+    margin: 0 0 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.1);
   }
   /* no desktop o mouse tem scroll próprio: a nav de baixo fica discreta */
   body[data-portal] nav[aria-label="Navegação principal"] { max-width: 480px; }
@@ -1422,4 +1429,73 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   }
   /* nas internas o h1 fica ao lado do logo, à esquerda */
   .header h1 { display: inline-flex; align-items: center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RECONSTRUÇÃO DESKTOP · Etapas 2-3: dashboards plenos
+   Radar · Ações · Perfil ganham tratamento de painel profissional.
+   Tudo sob media query — mobile intocado.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Fundo de dashboard: um tom mais fundo que os cards, pra eles "flutuarem" */
+  body[data-portal],
+  body[data-portal-acoes],
+  body[data-portal-perfil] {
+    background: var(--bg-soft);
+  }
+
+  /* Respiro generoso no topo das internas (o hero já saiu) */
+  body[data-portal-acoes] .page-pad,
+  body[data-portal-perfil] .page-pad {
+    padding-top: 20px;
+  }
+
+  /* Cards mais definidos no desktop: sombra e raio consistentes */
+  body[data-portal] .card,
+  body[data-portal-acoes] .card,
+  body[data-portal-perfil] .card {
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.03);
+  }
+  :root[data-theme="dark"] body[data-portal] .card,
+  :root[data-theme="dark"] body[data-portal-acoes] .card,
+  :root[data-theme="dark"] body[data-portal-perfil] .card {
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+
+  /* Ações e Perfil: colunas laterais com scroll interno, altura da tela */
+  body[data-portal-acoes] .acoes-grid,
+  body[data-portal-perfil] .perfil-grid {
+    max-width: 1280px;
+    gap: 16px 22px;
+  }
+  /* coluna fixa (impacto/identidade) não rola junto — fica sticky elegante */
+  body[data-portal-acoes] .g-impacto,
+  body[data-portal-perfil] .g-ident {
+    position: sticky;
+    top: 16px;
+  }
+
+  /* títulos de seção maiores no desktop, hierarquia clara */
+  body[data-portal-acoes] .eyebrow,
+  body[data-portal-perfil] .eyebrow,
+  body[data-portal] .eyebrow {
+    font-size: 11px;
+    letter-spacing: .08em;
+  }
+
+  /* grade de publicações do Perfil: 4 colunas com respiro */
+  body[data-portal-perfil] .g-pubs > div[style*="grid"] {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Desktop grande: dashboards respiram ainda mais */
+@media (min-width: 1440px) {
+  body[data-portal-acoes] .acoes-grid,
+  body[data-portal-perfil] .perfil-grid { max-width: 1400px; }
+  body[data-portal-perfil] .g-pubs > div[style*="grid"] {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
 }
