@@ -538,14 +538,14 @@ export function MapView({
           style={{
             position: 'absolute', zIndex: 3,
             ...(scrubberAncora === 'topo'
-              ? { left: 'calc(50% + 29px)', top: 10, transform: 'translateX(-50%)' }
+              ? { left: 58, right: 12, top: 10, maxWidth: 300, marginLeft: 'auto', marginRight: 'auto' }
               : scrubberAncora === 'rodape-esq'
                 ? { left: 10, bottom: 12 }
                 : { left: '50%', bottom: 12, transform: 'translateX(-50%)' }),
             background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
             border: '1px solid rgba(255,255,255,.16)',
             borderRadius: 12, padding: '7px 14px 5px',
-            width: scrubberAncora === 'topo' ? 'min(272px, 62%)' : scrubberAncora === 'rodape-esq' ? 'min(300px, 62%)' : 'min(340px, 78%)',
+            width: scrubberAncora === 'rodape-esq' ? 'min(300px, 62%)' : scrubberAncora === 'topo' ? undefined : 'min(340px, 78%)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
