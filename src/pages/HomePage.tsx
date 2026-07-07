@@ -6,23 +6,30 @@ import { DesktopLandingPage } from './DesktopLandingPage'
 import { gravaOnboarded } from '../onboarding/OnboardingContext'
 import { useEhDesktop } from '../hooks/useEhDesktop'
 
-// Só o DESKTOP usa o dashboard-mapa como Home (modelo ZUrb). O mobile
-// permanece com a Radar como inicial — a experiência de celular não muda.
-const MapaPage = lazy(() => import('./MapaPage').then((m) => ({ default: m.MapaPage })))
-
 /**
- * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
+ * Rota `/` — bifurca por plataforma:
  *
- * Visitante desktop → DesktopLandingPage (onda + QR: o app é feito p/ celular).
- * Visitante mobile  → LandingPage original com cadastro.
- * Logado desktop    → MapaPage (dashboard ZUrb).
- * Logado mobile     → RadarPage.
+ * Desktop (≥1024px) → SEMPRE DesktopLandingPage (onda + QR).
+ *   O app é feito para o celular; no desktop mostramos o QR para
+ *   que o usuário escaneie e acesse pelo telefone. Sem exceção.
+ *
+ * Mobile  → LandingPage (visitante) ou RadarPage (logado).
  *
  * Escuta onAuthStateChange para capturar login OAuth (Google) que chega
  * via hash na URL após redirect.
  */
 export function HomePage() {
   const ehDesktop = useEhDesktop()
+
+  // Desktop: sempre landing com QR, logado ou não.
+  if (ehDesktop) return <DesktopLandingPage />
+
+  // ── Mobile: fluxo original (landing → radar) ──
+  return <MobileHome />
+}
+
+/** Lógica de auth + roteamento usada apenas no mobile. */
+function MobileHome() {
   const [estado, setEstado] = useState<'loading' | 'logado' | 'visitante'>('loading')
 
   useEffect(() => {
@@ -72,10 +79,5 @@ export function HomePage() {
     return <div className="page" style={{ minHeight: '100dvh' }} />
   }
 
-  if (estado !== 'logado') return ehDesktop ? <DesktopLandingPage /> : <LandingPage />
-
-  // Desktop → dashboard-mapa (ZUrb). Mobile → Radar, como sempre foi.
-  return ehDesktop
-    ? <Suspense fallback={<div className="page" style={{ minHeight: '100dvh' }} />}><MapaPage /></Suspense>
-    : <RadarPage />
+  return estado === 'logado' ? <RadarPage /> : <LandingPage />
 }
