@@ -27,7 +27,10 @@ const PILARES = [
 export function DesktopLandingPage() {
   return (
     <div className="desktop-landing">
-      {/* ── Wave canvas background ── */}
+      {/* ── Photo background (onda real) ── */}
+      <div className="dl-photo-bg" aria-hidden="true" />
+
+      {/* ── Wave canvas background (SVG animado sobre a foto) ── */}
       <div className="dl-wave-bg" aria-hidden="true">
         <svg className="dl-wave" viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path className="dl-wave-path dl-wave-1" d="M0,160 C360,260 720,60 1080,160 C1260,210 1380,140 1440,160 L1440,320 L0,320 Z" />

@@ -1742,7 +1742,27 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   color: #fff;
 }
 
-/* ── Wave background ── */
+/* ── Photo background (onda real) ── */
+.dl-photo-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/wave-header.png') center/cover no-repeat;
+  z-index: 0;
+}
+.dl-photo-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Gradiente escuro sobre a foto para legibilidade do texto */
+  background:
+    linear-gradient(180deg,
+      rgba(10,58,76,.82) 0%,
+      rgba(6,43,69,.72) 40%,
+      rgba(10,58,76,.88) 100%),
+    radial-gradient(ellipse 80% 50% at 30% 70%, rgba(46,155,214,.15), transparent);
+}
+
+/* ── Wave background (SVG animado) ── */
 .dl-wave-bg {
   position: absolute;
   bottom: 0; left: 0; right: 0;
