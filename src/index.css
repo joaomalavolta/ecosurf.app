@@ -1622,15 +1622,20 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
 }
 .landing-slide .landing-bg {
   position: absolute; inset: 0;
-  background: var(--grad-ocean);
+  background:
+    url('/wave-header.png') center/cover no-repeat;
   z-index: 0;
 }
 .landing-slide .landing-bg::after {
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(46,155,214,.18), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(21,165,151,.12), transparent);
+    linear-gradient(180deg,
+      rgba(10,58,76,.80) 0%,
+      rgba(6,43,69,.70) 45%,
+      rgba(10,58,76,.85) 100%),
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(46,155,214,.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(21,165,151,.10), transparent);
 }
 .landing-content {
   position: relative; z-index: 1;
