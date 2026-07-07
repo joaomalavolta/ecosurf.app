@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react'
 import { temBackend } from '../services/api'
 import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'
+import { DesktopLandingPage } from './DesktopLandingPage'
 import { gravaOnboarded } from '../onboarding/OnboardingContext'
 import { useEhDesktop } from '../hooks/useEhDesktop'
 
@@ -11,6 +12,12 @@ const MapaPage = lazy(() => import('./MapaPage').then((m) => ({ default: m.MapaP
 
 /**
  * Rota `/` — decide entre LandingPage (visitante) e RadarPage (logado).
+ *
+ * Visitante desktop → DesktopLandingPage (onda + QR: o app é feito p/ celular).
+ * Visitante mobile  → LandingPage original com cadastro.
+ * Logado desktop    → MapaPage (dashboard ZUrb).
+ * Logado mobile     → RadarPage.
+ *
  * Escuta onAuthStateChange para capturar login OAuth (Google) que chega
  * via hash na URL após redirect.
  */
@@ -65,7 +72,7 @@ export function HomePage() {
     return <div className="page" style={{ minHeight: '100dvh' }} />
   }
 
-  if (estado !== 'logado') return <LandingPage />
+  if (estado !== 'logado') return ehDesktop ? <DesktopLandingPage /> : <LandingPage />
 
   // Desktop → dashboard-mapa (ZUrb). Mobile → Radar, como sempre foi.
   return ehDesktop
