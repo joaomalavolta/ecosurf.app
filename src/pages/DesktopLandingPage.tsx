@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import {
   IconDeviceMobile,
   IconWaveSine,
@@ -42,9 +41,6 @@ export function DesktopLandingPage() {
       {/* ── Content ── */}
       <header className="dl-header">
         <Brand height={38} />
-        <Link to="/mapa" className="dl-header-link">
-          Explorar mapa
-        </Link>
       </header>
 
       <main className="dl-main">
