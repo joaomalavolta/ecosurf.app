@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -333,6 +333,57 @@ export function PerfilPage() {
                     <IconShieldLock size={20} stroke={2} /> Painel administrativo
                   </Link>
                 )}
+              </div>
+            </div>
+
+            {/* Fale conosco */}
+            <div className="card pad" style={{ marginTop: 12 }}>
+              <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <IconHeartHandshake size={12} stroke={2} /> Fale conosco
+              </span>
+              <div className="stack" style={{ marginTop: 10 }}>
+                <a href="mailto:ecosurf@ecosurf.org.br?subject=Contato%20pelo%20Ecosurf%20App" className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <IconMail size={20} stroke={2} />
+                  <span style={{ flex: 1 }}>Enviar e-mail</span>
+                  <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
+                </a>
+                <a href="https://instagram.com/ecosurfoficial" target="_blank" rel="noopener noreferrer" className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <IconBrandInstagram size={20} stroke={2} />
+                  <span style={{ flex: 1 }}>@ecosurfoficial</span>
+                  <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
+                </a>
+              </div>
+            </div>
+
+            {/* Reportar problema */}
+            <div className="card pad" style={{ marginTop: 12 }}>
+              <a
+                href="mailto:ecosurf@ecosurf.org.br?subject=Problema%20no%20Ecosurf%20App&body=Descreva%20o%20que%20aconteceu%2C%20em%20qual%20tela%20e%20qual%20aparelho%20voc%C3%AA%20usa%3A%0A%0A"
+                className="row"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <IconBug size={20} stroke={2} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>Reportar um problema</div>
+                  <div className="muted" style={{ fontSize: 12 }}>Encontrou um erro? Conte pra gente.</div>
+                </div>
+                <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
+              </a>
+            </div>
+
+            {/* Sobre o Ecosurf */}
+            <div className="card pad" style={{ marginTop: 12 }}>
+              <span className="eyebrow">Sobre o Ecosurf</span>
+              <div className="muted" style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 8 }}>
+                <p style={{ margin: 0 }}>
+                  O Ecosurf.app é uma plataforma criada para conectar pessoas, comunidades, territórios e maretórios em torno da proteção das praias, das ondas, dos rios e do Oceano.
+                </p>
+                <p style={{ margin: '10px 0 0' }}>
+                  Desenvolvido pelo <b style={{ color: 'var(--text)', fontWeight: 600 }}>Instituto Ecosurf</b>, o app fortalece a participação cidadã, permite registrar ações, compartilhar situações ambientais, mobilizar mutirões e dar visibilidade aos desafios e soluções nos ecossistemas de surf.
+                </p>
+                <p style={{ margin: '10px 0 0' }}>
+                  Mais do que uma ferramenta digital, o Ecosurf.app é um espaço de colaboração para quem acredita que <b style={{ color: 'var(--turq)', fontWeight: 600 }}>proteger o Oceano é da nossa natureza.</b>
+                </p>
               </div>
             </div>
 
