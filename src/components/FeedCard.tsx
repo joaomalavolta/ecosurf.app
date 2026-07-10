@@ -16,8 +16,10 @@ function rotuloQuando(iso: string): string {
   const hora = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   if (d.toDateString() === hoje.toDateString()) return `hoje · ${hora}`
   if (d.toDateString() === ontem.toDateString()) return `ontem · ${hora}`
-  const dia = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }).replace('.', '')
-  return `${dia} · ${hora}`
+  // Sempre com mês (dia sozinho é ambíguo); ano só quando não é o corrente.
+  const dia = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '')
+  const ano = d.getFullYear() !== hoje.getFullYear() ? ` ${d.getFullYear()}` : ''
+  return `${dia}${ano} · ${hora}`
 }
 
 export function FeedCard({
@@ -95,14 +97,35 @@ export function FeedCard({
           </button>
         )}
         <div className="feed-overlay-badges">
-          <span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {/* Crédito visível: quem fez o report */}
+            {fotosComUrl[activeIdx]?.autorNome && (
+              <span className="badge b-glass" style={{ fontSize: 10.5, paddingLeft: 4 }}>
+                {fotosComUrl[activeIdx]?.autorAvatar ? (
+                  <img
+                    src={fotosComUrl[activeIdx].autorAvatar}
+                    alt=""
+                    style={{ width: 18, height: 18, borderRadius: 99, objectFit: 'cover', border: '1px solid rgba(255,255,255,.4)' }}
+                  />
+                ) : (
+                  <span style={{
+                    width: 18, height: 18, borderRadius: 99, background: 'rgba(255,255,255,.25)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 700,
+                  }}>
+                    {fotosComUrl[activeIdx].autorNome[0]?.toUpperCase()}
+                  </span>
+                )}
+                {fotosComUrl[activeIdx].autorNome}
+              </span>
+            )}
             {fotosComUrl[activeIdx]?.procedencia === 'no-local' && (
               <span className="badge b-glass" style={{ fontSize: 10 }}>
                 <IconShieldCheck size={12} stroke={2} /> no local
               </span>
             )}
           </span>
-          {/* condição vive no gradiente de baixo — aqui só a procedência,
+          {/* condição vive no gradiente de baixo — aqui só autor + procedência,
               senão o selo briga com a estrela de favorito no canto direito */}
         </div>
 

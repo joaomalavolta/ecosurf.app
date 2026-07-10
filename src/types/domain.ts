@@ -72,6 +72,7 @@ export interface Foto {
   picoId: string;
   autorId: string;
   autorNome: string;
+  autorAvatar?: string; // URL do avatar do autor (crédito visível no feed)
   capturadaEm: string; // ISO — hora real da captura
   url?: string;        // foto cheia (página do pico); ausente → gradiente determinístico
   thumbUrl?: string;   // miniatura leve para o feed/listas
