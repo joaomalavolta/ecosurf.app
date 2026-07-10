@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { SkeletonDetalhe, Skeleton } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
@@ -167,7 +168,8 @@ export function PicoPage() {
   if (pico === undefined) {
     return (
       <div className="page">
-        <Header title="Carregando…" sub="Buscando o pico." />
+        <Header title="" />
+        <SkeletonDetalhe />
       </div>
     )
   }
@@ -195,7 +197,7 @@ export function PicoPage() {
       <div className="page-pad stack">
         <div className="card pad">
           <span className="eyebrow">Condição agora</span>
-          {fc ? <ForecastStrip f={fc} /> : <p className="muted">Carregando previsão…</p>}
+          {fc ? <ForecastStrip f={fc} /> : <Skeleton w={180} h={12} />}
           {fc && (
             <p className="muted" style={{ marginTop: 10 }}>
               Fonte: {fc.fonte === 'open-meteo' ? 'Open-Meteo (ao vivo)' : 'modelo local (offline)'}.

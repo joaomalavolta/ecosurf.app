@@ -47,3 +47,39 @@ export function SkeletonLinha() {
     </div>
   )
 }
+
+/** Página de detalhe (Pico/Mutirão): capa + título + linhas de meta + cards. */
+export function SkeletonDetalhe() {
+  return (
+    <div style={{ padding: '4px 16px 16px' }}>
+      <Skeleton h={0} r={16} style={{ paddingBottom: '55%', marginBottom: 14 }} />
+      <Skeleton w="72%" h={22} style={{ marginBottom: 8 }} />
+      <Skeleton w="48%" h={13} style={{ marginBottom: 18 }} />
+      <div className="card pad" style={{ marginBottom: 10 }}>
+        <Skeleton w={80} h={10} style={{ marginBottom: 12 }} />
+        <Skeleton w="90%" h={13} style={{ marginBottom: 6 }} />
+        <Skeleton w="70%" h={13} />
+      </div>
+      <div className="card pad">
+        <Skeleton w={100} h={10} style={{ marginBottom: 12 }} />
+        <Skeleton w="100%" h={13} style={{ marginBottom: 6 }} />
+        <Skeleton w="85%" h={13} />
+      </div>
+    </div>
+  )
+}
+
+/** Formulário em edição: título + campos empilhados. */
+export function SkeletonFormulario() {
+  return (
+    <div style={{ padding: '4px 16px 16px' }}>
+      <Skeleton w="60%" h={22} style={{ marginBottom: 22 }} />
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="card pad" style={{ marginBottom: 10 }}>
+          <Skeleton w={80} h={10} style={{ marginBottom: 10 }} />
+          <Skeleton w="100%" h={38} r={10} />
+        </div>
+      ))}
+    </div>
+  )
+}

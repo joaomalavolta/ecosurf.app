@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { SkeletonFormulario } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { IconUsers,
@@ -188,10 +189,8 @@ export function FormularioAlertaPage() {
   if (carregando) {
     return (
       <div className="page">
-        <Header title="Carregando..." />
-        <div className="page-pad" style={{ textAlign: 'center', padding: 40 }}>
-          <div className="spinner" />
-        </div>
+        <Header title="" />
+        <SkeletonFormulario />
       </div>
     )
   }

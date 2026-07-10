@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { SkeletonFormulario } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
@@ -187,10 +188,8 @@ export function FormularioMutiraoPage() {
   if (carregandoEdicao) {
     return (
       <div className="page">
-        <Header title="Editar Mutirão" sub="Carregando dados..." />
-        <div className="page-pad" style={{ textAlign: 'center', paddingTop: 40 }}>
-          <p className="muted">Carregando...</p>
-        </div>
+        <Header title="Editar Mutirão" />
+        <SkeletonFormulario />
       </div>
     )
   }

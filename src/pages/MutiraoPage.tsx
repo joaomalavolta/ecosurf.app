@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SkeletonDetalhe } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconCheck,
@@ -67,10 +68,8 @@ export function MutiraoPage() {
   if (mutirao === undefined) {
     return (
       <div className="page">
-        <Header title="Mutirão" sub="Carregando..." />
-        <div className="page-pad" style={{ textAlign: 'center' }}>
-          <p className="muted">Carregando detalhes...</p>
-        </div>
+        <Header title="Mutirão" />
+        <SkeletonDetalhe />
       </div>
     )
   }
@@ -138,7 +137,12 @@ export function MutiraoPage() {
   }
 
   if (!mutirao) {
-    return <div style={{ padding: 16 }}>Carregando...</div>
+    return (
+      <div className="page">
+        <Header title="Mutirão" />
+        <SkeletonDetalhe />
+      </div>
+    )
   }
 
   return (
