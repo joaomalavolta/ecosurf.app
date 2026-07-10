@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconCompass, IconThumbUp, IconWaveSine, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
-import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
-import { PainelComunidade } from '../components/PainelComunidade'
 import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
 import { VazioFeed } from '../components/VazioFeed'
@@ -61,11 +59,6 @@ export function RadarPage() {
 
   // Modo portal (desktop): só esta rota alarga o shell — as outras páginas
   // continuam na coluna mobile até ganharem seus próprios layouts.
-  useEffect(() => {
-    document.body.dataset.portal = '1'
-    return () => { delete document.body.dataset.portal }
-  }, [])
-
   useEffect(() => {
     let vivo = true
     carregarPicos().then((ps) => {
@@ -274,7 +267,6 @@ export function RadarPage() {
           <IconSnowboarding size={15} stroke={2} /> Surf
         </button>
       </div>
-      <TideStripRadar pico={selPico ?? picosTodos[0] ?? null} />
       </div>
 
       <div className="radar-col-feed">
@@ -395,12 +387,6 @@ export function RadarPage() {
         </p>
       </div>
 
-      <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
-        <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
-      </div>
-      <div className="so-desktop" style={{ margin: '0 16px 12px' }}>
-        <PainelComunidade fotos={feed} alertas={alertas} mutiroes={mutiroes} />
-      </div>
       </div>
       {verTour && <TourInicial onFechar={() => setVerTour(false)} />}
     </div>
@@ -408,44 +394,6 @@ export function RadarPage() {
 }
 
 /** Faixa de maré do portal (desktop): a curva do dia da estação mais próxima. */
-function TideStripRadar({ pico }: { pico: Pico | null }) {
-  const [pontos, setPontos] = useState<{ hora: number; alturaM: number }[]>([])
-  useEffect(() => {
-    if (!pico) return
-    let vivo = true
-    import('../services/tide/provider').then(({ tideProvider }) =>
-      tideProvider.curvaDoDia(pico, new Date()).then((c) => vivo && setPontos(c))
-    ).catch(() => {})
-    return () => { vivo = false }
-  }, [pico])
-
-  if (!pico || pontos.length === 0) return null
-  const min = Math.min(...pontos.map((p) => p.alturaM))
-  const max = Math.max(...pontos.map((p) => p.alturaM))
-  const W = 600, H = 54
-  const x = (h: number) => (h / 24) * W
-  const y = (a: number) => H - 8 - ((a - min) / Math.max(0.01, max - min)) * (H - 18)
-  const linha = pontos.map((p) => `${x(p.hora).toFixed(1)},${y(p.alturaM).toFixed(1)}`).join(' ')
-  const agoraH = new Date().getHours() + new Date().getMinutes() / 60
-  const perto = pontos.reduce((a, b) => Math.abs(b.hora - agoraH) < Math.abs(a.hora - agoraH) ? b : a)
-  return (
-    <div className="so-desktop card" style={{ margin: '12px 12px 0', padding: '10px 14px 8px' }}>
-      <div className="between" style={{ marginBottom: 2 }}>
-        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconWaveSine size={12} stroke={2} /> Maré do dia · {pico.nome}</span>
-        <span className="dado" style={{ fontSize: 12, fontWeight: 700, color: 'var(--turq)' }}>agora ≈ {perto.alturaM.toFixed(1)}m</span>
-      </div>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 54, display: 'block' }} aria-label="Curva de maré do dia">
-        <polyline points={linha} fill="none" stroke="var(--turq)" strokeWidth="2.2" strokeLinecap="round" />
-        <circle cx={x(agoraH)} cy={y(perto.alturaM)} r="4" fill="var(--turq)" />
-      </svg>
-      <div className="between">
-        <span className="dado muted" style={{ fontSize: 10 }}>00h</span>
-        <span className="dado muted" style={{ fontSize: 10 }}>12h</span>
-        <span className="dado muted" style={{ fontSize: 10 }}>24h</span>
-      </div>
-    </div>
-  )
-}
 
 function Pill({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

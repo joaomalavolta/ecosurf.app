@@ -8,7 +8,6 @@ import { iniciarSincronizacao } from './offline/uploadQueue'
 import { HomePage } from './pages/HomePage'
 import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
-import { RadarPage } from './pages/RadarPage'
 import { PerfilPage } from './pages/PerfilPage'
 import { CapturePage } from './pages/CapturePage'
 import { ModeracaoPage } from './pages/ModeracaoPage'
@@ -64,7 +63,6 @@ export default function App() {
           }
         />
         <Route path="/pico/:picoId" element={<PicoPage />} />
-        <Route path="/radar" element={<RadarPage />} />
         <Route path="/acoes" element={<AcoesPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/moderacao" element={<ModeracaoPage />} />

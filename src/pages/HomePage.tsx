@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { useEffect, useState } from 'react'
 import { temBackend } from '../services/api'
 import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'

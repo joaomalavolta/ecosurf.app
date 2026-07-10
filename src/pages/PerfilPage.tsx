@@ -35,11 +35,6 @@ export function PerfilPage() {
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    document.body.dataset.portalPerfil = '1'
-    return () => { delete document.body.dataset.portalPerfil }
-  }, [])
-
-  useEffect(() => {
     let vivo = true
     Promise.all([ehModerador(), meuStatus(), carregarPerfilAtual()]).then(([m, s, p]) => {
       if (vivo) {

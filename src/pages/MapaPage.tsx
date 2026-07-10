@@ -1,28 +1,18 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconRipple, IconAlertTriangle, IconUsers, IconCamera, IconCompass, IconMapPin, IconChevronRight, IconSeeding } from '@tabler/icons-react'
+import { IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
-import { PainelComunidade } from '../components/PainelComunidade'
-import { FeedFotosCarrossel } from '../components/FeedFotosCompacto'
-import { StoryBubbles } from '../components/StoryBubbles'
-import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFeedGlobal } from '../services/feed'
 import { useOnboarding } from '../onboarding/OnboardingContext'
-import type { Alerta, Mutirao, Pico, Foto } from '../types/domain'
+import type { Alerta, Mutirao, Pico } from '../types/domain'
 
 type Filtro = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
   const [ativos, setAtivos] = useState<Set<string>>(new Set())
-  const [fotosFeed, setFotosFeed] = useState<Foto[]>([])
-  const picoMap = useMemo(() => {
-    const m = new Map<string, Pico>()
-    for (const p of picos) m.set(p.id, p)
-    return m
-  }, [picos])
   const [atividade, setAtividade] = useState<{ picoId: string; em: string }[]>([])
   const [alertas, setAlertas] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
@@ -33,11 +23,6 @@ export function MapaPage() {
   const { onboarded, abrir } = useOnboarding()
 
   useEffect(() => {
-    document.body.dataset.paginaMapa = '1'
-    return () => { delete document.body.dataset.paginaMapa }
-  }, [])
-
-  useEffect(() => {
     let vivo = true
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAlertas(a))
@@ -46,7 +31,6 @@ export function MapaPage() {
     carregarFeedGlobal(120).then((fs) => {
       if (!vivo) return
       setAtividade(fs.map((f) => ({ picoId: f.picoId, em: f.capturadaEm })))
-      setFotosFeed(fs)
     })
     return () => {
       vivo = false
@@ -59,54 +43,12 @@ export function MapaPage() {
   const numAlertas = sel ? alertas.filter((a) => a.picoId === sel.id).length : 0
 
   return (
-    <div className="page mapa-dashboard" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <div className="page" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* Header padrão — mesmo tamanho de todas as páginas */}
       <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
 
-      <div className="mapa-corpo">
-      {/* Sidebar de navegação — só no desktop (o mobile não muda) */}
-      <aside className="mapa-sidebar so-desktop">
-        <div className="card pad">
-          <span className="eyebrow">Centro de inteligência</span>
-          <h2 style={{ fontSize: 18, lineHeight: 1.2, margin: '8px 0 6px' }}>Monitoramento costeiro em tempo real</h2>
-          <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
-            Mapa vivo de picos, alertas, fotos e mutirões para apoiar decisões e mobilizar ação local.
-          </p>
-        </div>
-
-        <nav className="mapa-sidebar-nav">
-          <SidebarLink to="/" Icone={IconRipple} label="Radar da costa" />
-          <button className="sidebar-link ativo" onClick={() => setFiltro('picos')}>
-            <IconMapPin size={18} stroke={2} /> <span>Mapa de picos</span> <IconChevronRight size={15} stroke={2} className="seta" />
-          </button>
-          <button className="sidebar-link" onClick={() => setFiltro('alertas')}>
-            <IconAlertTriangle size={18} stroke={2} /> <span>Alertas ambientais</span> <IconChevronRight size={15} stroke={2} className="seta" />
-          </button>
-          <button className="sidebar-link" onClick={() => setFiltro('mutiroes')}>
-            <IconUsers size={18} stroke={2} /> <span>Mutirões abertos</span> <IconChevronRight size={15} stroke={2} className="seta" />
-          </button>
-          <SidebarLink to="/explorar" Icone={IconCompass} label="Explorar litoral" />
-        </nav>
-
-        <div className="card pad">
-          <span className="eyebrow">Resumo rápido</span>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
-            <div style={{ textAlign: 'center', padding: '10px 6px', border: '1px solid var(--line)', borderRadius: 12 }}>
-              <div className="dado" style={{ fontSize: 22, fontWeight: 700, color: 'var(--turq)' }}>{picos.length}</div>
-              <div className="muted" style={{ fontSize: 10.5 }}>picos</div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '10px 6px', border: '1px solid var(--line)', borderRadius: 12 }}>
-              <div className="dado" style={{ fontSize: 22, fontWeight: 700, color: '#E8734A' }}>{alertas.length}</div>
-              <div className="muted" style={{ fontSize: 10.5 }}>alertas</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
       {/* Mapa ocupa todo espaço restante */}
-      {/* Coluna central: mapa + carrosséis abaixo (desktop) */}
-      <div className="mapa-centro">
-      <div className="mapa-painel" style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
         {/* Filtros flutuantes sobre o mapa */}
         <div className="map-filter-bar">
           <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
@@ -177,99 +119,11 @@ export function MapaPage() {
           </div>
         )}
       </div>
-
-      {/* Carrosséis abaixo do mapa (desktop) — o conteúdo do Radar mesclado */}
-      <div className="mapa-carrosseis so-desktop">
-        <section>
-          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, margin: '0 0 8px 4px' }}>
-            <IconSeeding size={13} stroke={2} /> Agir local · alertas e mutirões
-          </span>
-          <CarrosselRegiao alertas={alertas} mutiroes={mutiroes} />
-        </section>
-        <section style={{ marginTop: 14 }}>
-          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, margin: '0 0 8px 4px' }}>
-            <IconRipple size={13} stroke={2} /> O mar agora · fotos da comunidade nos picos
-          </span>
-          <FeedFotosCarrossel fotos={fotosFeed} picoMap={picoMap} />
-        </section>
-      </div>
-      </div>
-
-      {/* Painel de inteligência — só no desktop (o mobile não muda) */}
-      <aside className="mapa-intel so-desktop">
-        <div className="card pad">
-          <span className="eyebrow">Resumo da costa</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, marginTop: 10 }}>
-            <ResumoItem n={picos.length} rotulo="picos" cor="var(--turq)" Icone={IconRipple} />
-            <ResumoItem n={alertas.length} rotulo="alertas" cor="#E8734A" Icone={IconAlertTriangle} />
-            <ResumoItem n={mutiroes.length} rotulo="mutirões" cor="#2E9B6B" Icone={IconUsers} />
-            <ResumoItem n={ativos.size} rotulo="picos ativos hoje" cor="var(--turq)" Icone={IconCamera} />
-          </div>
-        </div>
-
-        {/* Stories dos picos, logo abaixo do resumo */}
-        <div className="card pad">
-          <span className="eyebrow" style={{ display: 'block', marginBottom: 10 }}>Picos com registro</span>
-          <StoryBubbles fotos={fotosFeed} picos={picos} />
-        </div>
-
-        <PainelComunidade fotos={fotosFeed} alertas={alertas} mutiroes={mutiroes} />
-
-        {alertas.length > 0 && (
-          <div className="card pad">
-            <span className="eyebrow" style={{ color: '#E8734A', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <IconAlertTriangle size={12} stroke={2} /> Alertas ativos
-            </span>
-            <div className="stack" style={{ marginTop: 8 }}>
-              {alertas.slice(0, 4).map((a) => (
-                <Link key={a.id} to={`/alerta/${a.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13.5 }}>{a.titulo}</div>
-                  <div className="muted" style={{ fontSize: 11.5 }}>{a.municipio ?? ''}{a.uf ? `/${a.uf}` : ''} · {a.gravidade ?? 'média'}</div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="card pad">
-          <span className="eyebrow">Ações rápidas</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-            <button className="btn acento full" onClick={() => (onboarded ? navigate('/capturar') : abrir())}>
-              <IconCamera size={17} stroke={2} /> Registrar foto ou alerta
-            </button>
-            <Link to="/nova-acao/mutirao" className="btn outline full">
-              <IconUsers size={17} stroke={2} /> Criar mutirão
-            </Link>
-            <Link to="/explorar" className="btn outline full">
-              <IconCompass size={17} stroke={2} /> Explorar por cidade
-            </Link>
-          </div>
-        </div>
-      </aside>
-      </div>
     </div>
   )
 }
 
-function ResumoItem({ n, rotulo, cor, Icone }: { n: number; rotulo: string; cor: string; Icone: typeof IconRipple }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', border: '1px solid var(--line)', borderRadius: 12 }}>
-      <Icone size={18} stroke={2} color={cor} style={{ flexShrink: 0 }} />
-      <div style={{ minWidth: 0 }}>
-        <div className="dado" style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{n}</div>
-        <div className="muted" style={{ fontSize: 10.5 }}>{rotulo}</div>
-      </div>
-    </div>
-  )
-}
 
-function SidebarLink({ to, Icone, label }: { to: string; Icone: typeof IconRipple; label: string }) {
-  return (
-    <Link to={to} className="sidebar-link">
-      <Icone size={18} stroke={2} /> <span>{label}</span> <IconChevronRight size={15} stroke={2} className="seta" />
-    </Link>
-  )
-}
 
 function Pill({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

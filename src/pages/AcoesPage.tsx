@@ -106,11 +106,6 @@ export function AcoesPage() {
   const [tab, setTab] = useState<'tudo' | 'alertas' | 'mutiroes'>('tudo')
 
   useEffect(() => {
-    document.body.dataset.portalAcoes = '1'
-    return () => { delete document.body.dataset.portalAcoes }
-  }, [])
-
-  useEffect(() => {
     let vivo = true
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
