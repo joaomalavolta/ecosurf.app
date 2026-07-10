@@ -3,7 +3,7 @@ import { toast } from '../lib/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { MapaPicker } from '../components/MapaPicker'
+import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
 import { statusPerfil } from '../services/perfil'
 

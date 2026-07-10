@@ -13,7 +13,7 @@ import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
 import { buscarForecast } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
-import { MapView } from '../map/MapView'
+import { MapViewLazy as MapView } from '../map/MapViewLazy'
 import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos' | 'seguindo'

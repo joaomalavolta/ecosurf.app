@@ -6,7 +6,7 @@ import { IconUsers,
   IconCamera, IconUpload, IconBookmark,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { MapaPicker } from '../components/MapaPicker'
+import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'

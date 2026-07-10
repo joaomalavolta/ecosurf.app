@@ -3,7 +3,7 @@ import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { IconCheck, IconMapPin, IconBeach } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { MapaPicker } from '../components/MapaPicker'
+import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { statusPerfil } from '../services/perfil'
 
 const FUNDOS = [

@@ -15,7 +15,7 @@ import { IconCheck,
   IconEdit,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
-import { MapaLocal } from '../components/MapaLocal'
+import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { carregarMutiroes } from '../services/picos'
 import { sb } from '../services/supabase/client'
 import type { Mutirao } from '../types/domain'
