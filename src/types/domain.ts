@@ -146,6 +146,8 @@ export interface Alerta {
   autorId?: string;
   autorNome?: string;
   autorFoto?: string;
+  /** Comunidade que assina a publicação (opcional). */
+  comunidadeId?: string;
 }
 
 /** @deprecated Use Alerta */
@@ -162,6 +164,8 @@ export type StatusMutirao = 'rascunho' | 'agendado' | 'realizado' | 'cancelado';
 export interface Mutirao {
   id: string;
   titulo: string;
+  /** Comunidade que assina a publicação (opcional). */
+  comunidadeId?: string;
   /** Ocorrência que originou a ação (rastreabilidade problema→ação). */
   alertaId?: string | null;
   tipoAcao?: TipoAcaoMutirao;

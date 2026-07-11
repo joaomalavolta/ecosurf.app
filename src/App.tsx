@@ -9,6 +9,9 @@ import { HomePage } from './pages/HomePage'
 import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
 import { PerfilPage } from './pages/PerfilPage'
+import { ComunidadePage } from './pages/ComunidadePage'
+import { CriarComunidadePage } from './pages/CriarComunidadePage'
+import { GerenciarComunidadePage } from './pages/GerenciarComunidadePage'
 import { CapturePage } from './pages/CapturePage'
 import { ModeracaoPage } from './pages/ModeracaoPage'
 import { TermosPage } from './pages/TermosPage'
@@ -65,6 +68,9 @@ export default function App() {
         <Route path="/pico/:picoId" element={<PicoPage />} />
         <Route path="/acoes" element={<AcoesPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/comunidades/nova" element={<CriarComunidadePage />} />
+        <Route path="/comunidade/:comunidadeId/gerenciar" element={<GerenciarComunidadePage />} />
+        <Route path="/comunidade/:comunidadeId" element={<ComunidadePage />} />
         <Route path="/moderacao" element={<ModeracaoPage />} />
         <Route path="/capturar" element={<CapturePage />} />
         <Route path="/termos" element={<TermosPage />} />

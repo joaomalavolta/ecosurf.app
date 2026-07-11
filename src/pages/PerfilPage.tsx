@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -27,6 +27,7 @@ export function PerfilPage() {
   const [painel, setPainel] = useState(false)
   const [borrarFotos, setBorrarFotos] = useState(() => localStorage.getItem('borrarRostos') !== 'false')
   const [verPrefs, setVerPrefs] = useState(false)
+  const [comunidades, setComunidades] = useState<{ comunidade: import('../services/comunidades').Comunidade; papel: import('../services/comunidades').PapelComunidade }[]>([])
   const [verConquistas, setVerConquistas] = useState(false)
   const [nAlertas, setNAlertas] = useState(0)
   const [nMutiroes, setNMutiroes] = useState(0)
@@ -57,6 +58,9 @@ export function PerfilPage() {
                 } catch { /* silencioso */ }
               })
             })
+          ).catch(() => {})
+          import('../services/comunidades').then(({ minhasComunidades }) =>
+            minhasComunidades().then((cs) => { if (vivo) setComunidades(cs) }),
           ).catch(() => {})
           import('../services/supabase/rest').then(({ restMinhasFotos }) =>
             restMinhasFotos().then(fotos => {
@@ -329,6 +333,52 @@ export function PerfilPage() {
                   </Link>
                 )}
               </div>
+            </div>
+
+            {/* Minhas comunidades */}
+            <div className="card pad" style={{ marginTop: 12 }}>
+              <div className="between">
+                <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <IconUsersGroup size={12} stroke={2} /> Minhas comunidades
+                </span>
+                <Link to="/comunidades/nova" style={{ fontSize: 12.5, color: 'var(--turq)', fontWeight: 700, textDecoration: 'none' }}>
+                  criar nova
+                </Link>
+              </div>
+
+              {comunidades.length === 0 ? (
+                <p className="muted" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.5 }}>
+                  Reúna pessoas em torno de uma praia, um projeto ou uma causa. Você convida quem quiser e escolhe quem publica junto.
+                </p>
+              ) : (
+                <div className="stack" style={{ marginTop: 10 }}>
+                  {comunidades.map(({ comunidade: c, papel }) => (
+                    <Link
+                      key={c.id}
+                      to={`/comunidade/${c.id}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <span style={{
+                        width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+                        background: c.avatarUrl
+                          ? `url('${c.avatarUrl}') center/cover no-repeat`
+                          : 'linear-gradient(135deg, #0D6EA8, #2E9BD6)',
+                        display: 'grid', placeItems: 'center',
+                      }}>
+                        {!c.avatarUrl && <IconUsersGroup size={17} stroke={2} color="#fff" />}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{c.nome}</div>
+                        <div className="muted" style={{ fontSize: 11.5 }}>
+                          {papel === 'admin' ? 'Você administra' : papel === 'autor' ? 'Você publica' : 'Seguindo'}
+                          {' · '}{c.membros} {c.membros === 1 ? 'membro' : 'membros'}
+                        </div>
+                      </div>
+                      <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Fale conosco */}

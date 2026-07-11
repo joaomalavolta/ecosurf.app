@@ -72,6 +72,18 @@ export default async function handler(req: Request): Promise<Response> {
       descricao = `Alerta ambiental registrado pela comunidade · gravidade ${a[0].gravidade ?? 'média'} · ${a[0].municipio ?? ''}${a[0].uf ? `/${a[0].uf}` : ''}.`
       if (a[0].images?.[0]) imagem = fotoPublica(a[0].images[0])
     }
+  } else if (tipo === 'comunidade' && id) {
+    destino = `${SITE}/comunidade/${id}`
+    const c = await rest<{ nome: string; descricao: string | null; municipio: string | null; uf: string | null; capa_url: string | null; avatar_url: string | null; membros: number }[]>(
+      `comunidades_publicas?id=eq.${encodeURIComponent(id)}&select=nome,descricao,municipio,uf,capa_url,avatar_url,membros&limit=1`,
+    )
+    if (c?.[0]) {
+      titulo = `${c[0].nome} — Comunidade no Ecosurf`
+      descricao = c[0].descricao
+        ?? `Comunidade do Ecosurf${c[0].municipio ? ` em ${c[0].municipio}${c[0].uf ? `/${c[0].uf}` : ''}` : ''}. Participe!`
+      if (c[0].capa_url) imagem = c[0].capa_url
+      else if (c[0].avatar_url) imagem = c[0].avatar_url
+    }
   } else if (tipo === 'mutirao' && id) {
     destino = `${SITE}/mutirao/${id}`
     const m = await rest<{ titulo: string; municipio: string; uf: string; quando: string; horario: string | null; imagem_url: string | null }[]>(

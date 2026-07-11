@@ -16,6 +16,11 @@
       "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|googlebot).*" }],
       "destination": "/api/og?tipo=mutirao&id=:id"
     },
+    {
+      "source": "/comunidade/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(whatsapp|facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|pinterest|googlebot).*" }],
+      "destination": "/api/og?tipo=comunidade&id=:id"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

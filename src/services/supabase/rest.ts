@@ -142,6 +142,7 @@ interface AmeacaRow {
   autor_id: string | null
   autor_nome: string | null
   autor_foto: string | null
+  comunidade_id: string | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
@@ -159,6 +160,7 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     lng: r.lng ?? undefined,
     descricao: r.descricao ?? undefined,
     autorId: r.autor_id ?? undefined,
+    comunidadeId: r.comunidade_id ?? undefined,
     autorNome: r.autor_nome ?? undefined,
     autorFoto: r.autor_foto ?? undefined,
     images: (r as { images?: string[] | null }).images ?? undefined,
@@ -189,6 +191,7 @@ interface MutiraoRow {
   autor_id: string | null
   autor_nome: string | null
   autor_foto: string | null
+  comunidade_id: string | null
 }
 
 /** Mutirões públicos futuros e recentes — local EXATO (mobilização aberta). */
@@ -219,6 +222,7 @@ export async function restMutiroes(): Promise<Mutirao[]> {
       lng: r.lng as number,
       descricao: r.descricao ?? undefined,
       autorId: r.autor_id ?? undefined,
+      comunidadeId: r.comunidade_id ?? undefined,
       autorNome: r.autor_nome ?? undefined,
       autorFoto: r.autor_foto ?? undefined,
     }))
