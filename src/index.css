@@ -127,8 +127,16 @@ html, body {
   overflow-x: hidden;
 }
 
-.page { min-height: 100dvh; padding-bottom: calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px) + 12px); }
-.page-pad { padding: 16px; }
+/* Rede de segurança contra vazamento horizontal: nenhuma página empurra
+   conteúdo para fora da tela. Se algo dentro for largo demais, ele encolhe ou
+   é contido — a borda direita do app nunca é ultrapassada. */
+.page {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px) + 12px);
+  max-width: 100%;
+  overflow-x: clip;
+}
+.page-pad { padding: 16px; max-width: 100%; box-sizing: border-box; }
 
 /* shell do onboarding */
 .onboarding-shell {
@@ -338,9 +346,21 @@ html, body {
   background: var(--primary); color: var(--on-primary);
   font-size: 15px; font-weight: 800; cursor: pointer;
   box-shadow: var(--shadow-cta);
+  /* Um botão jamais estoura o container: sem min-width:0 o conteúdo impõe uma
+     largura mínima e a linha vaza pela borda da tela (era o bug do "Atualizar"
+     escapando à direita). O texto encurta com reticências em vez de empurrar. */
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
+.btn > svg { flex-shrink: 0; }
 .btn:active { transform: translateY(1px); }
-.btn.full { width: 100%; }
+/* Sozinho, ocupa a linha. Em linha com outros (flex), divide o espaço
+   igualmente — quatro botões "full" lado a lado não pedem 400% de largura. */
+.btn.full { width: 100%; flex: 1 1 0; }
 .btn.outline { background: transparent; color: var(--text); border: 1.5px solid var(--line); box-shadow: none; }
 .btn.acento { background: var(--aqua); color: #fff; } /* CTA de registro */
 
@@ -1075,6 +1095,10 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
+  /* Sem isto o flex estica os cards à altura do mais alto (align-items:stretch
+     é o padrão) — um município de nome longo quebrava a linha e desalinhava a
+     fileira inteira. Alinhados ao topo, todos os cards têm a mesma moldura. */
+  align-items: flex-start;
 }
 .cr-card {
   flex: 0 0 148px;
@@ -1084,7 +1108,8 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
 }
 .cr-foto {
   position: relative;
-  height: 88px;
+  width: 100%;
+  aspect-ratio: 4 / 3;   /* mesma proporção das fotos cortadas no envio */
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -1118,7 +1143,10 @@ body[data-landing] .app-shell { padding-bottom: 0 !important; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cr-sub { display: block; font-size: 10.5px; color: var(--muted); }
+.cr-sub {
+  display: block; font-size: 10.5px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Menu territorial (hambúrguer do mapa) */
 .menu-terr-item {

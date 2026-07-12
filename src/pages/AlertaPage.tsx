@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
+import { CorteFoto } from '../components/CorteFotoLazy'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
+import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
@@ -55,6 +56,8 @@ export function AlertaPage() {
   const [editLat, setEditLat] = useState<number | undefined>()
   const [editLng, setEditLng] = useState<number | undefined>()
   const [editFotos, setEditFotos] = useState<File[]>([])
+  const [filaCorte, setFilaCorte] = useState<File[]>([])
+  const [reajustando, setReajustando] = useState<{ path: string; file: File } | null>(null)
   const [keptImages, setKeptImages] = useState<string[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
 
@@ -161,9 +164,44 @@ export function AlertaPage() {
     const total = keptImages.length + editFotos.length
     const files = Array.from(e.target.files ?? []).slice(0, 3 - total)
     if (files.length === 0) return
-    setEditFotos((prev) => [...prev, ...files])
-    setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    setFilaCorte(files)
     e.target.value = ''
+  }
+
+  function aoCortarNova(blob: Blob) {
+    const orig = filaCorte[0]
+    const arq = new File([blob], (orig?.name ?? 'foto').replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' })
+    setEditFotos((prev) => [...prev, arq])
+    setPreviewUrls((prev) => [...prev, URL.createObjectURL(arq)])
+    setFilaCorte((f) => f.slice(1))
+  }
+
+  /**
+   * Reenquadrar uma foto JÁ publicada: baixa o arquivo do storage, abre o
+   * corte e devolve a versão ajustada como foto nova, retirando a antiga.
+   * É o que permite uniformizar o acervo anterior ao corte — o usuário
+   * decide o melhor enquadramento em vez de sofrer um corte automático.
+   */
+  async function reenquadrar(path: string) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`)
+      if (!r.ok) throw new Error()
+      const blob = await r.blob()
+      setReajustando({ path, file: new File([blob], 'foto.jpg', { type: blob.type || 'image/jpeg' }) })
+    } catch {
+      toast('Não foi possível abrir esta foto para ajuste.')
+    }
+  }
+
+  function aoReenquadrar(blob: Blob) {
+    const alvo = reajustando
+    setReajustando(null)
+    if (!alvo) return
+    const arq = new File([blob], 'reenquadrada.webp', { type: 'image/webp' })
+    setKeptImages((prev) => prev.filter((p) => p !== alvo.path)) // sai a antiga
+    setEditFotos((prev) => [...prev, arq])                        // entra a ajustada
+    setPreviewUrls((prev) => [...prev, URL.createObjectURL(arq)])
+    toast('Enquadramento ajustado. Salve para confirmar.')
   }
 
   function removerKeptImage(path: string) {
@@ -261,44 +299,28 @@ export function AlertaPage() {
         {!isEditing ? (
           alerta.images && alerta.images.length > 0 && (
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {alerta.images.map((path, i) => {
-                const url = `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`
-                return (
-                  /* Padrão "fundo vivo": a mesma foto desfocada preenche o quadro
-                     e a foto inteira (contain) flutua por cima — o assunto da
-                     denúncia aparece completo, sem corte nem letterbox morto. */
-                  <div
-                    key={i}
-                    style={{
-                      position: 'relative',
-                      width: alerta.images!.length === 1 ? '100%' : 280,
-                      height: 220,
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      background: '#0a1929',
-                    }}
-                  >
-                    <img
-                      src={url}
-                      alt=""
-                      aria-hidden
-                      style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%',
-                        objectFit: 'cover', filter: 'blur(16px) brightness(.72)', transform: 'scale(1.12)',
-                      }}
-                    />
-                    <img
-                      src={url}
-                      alt={`Foto ${i + 1}`}
-                      style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%',
-                        objectFit: 'contain',
-                      }}
-                    />
-                  </div>
-                )
-              })}
+              {alerta.images.map((path, i) => (
+                /* Moldura 4:3 uniforme com o quadro sempre cheio. O corte no
+                   envio garante que nada essencial se perca; fotos antigas
+                   podem ser reenquadradas pelo dono em "Editar". */
+                <div
+                  key={i}
+                  style={{
+                    width: alerta.images!.length === 1 ? '100%' : 280,
+                    aspectRatio: '4 / 3',
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    background: '#0a1929',
+                  }}
+                >
+                  <img
+                    src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`}
+                    alt={`Foto ${i + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </div>
+              ))}
             </div>
           )
         ) : (
@@ -317,6 +339,21 @@ export function AlertaPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
                     }}
                   >✕</button>
+                  {/* Reenquadrar: o usuário decide o melhor recorte da foto já
+                      publicada — é assim que o acervo antigo fica uniforme. */}
+                  <button
+                    type="button"
+                    onClick={() => void reenquadrar(path)}
+                    aria-label="Ajustar enquadramento"
+                    style={{
+                      position: 'absolute', left: 0, right: 0, bottom: 0,
+                      background: 'rgba(0,0,0,.62)', color: '#fff', border: 0, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      padding: '5px 0', fontSize: 10.5, fontWeight: 700, fontFamily: 'inherit',
+                    }}
+                  >
+                    <IconCrop size={12} stroke={2} /> Ajustar
+                  </button>
                 </div>
               ))}
               {previewUrls.map((url, i) => (
@@ -544,6 +581,27 @@ export function AlertaPage() {
           )}
         </div>
       </div>
+
+      {filaCorte.length > 0 && (
+        <CorteFoto
+          key={`nova-${filaCorte.length}`}
+          arquivo={filaCorte[0]}
+          proporcao={4 / 3}
+          titulo={filaCorte.length > 1 ? `Enquadre a foto (${filaCorte.length} restantes)` : 'Enquadre a foto'}
+          onPronto={aoCortarNova}
+          onCancelar={() => setFilaCorte((f) => f.slice(1))}
+        />
+      )}
+
+      {reajustando && (
+        <CorteFoto
+          arquivo={reajustando.file}
+          proporcao={4 / 3}
+          titulo="Ajuste o enquadramento"
+          onPronto={aoReenquadrar}
+          onCancelar={() => setReajustando(null)}
+        />
+      )}
     </div>
   )
 }
