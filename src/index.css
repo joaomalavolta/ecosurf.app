@@ -1660,3 +1660,93 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   .dl-pilares { grid-template-columns: 1fr; }
 }
 
+
+/* ═══ Voltar flutuante (aparece ao rolar) ═══ */
+.voltar-flutuante {
+  position: fixed;
+  left: 14px;
+  bottom: calc(var(--altura-nav) + env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 40;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--text);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+  /* Escondido por padrão: entra deslizando de baixo, sem piscar na tela. */
+  opacity: 0;
+  transform: translateY(10px) scale(.92);
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s cubic-bezier(.2, .8, .3, 1);
+}
+.voltar-flutuante[data-visivel] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.voltar-flutuante:active { transform: scale(.94); }
+
+/* A preferência "reduzir animações" (html[data-reduz-animacao]) já anula a
+   transição acima globalmente — nada a fazer aqui. */
+
+/* ═══ Tira de comunidades (Radar) ═══ */
+.tira-comunidades {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 14px 4px;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tira-comunidades::-webkit-scrollbar { display: none; }
+
+.tira-com-item {
+  flex: 0 0 68px;
+  width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: inherit;
+}
+.tira-com-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #0D6EA8, #2E9BD6);
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+}
+.tira-com-novo {
+  background: transparent;
+  border: 1.5px dashed var(--turq);
+  color: var(--turq);
+}
+.tira-com-nome {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tira-com-sub {
+  font-size: 9.5px;
+  color: var(--muted);
+  line-height: 1.2;
+  white-space: nowrap;
+}

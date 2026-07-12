@@ -16,6 +16,7 @@ import { IconCheck,
   IconEdit,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { carregarMutiroes } from '../services/picos'
 import { sb } from '../services/supabase/client'
@@ -347,6 +348,8 @@ function InfoLinha({ icon: Icon, label, value }: { icon: typeof IconCalendar; la
         <div className="muted" style={{ fontSize: 11.5 }}>{label}</div>
         <div style={{ fontSize: 13.5 }}>{value}</div>
       </div>
+
+      <VoltarFlutuante para="/acoes" />
     </div>
   )
 }

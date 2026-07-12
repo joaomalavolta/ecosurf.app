@@ -4,6 +4,7 @@ import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { ForecastStrip } from '../components/ForecastStrip'
 import { TideScrubTimeline, compartilharPico } from '../components/TideScrubTimeline'
 import { carregarPico, carregarAmeacas } from '../services/picos'
@@ -262,6 +263,8 @@ export function PicoPage() {
           </button>
         </div>
       </div>
+
+      <VoltarFlutuante />
     </div>
   )
 }

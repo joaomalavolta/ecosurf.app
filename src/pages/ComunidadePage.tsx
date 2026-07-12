@@ -5,6 +5,7 @@ import {
   IconSeeding, IconCheck, IconPlus,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { SkeletonDetalhe } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import {
@@ -223,6 +224,8 @@ export function ComunidadePage() {
           )}
         </div>
       </div>
+
+      <VoltarFlutuante />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { CorteFoto } from '../components/CorteFotoLazy'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
@@ -605,6 +606,8 @@ export function AlertaPage() {
           onCancelar={() => setReajustando(null)}
         />
       )}
+
+      <VoltarFlutuante para="/acoes" />
     </div>
   )
 }

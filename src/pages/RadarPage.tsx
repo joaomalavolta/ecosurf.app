@@ -4,6 +4,7 @@ import { IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, Ico
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
+import { TiraComunidades } from '../components/TiraComunidades'
 import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
 import { VazioFeed } from '../components/VazioFeed'
@@ -293,6 +294,8 @@ export function RadarPage() {
 
       <div className="radar-col-feed">
       <StoryBubbles fotos={feed} picos={picosTodos} />
+
+      <TiraComunidades />
 
       {/* ─── FEED SECTION ─── */}
       <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px 6px' }}>
