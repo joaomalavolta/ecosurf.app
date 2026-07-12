@@ -16,6 +16,7 @@ import { IconUsers, IconPlus,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { SeletorComunidade } from '../components/SeletorComunidade'
+import { ConfirmarPico } from '../components/ConfirmarPico'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
@@ -31,13 +32,15 @@ const SIGLA_UF: Record<string, string> = {
   'Sergipe': 'SE', 'Tocantins': 'TO',
 }
 
-type Etapa = 'tipo' | 'localizacao' | 'camera' | 'selecionar-pico' | 'classificar-alerta' | 'concluido'
+type Etapa = 'tipo' | 'localizacao' | 'camera' | 'confirmar-pico' | 'selecionar-pico' | 'classificar-alerta' | 'concluido'
 
-function obterCoords(): Promise<{ lat?: number; lng?: number }> {
+function obterCoords(): Promise<{ lat?: number; lng?: number; precisaoM?: number }> {
   return new Promise((res) => {
     if (!navigator.geolocation) return res({})
     navigator.geolocation.getCurrentPosition(
-      (p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      // A precisão (accuracy) sempre veio do navegador e era descartada. Ela é
+      // decisiva: com erro de 80m, "o pico mais próximo" pode ser o errado.
+      (p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, precisaoM: p.coords.accuracy }),
       () => res({}),
       { enableHighAccuracy: true, timeout: 6000 },
     )
@@ -74,7 +77,18 @@ export function CapturePage() {
   const [picoSelecionado] = useState<string | null>(new URLSearchParams(window.location.search).get('pico'))
   const [blobCapturado, setBlobCapturado] = useState<Blob | undefined>()
   const [thumbCapturado, setThumbCapturado] = useState<Blob | undefined>()
-  const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number}>({})
+  const [posCapturada, setPosCapturada] = useState<{lat?: number, lng?: number, precisaoM?: number}>({})
+  // Confirmação do vínculo: o "mais próximo vence" pode errar quando há picos
+  // colados (há duplicatas a 120m no acervo) ou quando o GPS está impreciso.
+  // A foto espera aqui até o autor confirmar para qual pico ela vai.
+  const [confirmar, setConfirmar] = useState<{
+    blob?: Blob
+    thumb?: Blob
+    pos: { lat?: number; lng?: number; precisaoM?: number }
+    candidatos: { pico: import('../types/domain').Pico; metros: number }[]
+    escolhido: string
+    ambiguo: boolean
+  } | null>(null)
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
   const [novaOndaNome, setNovaOndaNome] = useState('')
@@ -194,7 +208,7 @@ export function CapturePage() {
     // Alerta/lixo: o GPS é essencial (denúncia sem lugar não existe),
     // então buscamos mesmo se a pessoa marcou "estou em casa".
     const precisaGPS = !noLocal || tipo === 'alerta' || tipo === 'lixo'
-    let pos: { lat?: number; lng?: number } = {}
+    let pos: { lat?: number; lng?: number; precisaoM?: number } = {}
     if (precisaGPS) {
       pos = await obterCoords()
       setPosCapturada(pos)
@@ -233,9 +247,31 @@ export function CapturePage() {
       await finalizarUpload(picoSelecionado, blob, coordsEnvio, thumb)
       return
     }
-    // "Estou no local" + pico detectado ao lado: direto, como prometido.
-    if (noLocal && picoAutoId) {
-      await finalizarUpload(picoAutoId, blob, coordsEnvio, thumb)
+    // "Estou no local" + pico detectado: NÃO sobe direto. O manual promete
+    // "Fotografar → Vincular ao pico → Classificar → Enviar", e a etapa de
+    // vínculo faltava: a foto ia para o pico mais próximo sem o autor ver qual.
+    if (noLocal && picoAutoId && coordsEnvio.lat && coordsEnvio.lng) {
+      const candidatos = picosExistentes
+        .map((p) => ({ pico: p, metros: Math.round(haversineKm(coordsEnvio.lat!, coordsEnvio.lng!, p.lat, p.lng) * 1000) }))
+        .sort((a, b) => a.metros - b.metros)
+        .slice(0, 6)
+
+      // Ambíguo quando o 2º pico está quase tão perto quanto o 1º, ou quando a
+      // imprecisão do GPS é maior que a folga entre eles — nesses casos a lista
+      // já abre expandida, com aviso. Fora disso, um toque basta.
+      const d1 = candidatos[0]?.metros ?? Infinity
+      const d2 = candidatos[1]?.metros ?? Infinity
+      const folga = d2 - d1
+      const precisao = coordsEnvio.precisaoM ?? 0
+      const ambiguo = folga < 250 || (precisao > 0 && folga < precisao)
+
+      setConfirmar({
+        blob, thumb, pos: coordsEnvio,
+        candidatos,
+        escolhido: picoAutoId,
+        ambiguo,
+      })
+      setEtapa('confirmar-pico')
       return
     }
     setEtapa('selecionar-pico')
@@ -641,6 +677,21 @@ export function CapturePage() {
       )}
 
       {/* ETAPA 4: Informar localização (orgânico) */}
+      {etapa === 'confirmar-pico' && confirmar && (
+        <ConfirmarPico
+          dados={confirmar}
+          comunidadeId={comunidadeId}
+          onComunidade={setComunidadeId}
+          onEscolher={(id) => setConfirmar((c) => (c ? { ...c, escolhido: id } : c))}
+          onOutro={() => { setEtapa('selecionar-pico') }}
+          onPublicar={async () => {
+            const c = confirmar
+            setConfirmar(null)
+            await finalizarUpload(c.escolhido, c.blob, c.pos, c.thumb)
+          }}
+        />
+      )}
+
       {etapa === 'classificar-alerta' && (
         <div style={{ position: 'fixed', inset: 0, background: '#06222E', zIndex: 50, overflowY: 'auto', padding: '24px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
           <h2 style={{ color: '#fff', marginBottom: 4 }}>Classifique o alerta</h2>
