@@ -460,3 +460,15 @@ export async function restMinhasFotos(): Promise<MinhaFotoRow[]> {
     return []
   }
 }
+
+/** Contadores por pico (total de fotos do acervo) — alimenta o Explorar. */
+export async function restPicosStats(): Promise<Map<string, number>> {
+  try {
+    const rows = await rest<{ pico_id: string; total_fotos: number }[]>(
+      'picos_stats?select=pico_id,total_fotos',
+    )
+    return new Map(rows.map((r) => [r.pico_id, r.total_fotos]))
+  } catch {
+    return new Map()
+  }
+}
