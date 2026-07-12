@@ -28,6 +28,8 @@ export interface NovaFoto {
   capturaLng?: number
   /** Se preenchido, o pico é criado no envio (antes da foto). Vazio = pico já existe. */
   picoNovo?: PicoNovo
+  /** Comunidade que assina a foto (admin/autor). Vazio = assina como pessoa. */
+  comunidadeId?: string | null
 }
 
 export interface EcosurfApi {

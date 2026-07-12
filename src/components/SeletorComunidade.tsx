@@ -11,9 +11,12 @@ import { comunidadesQuePublico, type Comunidade } from '../services/comunidades'
 export function SeletorComunidade({
   valor,
   onChange,
+  escuro = false,
 }: {
   valor: string | null
   onChange: (comunidadeId: string | null) => void
+  /** Sobre fundo escuro (overlay da câmera): inverte as cores do chip. */
+  escuro?: boolean
 }) {
   const [comunidades, setComunidades] = useState<Comunidade[]>([])
 
@@ -30,16 +33,22 @@ export function SeletorComunidade({
   const chip = (ativo: boolean): React.CSSProperties => ({
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
-    border: ativo ? '1.5px solid var(--turq)' : '1px solid var(--line)',
-    background: ativo ? 'color-mix(in srgb, var(--turq) 10%, transparent)' : 'var(--card)',
-    color: ativo ? 'var(--turq)' : 'var(--muted)',
+    border: ativo
+      ? '1.5px solid #1ECBC3'
+      : escuro ? '1px solid rgba(255,255,255,.22)' : '1px solid var(--line)',
+    background: ativo
+      ? (escuro ? 'rgba(30,203,195,.16)' : 'color-mix(in srgb, var(--turq) 10%, transparent)')
+      : (escuro ? 'rgba(255,255,255,.06)' : 'var(--card)'),
+    color: ativo ? (escuro ? '#7FE7E1' : 'var(--turq)') : (escuro ? 'rgba(255,255,255,.75)' : 'var(--muted)'),
     fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
     whiteSpace: 'nowrap', flexShrink: 0,
   })
 
   return (
     <div style={{ marginBottom: 14 }}>
-      <label className="form-label">Publicar como</label>
+      <label className="form-label" style={escuro ? { color: 'rgba(255,255,255,.72)' } : undefined}>
+        Publicar como
+      </label>
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
         <button type="button" style={chip(valor === null)} onClick={() => onChange(null)}>
           <IconUser size={14} stroke={2} /> Você

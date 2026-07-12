@@ -99,26 +99,35 @@ export function FeedCard({
         <div className="feed-overlay-badges">
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             {/* Crédito visível: quem fez o report */}
-            {fotosComUrl[activeIdx]?.autorNome && (
-              <span className="badge b-glass" style={{ fontSize: 10.5, paddingLeft: 4 }}>
-                {fotosComUrl[activeIdx]?.autorAvatar ? (
-                  <img
-                    src={fotosComUrl[activeIdx].autorAvatar}
-                    alt=""
-                    style={{ width: 18, height: 18, borderRadius: 99, objectFit: 'cover', border: '1px solid rgba(255,255,255,.4)' }}
-                  />
-                ) : (
-                  <span style={{
-                    width: 18, height: 18, borderRadius: 99, background: 'rgba(255,255,255,.25)',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 700,
-                  }}>
-                    {fotosComUrl[activeIdx].autorNome[0]?.toUpperCase()}
-                  </span>
-                )}
-                {fotosComUrl[activeIdx].autorNome}
-              </span>
-            )}
+            {(() => {
+              const f = fotosComUrl[activeIdx]
+              if (!f?.autorNome) return null
+              // Assinada por comunidade? O crédito é do grupo (cantos retos no
+              // avatar diferenciam de uma pessoa à primeira vista).
+              const ehCom = !!f.comunidadeNome
+              const nome = ehCom ? f.comunidadeNome! : f.autorNome
+              const avatar = ehCom ? f.comunidadeAvatar : f.autorAvatar
+              return (
+                <span className="badge b-glass" style={{ fontSize: 10.5, paddingLeft: 4 }}>
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt=""
+                      style={{ width: 18, height: 18, borderRadius: ehCom ? 6 : 99, objectFit: 'cover', border: '1px solid rgba(255,255,255,.4)' }}
+                    />
+                  ) : (
+                    <span style={{
+                      width: 18, height: 18, borderRadius: ehCom ? 6 : 99, background: 'rgba(255,255,255,.25)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700,
+                    }}>
+                      {nome[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  {nome}
+                </span>
+              )
+            })()}
             {fotosComUrl[activeIdx]?.procedencia === 'no-local' && (
               <span className="badge b-glass" style={{ fontSize: 10 }}>
                 <IconShieldCheck size={12} stroke={2} /> no local

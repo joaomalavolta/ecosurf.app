@@ -15,6 +15,7 @@ import { IconUsers, IconPlus,
   IconMap2,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
+import { SeletorComunidade } from '../components/SeletorComunidade'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
@@ -62,6 +63,7 @@ const TIPOS: { id: TipoRegistro; icone: typeof IconRipple; titulo: string; desc:
 export function CapturePage() {
   const [etapa, setEtapa] = useState<Etapa>('tipo')
   const [tipo, setTipo] = useState<TipoRegistro | null>(null)
+  const [comunidadeId, setComunidadeId] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -253,6 +255,7 @@ export function CapturePage() {
       uf: ufAlerta || 'SP',
       lat: posCapturada.lat,
       lng: posCapturada.lng,
+      comunidadeId,
     }
 
     // Sem sinal? Direto pra fila — denúncia não espera rede.
@@ -297,6 +300,7 @@ export function CapturePage() {
       capturaLat: pos?.lat,
       capturaLng: pos?.lng,
       picoNovo,
+      comunidadeId,
     })
     if (tipo) await definirTipo(id, tipo)
     setPicoFinal(picoId)
@@ -644,6 +648,8 @@ export function CapturePage() {
             Sua foto vira um registro ambiental oficial no mapa da comunidade.
           </p>
 
+          <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} escuro />
+
           <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
             <SeletorCategoria selecionada={catAlerta} onSelecionar={setCatAlerta} />
           </div>
@@ -708,6 +714,8 @@ export function CapturePage() {
                 ? 'Nenhum pico cadastrado aqui pertinho — escolha o mais próximo ou reporte este local.'
                 : 'Escolha o pico deste registro — ou reporte um local novo.'}
           </p>
+
+          <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} escuro />
 
           {/* Picos já cadastrados primeiro: evita locais duplicados no mapa */}
           {!modoNovoPico && picosExistentes.length > 0 && (

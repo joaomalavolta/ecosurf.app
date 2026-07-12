@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { CorteFoto } from '../components/CorteFotoLazy'
+import { CreditoComunidade } from '../components/CreditoComunidade'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -27,6 +28,9 @@ interface AlertaDetalhe {
   images: string[] | null
   criada_em: string
   autor_id: string | null
+  comunidade_id: string | null
+  comunidade_nome: string | null
+  comunidade_avatar: string | null
   lat: number | null
   lng: number | null
 }
@@ -492,6 +496,16 @@ export function AlertaPage() {
               placeholder="Descreva a ocorrência detalhadamente..."
               value={editDescricao}
               onChange={(e) => setEditDescricao(e.target.value)}
+            />
+          </div>
+        )}
+
+        {!isEditing && alerta.comunidade_id && (
+          <div style={{ marginTop: 12 }}>
+            <CreditoComunidade
+              id={alerta.comunidade_id}
+              nome={alerta.comunidade_nome ?? undefined}
+              avatar={alerta.comunidade_avatar ?? undefined}
             />
           </div>
         )}

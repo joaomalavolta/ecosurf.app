@@ -73,6 +73,10 @@ export interface Foto {
   autorId: string;
   autorNome: string;
   autorAvatar?: string; // URL do avatar do autor (crédito visível no feed)
+  /** Comunidade que assina a foto (se houver, o feed credita o grupo). */
+  comunidadeId?: string;
+  comunidadeNome?: string;
+  comunidadeAvatar?: string;
   capturadaEm: string; // ISO — hora real da captura
   url?: string;        // foto cheia (página do pico); ausente → gradiente determinístico
   thumbUrl?: string;   // miniatura leve para o feed/listas
@@ -148,6 +152,8 @@ export interface Alerta {
   autorFoto?: string;
   /** Comunidade que assina a publicação (opcional). */
   comunidadeId?: string;
+  comunidadeNome?: string;
+  comunidadeAvatar?: string;
 }
 
 /** @deprecated Use Alerta */
@@ -166,6 +172,8 @@ export interface Mutirao {
   titulo: string;
   /** Comunidade que assina a publicação (opcional). */
   comunidadeId?: string;
+  comunidadeNome?: string;
+  comunidadeAvatar?: string;
   /** Ocorrência que originou a ação (rastreabilidade problema→ação). */
   alertaId?: string | null;
   tipoAcao?: TipoAcaoMutirao;

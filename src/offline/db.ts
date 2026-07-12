@@ -16,6 +16,8 @@ export interface UploadPendente {
   capturaLng?: number
   /** Se preenchido, o pico é criado no envio (permite registrar 100% offline). */
   picoNovo?: import('../services/api').PicoNovo
+  /** Comunidade que assina a foto (viaja com o registro na fila offline). */
+  comunidadeId?: string | null
   status: 'na-fila' | 'enviando' | 'enviado' | 'falhou' | 'bloqueado'
   erro?: string
   criadoEm: number

@@ -143,6 +143,8 @@ interface AmeacaRow {
   autor_nome: string | null
   autor_foto: string | null
   comunidade_id: string | null
+  comunidade_nome: string | null
+  comunidade_avatar: string | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
@@ -161,6 +163,8 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     descricao: r.descricao ?? undefined,
     autorId: r.autor_id ?? undefined,
     comunidadeId: r.comunidade_id ?? undefined,
+    comunidadeNome: r.comunidade_nome ?? undefined,
+    comunidadeAvatar: r.comunidade_avatar ?? undefined,
     autorNome: r.autor_nome ?? undefined,
     autorFoto: r.autor_foto ?? undefined,
     images: (r as { images?: string[] | null }).images ?? undefined,
@@ -192,6 +196,8 @@ interface MutiraoRow {
   autor_nome: string | null
   autor_foto: string | null
   comunidade_id: string | null
+  comunidade_nome: string | null
+  comunidade_avatar: string | null
 }
 
 /** Mutirões públicos futuros e recentes — local EXATO (mobilização aberta). */
@@ -223,6 +229,8 @@ export async function restMutiroes(): Promise<Mutirao[]> {
       descricao: r.descricao ?? undefined,
       autorId: r.autor_id ?? undefined,
       comunidadeId: r.comunidade_id ?? undefined,
+      comunidadeNome: r.comunidade_nome ?? undefined,
+      comunidadeAvatar: r.comunidade_avatar ?? undefined,
       autorNome: r.autor_nome ?? undefined,
       autorFoto: r.autor_foto ?? undefined,
     }))
@@ -292,11 +300,14 @@ export interface FotoRow {
   autor_nome: string | null
   autor_id: string | null
   autor_avatar: string | null
+  comunidade_id: string | null
+  comunidade_nome: string | null
+  comunidade_avatar: string | null
 }
 
 /** Fotos do pico a partir de 00:00 de hoje (o "feed do dia"), com autor_nome. */
 export async function restFotosDoDia(picoId: string, dia?: Date): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id,autor_avatar'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id,autor_avatar,comunidade_id,comunidade_nome,comunidade_avatar'
   // Sem dia: comportamento clássico (últimas 30 do pico). Com dia: só aquele
   // dia — é o que permite navegar o histórico sem baixar tudo de uma vez.
   let filtroDia = ''
@@ -329,7 +340,7 @@ export async function restDiasComFoto(picoId: string, de: Date, ate: Date): Prom
 
 /** Últimas fotos globais da plataforma, independente do pico. */
 export async function restUltimasFotosGlobais(limite = 10): Promise<FotoRow[]> {
-  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id,autor_avatar'
+  const cols = 'id,pico_id,capturada_em,storage_path,thumb_path,altura_mare_m,vento_tipo,observacao,procedencia,autor_nome,autor_id,autor_avatar,comunidade_id,comunidade_nome,comunidade_avatar'
   return rest<FotoRow[]>(
     `fotos_publicas?select=${cols}&storage_path=not.is.null&order=capturada_em.desc&limit=${limite}`
   )

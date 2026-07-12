@@ -17,6 +17,7 @@ import { IconCheck,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
+import { CreditoComunidade } from '../components/CreditoComunidade'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { carregarMutiroes } from '../services/picos'
 import { sb } from '../services/supabase/client'
@@ -184,6 +185,14 @@ export function MutiraoPage() {
             <IconShare size={15} /> Compartilhar
           </button>
         </div>
+
+        {mutirao.comunidadeId && (
+          <CreditoComunidade
+            id={mutirao.comunidadeId}
+            nome={mutirao.comunidadeNome}
+            avatar={mutirao.comunidadeAvatar}
+          />
+        )}
 
         {/* Informações principais */}
         <div className="card pad stack" style={{ gap: 12 }}>
