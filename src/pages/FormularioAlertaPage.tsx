@@ -14,6 +14,7 @@ import { CheckboxAceite } from '../components/CheckboxAceite'
 // TODO(edição-alerta): atualizarAlerta + carregarAlertaParaEdicao existem no serviço
 // e no admin; falta ligar o modo edição pelo autor (rota /alerta/:id/editar).
 import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
+import { SeletorComunidade } from '../components/SeletorComunidade'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
@@ -43,6 +44,9 @@ export function FormularioAlertaPage() {
 
   // Dados do formulário
   const [categoria, setCategoria] = useState<CategoriaAlerta | undefined>()
+  const [comunidadeId, setComunidadeId] = useState<string | null>(
+    () => new URLSearchParams(window.location.search).get('comunidade'),
+  )
   const [fotos, setFotos] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [lat, setLat] = useState<number | undefined>()
@@ -120,6 +124,7 @@ export function FormularioAlertaPage() {
         lng,
         recorrente,
         checkboxAceite: aceite,
+        comunidadeId,
         images: fotos.length > 0 ? fotos : undefined,
       }
       const idCriado = await publicarAlerta(dados)
@@ -205,6 +210,8 @@ export function FormularioAlertaPage() {
       </div>
 
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 100 }}>
+        <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} />
+
         {/* Etapa 1: Categoria */}
         {etapa === 1 && (
           <>

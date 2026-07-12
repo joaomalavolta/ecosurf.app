@@ -6,6 +6,7 @@ import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, I
 import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
+import { SeletorComunidade } from '../components/SeletorComunidade'
 import { statusPerfil } from '../services/perfil'
 
 const TIPOS_ACAO = [
@@ -39,6 +40,9 @@ export function FormularioMutiraoPage() {
   // Campos
   const [tipoAcao, setTipoAcao] = useState('limpeza')
   // Vindo do registro de lixo/alerta ("criar mutirão"), o título chega pronto.
+  const [comunidadeId, setComunidadeId] = useState<string | null>(
+    () => new URLSearchParams(window.location.search).get('comunidade'),
+  )
   const [titulo, setTitulo] = useState(() =>
     new URLSearchParams(window.location.search).get('titulo') ?? '')
   const [descricao, setDescricao] = useState('')
@@ -142,6 +146,7 @@ export function FormularioMutiraoPage() {
     setEnviando(true)
     try {
       const dados: DadosMutirao = {
+        comunidadeId,
         titulo: titulo.trim(),
         tipoAcao,
         alertaOrigemId: alertaOrigemId,
@@ -224,6 +229,8 @@ export function FormularioMutiraoPage() {
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 100, gap: 16 }}>
         {/* Tipo */}
         <div>
+          <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} />
+
           <label className="form-label">Tipo de ação *</label>
           <select className="input" value={tipoAcao} onChange={(e) => setTipoAcao(e.target.value)}>
             {TIPOS_ACAO.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   IconUsers, IconMapPin, IconShare2, IconSettings, IconAlertTriangle,
-  IconSeeding, IconCamera, IconCheck, IconPlus,
+  IconSeeding, IconCheck, IconPlus,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { SkeletonDetalhe } from '../components/Skeleton'
@@ -173,9 +173,14 @@ export function ComunidadePage() {
           </Link>
         )}
         {podePublicar && (
-          <button className="btn full" style={{ marginTop: 8 }} onClick={() => navigate('/capturar')}>
-            <IconCamera size={16} stroke={2} /> Publicar em nome da comunidade
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button className="btn outline" style={{ flex: 1 }} onClick={() => navigate(`/nova-acao/alerta?comunidade=${c.id}`)}>
+              <IconAlertTriangle size={15} stroke={2} /> Alerta
+            </button>
+            <button className="btn outline" style={{ flex: 1 }} onClick={() => navigate(`/nova-acao/mutirao?comunidade=${c.id}`)}>
+              <IconUsers size={15} stroke={2} /> Mutirão
+            </button>
+          </div>
         )}
 
         {/* Publicações da comunidade */}

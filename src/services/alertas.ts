@@ -19,6 +19,8 @@ async function authed() {
 /* ─── Alerta Ambiental ─── */
 
 export interface DadosAlerta {
+  /** Comunidade que assina a publicação (admin/autor). */
+  comunidadeId?: string | null
   titulo: string
   categoria: CategoriaAlerta
   gravidade: GravidadeAlerta
@@ -66,6 +68,7 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
     images: imagePaths.length > 0 ? imagePaths : null,
     recorrente: dados.recorrente ?? false,
     checkbox_aceite: dados.checkboxAceite,
+    comunidade_id: dados.comunidadeId ?? null,
   }
 
   const { data, error } = await sb.from('ameacas').insert(body).select('id').single()
@@ -142,6 +145,8 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
 /* ─── Mutirão ─── */
 
 export interface DadosMutirao {
+  /** Comunidade que assina a publicação (admin/autor). */
+  comunidadeId?: string | null
   titulo: string
   tipoAcao: string
   descricao?: string
@@ -192,6 +197,7 @@ export async function publicarMutirao(dados: DadosMutirao): Promise<string> {
     ponto_encontro: dados.pontoEncontro ?? null,
     organizador: dados.organizador ?? null,
     organizador_id: user.id,
+    comunidade_id: dados.comunidadeId ?? null,
     instituicao: dados.instituicao ?? null,
     contato: dados.contato ?? null,
     vagas: dados.vagas ?? null,

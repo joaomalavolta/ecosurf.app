@@ -6,6 +6,8 @@ import { UpdatePrompt } from './components/UpdatePrompt'
 import { OnboardingProvider } from './onboarding/OnboardingContext'
 import { iniciarSincronizacao } from './offline/uploadQueue'
 import { HomePage } from './pages/HomePage'
+import { DesktopQRLanding } from './pages/DesktopQRLanding'
+import { useEhDesktop } from './hooks/useEhDesktop'
 import { PicoPage } from './pages/PicoPage'
 import { AcoesPage } from './pages/AcoesPage'
 import { PerfilPage } from './pages/PerfilPage'
@@ -35,6 +37,7 @@ const EstiloDemoPage = lazy(() => import('./pages/EstiloDemoPage').then((m) => (
 
 export default function App() {
   const { pathname } = useLocation()
+  const ehDesktop = useEhDesktop()
   const semNav = pathname === '/capturar' || pathname === '/termos' || pathname.startsWith('/nova-acao')
 
   useEffect(() => {
@@ -48,6 +51,17 @@ export default function App() {
         <AdminPage />
         <UpdatePrompt />
       </Suspense>
+    )
+  }
+
+  // Desktop → sempre a landing com QR (o app é feito para o celular).
+  // Admin fica de fora (acima). Abaixo de 1024px, o app segue normal.
+  if (ehDesktop) {
+    return (
+      <>
+        <DesktopQRLanding />
+        <UpdatePrompt />
+      </>
     )
   }
 
