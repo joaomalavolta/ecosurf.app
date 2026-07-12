@@ -4,7 +4,7 @@ import { IconShieldCheck, IconPencil, IconEye, IconShare2, IconPhoto, IconCamera
 import { Header } from '../components/Header'
 import { SkeletonLinha } from '../components/Skeleton'
 import { toast } from '../lib/toast'
-import { versoesDeArquivo } from '../lib/imagem'
+import { CorteFoto } from '../components/CorteFotoLazy'
 import {
   carregarComunidade, listarMembros, definirPapel, meuPapel, atualizarComunidade,
   type Comunidade, type PapelComunidade,
@@ -27,16 +27,23 @@ export function GerenciarComunidadePage() {
   const [membros, setMembros] = useState<{ usuarioId: string; nome: string; avatar?: string; papel: PapelComunidade }[]>([])
   const [carregando, setCarregando] = useState(true)
   const [salvandoImg, setSalvandoImg] = useState(false)
+  const [cortando, setCortando] = useState<{ file: File; tipo: 'avatar' | 'capa' } | null>(null)
   const refCapa = useRef<HTMLInputElement>(null)
   const refAvatar = useRef<HTMLInputElement>(null)
 
-  async function trocarImagem(file: File | undefined, tipo: 'avatar' | 'capa') {
-    if (!file || !comunidadeId) return
+  // Escolher a foto abre o corte; o upload só acontece com o enquadramento
+  // confirmado — capa e logo mantêm a proporção padrão do sistema.
+  function escolherImagem(file: File | undefined, tipo: 'avatar' | 'capa') {
+    if (!file) return
+    setCortando({ file, tipo })
+  }
+
+  async function aoCortar(blob: Blob) {
+    const tipo = cortando?.tipo
+    setCortando(null)
+    if (!tipo || !comunidadeId) return
     setSalvandoImg(true)
     try {
-      const v = await versoesDeArquivo(file)
-      const blob = tipo === 'avatar' ? (v.thumb ?? v.full) : (v.full ?? v.thumb)
-      if (!blob) throw new Error('Não foi possível processar a imagem.')
       await atualizarComunidade(comunidadeId, tipo === 'avatar' ? { avatarBlob: blob } : { capaBlob: blob })
       const atualizada = await carregarComunidade(comunidadeId)
       setC(atualizada)
@@ -137,9 +144,9 @@ export function GerenciarComunidadePage() {
             {!c?.avatarUrl && <IconCamera size={22} stroke={1.9} color="#fff" />}
           </button>
           <input ref={refCapa} type="file" accept="image/*" hidden
-            onChange={(e) => void trocarImagem(e.target.files?.[0], 'capa')} />
+            onChange={(e) => escolherImagem(e.target.files?.[0], 'capa')} />
           <input ref={refAvatar} type="file" accept="image/*" hidden
-            onChange={(e) => void trocarImagem(e.target.files?.[0], 'avatar')} />
+            onChange={(e) => escolherImagem(e.target.files?.[0], 'avatar')} />
         </div>
 
         <button className="btn acento full" onClick={convidar}>
@@ -199,6 +206,17 @@ export function GerenciarComunidadePage() {
           </div>
         )}
       </div>
+
+      {cortando && (
+        <CorteFoto
+          arquivo={cortando.file}
+          proporcao={cortando.tipo === 'avatar' ? 1 : 16 / 5}
+          maxLargura={cortando.tipo === 'avatar' ? 400 : 1600}
+          titulo={cortando.tipo === 'avatar' ? 'Enquadre a logo' : 'Enquadre a capa'}
+          onPronto={(b) => void aoCortar(b)}
+          onCancelar={() => setCortando(null)}
+        />
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
+import { CorteFoto } from '../components/CorteFotoLazy'
 import { statusPerfil } from '../services/perfil'
 
 const TIPOS_ACAO = [
@@ -78,6 +79,7 @@ export function FormularioMutiraoPage() {
   const [vagas, setVagas] = useState<number | undefined>()
   const [infoVoluntarios, setInfoVoluntarios] = useState('')
   const [imagemCapa, setImagemCapa] = useState<File | undefined>()
+  const [cortando, setCortando] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | undefined>()
 
   useEffect(() => {
@@ -126,12 +128,22 @@ export function FormularioMutiraoPage() {
     }
   }, [lat, modoEdicao])
 
+  // A capa passa pelo corte 4:3 antes de virar preview — o card do mutirão
+  // no mapa e no carrossel sempre recebe a mesma proporção.
   function selecionarImagem(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setCortando(file)
+    e.target.value = ''
+  }
+
+  function aoCortarCapa(blob: Blob) {
+    const nome = (cortando?.name ?? 'capa').replace(/\.[^.]+$/, '') + '.webp'
+    const arquivo = new File([blob], nome, { type: 'image/webp' })
+    setCortando(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setImagemCapa(file)
-    setPreviewUrl(URL.createObjectURL(file))
+    setImagemCapa(arquivo)
+    setPreviewUrl(URL.createObjectURL(arquivo))
   }
 
   function podePublicar(): boolean {
@@ -426,6 +438,17 @@ export function FormularioMutiraoPage() {
           </button>
         )}
       </div>
+
+      {cortando && (
+        <CorteFoto
+          arquivo={cortando}
+          proporcao={4 / 3}
+          maxLargura={1600}
+          titulo="Enquadre a capa do mutirão"
+          onPronto={aoCortarCapa}
+          onCancelar={() => setCortando(null)}
+        />
+      )}
     </div>
   )
 }

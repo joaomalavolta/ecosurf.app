@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IconCamera, IconUsers, IconPhoto } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { toast } from '../lib/toast'
-import { versoesDeArquivo } from '../lib/imagem'
+import { CorteFoto } from '../components/CorteFotoLazy'
 import { criarComunidade, type CategoriaComunidade } from '../services/comunidades'
 
 const CATEGORIAS: { id: CategoriaComunidade; label: string; desc: string }[] = [
@@ -30,18 +30,24 @@ export function CriarComunidadePage() {
   const [avatar, setAvatar] = useState<{ blob: Blob; url: string } | null>(null)
   const [capa, setCapa] = useState<{ blob: Blob; url: string } | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [cortando, setCortando] = useState<{ file: File; tipo: 'avatar' | 'capa' } | null>(null)
 
   const refAvatar = useRef<HTMLInputElement>(null)
   const refCapa = useRef<HTMLInputElement>(null)
 
-  async function escolherImagem(file: File | undefined, tipo: 'avatar' | 'capa') {
+  // A foto escolhida vai primeiro para o corte: assim capa e logo nascem na
+  // proporção certa e nunca aparecem esticadas ou cortadas pelo layout.
+  function escolherImagem(file: File | undefined, tipo: 'avatar' | 'capa') {
     if (!file) return
-    const v = await versoesDeArquivo(file)
-    // avatar usa a versão leve (400px basta num círculo); capa usa a cheia
-    const blob = tipo === 'avatar' ? (v.thumb ?? v.full) : (v.full ?? v.thumb)
-    if (!blob) { toast('Não foi possível processar a imagem.'); return }
+    setCortando({ file, tipo })
+  }
+
+  function aoCortar(blob: Blob) {
+    const alvo = cortando?.tipo
+    setCortando(null)
+    if (!alvo) return
     const url = URL.createObjectURL(blob)
-    if (tipo === 'avatar') setAvatar({ blob, url })
+    if (alvo === 'avatar') setAvatar({ blob, url })
     else setCapa({ blob, url })
   }
 
@@ -106,9 +112,9 @@ export function CriarComunidadePage() {
             {!avatar && <IconCamera size={24} stroke={1.9} color="#fff" />}
           </button>
           <input ref={refCapa} type="file" accept="image/*" hidden
-            onChange={(e) => void escolherImagem(e.target.files?.[0], 'capa')} />
+            onChange={(e) => escolherImagem(e.target.files?.[0], 'capa')} />
           <input ref={refAvatar} type="file" accept="image/*" hidden
-            onChange={(e) => void escolherImagem(e.target.files?.[0], 'avatar')} />
+            onChange={(e) => escolherImagem(e.target.files?.[0], 'avatar')} />
         </div>
 
         <label className="form-label">Nome da comunidade *</label>
@@ -170,6 +176,17 @@ export function CriarComunidadePage() {
           Você será o administrador e poderá convidar pessoas e promover co-autores.
         </p>
       </div>
+
+      {cortando && (
+        <CorteFoto
+          arquivo={cortando.file}
+          proporcao={cortando.tipo === 'avatar' ? 1 : 16 / 5}
+          maxLargura={cortando.tipo === 'avatar' ? 400 : 1600}
+          titulo={cortando.tipo === 'avatar' ? 'Enquadre a logo' : 'Enquadre a capa'}
+          onPronto={aoCortar}
+          onCancelar={() => setCortando(null)}
+        />
+      )}
     </div>
   )
 }

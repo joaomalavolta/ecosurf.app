@@ -15,6 +15,7 @@ import { CheckboxAceite } from '../components/CheckboxAceite'
 // e no admin; falta ligar o modo edição pelo autor (rota /alerta/:id/editar).
 import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
+import { CorteFoto } from '../components/CorteFotoLazy'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
@@ -48,6 +49,7 @@ export function FormularioAlertaPage() {
     () => new URLSearchParams(window.location.search).get('comunidade'),
   )
   const [fotos, setFotos] = useState<File[]>([])
+  const [filaCorte, setFilaCorte] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [lat, setLat] = useState<number | undefined>()
   const [lng, setLng] = useState<number | undefined>()
@@ -81,12 +83,22 @@ export function FormularioAlertaPage() {
     }
   }, [etapa, lat])
 
+  // Cada foto escolhida entra numa fila de corte 4:3. Padronizar na origem é
+  // o que permite exibir tudo com o quadro cheio, sem cortar o assunto nem
+  // deixar cada denúncia com uma proporção diferente.
   function adicionarFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []).slice(0, 3 - fotos.length)
     if (files.length === 0) return
-    setFotos((prev) => [...prev, ...files])
-    setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    setFilaCorte(files)
     e.target.value = ''
+  }
+
+  function aoCortarFoto(blob: Blob) {
+    const original = filaCorte[0]
+    const cortada = new File([blob], (original?.name ?? 'foto').replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' })
+    setFotos((prev) => [...prev, cortada])
+    setPreviewUrls((prev) => [...prev, URL.createObjectURL(cortada)])
+    setFilaCorte((f) => f.slice(1))
   }
 
   function removerFoto(i: number) {
@@ -420,6 +432,18 @@ export function FormularioAlertaPage() {
           </button>
         )}
       </div>
+
+      {filaCorte.length > 0 && (
+        <CorteFoto
+          key={filaCorte.length}
+          arquivo={filaCorte[0]}
+          proporcao={4 / 3}
+          maxLargura={1600}
+          titulo={filaCorte.length > 1 ? `Enquadre a foto (${filaCorte.length} restantes)` : 'Enquadre a foto'}
+          onPronto={aoCortarFoto}
+          onCancelar={() => setFilaCorte((f) => f.slice(1))}
+        />
+      )}
     </div>
   )
 }
