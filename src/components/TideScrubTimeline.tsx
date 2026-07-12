@@ -564,6 +564,17 @@ export function TideScrubTimeline({
               })()}
               {/* Filled area */}
               <path d={area} fill="url(#grad-mare-v3)" />
+
+              {/* Grade horizontal sutil (leitura de altura sem esforço) */}
+              {[0.25, 0.5, 0.75].map((f) => (
+                <line key={f} x1={0} x2={VB_W} y1={6 + f * 30} y2={6 + f * 30}
+                  stroke="rgba(255,255,255,.07)" strokeWidth="0.4" vectorEffect="non-scaling-stroke" />
+              ))}
+              {/* Marcas de hora (6h · 12h · 18h) */}
+              {[6, 12, 18].map((h) => (
+                <line key={h} x1={x(h)} x2={x(h)} y1={VB_H - 3} y2={VB_H}
+                  stroke="rgba(255,255,255,.22)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+              ))}
               {/* Curve line with glow */}
               <path d={linha} fill="none" stroke="url(#grad-linha-v3)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" filter="url(#glow-line)" />
 
@@ -635,6 +646,40 @@ export function TideScrubTimeline({
                 pointerEvents: 'none', zIndex: 5,
                 transition: scrubHora == null ? 'left .1s ease-out' : 'none',
               }} />
+            )}
+
+            {/* Eixo de horas: orientação temporal objetiva */}
+            {[0, 6, 12, 18, 24].map((h) => (
+              <span key={`hx-${h}`} className="dado" style={{
+                position: 'absolute',
+                bottom: 4,
+                left: `${(h / 24) * 100}%`,
+                transform: h === 0 ? 'none' : h === 24 ? 'translateX(-100%)' : 'translateX(-50%)',
+                fontSize: 8.5, fontWeight: 600,
+                color: 'var(--muted)', opacity: 0.55,
+                pointerEvents: 'none',
+              }}>
+                {h === 24 ? '24h' : `${h}h`}
+              </span>
+            ))}
+
+            {/* Chip de leitura ao arrastar: a maré exata sob o dedo */}
+            {scrubHora != null && (
+              <span className="dado" style={{
+                position: 'absolute',
+                left: `${(scrubHora / 24) * 100}%`,
+                top: Math.max(2, 28 + topPx(alturaNaHora(curvaDoDia, scrubHora)) - 30),
+                transform: 'translateX(-50%)',
+                background: '#0D6EA8',
+                color: '#fff',
+                borderRadius: 9,
+                padding: '3px 9px',
+                fontSize: 10.5, fontWeight: 800, whiteSpace: 'nowrap',
+                boxShadow: '0 3px 10px rgba(0,0,0,.35)',
+                pointerEvents: 'none', zIndex: 6,
+              }}>
+                {alturaNaHora(curvaDoDia, scrubHora).toFixed(2)}m · {fmtHora(scrubHora)}
+              </span>
             )}
 
             {/* Floating badges — maré alta/baixa */}

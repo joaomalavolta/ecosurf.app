@@ -261,20 +261,44 @@ export function AlertaPage() {
         {!isEditing ? (
           alerta.images && alerta.images.length > 0 && (
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-              {alerta.images.map((path, i) => (
-                <img
-                  key={i}
-                  src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`}
-                  alt={`Foto ${i + 1}`}
-                  style={{
-                    width: alerta.images!.length === 1 ? '100%' : 260,
-                    height: 200,
-                    objectFit: 'cover',
-                    borderRadius: 14,
-                    flexShrink: 0,
-                  }}
-                />
-              ))}
+              {alerta.images.map((path, i) => {
+                const url = `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`
+                return (
+                  /* Padrão "fundo vivo": a mesma foto desfocada preenche o quadro
+                     e a foto inteira (contain) flutua por cima — o assunto da
+                     denúncia aparece completo, sem corte nem letterbox morto. */
+                  <div
+                    key={i}
+                    style={{
+                      position: 'relative',
+                      width: alerta.images!.length === 1 ? '100%' : 280,
+                      height: 220,
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      background: '#0a1929',
+                    }}
+                  >
+                    <img
+                      src={url}
+                      alt=""
+                      aria-hidden
+                      style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        objectFit: 'cover', filter: 'blur(16px) brightness(.72)', transform: 'scale(1.12)',
+                      }}
+                    />
+                    <img
+                      src={url}
+                      alt={`Foto ${i + 1}`}
+                      style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </div>
+                )
+              })}
             </div>
           )
         ) : (
