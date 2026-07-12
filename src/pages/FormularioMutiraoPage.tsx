@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { SkeletonFormulario } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
+import { IconCrop, IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
@@ -135,6 +135,21 @@ export function FormularioMutiraoPage() {
     if (!file) return
     setCortando(file)
     e.target.value = ''
+  }
+
+  /** Reabre o corte da capa atual — seja um arquivo recém-escolhido ou a
+   *  imagem já publicada (baixada do storage). */
+  async function reenquadrarCapa() {
+    if (imagemCapa) { setCortando(imagemCapa); return }
+    if (!previewUrl) return
+    try {
+      const r = await fetch(previewUrl)
+      if (!r.ok) throw new Error()
+      const b = await r.blob()
+      setCortando(new File([b], 'capa.jpg', { type: b.type || 'image/jpeg' }))
+    } catch {
+      toast('Não foi possível abrir a capa para ajuste.')
+    }
   }
 
   function aoCortarCapa(blob: Blob) {
@@ -351,8 +366,23 @@ export function FormularioMutiraoPage() {
         <div>
           <label className="form-label">Imagem de capa</label>
           {previewUrl && (
-            <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
-              <img src={previewUrl} alt="Capa" style={{ width: '100%', height: 160, objectFit: 'cover' }} />
+            <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', marginBottom: 10, aspectRatio: '4 / 3', background: '#0a1929' }}>
+              <img src={previewUrl} alt="Capa" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              {/* Reenquadrar a capa já publicada (edição) — o dono decide o
+                  recorte em vez de sofrer um corte automático. */}
+              <button
+                type="button"
+                onClick={() => void reenquadrarCapa()}
+                style={{
+                  position: 'absolute', right: 8, bottom: 8,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: 'rgba(0,0,0,.62)', color: '#fff', border: 0, cursor: 'pointer',
+                  padding: '6px 10px', borderRadius: 9,
+                  fontSize: 11.5, fontWeight: 700, fontFamily: 'inherit',
+                }}
+              >
+                <IconCrop size={13} stroke={2} /> Ajustar
+              </button>
             </div>
           )}
           <div style={{ display: 'flex', gap: 10 }}>

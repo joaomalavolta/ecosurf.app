@@ -152,8 +152,8 @@ export function MutiraoPage() {
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 80 }}>
         {/* Imagem de capa */}
         {mutirao.imagemUrl ? (
-          <div style={{ borderRadius: 14, overflow: 'hidden', height: 200 }}>
-            <img src={mutirao.imagemUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ borderRadius: 14, overflow: 'hidden', aspectRatio: '4 / 3', background: '#0a1929' }}>
+            <img src={mutirao.imagemUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
         ) : (
           <div style={{

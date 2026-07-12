@@ -539,7 +539,7 @@ export function AlertaPage() {
           </button>
         )}
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
           {!isEditing ? (
             <>
               <button className="btn outline full" onClick={() => navigate('/acoes')}>
