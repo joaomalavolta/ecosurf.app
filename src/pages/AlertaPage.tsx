@@ -539,12 +539,23 @@ export function AlertaPage() {
           </button>
         )}
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+        {/* Grade 2×2: com quatro ações, a linha flex sempre estourava a tela
+            (o "Excluir registro" não encolhia e empurrava o resto). Na grade,
+            cada botão recebe exatamente metade da largura — nunca vaza. */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
           {!isEditing ? (
             <>
-              <button className="btn outline full" onClick={() => navigate('/acoes')}>
+              <button className="btn outline" onClick={() => navigate('/acoes')}>
                 <IconArrowLeft size={16} /> Voltar
               </button>
+              <button className="btn acento" onClick={() => setVer(v => v + 1)}>
+                <IconRefresh size={16} /> Atualizar
+              </button>
+              {(isOwner || userId === alerta.autor_id) && (
+                <button className="btn outline" onClick={() => setIsEditing(true)}>
+                  Editar
+                </button>
+              )}
               {(isOwner || userId === alerta.autor_id) && (
                 <button
                   className="btn outline"
@@ -557,25 +568,17 @@ export function AlertaPage() {
                     else toast('Não foi possível apagar. Verifique a conexão e tente de novo.')
                   }}
                 >
-                  Excluir registro
+                  Excluir
                 </button>
               )}
-              {(isOwner || userId === alerta.autor_id) && (
-                <button className="btn outline full" onClick={() => setIsEditing(true)}>
-                  Editar
-                </button>
-              )}
-              <button className="btn acento full" onClick={() => setVer(v => v + 1)}>
-                <IconRefresh size={16} /> Atualizar
-              </button>
             </>
           ) : (
             <>
-              <button className="btn outline full" onClick={cancelarEdicao} disabled={salvando}>
+              <button className="btn outline" onClick={cancelarEdicao} disabled={salvando}>
                 Cancelar
               </button>
-              <button className="btn acento full" onClick={salvarEdicao} disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Salvar Alterações'}
+              <button className="btn acento" onClick={salvarEdicao} disabled={salvando}>
+                {salvando ? 'Salvando…' : 'Salvar'}
               </button>
             </>
           )}
