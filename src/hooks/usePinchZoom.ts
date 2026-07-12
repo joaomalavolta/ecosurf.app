@@ -15,6 +15,14 @@ import { useEffect, useRef, useState, type RefObject } from 'react'
  * Retorna se o zoom de lente está disponível (para a UI decidir se mostra
  * algum indicador), mas funciona mesmo quando não está.
  */
+/**
+ * Suavidade da pinça. Expoente < 1 faz o zoom avançar mais devagar que os
+ * dedos: com 0.45, abrir os dedos ao dobro (fator 2) leva o zoom a ~1.37×,
+ * não a 2×. Isso dá controle fino para parar no enquadramento desejado —
+ * a queixa era que o zoom "corria" e passava do ponto.
+ */
+const SUAVIDADE = 0.45
+
 export function usePinchZoom(
   alvoRef: RefObject<HTMLElement | null>,
   streamRef: RefObject<MediaStream | null>,
@@ -68,10 +76,7 @@ export function usePinchZoom(
       if (!caps || !track) return // sem zoom de lente: só bloqueia a página
 
       const fator = distancia(e.touches) / (distInicial.current || 1)
-      // Curva suavizada (expoente < 1): o zoom avança mais devagar que os
-      // dedos — fácil de parar no nível certo, perto da sensação da câmera
-      // nativa. Linear (fator puro) era nervoso demais.
-      let novo = zoomInicial.current * Math.pow(fator, 0.6)
+      let novo = zoomInicial.current * Math.pow(fator, SUAVIDADE)
       novo = Math.min(caps.max, Math.max(caps.min, novo))
       try {
         await track.applyConstraints({ advanced: [{ zoom: novo } as unknown as MediaTrackConstraintSet] })
@@ -99,7 +104,7 @@ export function usePinchZoom(
       // `scale` é a razão do pinça desde o início do gesto (propriedade iOS).
       const scale = (e as unknown as { scale?: number }).scale
       if (!caps || !track || !scale) return // sem zoom de lente: só bloqueia
-      let novo = zoomInicial.current * Math.pow(scale, 0.6) // curva suavizada
+      let novo = zoomInicial.current * Math.pow(scale, SUAVIDADE)
       novo = Math.min(caps.max, Math.max(caps.min, novo))
       try {
         await track.applyConstraints({ advanced: [{ zoom: novo } as unknown as MediaTrackConstraintSet] })

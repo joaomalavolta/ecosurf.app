@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import { IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
@@ -204,6 +204,28 @@ export function RadarPage() {
                   >
                     <IconCompass size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Abrir Explorar completo →
                   </Link>
+
+                  {/* Ações da comunidade — o território acima, o que fazer com
+                      ele aqui. No Perfil isso ficava enterrado. */}
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 10, paddingTop: 10 }}>
+                    <Link
+                      to="/comunidades/nova"
+                      onClick={() => setMenuTerritorio(false)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '10px 8px', borderRadius: 10,
+                        color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                        background: 'rgba(30,203,195,.14)',
+                        border: '1px solid rgba(30,203,195,.3)',
+                      }}
+                    >
+                      <IconUsersGroup size={16} stroke={2} style={{ color: '#7FE7E1', flexShrink: 0 }} />
+                      Criar comunidade
+                    </Link>
+                    <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 10.5, lineHeight: 1.4, margin: '8px 4px 2px' }}>
+                      Reúna pessoas em torno de uma praia, projeto ou causa.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
