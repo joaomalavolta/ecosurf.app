@@ -3,33 +3,50 @@ import { useNavigate } from 'react-router-dom'
 import { IconArrowLeft } from '@tabler/icons-react'
 
 /**
- * Voltar flutuante — aparece quando o usuário já rolou o suficiente para o
- * botão do topo sair de vista, e some quando ele volta ao topo (lá o Header
- * já resolve). Fica acima da barra inferior, à esquerda, longe do botão
- * central de captura: é um atalho discreto, não um elemento que compete com
- * o conteúdo. Vidro fosco para pousar sobre qualquer foto sem sujar a tela.
+ * Voltar flutuante — aparece quando o conteúdo já rolou o bastante para o
+ * voltar do topo ficar longe, e some ao retornar ao topo.
+ *
+ * Detalhe que custou uma tentativa: quem rola NÃO é a janela, e sim o
+ * `.app-shell` (o app define `html, body { height:100%; overflow-x:hidden }`,
+ * e com um eixo escondido o outro vira `auto` — `window.scrollY` fica em 0
+ * para sempre). O Header usa exatamente o mesmo alvo para encolher; seguimos
+ * a mesma fonte de verdade, com a janela como reserva.
  */
 export function VoltarFlutuante({ para }: { para?: string }) {
   const navigate = useNavigate()
   const [visivel, setVisivel] = useState(false)
 
   useEffect(() => {
-    // Só aparece depois que o topo saiu de cena — antes disso seria ruído.
     const LIMIAR = 260
-    let ticking = false
+    const shell = document.querySelector('.app-shell') as HTMLElement | null
 
-    function aoRolar() {
-      if (ticking) return
-      ticking = true
+    // Não assumimos QUEM rola: lemos todos os candidatos e usamos o maior.
+    // Assim o botão funciona com o shell rolando, com o body rolando, ou se
+    // esse detalhe de layout mudar amanhã.
+    const posicao = () => Math.max(
+      shell?.scrollTop ?? 0,
+      window.scrollY,
+      document.documentElement.scrollTop,
+      document.body.scrollTop,
+    )
+
+    let pendente = false
+    const aoRolar = () => {
+      if (pendente) return
+      pendente = true
       requestAnimationFrame(() => {
-        setVisivel(window.scrollY > LIMIAR)
-        ticking = false
+        setVisivel(posicao() > LIMIAR)
+        pendente = false
       })
     }
 
     aoRolar()
+    shell?.addEventListener('scroll', aoRolar, { passive: true })
     window.addEventListener('scroll', aoRolar, { passive: true })
-    return () => window.removeEventListener('scroll', aoRolar)
+    return () => {
+      shell?.removeEventListener('scroll', aoRolar)
+      window.removeEventListener('scroll', aoRolar)
+    }
   }, [])
 
   return (
