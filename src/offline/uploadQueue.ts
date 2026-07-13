@@ -84,6 +84,12 @@ export async function flush(): Promise<void> {
           // Erro de autenticação: não retentar (bloqueado até login)
           u.status = 'bloqueado'
           u.erro = msg
+        } else if (msg.includes('PICO_DUPLICADO')) {
+          // O servidor barrou um pico igual a um vizinho. Retentar não resolve
+          // (vai falhar sempre): paramos a fila e mostramos o recado do banco,
+          // que já vem em português e diz qual pico usar.
+          u.status = 'bloqueado'
+          u.erro = msg.replace(/^.*PICO_DUPLICADO:\s*/, '')
         } else {
           u.status = 'falhou'
           u.erro = msg

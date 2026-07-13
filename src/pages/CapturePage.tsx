@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { usePinchZoom } from '../hooks/usePinchZoom'
@@ -95,6 +95,18 @@ export function CapturePage() {
   
   const [picosExistentes, setPicosExistentes] = useState<import('../types/domain').Pico[]>([])
   const [modoNovoPico, setModoNovoPico] = useState(false)
+
+  // Picos a até 300 m de onde a pessoa está: se existem, criar outro aqui é
+  // quase certamente uma duplicata. (O banco também barra nome-eco a <600 m,
+  // mas o aviso aqui evita que ela chegue a esbarrar no erro.)
+  const picosProximosDaqui = useMemo(() => {
+    if (!posCapturada.lat || !posCapturada.lng) return []
+    return picosExistentes
+      .map((p) => ({ pico: p, metros: Math.round(haversineKm(posCapturada.lat!, posCapturada.lng!, p.lat, p.lng) * 1000) }))
+      .filter((c) => c.metros <= 300)
+      .sort((a, b) => a.metros - b.metros)
+      .slice(0, 3)
+  }, [posCapturada, picosExistentes])
   const [picoFinal, setPicoFinal] = useState<string | null>(null)
   const [catAlerta, setCatAlerta] = useState<import('../types/domain').CategoriaAlerta | undefined>()
   const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
@@ -813,6 +825,49 @@ export function CapturePage() {
 
           {(modoNovoPico || picosExistentes.length === 0) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Antes de criar, mostramos o que já existe por perto. A duplicata
+                "Boca Da Barra" × "Boca Da Barra - Boca Da Barra" (120 m) nasceu
+                justamente porque o pico existente não estava à vista aqui. */}
+            {picosProximosDaqui.length > 0 && (
+              <div style={{
+                background: 'rgba(232,115,74,.13)', border: '1px solid rgba(232,115,74,.34)',
+                borderRadius: 12, padding: '11px 12px',
+              }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 9 }}>
+                  <IconAlertTriangle size={16} stroke={2} style={{ color: '#F0A17E', flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 1.45 }}>
+                    {picosProximosDaqui.length === 1
+                      ? 'Já existe um pico cadastrado bem aqui. É este?'
+                      : 'Já existem picos cadastrados bem aqui. É algum destes?'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {picosProximosDaqui.map(({ pico, metros }) => (
+                    <button
+                      key={pico.id}
+                      onClick={() => { setModoNovoPico(false); void finalizarUpload(pico.id, blobCapturado, posCapturada, thumbCapturado) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                        padding: '9px 10px', borderRadius: 10, cursor: 'pointer',
+                        fontFamily: 'inherit', textAlign: 'left',
+                        background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.16)',
+                      }}
+                    >
+                      <IconRipple size={15} stroke={2} style={{ color: '#7FE7E1', flexShrink: 0 }} />
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ color: '#fff', fontWeight: 600, fontSize: 13.5, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {pico.nome}
+                        </span>
+                        <span className="dado" style={{ color: 'rgba(255,255,255,.5)', fontSize: 10.5 }}>
+                          a {metros} m — usar este pico
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <label style={{ display: 'block', color: 'rgba(255,255,255,.8)', fontSize: 12, marginBottom: 4, paddingLeft: 4 }}>
                 Praia (ou Cidade)
