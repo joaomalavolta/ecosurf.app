@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef, Suspense } from 'react'
+import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
 import { Link } from 'react-router-dom'
 import { IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -32,7 +33,17 @@ function agruparPorPico(fotos: Foto[]): Map<string, Foto[]> {
 }
 
 export function RadarPage() {
-  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [filtro, setFiltroEstado] = useState<Filtro>(() => {
+    const salvo = lerPreferencia<string>('feed', 'filtroInicial', 'todos')
+    return (['favoritos', 'melhores', 'todos', 'seguindo'] as const).includes(salvo as Filtro)
+      ? (salvo as Filtro)
+      : 'todos'
+  })
+  // O Radar abre na última aba usada — "escolhe uma vez, o app lembra sempre".
+  const setFiltro = useCallback((f: Filtro) => {
+    setFiltroEstado(f)
+    gravarPreferencia('feed', 'filtroInicial', f)
+  }, [])
   const [picosTodos, setPicosTodos] = useState<Pico[]>([])
   const [fc, setFc] = useState<Record<string, Forecast>>({})
   const [feed, setFeed] = useState<Foto[]>([])

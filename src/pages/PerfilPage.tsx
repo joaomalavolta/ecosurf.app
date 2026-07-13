@@ -10,6 +10,7 @@ import { ehModerador } from '../services/moderacao'
 import { meuStatus, permissoes, sair } from '../services/admin'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
 
 function Stat({ k, v, icon: Icon }: { k: string; v: string | number; icon: React.ElementType }) {
   return (
@@ -25,7 +26,8 @@ export function PerfilPage() {
   const [perfil, setPerfil] = useState<PerfilAtual | null>(null)
   const [mod, setMod] = useState(false)
   const [painel, setPainel] = useState(false)
-  const [borrarFotos, setBorrarFotos] = useState(() => localStorage.getItem('borrarRostos') !== 'false')
+  const [borrarFotos, setBorrarFotos] = useState(() =>
+    lerPreferencia('privacidade', 'borrarRostos', localStorage.getItem('borrarRostos') !== 'false'))
   const [verPrefs, setVerPrefs] = useState(false)
   const [comunidades, setComunidades] = useState<{ comunidade: import('../services/comunidades').Comunidade; papel: import('../services/comunidades').PapelComunidade }[]>([])
   const [verConquistas, setVerConquistas] = useState(false)
@@ -104,8 +106,9 @@ export function PerfilPage() {
   function toggleBorrar() {
     const val = !borrarFotos
     setBorrarFotos(val)
-    localStorage.setItem('borrarRostos', val ? 'true' : 'false')
-    toast('Preferência de privacidade salva no dispositivo.')
+    gravarPreferencia('privacidade', 'borrarRostos', val)
+    try { localStorage.setItem('borrarRostos', val ? 'true' : 'false') } catch { /* modo privado */ }
+    toast('Preferência de privacidade salva na sua conta.')
   }
 
   async function uploadAvatar(file: File) {

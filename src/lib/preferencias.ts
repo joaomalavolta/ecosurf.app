@@ -8,11 +8,12 @@
  * cache + Supabase). As chaves antigas de localStorage seguem como fallback
  * de leitura — quem já tinha escolhido não perde nada na migração.
  */
-import { lerPreferencia, gravarPreferencia, carregarPreferencias } from '../services/preferencias-conta'
+import { lerPreferencia, gravarPreferencia, carregarPreferencias, restaurarCategoria } from '../services/preferencias-conta'
 import { aplicarTema, type Tema } from '../theme'
 
 const CH_TEXTO = 'ecosurf.texto-grande'
 const CH_ANIM = 'ecosurf.reduz-animacao'
+const CH_SO_FOTOS = 'ecosurf.timeline-so-com-fotos'
 
 function lerLegado(chave: string): boolean {
   try { return localStorage.getItem(chave) === '1' } catch { return false }
@@ -38,6 +39,29 @@ export function setTextoGrande(v: boolean): void {
 
 export function setReduzAnimacao(v: boolean): void {
   gravarPreferencia('aparencia', 'reduzAnimacao', v)
+  aplicarPreferencias()
+}
+
+/** Toggle "só dias com fotos" da timeline — mesma preferência do botão da régua. */
+export const soComFotosAtivo = (): boolean =>
+  lerPreferencia('timeline', 'soComFotos', lerLegado(CH_SO_FOTOS))
+export function setSoComFotos(v: boolean): void {
+  gravarPreferencia('timeline', 'soComFotos', v)
+}
+
+/**
+ * Restaura aparência e timeline ao padrão — na conta E nas chaves locais
+ * antigas (senão o fallback de migração ressuscitaria a escolha antiga).
+ */
+export async function restaurarPreferenciasDoApp(): Promise<void> {
+  await restaurarCategoria('aparencia')
+  await restaurarCategoria('timeline')
+  try {
+    localStorage.removeItem(CH_TEXTO)
+    localStorage.removeItem(CH_ANIM)
+    localStorage.removeItem(CH_SO_FOTOS)
+  } catch { /* modo privado */ }
+  aplicarTema('light', false)
   aplicarPreferencias()
 }
 

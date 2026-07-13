@@ -6,9 +6,7 @@ import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
 import { denunciarFoto } from '../services/moderacao'
-import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
-
-const CH_SO_FOTOS = 'ecosurf.timeline-so-com-fotos'
+import { soComFotosAtivo, setSoComFotos as gravarSoComFotos } from '../lib/preferencias'
 import { Photo } from './Photo'
 import { ProvenanceBadge } from './ProvenanceBadge'
 
@@ -154,18 +152,12 @@ export function TideScrubTimeline({
   const tabsRef = useRef<HTMLDivElement>(null)
 
   // "Só dias com fotos": poupa o desliza-desliza por dias vazios na régua e
-  // nas setas. Persistido na conta (preferências), com fallback à chave local
-  // antiga para quem ativou antes da sincronização existir.
-  const [soComFotos, setSoComFotos] = useState<boolean>(() => {
-    const legado = (() => {
-      try { return localStorage.getItem(CH_SO_FOTOS) === '1' } catch { return false }
-    })()
-    return lerPreferencia('timeline', 'soComFotos', legado)
-  })
+  // nas setas. Persistido na conta (preferências) — mesma chave do Perfil.
+  const [soComFotos, setSoComFotos] = useState<boolean>(() => soComFotosAtivo())
   const alternarSoComFotos = useCallback(() => {
     setSoComFotos(v => {
       const nv = !v
-      gravarPreferencia('timeline', 'soComFotos', nv)
+      gravarSoComFotos(nv)
       return nv
     })
   }, [])

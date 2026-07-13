@@ -6,6 +6,7 @@ import {
 import type { Icon } from '@tabler/icons-react'
 import {
   textoGrandeAtivo, reduzAnimacaoAtivo, setTextoGrande, setReduzAnimacao,
+  soComFotosAtivo, setSoComFotos, restaurarPreferenciasDoApp,
 } from '../lib/preferencias'
 
 function LinhaPref({ Icone, titulo, sub, valor, onToggle }: {
@@ -27,6 +28,7 @@ function LinhaPref({ Icone, titulo, sub, valor, onToggle }: {
 export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
   const [texto, setTexto] = useState(textoGrandeAtivo())
   const [anim, setAnim] = useState(reduzAnimacaoAtivo())
+  const [soFotos, setSoFotos] = useState(soComFotosAtivo())
 
   return (
     <div className="card pad" style={{ marginTop: 12 }}>
@@ -41,9 +43,23 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
           valor={texto} onToggle={() => { const v = !texto; setTexto(v); setTextoGrande(v) }} />
         <LinhaPref Icone={IconWaveSquare} titulo="Reduzir animações" sub="Desliga transições e o voo do mapa"
           valor={anim} onToggle={() => { const v = !anim; setAnim(v); setReduzAnimacao(v) }} />
+        <LinhaPref Icone={IconCamera} titulo="Timeline: só dias com fotos" sub="A régua de dias pula os dias sem registro"
+          valor={soFotos} onToggle={() => { const v = !soFotos; setSoFotos(v); setSoComFotos(v) }} />
       </div>
+      <button
+        className="btn outline full"
+        style={{ marginTop: 10 }}
+        onClick={() => {
+          void restaurarPreferenciasDoApp()
+          setTexto(false)
+          setAnim(false)
+          setSoFotos(false)
+        }}
+      >
+        Restaurar padrão
+      </button>
       <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-        Preferências salvas neste aparelho.
+        Com a conta conectada, valem em todos os seus aparelhos. Sem conta, ficam só neste.
       </p>
     </div>
   )
