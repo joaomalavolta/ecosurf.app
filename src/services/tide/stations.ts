@@ -17,22 +17,17 @@ import { ESTACOES_CHM_2026 } from './estacoes-chm'
  * de cálculo nunca muda.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ CONSTANTES: PREENCHER COM DADOS OFICIAIS DA FEMAR
+ * PAPEL ATUAL DESTE ARQUIVO (leia antes de mexer)
  * ─────────────────────────────────────────────────────────────────────────
- * As fichas abaixo estão com `constituintes: []` DE PROPÓSITO. Enquanto
- * vazias, o pico cai automaticamente nas constantes genéricas do litoral
- * SE/S (CONSTITUINTES_PADRAO) — uma aproximação honesta, não um número
- * inventado se passando por oficial.
- *
- * Para preencher, use a ficha da estação no Catálogo FEMAR
- * (https://www.marinha.mil.br/chm/dados-do-segnav/catalogo-estacoes-mares).
- * Cada linha da ficha traz: Componente | H (amplitude, em cm) | G (fase, em graus).
- *
- * Conversão para o formato daqui:
- *   - nome     = a componente (ex.: 'M2')
- *   - periodoH = período fixo da componente (JÁ preenchido em PERIODOS_H abaixo)
- *   - amp      = H convertido de cm para METROS  (ex.: 42 cm → 0.42)
- *   - faseDeg  = G exatamente como está na ficha (graus)
+ * Este catálogo serve para UMA coisa: localizar a estação com TÁBUA OFICIAL
+ * da DHN mais próxima (prioridade 1 do provider). As `constituintes: []`
+ * vazias são intencionais e NÃO devem mais ser preenchidas aqui — as
+ * constantes harmônicas reais do litoral inteiro vivem em
+ * `estacoes-bndo.ts` (26 estações, fases já em Greenwich verdadeiro) e
+ * alimentam o motor astronômico `lib/tide-astro.ts` (prioridade 2).
+ * O portal antigo da FEMAR saiu do ar; a fonte viva é a monografia
+ * Soares (2013, UFSC) e, para dados novos, pedido gratuito de fichas F-41
+ * ao BNDO (https://www.marinha.mil.br/chm/dados-do-segnav-bndo).
  *
  * Recomendado preencher ao menos as 5 principais (M2, S2, N2, O1, K1); quanto
  * mais componentes, mais fiel a curva. Depois de preencher, rode `npm test`:
