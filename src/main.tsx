@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { aplicarPreferencias } from './lib/preferencias'
+import { aplicarPreferencias, sincronizarPreferenciasDaConta } from './lib/preferencias'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
@@ -11,6 +11,7 @@ iniciarMonitorDeErros()
 iniciarPaginaEstatica()
 
 aplicarPreferencias()
+void sincronizarPreferenciasDaConta()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

@@ -1,42 +1,53 @@
 /**
- * Preferências do app — locais ao aparelho (localStorage), aplicadas como
- * data-attributes no <html> para o CSS reagir. Duas sementes de
- * acessibilidade que funcionam de verdade:
+ * Preferências do app aplicadas como data-attributes no <html> para o CSS
+ * reagir. Duas sementes de acessibilidade que funcionam de verdade:
  *  · texto grande: +10% na base tipográfica (rem-cascata)
  *  · reduzir animações: corta transições e o voo cinematográfico do mapa
+ *
+ * A fonte da verdade agora é o serviço de preferências por conta (memória +
+ * cache + Supabase). As chaves antigas de localStorage seguem como fallback
+ * de leitura — quem já tinha escolhido não perde nada na migração.
  */
+import { lerPreferencia, gravarPreferencia, carregarPreferencias } from '../services/preferencias-conta'
+import { aplicarTema, type Tema } from '../theme'
 
 const CH_TEXTO = 'ecosurf.texto-grande'
 const CH_ANIM = 'ecosurf.reduz-animacao'
 
-function ler(chave: string): boolean {
+function lerLegado(chave: string): boolean {
   try { return localStorage.getItem(chave) === '1' } catch { return false }
 }
 
-function gravar(chave: string, v: boolean): void {
-  try {
-    if (v) localStorage.setItem(chave, '1')
-    else localStorage.removeItem(chave)
-  } catch { /* modo privado */ }
-}
+export const textoGrandeAtivo = (): boolean =>
+  lerPreferencia('aparencia', 'textoGrande', lerLegado(CH_TEXTO))
+export const reduzAnimacaoAtivo = (): boolean =>
+  lerPreferencia('aparencia', 'reduzAnimacao', lerLegado(CH_ANIM))
 
 export function aplicarPreferencias(): void {
   const html = document.documentElement
-  if (ler(CH_TEXTO)) html.dataset.textoGrande = '1'
+  if (textoGrandeAtivo()) html.dataset.textoGrande = '1'
   else delete html.dataset.textoGrande
-  if (ler(CH_ANIM)) html.dataset.reduzAnimacao = '1'
+  if (reduzAnimacaoAtivo()) html.dataset.reduzAnimacao = '1'
   else delete html.dataset.reduzAnimacao
 }
 
-export const textoGrandeAtivo = () => ler(CH_TEXTO)
-export const reduzAnimacaoAtivo = () => ler(CH_ANIM)
-
 export function setTextoGrande(v: boolean): void {
-  gravar(CH_TEXTO, v)
+  gravarPreferencia('aparencia', 'textoGrande', v)
   aplicarPreferencias()
 }
 
 export function setReduzAnimacao(v: boolean): void {
-  gravar(CH_ANIM, v)
+  gravarPreferencia('aparencia', 'reduzAnimacao', v)
+  aplicarPreferencias()
+}
+
+/**
+ * Sincroniza com a conta e reaplica o que mudou (chamar no boot; como o
+ * login recarrega a página, cobre também o pós-login). Fire-and-forget.
+ */
+export async function sincronizarPreferenciasDaConta(): Promise<void> {
+  const p = await carregarPreferencias()
+  const tema = p.aparencia?.tema
+  if (tema === 'dark' || tema === 'light') aplicarTema(tema as Tema, false)
   aplicarPreferencias()
 }
