@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { toast } from '../lib/toast'
-import { useNavigate } from 'react-router-dom'
-import { IconCheck, IconMapPin, IconBeach } from '@tabler/icons-react'
+import { carregarPicos } from '../services/picos'
+import type { Pico } from '../types/domain'
+import { Link, useNavigate } from 'react-router-dom'
+import { IconAlertTriangle, IconRipple, IconChevronRight, IconCheck, IconMapPin, IconBeach } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { statusPerfil } from '../services/perfil'
@@ -12,6 +14,17 @@ const FUNDOS = [
   { id: 'coral', label: 'Coral' },
   { id: 'misto', label: 'Misto' },
 ]
+
+/** Distância em km entre dois pontos (mesma fórmula da captura). */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
 
 function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   return new Promise((res) => {
@@ -38,6 +51,7 @@ export function FormularioPicoPage() {
   const [lng, setLng] = useState<number | undefined>()
   const [fundo, setFundo] = useState('areia')
   const [descricao, setDescricao] = useState('')
+  const [picos, setPicos] = useState<Pico[]>([])
 
   useEffect(() => {
     statusPerfil().then((s) => {
@@ -56,6 +70,22 @@ export function FormularioPicoPage() {
       })
     }
   }, [lat])
+
+  useEffect(() => {
+    carregarPicos().then(setPicos).catch(() => { /* sem lista: o banco ainda barra duplicata */ })
+  }, [])
+
+  // Picos a até 300 m do ponto escolhido. Esta é a SEGUNDA porta de criação de
+  // pico (a primeira é a câmera) — sem este aviso, ela recriaria as duplicatas
+  // que acabamos de mesclar, e o autor só veria um erro seco do servidor.
+  const vizinhos = useMemo(() => {
+    if (!lat || !lng) return []
+    return picos
+      .map((p) => ({ pico: p, metros: Math.round(haversineKm(lat, lng, p.lat, p.lng) * 1000) }))
+      .filter((v) => v.metros <= 300)
+      .sort((a, b) => a.metros - b.metros)
+      .slice(0, 3)
+  }, [lat, lng, picos])
 
   function podePublicar(): boolean {
     return nome.trim().length > 2 && municipio.trim().length > 0 && uf.trim().length === 2
@@ -86,7 +116,14 @@ export function FormularioPicoPage() {
       setPicoId(id)
       setSucesso(true)
     } catch (e) {
-      toast(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`)
+      const msg = e instanceof Error ? e.message : 'desconhecido'
+      // O servidor barra nome-eco a menos de 600 m. A mensagem já vem em
+      // português dizendo qual pico usar — repassamos sem o prefixo técnico.
+      if (msg.includes('PICO_DUPLICADO')) {
+        toast(msg.replace(/^.*PICO_DUPLICADO:\s*/, ''))
+      } else {
+        toast(`Erro: ${msg}`)
+      }
     } finally {
       setEnviando(false)
     }
@@ -163,6 +200,47 @@ export function FormularioPicoPage() {
             <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
               <IconMapPin size={12} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />
               {lat.toFixed(5)}, {lng.toFixed(5)}
+            </div>
+          )}
+
+          {/* Já existe pico aqui? Mostrar ANTES de cadastrar outro. */}
+          {vizinhos.length > 0 && (
+            <div style={{
+              marginTop: 10, padding: '11px 12px', borderRadius: 12,
+              background: 'color-mix(in srgb, #E8734A 10%, transparent)',
+              border: '1px solid color-mix(in srgb, #E8734A 32%, transparent)',
+            }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
+                <IconAlertTriangle size={16} stroke={2} style={{ color: '#C75A35', flexShrink: 0, marginTop: 1 }} />
+                <span style={{ fontSize: 12.5, lineHeight: 1.45 }}>
+                  {vizinhos.length === 1
+                    ? 'Já existe um pico cadastrado bem aqui. Confira se não é o mesmo:'
+                    : 'Já existem picos cadastrados bem aqui. Confira se não é um destes:'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {vizinhos.map(({ pico, metros }) => (
+                  <Link
+                    key={pico.id}
+                    to={`/pico/${pico.id}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '8px 10px', borderRadius: 9,
+                      background: 'var(--card)', border: '1px solid var(--line)',
+                      textDecoration: 'none', color: 'inherit',
+                    }}
+                  >
+                    <IconRipple size={15} stroke={2} style={{ color: 'var(--turq)', flexShrink: 0 }} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13.5, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {pico.nome}
+                      </span>
+                      <span className="muted" style={{ fontSize: 10.5 }}>a {metros} m — abrir este pico</span>
+                    </span>
+                    <IconChevronRight size={15} stroke={2} style={{ color: 'var(--muted)', flexShrink: 0 }} />
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 

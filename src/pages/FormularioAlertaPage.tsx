@@ -11,8 +11,6 @@ import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'
-// TODO(edição-alerta): atualizarAlerta + carregarAlertaParaEdicao existem no serviço
-// e no admin; falta ligar o modo edição pelo autor (rota /alerta/:id/editar).
 import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { CorteFoto } from '../components/CorteFotoLazy'
