@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
+import { PainelPreferencias } from '../components/PreferenciasEConquistas'
 import { Link } from 'react-router-dom'
-import { IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconSettings, IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
@@ -59,6 +60,7 @@ export function RadarPage() {
   const [carregandoFeed, setCarregandoFeed] = useState(true)
   const [verTour, setVerTour] = useState(false)
   const [menuTerritorio, setMenuTerritorio] = useState(false)
+  const [verPrefs, setVerPrefs] = useState(false)
   const [ufMenu, setUfMenu] = useState<string | null>(null)
   const [destinoMapa, setDestinoMapa] = useState<{ lng: number; lat: number; zoom?: number } | null>(null)
   const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
@@ -237,6 +239,19 @@ export function RadarPage() {
                     <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 10.5, lineHeight: 1.4, margin: '8px 4px 2px' }}>
                       Reúna pessoas em torno de uma praia, projeto ou causa.
                     </p>
+                    <button
+                      onClick={() => { setMenuTerritorio(false); setVerPrefs(true) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                        padding: '10px 8px', borderRadius: 10, marginTop: 8,
+                        color: '#fff', fontSize: 13, fontWeight: 600,
+                        background: 'none', border: '1px solid rgba(255,255,255,.14)',
+                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                      }}
+                    >
+                      <IconSettings size={16} stroke={2} style={{ flexShrink: 0, opacity: .85 }} />
+                      Preferências do app
+                    </button>
                   </div>
                 </div>
               </div>
@@ -425,6 +440,17 @@ export function RadarPage() {
 
       </div>
       {verTour && <TourInicial onFechar={() => setVerTour(false)} />}
+      {/* Preferências — o mesmo painel do Perfil, aberto do hambúrguer do mapa */}
+      {verPrefs && (
+        <div
+          onClick={() => setVerPrefs(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(4,20,27,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px, 100%)', padding: '0 12px 14px' }}>
+            <PainelPreferencias onFechar={() => setVerPrefs(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
