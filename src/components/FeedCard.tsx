@@ -96,46 +96,10 @@ export function FeedCard({
             <IconStar size={19} stroke={2} fill={favorito ? '#FFD34D' : 'none'} />
           </button>
         )}
-        <div className="feed-overlay-badges">
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            {/* Crédito visível: quem fez o report */}
-            {(() => {
-              const f = fotosComUrl[activeIdx]
-              if (!f?.autorNome) return null
-              // Assinada por comunidade? O crédito é do grupo (cantos retos no
-              // avatar diferenciam de uma pessoa à primeira vista).
-              const ehCom = !!f.comunidadeNome
-              const nome = ehCom ? f.comunidadeNome! : f.autorNome
-              const avatar = ehCom ? f.comunidadeAvatar : f.autorAvatar
-              return (
-                <span className="badge b-glass" style={{ fontSize: 10.5, paddingLeft: 4 }}>
-                  {avatar ? (
-                    <img
-                      src={avatar}
-                      alt=""
-                      style={{ width: 18, height: 18, borderRadius: ehCom ? 6 : 99, objectFit: 'cover', border: '1px solid rgba(255,255,255,.4)' }}
-                    />
-                  ) : (
-                    <span style={{
-                      width: 18, height: 18, borderRadius: ehCom ? 6 : 99, background: 'rgba(255,255,255,.25)',
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 10, fontWeight: 700,
-                    }}>
-                      {nome[0]?.toUpperCase()}
-                    </span>
-                  )}
-                  {nome}
-                </span>
-              )
-            })()}
-            {fotosComUrl[activeIdx]?.procedencia === 'no-local' && (
-              <span className="badge b-glass" style={{ fontSize: 10 }}>
-                <IconShieldCheck size={12} stroke={2} /> no local
-              </span>
-            )}
-          </span>
-          {/* condição vive no gradiente de baixo — aqui só autor + procedência,
-              senão o selo briga com a estrela de favorito no canto direito */}
+        {/* TOPO: identidade do pico — a primeira leitura do card */}
+        <div className="feed-top-grad">
+          <h3 className="disp" style={{ fontSize: 21, lineHeight: 1.1, margin: 0, textShadow: '0 1px 8px rgba(0,0,0,.4)' }}>{nome}</h3>
+          {local && <div style={{ fontSize: 12, opacity: .85, marginTop: 2 }}>{local}</div>}
         </div>
 
         {/* Dots */}
@@ -156,13 +120,48 @@ export function FeedCard({
           </div>
         )}
 
-        {/* Herói: dados flutuam sobre a foto */}
+        {/* Herói: contexto do REGISTRO flutua sobre a base da foto —
+            quem fez, procedência, condição e hora. O pico vive no topo. */}
         <div className="feed-hero-grad">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+            {(() => {
+              const f = fotosComUrl[activeIdx]
+              if (!f?.autorNome) return null
+              // Assinada por comunidade? O crédito é do grupo (cantos retos no
+              // avatar diferenciam de uma pessoa à primeira vista).
+              const ehCom = !!f.comunidadeNome
+              const credito = ehCom ? f.comunidadeNome! : f.autorNome
+              const avatar = ehCom ? f.comunidadeAvatar : f.autorAvatar
+              return (
+                <span className="badge b-glass" style={{ fontSize: 10.5, paddingLeft: 4 }}>
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt=""
+                      style={{ width: 18, height: 18, borderRadius: ehCom ? 6 : 99, objectFit: 'cover', border: '1px solid rgba(255,255,255,.4)' }}
+                    />
+                  ) : (
+                    <span style={{
+                      width: 18, height: 18, borderRadius: ehCom ? 6 : 99, background: 'rgba(255,255,255,.25)',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700,
+                    }}>
+                      {credito[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  {credito}
+                </span>
+              )
+            })()}
+            {fotosComUrl[activeIdx]?.procedencia === 'no-local' && (
+              <span className="badge b-glass" style={{ fontSize: 10 }}>
+                <IconShieldCheck size={12} stroke={2} /> no local
+              </span>
+            )}
+          </div>
           <div className="between" style={{ alignItems: 'flex-end' }}>
             <div style={{ minWidth: 0 }}>
-              <h3 className="disp" style={{ fontSize: 21, lineHeight: 1.1, margin: 0, textShadow: '0 1px 8px rgba(0,0,0,.4)' }}>{nome}</h3>
-              {local && <div style={{ fontSize: 12, opacity: .85, marginTop: 2 }}>{local}</div>}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {forecast && (
                   <span className="badge b-info" style={{ fontSize: 10.5 }}>
                     {rotularCondicao(forecast.ondaM, forecast.vento.tipo)}
