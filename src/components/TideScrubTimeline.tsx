@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconThumbUp, IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX } from '@tabler/icons-react'
+import { IconThumbUp, IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX, IconPhoto } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
 import { denunciarFoto } from '../services/moderacao'
+
+const CH_SO_FOTOS = 'ecosurf.timeline-so-com-fotos'
 import { Photo } from './Photo'
 import { ProvenanceBadge } from './ProvenanceBadge'
 
@@ -150,6 +152,22 @@ export function TideScrubTimeline({
   const [calAberto, setCalAberto] = useState(false)
   const tabsRef = useRef<HTMLDivElement>(null)
 
+  // "Só dias com fotos": poupa o desliza-desliza por dias vazios na régua e
+  // nas setas. Persistido no aparelho (migra para a conta na fase Meu Ecosurf).
+  const [soComFotos, setSoComFotos] = useState<boolean>(() => {
+    try { return localStorage.getItem(CH_SO_FOTOS) === '1' } catch { return false }
+  })
+  const alternarSoComFotos = useCallback(() => {
+    setSoComFotos(v => {
+      const nv = !v
+      try {
+        if (nv) localStorage.setItem(CH_SO_FOTOS, '1')
+        else localStorage.removeItem(CH_SO_FOTOS)
+      } catch { /* modo privado */ }
+      return nv
+    })
+  }, [])
+
   const [selectedDiaKey, setSelectedDiaKey] = useState<string>(() => {
     if (initialFotoId) {
       const ft = fotos.find(f => f.id === initialFotoId)
@@ -178,7 +196,7 @@ export function TideScrubTimeline({
     const destino = el.offsetLeft - (cont.clientWidth - el.clientWidth) / 2
     cont.scrollTo({ left: Math.max(0, destino), behavior: jaCentralizou.current ? 'smooth' : 'auto' })
     jaCentralizou.current = true
-  }, [selectedDiaKey])
+  }, [selectedDiaKey, soComFotos])
 
   const hasInitialized = useRef(false)
   useEffect(() => {
@@ -198,6 +216,25 @@ export function TideScrubTimeline({
 
   const diaAtual = dias[diaIdx] ?? hoje
   const diaKey = dateKey(diaAtual)
+
+  // Lista exibida na régua e percorrida pelas setas. Com o filtro ativo,
+  // só dias com foto (atuais ou históricas) — mais o hoje e o dia aberto,
+  // que nunca somem debaixo do usuário.
+  const diasVisiveis = useMemo(() => {
+    if (!soComFotos) return dias
+    const comFoto = new Set<string>()
+    fotos.forEach(f => comFoto.add(dateKey(f.capturadaEm)))
+    const filtrados = dias.filter(d => {
+      const k = dateKey(d)
+      return comFoto.has(k) || diasComFoto?.has(k) || k === todasHoje || k === selectedDiaKey
+    })
+    return filtrados.length > 0 ? filtrados : dias
+  }, [dias, soComFotos, fotos, diasComFoto, todasHoje, selectedDiaKey])
+
+  const idxVisivel = useMemo(() => {
+    const i = diasVisiveis.findIndex(d => dateKey(d) === diaKey)
+    return i !== -1 ? i : 0
+  }, [diasVisiveis, diaKey])
 
   const curvaDoDia = useMemo(() => {
     if (curvasMultiDia?.[diaKey]) return curvasMultiDia[diaKey]
@@ -404,6 +441,16 @@ export function TideScrubTimeline({
         >
           <IconCalendar size={18} stroke={2} />
         </button>
+        <button
+          className={soComFotos ? 'btn ic' : 'btn outline ic'}
+          aria-pressed={soComFotos}
+          aria-label="Mostrar só dias com fotos"
+          title="Só dias com fotos"
+          onClick={alternarSoComFotos}
+          style={{ flexShrink: 0, alignSelf: 'center' }}
+        >
+          <IconPhoto size={18} stroke={2} />
+        </button>
         <div
           className="tide-day-tabs"
           role="tablist"
@@ -413,7 +460,7 @@ export function TideScrubTimeline({
           onTouchStart={() => { tocandoRegua.current = true }}
           onTouchEnd={() => { setTimeout(() => { tocandoRegua.current = false }, 400) }}
         >
-          {dias.map((d) => {
+          {diasVisiveis.map((d) => {
             const key = dateKey(d)
             const fotosNoDia = fotos.filter(f2 => dateKey(f2.capturadaEm) === key)
             const temHistorico = fotosNoDia.length === 0 && diasComFoto?.has(key)
@@ -446,11 +493,11 @@ export function TideScrubTimeline({
 
       {/* Date paginator */}
       <div className="between" style={{ padding: '0 20px', marginTop: 16 }}>
-        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(dias[Math.max(0, diaIdx - 1)]))} disabled={diaIdx === 0}><IconChevronLeft size={18} /></button>
+        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(diasVisiveis[Math.max(0, idxVisivel - 1)]))} disabled={idxVisivel === 0} aria-label="Dia anterior"><IconChevronLeft size={18} /></button>
         <div style={{ textAlign: 'center', flex: 1 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--azul-escuro)' }}>{labelDia(diaAtual, hoje)}</span>
         </div>
-        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(dias[Math.min(dias.length - 1, diaIdx + 1)]))} disabled={diaIdx === dias.length - 1}><IconChevronRight size={18} /></button>
+        <button className="btn outline ic" onClick={() => selecionarDia(dateKey(diasVisiveis[Math.min(diasVisiveis.length - 1, idxVisivel + 1)]))} disabled={idxVisivel === diasVisiveis.length - 1} aria-label="Próximo dia"><IconChevronRight size={18} /></button>
       </div>
 
       {/* Bubbles horizontais */}
