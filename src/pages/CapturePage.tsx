@@ -293,6 +293,29 @@ export function CapturePage() {
     gravacaoRef.current?.parar()
   }
 
+  /**
+   * Foto da galeria. Nasce com selo "galeria" (procedência decidida no
+   * servidor) e segue o MESMO caminho de uma foto tirada na hora: vira o
+   * poster/foto do registro e cai na etapa de vínculo ao pico. Sem GPS —
+   * caso natural de foto da galeria — o fluxo leva a "selecionar-pico", onde
+   * dá para escolher um pico cadastrado ou reportar um novo.
+   */
+  async function escolherFotoGaleria(file: File) {
+    setErroVideo(null)
+    if (!file.type.startsWith('image/')) {
+      setErroVideo('O arquivo escolhido não é uma imagem.')
+      return
+    }
+    try {
+      const { versoesDeArquivo } = await import('../lib/imagem')
+      const versoes = await versoesDeArquivo(file)
+      // Sem clipe: é foto. disparar(ehFoto) trata o poster como a própria foto.
+      await disparar({ blob: file, mime: file.type, duracaoS: 0, poster: versoes.full, posterThumb: versoes.thumb, ehFoto: true })
+    } catch {
+      setErroVideo('Não deu para preparar esta foto neste aparelho. Tente outra imagem.')
+    }
+  }
+
   async function escolherVideoGaleria(file: File) {
     setErroVideo(null)
     const veredicto = await validarVideoGaleria(file)
@@ -344,16 +367,21 @@ export function CapturePage() {
     }
   }
 
-  async function disparar(videoPronto?: { blob: Blob; mime: string; duracaoS: number; poster?: Blob; posterThumb?: Blob }) {
+  async function disparar(pronto?: { blob: Blob; mime: string; duracaoS: number; poster?: Blob; posterThumb?: Blob; ehFoto?: boolean }) {
     const v = videoRef.current
     let blob: Blob | undefined
     let thumb: Blob | undefined
-    if (videoPronto) {
+    if (pronto?.ehFoto) {
+      // Foto da galeria: o próprio arquivo é a foto; nada de clipe.
+      blob = pronto.poster
+      thumb = pronto.posterThumb
+      setVideoCapturado(undefined)
+    } else if (pronto) {
       // Vídeo: o "poster" (frame) faz o papel da foto — feed e timeline nem
       // percebem a diferença; o clipe viaja ao lado.
-      blob = videoPronto.poster
-      thumb = videoPronto.posterThumb
-      setVideoCapturado({ blob: videoPronto.blob, mime: videoPronto.mime, duracaoS: videoPronto.duracaoS })
+      blob = pronto.poster
+      thumb = pronto.posterThumb
+      setVideoCapturado({ blob: pronto.blob, mime: pronto.mime, duracaoS: pronto.duracaoS })
     } else if (v && v.videoWidth > 0) {
       const { versoesDeVideo } = await import('../lib/imagem')
       const versoes = await versoesDeVideo(v)
@@ -883,23 +911,39 @@ export function CapturePage() {
               </p>
             )}
 
-            {/* Vídeo da galeria — nasce com selo "galeria", como as fotos.
-                Se passar de 5s, o app recorta e re-codifica no próprio aparelho. */}
+            {/* Galeria: foto ou vídeo. Ambos nascem com selo "galeria" e caem
+                no mesmo fluxo de vínculo ao pico (escolher ou cadastrar). */}
             {procVideo === null ? (
-              <label style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
-                border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
-              }}>
-                <IconVideo size={15} stroke={2} />
-                Enviar vídeo da galeria
-                <input
-                  type="file"
-                  accept="video/*"
-                  style={{ display: 'none' }}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherVideoGaleria(f); e.target.value = '' }}
-                />
-              </label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <label style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                  fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
+                  border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
+                }}>
+                  <IconPhoto size={15} stroke={2} />
+                  Enviar foto da galeria
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherFotoGaleria(f); e.target.value = '' }}
+                  />
+                </label>
+                <label style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                  fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
+                  border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
+                }}>
+                  <IconVideo size={15} stroke={2} />
+                  Enviar vídeo da galeria
+                  <input
+                    type="file"
+                    accept="video/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherVideoGaleria(f); e.target.value = '' }}
+                  />
+                </label>
+              </div>
             ) : (
               <div style={{ width: 220, textAlign: 'center' }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', marginBottom: 6 }}>
