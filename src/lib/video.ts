@@ -41,6 +41,8 @@ export interface ClipeGravado {
   blob: Blob
   mime: string
   duracaoS: number
+  /** Poster (frame) capturado direto do canvas do corte — evita reler o blob. */
+  posterBlob?: Blob
 }
 
 export interface GravacaoAtiva {
@@ -197,7 +199,13 @@ export function recortarVideoParaClipe(
         URL.revokeObjectURL(url)
         onProgresso?.(1)
         const duracaoS = Math.min(VIDEO_MAX_S, Math.max(0.1, (v.duration || VIDEO_MAX_S) - inicioS))
-        resolve({ blob: new Blob(pedacos, { type: mime }), mime, duracaoS })
+        // Poster do PRÓPRIO canvas (último frame desenhado) — dispensa reler o
+        // blob recém-gravado, que costuma vir sem metadados de duração.
+        canvas.toBlob(
+          (posterBlob) => resolve({ blob: new Blob(pedacos, { type: mime }), mime, duracaoS, posterBlob: posterBlob ?? undefined }),
+          'image/jpeg',
+          0.82,
+        )
       }
 
       const parar = () => {
@@ -314,14 +322,36 @@ export function carregarVideoParaPoster(file: File): Promise<HTMLVideoElement> {
     v.muted = true
     v.playsInline = true
     v.preload = 'auto'
-    v.onerror = () => { URL.revokeObjectURL(url); reject(new Error('video ilegível')) }
+
+    let resolvido = false
+    const terminar = (ok: boolean) => {
+      if (resolvido) return
+      resolvido = true
+      clearTimeout(timeout)
+      if (ok) resolve(v)
+      else { URL.revokeObjectURL(url); reject(new Error('video ilegível')) }
+    }
+
+    // Rede de segurança: blobs frescos do MediaRecorder às vezes não emitem
+    // 'seeked' (duração ausente nos metadados). Sem este timeout, o await
+    // travava para sempre e o registro "sumia". Ao estourar, usa o frame atual.
+    const timeout = setTimeout(() => {
+      if (v.videoWidth > 0) terminar(true)
+      else terminar(false)
+    }, 2500)
+
+    v.onerror = () => terminar(false)
     v.onloadeddata = () => {
-      const capturar = () => resolve(v) // caller revoga a URL depois de usar
-      if (v.readyState >= 2 && v.videoWidth > 0) {
-        v.currentTime = Math.min(0.1, v.duration / 2)
-        v.onseeked = capturar
+      if (!v.videoWidth) { terminar(true); return } // sem imagem: caller lida
+      // duration pode ser Infinity/NaN em blob de MediaRecorder: NÃO fazer seek
+      // com valor inválido (currentTime = NaN nunca dispara 'seeked').
+      const dur = v.duration
+      const alvo = Number.isFinite(dur) && dur > 0 ? Math.min(0.1, dur / 2) : 0
+      if (alvo > 0) {
+        v.onseeked = () => terminar(true)
+        try { v.currentTime = alvo } catch { terminar(true) }
       } else {
-        capturar()
+        terminar(true) // frame inicial já serve de poster
       }
     }
     v.src = url

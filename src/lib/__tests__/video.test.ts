@@ -129,3 +129,46 @@ beforeEach(() => {
   vi.unstubAllGlobals()
   vi.stubGlobal('URL', { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} })
 })
+
+describe('carregarVideoParaPoster — blobs frescos do MediaRecorder', () => {
+  // O bug: blob recém-gravado tem duration Infinity/NaN. Fazer seek com
+  // currentTime=NaN nunca dispara 'seeked' → a Promise travava e o vídeo
+  // "sumia". A correção: não fazer seek com duração inválida.
+  function stubComDuracao(duration: number) {
+    vi.stubGlobal('URL', { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} })
+    let seekTentado = false
+    vi.stubGlobal('document', {
+      createElement: () => {
+        const el: Record<string, unknown> = { videoWidth: 640, videoHeight: 480 }
+        Object.defineProperty(el, 'currentTime', {
+          get: () => 0,
+          set: () => { seekTentado = true }, // se chamado com NaN, seeked nunca vem
+        })
+        Object.defineProperty(el, 'src', {
+          set() {
+            setTimeout(() => {
+              el.duration = duration
+              ;(el.onloadeddata as (() => void) | undefined)?.()
+            }, 0)
+          },
+        })
+        return el
+      },
+    })
+    return () => seekTentado
+  }
+
+  it('resolve mesmo com duration = Infinity (não trava no seek)', async () => {
+    const { carregarVideoParaPoster } = await import('../video')
+    stubComDuracao(Infinity)
+    const el = await carregarVideoParaPoster(new File([new Uint8Array(1)], 'c', { type: 'video/webm' }))
+    expect(el).toBeTruthy()
+  })
+
+  it('resolve mesmo com duration = NaN', async () => {
+    const { carregarVideoParaPoster } = await import('../video')
+    stubComDuracao(NaN)
+    const el = await carregarVideoParaPoster(new File([new Uint8Array(1)], 'c', { type: 'video/webm' }))
+    expect(el).toBeTruthy()
+  })
+})

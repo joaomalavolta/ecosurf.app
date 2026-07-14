@@ -363,15 +363,28 @@ export function CapturePage() {
   }
 
   /** Poster + envio: sai do clipe FINAL, que é o que a comunidade vai ver. */
-  async function prepararClipe(clipe: { blob: Blob; mime: string; duracaoS: number }) {
+  async function prepararClipe(clipe: { blob: Blob; mime: string; duracaoS: number; posterBlob?: Blob }) {
+    // O poster é DESEJÁVEL, não obrigatório: se falhar, o vídeo ainda sobe.
+    // Preferimos o poster capturado no canvas do corte (clipe.posterBlob) —
+    // reler o blob recém-gravado do MediaRecorder costuma falhar (sem duração
+    // nos metadados), e era isso que fazia o registro "sumir".
+    let poster: { full?: Blob; thumb?: Blob } = {}
     try {
-      const arquivoPoster = clipe.blob instanceof File
-        ? clipe.blob
-        : new File([clipe.blob], 'clipe', { type: clipe.mime })
-      const el = await carregarVideoParaPoster(arquivoPoster)
-      const { versoesDeVideo } = await import('../lib/imagem')
-      const poster = await versoesDeVideo(el)
-      URL.revokeObjectURL(el.src)
+      const { versoesDeArquivo, versoesDeVideo } = await import('../lib/imagem')
+      if (clipe.posterBlob) {
+        poster = await versoesDeArquivo(clipe.posterBlob)
+      } else {
+        const arquivoPoster = clipe.blob instanceof File
+          ? clipe.blob
+          : new File([clipe.blob], 'clipe', { type: clipe.mime })
+        const el = await carregarVideoParaPoster(arquivoPoster)
+        poster = await versoesDeVideo(el)
+        URL.revokeObjectURL(el.src)
+      }
+    } catch (e) {
+      console.warn('poster do vídeo falhou; seguindo sem miniatura', e)
+    }
+    try {
       await disparar({
         blob: clipe.blob,
         mime: clipe.mime,
@@ -379,7 +392,8 @@ export function CapturePage() {
         poster: poster.full,
         posterThumb: poster.thumb,
       })
-    } catch {
+    } catch (e) {
+      console.error('falha ao preparar o vídeo para envio', e)
       setErroVideo('Não deu para preparar este vídeo neste aparelho. Tente gravar pelo app ou escolher outro arquivo.')
     }
   }
