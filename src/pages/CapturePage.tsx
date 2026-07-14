@@ -16,7 +16,7 @@ import { IconUsers, IconPlus,
   IconMap2,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
-import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
+import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVideoParaClipe, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
 import { SeletorCategoria } from '../components/SeletorCategoria'
@@ -79,6 +79,8 @@ export function CapturePage() {
   const [gravando, setGravando] = useState(false)
   const [progGrav, setProgGrav] = useState(0)
   const [erroVideo, setErroVideo] = useState<string | null>(null)
+  /** 0..1 enquanto recorta um vídeo da galeria; null quando não há corte em curso. */
+  const [procVideo, setProcVideo] = useState<number | null>(null)
   const [videoCapturado, setVideoCapturado] = useState<{ blob: Blob; mime: string; duracaoS: number } | undefined>()
   const podeGravar = useMemo(() => !!melhorMimeGravacao(), [])
   const cameraBoxRef = useRef<HTMLDivElement>(null)
@@ -258,19 +260,34 @@ export function CapturePage() {
       return
     }
     try {
-      const el = await carregarVideoParaPoster(file)
+      let clipe: { blob: Blob; mime: string; duracaoS: number }
+      if (veredicto.acao === 'recortar') {
+        // Roda em tempo real (até 5s) — a barra evita a sensação de travamento.
+        setProcVideo(0)
+        const recortado = await recortarVideoParaClipe(file, setProcVideo)
+        setProcVideo(null)
+        clipe = recortado
+      } else {
+        clipe = { blob: file, mime: file.type, duracaoS: veredicto.duracaoS ?? 0 }
+      }
+      // Poster: sai do clipe FINAL (o que a comunidade vai ver de fato).
+      const arquivoPoster = clipe.blob instanceof File
+        ? clipe.blob
+        : new File([clipe.blob], 'clipe', { type: clipe.mime })
+      const el = await carregarVideoParaPoster(arquivoPoster)
       const { versoesDeVideo } = await import('../lib/imagem')
       const poster = await versoesDeVideo(el)
       URL.revokeObjectURL(el.src)
       await disparar({
-        blob: file,
-        mime: file.type,
-        duracaoS: veredicto.duracaoS ?? 0,
+        blob: clipe.blob,
+        mime: clipe.mime,
+        duracaoS: clipe.duracaoS,
         poster: poster.full,
         posterThumb: poster.thumb,
       })
     } catch {
-      setErroVideo('Não deu para ler este vídeo neste aparelho. Tente outro formato.')
+      setProcVideo(null)
+      setErroVideo('Não deu para preparar este vídeo neste aparelho. Tente gravar pelo app ou escolher outro arquivo.')
     }
   }
 
@@ -799,21 +816,36 @@ export function CapturePage() {
               </p>
             )}
 
-            {/* Vídeo da galeria — nasce com selo "galeria", como as fotos */}
-            <label style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-              fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
-              border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
-            }}>
-              <IconVideo size={15} stroke={2} />
-              Enviar vídeo da galeria
-              <input
-                type="file"
-                accept="video/*"
-                style={{ display: 'none' }}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherVideoGaleria(f); e.target.value = '' }}
-              />
-            </label>
+            {/* Vídeo da galeria — nasce com selo "galeria", como as fotos.
+                Se passar de 5s, o app recorta e re-codifica no próprio aparelho. */}
+            {procVideo === null ? (
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
+                border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
+              }}>
+                <IconVideo size={15} stroke={2} />
+                Enviar vídeo da galeria
+                <input
+                  type="file"
+                  accept="video/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherVideoGaleria(f); e.target.value = '' }}
+                />
+              </label>
+            ) : (
+              <div style={{ width: 220, textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', marginBottom: 6 }}>
+                  Preparando os primeiros 5s…
+                </div>
+                <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,.18)', overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${Math.round(procVideo * 100)}%`, height: '100%',
+                    background: '#1ECBC3', transition: 'width .2s linear',
+                  }} />
+                </div>
+              </div>
+            )}
             {erroVideo && (
               <p style={{ fontSize: 12, color: '#FFB4B4', textAlign: 'center', maxWidth: 280, lineHeight: 1.4 }}>
                 {erroVideo}

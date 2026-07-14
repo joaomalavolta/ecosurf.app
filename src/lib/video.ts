@@ -108,27 +108,153 @@ export function gravarClipe(
   return { parar, clipe }
 }
 
+/** Teto de peso do ARQUIVO de origem que aceitamos abrir para recortar. */
+export const VIDEO_MAX_ORIGEM_BYTES = 200 * 1024 * 1024
+/** Lado maior do clipe recortado — 720p basta para o mar e segura o peso. */
+const LARGURA_ALVO = 1280
+
+/** Este aparelho consegue recortar/reprocessar vídeo no próprio navegador? */
+export function podeRecortarNoAparelho(): boolean {
+  if (typeof document === 'undefined' || typeof HTMLCanvasElement === 'undefined') return false
+  if (!melhorMimeGravacao()) return false
+  const c = document.createElement('canvas')
+  return typeof (c as HTMLCanvasElement & { captureStream?: unknown }).captureStream === 'function'
+}
+
+/**
+ * Recorta os primeiros 5 s de um vídeo da galeria e RE-CODIFICA no aparelho.
+ *
+ * Como: reproduz o arquivo, desenha cada quadro num canvas e grava o
+ * `captureStream()` desse canvas com o mesmo MediaRecorder da câmera. Resolve
+ * três problemas de uma vez:
+ *   · duração — para no teto de 5 s;
+ *   · formato — a saída sai no codec que ESTE navegador grava (mata o HEVC do
+ *     iPhone, que muitos Androids não reproduzem);
+ *   · peso — reescala para 720p e limita o bitrate (≈1,5 MB, como o in-app).
+ *
+ * Custo honesto: leva alguns segundos (roda em tempo real) e descarta o áudio
+ * — o feed reproduz mudo de qualquer forma.
+ */
+export function recortarVideoParaClipe(
+  file: File,
+  onProgresso?: (frac: number) => void,
+): Promise<ClipeGravado> {
+  return new Promise((resolve, reject) => {
+    const mime = melhorMimeGravacao()
+    if (!mime || !podeRecortarNoAparelho()) {
+      reject(new Error('Este aparelho não consegue recortar vídeo pelo navegador.'))
+      return
+    }
+    const url = URL.createObjectURL(file)
+    const v = document.createElement('video')
+    v.muted = true
+    v.playsInline = true
+    v.preload = 'auto'
+    v.src = url
+
+    let rec: MediaRecorder | null = null
+    let raf = 0
+    let encerrado = false
+
+    const falhar = (msg: string) => {
+      if (encerrado) return
+      encerrado = true
+      cancelAnimationFrame(raf)
+      try { rec?.stop() } catch { /* já parado */ }
+      URL.revokeObjectURL(url)
+      reject(new Error(msg))
+    }
+
+    v.onerror = () => falhar('Não foi possível ler este vídeo neste aparelho.')
+
+    v.onloadeddata = () => {
+      if (!v.videoWidth || !v.videoHeight) {
+        falhar('Vídeo sem imagem legível.')
+        return
+      }
+      // Reescala mantendo proporção; dimensões pares (exigência de codecs).
+      const escala = Math.min(1, LARGURA_ALVO / Math.max(v.videoWidth, v.videoHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round((v.videoWidth * escala) / 2) * 2
+      canvas.height = Math.round((v.videoHeight * escala) / 2) * 2
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        falhar('Canvas indisponível neste aparelho.')
+        return
+      }
+
+      const stream = canvas.captureStream(30)
+      rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2_500_000 })
+      const pedacos: Blob[] = []
+      rec.ondataavailable = (e) => { if (e.data.size > 0) pedacos.push(e.data) }
+      rec.onerror = () => falhar('Falha ao processar o vídeo.')
+      rec.onstop = () => {
+        if (encerrado) return
+        encerrado = true
+        cancelAnimationFrame(raf)
+        URL.revokeObjectURL(url)
+        onProgresso?.(1)
+        const duracaoS = Math.min(VIDEO_MAX_S, v.duration || VIDEO_MAX_S)
+        resolve({ blob: new Blob(pedacos, { type: mime }), mime, duracaoS })
+      }
+
+      const parar = () => {
+        v.pause()
+        if (rec && rec.state !== 'inactive') {
+          try { rec.stop() } catch { /* corrida com onended */ }
+        }
+      }
+
+      const desenhar = () => {
+        if (encerrado) return
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
+        onProgresso?.(Math.min(1, v.currentTime / VIDEO_MAX_S))
+        if (v.currentTime >= VIDEO_MAX_S || v.ended) {
+          parar()
+          return
+        }
+        raf = requestAnimationFrame(desenhar)
+      }
+
+      v.onended = parar
+      rec.start(250)
+      v.currentTime = 0
+      void v.play()
+        .then(() => { raf = requestAnimationFrame(desenhar) })
+        .catch(() => falhar('Não foi possível reproduzir este vídeo para recortar.'))
+    }
+  })
+}
+
 export interface VeredictoGaleria {
   ok: boolean
+  /** 'direto' = já está pronto; 'recortar' = precisa passar pelo re-encode. */
+  acao?: 'direto' | 'recortar'
   motivo?: string
   duracaoS?: number
   mime?: string
 }
 
 /**
- * Porteiro da galeria: aceita só vídeo ≤ 5 s, ≤ 12 MB e que este navegador
- * consiga ao menos ler (metadata carrega). Mensagens em linguagem de gente.
+ * Triagem da galeria. Três desfechos:
+ *  · DIRETO — já está dentro das regras (≤5 s, ≤12 MB): sobe como está,
+ *    preservando a qualidade original. Nada de re-encode à toa.
+ *  · RECORTAR — longo/pesado, mas o aparelho sabe recortar: vai para o
+ *    re-encode (corta em 5 s, normaliza formato, reduz peso).
+ *  · RECUSADO — o aparelho não sabe recortar, ou nem ler o arquivo consegue.
+ *    A mensagem então ENSINA a saída (cortar no editor do celular).
  */
 export function validarVideoGaleria(file: File): Promise<VeredictoGaleria> {
   if (!file.type.startsWith('video/')) {
     return Promise.resolve({ ok: false, motivo: 'O arquivo escolhido não é um vídeo.' })
   }
-  if (file.size > VIDEO_MAX_GALERIA_BYTES) {
+  if (file.size > VIDEO_MAX_ORIGEM_BYTES) {
     return Promise.resolve({
       ok: false,
-      motivo: 'Vídeo muito pesado. Corte para até 5 segundos no editor da galeria e tente de novo.',
+      motivo: 'Vídeo grande demais para abrir. Corte um trecho no editor da galeria e tente de novo.',
     })
   }
+  const recorta = podeRecortarNoAparelho()
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file)
     const v = document.createElement('video')
@@ -139,16 +265,22 @@ export function validarVideoGaleria(file: File): Promise<VeredictoGaleria> {
       resolve(r)
     }
     v.onloadedmetadata = () => {
-      if (!isFinite(v.duration) || v.duration <= 0) {
+      const dur = v.duration
+      if (!isFinite(dur) || dur <= 0) {
         fim({ ok: false, motivo: 'Não deu para ler a duração deste vídeo neste aparelho.' })
-      } else if (v.duration > VIDEO_MAX_GALERIA_S) {
+        return
+      }
+      const dentroDoTeto = dur <= VIDEO_MAX_GALERIA_S && file.size <= VIDEO_MAX_GALERIA_BYTES
+      if (dentroDoTeto) {
+        fim({ ok: true, acao: 'direto', duracaoS: dur, mime: file.type })
+      } else if (recorta) {
+        fim({ ok: true, acao: 'recortar', duracaoS: Math.min(VIDEO_MAX_S, dur), mime: file.type })
+      } else {
         fim({
           ok: false,
-          motivo: `Este vídeo tem ${Math.round(v.duration)}s. Corte para até 5 segundos na galeria e tente de novo.`,
-          duracaoS: v.duration,
+          motivo: `Este vídeo tem ${Math.round(dur)}s. Corte para até 5 segundos na galeria e tente de novo.`,
+          duracaoS: dur,
         })
-      } else {
-        fim({ ok: true, duracaoS: v.duration, mime: file.type })
       }
     }
     v.onerror = () =>
