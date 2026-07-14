@@ -1747,3 +1747,19 @@ html[data-reduz-animacao] .skeleton { animation: none; opacity: .6; }
   line-height: 1.2;
   white-space: nowrap;
 }
+
+/* Obturador: segurar grava vídeo. O long-press do navegador tentava selecionar
+   e mostrar o realce/menu de contexto — aquele "box" oval por cima do botão.
+   Aqui matamos highlight, callout e seleção: o gesto é só nosso. */
+.btn-obturador {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  outline: none;
+  appearance: none;
+  padding: 0;
+}
+.btn-obturador:focus,
+.btn-obturador:focus-visible { outline: none; }

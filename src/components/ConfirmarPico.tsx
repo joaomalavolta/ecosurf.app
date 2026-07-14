@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconRipple, IconCheck, IconMapPin, IconAlertTriangle, IconPlus } from '@tabler/icons-react'
+import { IconRipple, IconCheck, IconMapPin, IconAlertTriangle, IconPlus, IconArrowLeft } from '@tabler/icons-react'
 import { SeletorComunidade } from './SeletorComunidade'
 import type { Pico } from '../types/domain'
 
@@ -21,6 +21,7 @@ export function ConfirmarPico({
   onComunidade,
   onEscolher,
   onOutro,
+  onVoltar,
   onPublicar,
 }: {
   dados: {
@@ -36,6 +37,7 @@ export function ConfirmarPico({
   onComunidade: (id: string | null) => void
   onEscolher: (picoId: string) => void
   onOutro: () => void
+  onVoltar: () => void
   onPublicar: () => void | Promise<void>
 }) {
   const [listaAberta, setListaAberta] = useState(dados.ambiguo)
@@ -53,6 +55,19 @@ export function ConfirmarPico({
       overflowY: 'auto',
       padding: '22px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
+      <button
+        onClick={onVoltar}
+        aria-label="Voltar para a câmera"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'none', border: 'none', padding: '4px 4px 10px 0',
+          color: 'rgba(255,255,255,.75)', fontSize: 13, cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        <IconArrowLeft size={18} stroke={2} />
+        Refazer
+      </button>
       <h2 style={{ color: '#fff', margin: '0 0 4px', fontSize: 22 }}>Confirme o pico</h2>
       <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, margin: '0 0 16px' }}>
         Sua foto entra na linha do tempo deste pico. Confira antes de publicar.

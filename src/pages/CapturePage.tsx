@@ -757,7 +757,9 @@ export function CapturePage() {
                 </svg>
               )}
               <button
+                className="btn-obturador"
                 onClick={() => { if (!segurou.current) void disparar() }}
+                onContextMenu={(e) => e.preventDefault()}
                 disabled={!!erro}
                 aria-label={gravando ? 'Gravando vídeo — solte para parar' : 'Tocar: foto · Segurar: vídeo de 5s'}
                 style={{
@@ -835,6 +837,15 @@ export function CapturePage() {
           onComunidade={setComunidadeId}
           onEscolher={(id) => setConfirmar((c) => (c ? { ...c, escolhido: id } : c))}
           onOutro={() => { setEtapa('selecionar-pico') }}
+          onVoltar={() => {
+            // Refazer: descarta o registro atual e volta para a câmera. Nada
+            // foi enviado ainda — o gesto é seguro e reversível.
+            setConfirmar(null)
+            setVideoCapturado(undefined)
+            setBlobCapturado(undefined)
+            setThumbCapturado(undefined)
+            void abrirCamera()
+          }}
           onPublicar={async () => {
             const c = confirmar
             setConfirmar(null)
