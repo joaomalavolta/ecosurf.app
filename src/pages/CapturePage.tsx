@@ -20,6 +20,7 @@ import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVide
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
 import { MapaPicker } from '../components/MapaPicker'
+import { acaoDoVoltar } from './captura-voltar'
 import { RecortarVideo } from '../components/RecortarVideo'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
@@ -161,39 +162,55 @@ export function CapturePage() {
     return () => { vivo = false }
   }, [navigate])
 
-  // Controla o botão voltar físico do Android e popstate do navegador
-  useEffect(() => {
-    if (etapa === 'tipo' || etapa === 'concluido') {
-      return
-    }
+  // Botão voltar físico do Android / popstate do navegador.
+  //
+  // Antes, este efeito empilhava um pushState a CADA mudança de etapa e de
+  // 'recortando'. No fluxo do vídeo da galeria as transições são rápidas
+  // (recortando→null, depois etapa→selecionar-pico), gerando entradas em
+  // cascata; um popstate espúrio caía em setEtapa('confirmar-pico') sem haver
+  // 'confirmar', e a tela sumia sem botão publicar. Agora empilhamos UMA vez
+  // ao entrar no overlay e lemos a etapa atual por ref no momento do voltar.
+  const etapaRef = useRef(etapa)
+  etapaRef.current = etapa
+  const recortandoRef = useRef(recortando)
+  recortandoRef.current = recortando
 
-    window.history.pushState({ captureOverlay: true, etapa, recortando: !!recortando }, '')
+  useEffect(() => {
+    // Só interessa quando há um overlay ativo (fora de 'tipo'/'concluido').
+    if (etapa === 'tipo' || etapa === 'concluido') return
+
+    window.history.pushState({ captureOverlay: true }, '')
 
     const lidarComPopState = () => {
-      if (recortando) {
-        setRecortando(null)
-      } else if (etapa === 'classificar-alerta') {
-        void abrirCamera()
-      } else if (etapa === 'confirmar-pico') {
-        setConfirmar(null)
-        setVideoCapturado(undefined)
-        setBlobCapturado(undefined)
-        setThumbCapturado(undefined)
-        void abrirCamera()
-      } else if (etapa === 'selecionar-pico') {
-        setEtapa('confirmar-pico')
-      } else if (etapa === 'camera') {
-        setEtapa('localizacao')
-      } else if (etapa === 'localizacao') {
-        setEtapa('tipo')
+      // Decisão na função pura testada (src/pages/captura-voltar.ts) —
+      // blinda o bug de 'selecionar-pico' cair em 'confirmar-pico' vazio.
+      const acao = acaoDoVoltar({
+        recortando: !!recortandoRef.current,
+        etapa: etapaRef.current,
+      })
+      switch (acao.tipo) {
+        case 'fechar-recorte':
+          setRecortando(null)
+          break
+        case 'abrir-camera':
+          setConfirmar(null)
+          setVideoCapturado(undefined)
+          setBlobCapturado(undefined)
+          setThumbCapturado(undefined)
+          void abrirCamera()
+          break
+        case 'ir-etapa':
+          setEtapa(acao.etapa)
+          break
       }
     }
 
     window.addEventListener('popstate', lidarComPopState)
-    return () => {
-      window.removeEventListener('popstate', lidarComPopState)
-    }
-  }, [etapa, recortando])
+    return () => window.removeEventListener('popstate', lidarComPopState)
+    // Registra o overlay UMA vez por entrada real (transição de fora do overlay
+    // para dentro). As transições internas usam os refs, sem re-empilhar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapa === 'tipo' || etapa === 'concluido'])
 
 
   // Quando o user diz "sim, estou no local", detectar GPS e achar pico
@@ -977,9 +994,7 @@ export function CapturePage() {
       {recortando && (
         <RecortarVideo
           file={recortando}
-          onCancelar={() => {
-            window.history.back()
-          }}
+          onCancelar={() => { setRecortando(null) }}
           onConfirmar={(inicioS) => { void confirmarRecorte(recortando, inicioS) }}
         />
       )}
