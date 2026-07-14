@@ -205,6 +205,17 @@ const JANELAS: { h: number | null; rotulo: string; curto: string }[] = [
   { h: null, rotulo: 'todas', curto: 'tudo' },
 ]
 
+/** Distância em km entre dois pontos (haversine) — usada para enquadrar a região. */
+function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+
 export function MapView({
   picos,
   alertas = [],
@@ -237,8 +248,16 @@ export function MapView({
   const [janelaIdx, setJanelaIdx] = useState(JANELAS.length - 1) // padrão: tudo
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  /** Picos atuais visíveis para o efeito de init (que roda uma vez só). */
+  const picosRef = useRef<Pico[]>([])
+  /** Marca que o voo pedido veio do BOTÃO de GPS (aproximar), não da abertura. */
+  const pediuAproximar = useRef(false)
   const prontoRef = useRef(false)
   const janelaH = JANELAS[janelaIdx].h
+  // O efeito de init roda uma vez; os picos chegam depois (rede). Este ref é a
+  // ponte — atualizado em efeito, nunca durante o render.
+  useEffect(() => { picosRef.current = picos }, [picos])
+
   const [ativosEfetivos, setAtivosEfetivos] = useState<Set<string> | undefined>(ativos)
   useEffect(() => {
     if (janelaH == null || !atividade) { setAtivosEfetivos(ativos); return }
@@ -299,6 +318,9 @@ export function MapView({
       positionOptions: { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
       trackUserLocation: true,
       showAccuracyCircle: false,
+      // O controle tem câmera própria: alinhamos com a nossa intenção de
+      // aproximação para os dois não brigarem no toque do botão.
+      fitBoundsOptions: { maxZoom: 15.5 },
     })
     map.addControl(geolocate, 'top-right')
     map.on('error', () => {})
@@ -324,26 +346,91 @@ export function MapView({
     // geolocalização disputavam o recurso e o toque no botão era sorteado —
     // daí a intermitência. Agora há uma só fonte de verdade: o controle.
     let vooCancelado = false
-    const voarPara = (lng: number, lat: number) => {
+
+    /**
+     * ABERTURA: enquadra a REGIÃO, não o ponto.
+     *
+     * Pousar colado no usuário mostra um pino solitário e esconde o que o app
+     * tem de melhor: os picos ao redor. Aqui o mapa abre sobre a cidade e, se
+     * houver picos por perto, enquadra todos eles — a pessoa vê de cara que há
+     * surf na sua região. A aproximação fica para quem pedir (o botão de GPS).
+     */
+    const enquadrarRegiao = (lng: number, lat: number, tentativa = 0) => {
       if (vooCancelado) return
-      map.flyTo(
-        vooIntro
-          ? { center: [lng, lat], zoom: 12.5, duration: 3400, curve: 1.6, essential: true }
-          : { center: [lng, lat], zoom: 12.5, speed: 1.4 },
+      // Corrida de partida: o GPS pode responder antes de os picos chegarem do
+      // Supabase. Em vez de cair no fallback de cidade, espera um pouco — é o
+      // enquadramento regional que dá sentido à abertura.
+      if (picosRef.current.length === 0 && tentativa < 6) {
+        setTimeout(() => enquadrarRegiao(lng, lat, tentativa + 1), 350)
+        return
+      }
+      const RAIO_KM = 30
+      const perto = picosRef.current.filter(
+        (p) => distanciaKm(lat, lng, p.lat, p.lng) <= RAIO_KM,
       )
+      const suave = !document.documentElement.dataset.reduzAnimacao
+
+      if (perto.length >= 1) {
+        const bounds = new maplibregl.LngLatBounds([lng, lat], [lng, lat])
+        for (const p of perto) bounds.extend([p.lng, p.lat])
+        map.fitBounds(bounds, {
+          padding: { top: 90, bottom: 130, left: 50, right: 50 },
+          maxZoom: 13,   // nunca cola demais: o contexto é o produto
+          duration: suave ? (vooIntro ? 3400 : 1200) : 0,
+          essential: true,
+        })
+        return
+      }
+      // Sem picos por perto: pousa em nível de cidade mesmo assim.
+      map.flyTo({
+        center: [lng, lat],
+        zoom: 11,
+        ...(suave
+          ? (vooIntro ? { duration: 3400, curve: 1.6 } : { speed: 1.4 })
+          : { duration: 0 }),
+        essential: true,
+      })
     }
 
-    // A primeira posição emitida pelo controle comanda o voo (uma vez).
+    /** TOQUE NO BOTÃO DE GPS: aí sim, aproxima de verdade. */
+    const aproximarDoUsuario = (lng: number, lat: number) => {
+      map.flyTo({
+        center: [lng, lat],
+        zoom: 15.5,
+        ...(document.documentElement.dataset.reduzAnimacao
+          ? { duration: 0 }
+          : { speed: 1.4, curve: 1.4 }),
+        essential: true,
+      })
+    }
+
+    // A primeira posição emitida pelo controle comanda a abertura (uma vez).
+    // Dali em diante, quem manda é o botão — e o botão aproxima.
     let primeiraPosicao = true
     geolocate.on('geolocate', (e: { coords: { longitude: number; latitude: number } }) => {
-      if (!primeiraPosicao) return
-      primeiraPosicao = false
-      voarPara(e.coords.longitude, e.coords.latitude)
+      const { longitude: lng, latitude: lat } = e.coords
+      if (primeiraPosicao) {
+        primeiraPosicao = false
+        enquadrarRegiao(lng, lat)
+        return
+      }
+      if (pediuAproximar.current) {
+        pediuAproximar.current = false
+        aproximarDoUsuario(lng, lat)
+      }
     })
     // Permissão negada / GPS indisponível: no voo intro, desce ao litoral.
     geolocate.on('error', () => {
-      if (primeiraPosicao && vooIntro) { primeiraPosicao = false; voarPara(-46.79, -24.19) }
+      if (primeiraPosicao && vooIntro) { primeiraPosicao = false; enquadrarRegiao(-46.79, -24.19) }
     })
+
+    // O toque no botão do controle marca a intenção de APROXIMAR. (O trigger
+    // programático da abertura não passa por aqui — só o clique humano.)
+    const botaoGeo = map.getContainer().querySelector<HTMLButtonElement>(
+      '.maplibregl-ctrl-geolocate',
+    )
+    const aoTocarGeo = () => { pediuAproximar.current = true; vooCancelado = true }
+    botaoGeo?.addEventListener('click', aoTocarGeo)
 
     if ('geolocation' in navigator) {
       // Dispara o MESMO controle programaticamente após o mapa carregar: o
@@ -356,7 +443,7 @@ export function MapView({
       map.once('dragstart', () => { vooCancelado = true })
       map.once('zoomstart', () => { vooCancelado = true })
     } else if (vooIntro) {
-      setTimeout(() => voarPara(-46.79, -24.19), 1600)
+      setTimeout(() => enquadrarRegiao(-46.79, -24.19), 1600)
     }
 
     function aplicar() {
@@ -511,6 +598,7 @@ export function MapView({
       descartado = true
       prontoRef.current = false
       ro?.disconnect()
+      botaoGeo?.removeEventListener('click', aoTocarGeo)
       map.remove()
       mapRef.current = null
     }
