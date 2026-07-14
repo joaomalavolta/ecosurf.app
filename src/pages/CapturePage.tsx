@@ -19,6 +19,7 @@ import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVideoParaClipe, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
+import { MapaPicker } from '../components/MapaPicker'
 import { RecortarVideo } from '../components/RecortarVideo'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
@@ -133,6 +134,7 @@ export function CapturePage() {
   const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [publicandoAlerta, setPublicandoAlerta] = useState(false)
   const [buscandoLocalAlerta, setBuscandoLocalAlerta] = useState(false)
+  const [mostrarMapaAlerta, setMostrarMapaAlerta] = useState(false)
   const [alertaNaFila, setAlertaNaFila] = useState(false)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [picoAutoId, setPicoAutoId] = useState<string | null>(null)
@@ -434,6 +436,21 @@ export function CapturePage() {
       return
     }
     setEtapa('selecionar-pico')
+  }
+
+  /** Define o local do alerta (GPS atual ou ponto do mapa) e resolve cidade/UF. */
+  async function definirLocalAlerta(lat: number, lng: number) {
+    setPosCapturada({ lat, lng })
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`)
+      const g = await r.json()
+      const cidade = g.address?.city || g.address?.town || g.address?.municipality || g.address?.village || ''
+      if (cidade) setMunicipioAlerta(cidade)
+      const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
+      if (uf) setUfAlerta(uf)
+      const praia = g.address?.suburb || g.address?.neighbourhood || ''
+      if (praia && !novaPraiaNome) setNovaPraiaNome(praia)
+    } catch { /* rede: segue com a coordenada, sem o nome do lugar */ }
   }
 
   async function publicarAlertaDaCamera() {
@@ -986,8 +1003,10 @@ export function CapturePage() {
           </label>
 
           {/* Alerta EXIGE coordenada (denúncia sem lugar não vai ao mapa). Sem
-              GPS — caso típico de vídeo/foto "de outro lugar" — em vez de deixar
-              o botão mudo, explicamos e oferecemos buscar a localização. */}
+              GPS — caso típico de vídeo/foto "de outro lugar" — o botão publicar
+              ficaria mudo. Em vez disso, explicamos e damos DOIS caminhos:
+              usar a posição atual OU apontar no mapa. O mapa cobre o caso de um
+              vídeo filmado ontem, noutra praia: o GPS de agora estaria errado. */}
           {!posCapturada.lat && (
             <div style={{
               background: 'rgba(232,115,74,.13)', border: '1px solid rgba(232,115,74,.34)',
@@ -996,33 +1015,54 @@ export function CapturePage() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
                 <IconMapPin size={16} stroke={2} style={{ color: '#F0A17E', flexShrink: 0, marginTop: 1 }} />
                 <span style={{ color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 1.45 }}>
-                  Um alerta ambiental precisa de localização para aparecer no mapa. Toque abaixo para informar onde foi.
+                  Um alerta ambiental precisa de localização para aparecer no mapa. Onde isto aconteceu?
                 </span>
               </div>
-              <button
-                className="btn full"
-                disabled={buscandoLocalAlerta}
-                onClick={async () => {
-                  setBuscandoLocalAlerta(true)
-                  const p = await obterCoords()
-                  setPosCapturada(p)
-                  if (p.lat && p.lng) {
-                    try {
-                      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${p.lat}&lon=${p.lng}&format=json&zoom=14`)
-                      const g = await r.json()
-                      const cidade = g.address?.city || g.address?.town || g.address?.municipality || ''
-                      if (cidade) setMunicipioAlerta(cidade)
-                      const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
-                      if (uf) setUfAlerta(uf)
-                    } catch { /* rede: segue com coordenada, sem nome */ }
-                  }
-                  setBuscandoLocalAlerta(false)
-                }}
-              >
-                <IconCurrentLocation size={16} stroke={2} />
-                {buscandoLocalAlerta ? 'Buscando…' : 'Usar minha localização atual'}
-              </button>
+
+              {mostrarMapaAlerta ? (
+                <>
+                  <MapaPicker
+                    lat={posCapturada.lat}
+                    lng={posCapturada.lng}
+                    height={220}
+                    onChange={(lat, lng) => { void definirLocalAlerta(lat, lng) }}
+                  />
+                  <p style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, margin: '8px 2px 0', lineHeight: 1.4 }}>
+                    Arraste o pino, toque no mapa ou busque o endereço do local do registro.
+                  </p>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    className="btn full"
+                    disabled={buscandoLocalAlerta}
+                    onClick={async () => {
+                      setBuscandoLocalAlerta(true)
+                      const p = await obterCoords()
+                      if (p.lat && p.lng) await definirLocalAlerta(p.lat, p.lng)
+                      setBuscandoLocalAlerta(false)
+                    }}
+                  >
+                    <IconCurrentLocation size={16} stroke={2} />
+                    {buscandoLocalAlerta ? 'Buscando…' : 'Estou no local agora'}
+                  </button>
+                  <button
+                    className="btn outline full"
+                    style={{ borderColor: 'rgba(255,255,255,.3)', color: '#fff' }}
+                    onClick={() => setMostrarMapaAlerta(true)}
+                  >
+                    <IconMapPin size={16} stroke={2} /> Apontar no mapa
+                  </button>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Confirmação discreta de que já há um ponto definido */}
+          {posCapturada.lat != null && mostrarMapaAlerta && (
+            <p style={{ color: '#1ECBC3', fontSize: 12, margin: '0 2px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <IconMapPin size={13} stroke={2.5} /> Local definido{municipioAlerta ? ` · ${municipioAlerta}${ufAlerta ? `/${ufAlerta}` : ''}` : ''}
+            </p>
           )}
 
           <button
