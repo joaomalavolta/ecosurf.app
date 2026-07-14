@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { IconArrowLeft, IconCheck, IconScissors } from '@tabler/icons-react'
+import { IconCheck, IconScissors } from '@tabler/icons-react'
 import { VIDEO_MAX_S } from '../lib/video'
+import { BotaoVoltarOverlay } from './BotaoVoltarOverlay'
 
 /**
  * Linha de edição do vídeo da galeria.
@@ -107,18 +108,7 @@ export function RecortarVideo({
       padding: '18px 16px calc(env(safe-area-inset-bottom, 0px) + 18px)',
       touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none',
     }}>
-      <button
-        onClick={onCancelar}
-        aria-label="Escolher outro vídeo"
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
-          background: 'none', border: 'none', padding: '2px 4px 10px 0',
-          color: 'rgba(255,255,255,.75)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-        }}
-      >
-        <IconArrowLeft size={18} stroke={2} />
-        Outro vídeo
-      </button>
+      <BotaoVoltarOverlay onClick={onCancelar} label="Outro vídeo" />
 
       <h2 style={{ color: '#fff', margin: '0 0 4px', fontSize: 21, display: 'flex', alignItems: 'center', gap: 8 }}>
         <IconScissors size={20} stroke={2} /> Escolha os 5 segundos

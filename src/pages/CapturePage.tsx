@@ -23,6 +23,7 @@ import { RecortarVideo } from '../components/RecortarVideo'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
+import { BotaoVoltarOverlay } from '../components/BotaoVoltarOverlay'
 
 type TipoRegistro = 'report' | 'alerta' | 'lixo'
 const SIGLA_UF: Record<string, string> = {
@@ -131,6 +132,7 @@ export function CapturePage() {
   const [ufAlerta, setUfAlerta] = useState('')
   const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [publicandoAlerta, setPublicandoAlerta] = useState(false)
+  const [buscandoLocalAlerta, setBuscandoLocalAlerta] = useState(false)
   const [alertaNaFila, setAlertaNaFila] = useState(false)
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [picoAutoId, setPicoAutoId] = useState<string | null>(null)
@@ -156,6 +158,41 @@ export function CapturePage() {
     })
     return () => { vivo = false }
   }, [navigate])
+
+  // Controla o botão voltar físico do Android e popstate do navegador
+  useEffect(() => {
+    if (etapa === 'tipo' || etapa === 'concluido') {
+      return
+    }
+
+    window.history.pushState({ captureOverlay: true, etapa, recortando: !!recortando }, '')
+
+    const lidarComPopState = () => {
+      if (recortando) {
+        setRecortando(null)
+      } else if (etapa === 'classificar-alerta') {
+        void abrirCamera()
+      } else if (etapa === 'confirmar-pico') {
+        setConfirmar(null)
+        setVideoCapturado(undefined)
+        setBlobCapturado(undefined)
+        setThumbCapturado(undefined)
+        void abrirCamera()
+      } else if (etapa === 'selecionar-pico') {
+        setEtapa('confirmar-pico')
+      } else if (etapa === 'camera') {
+        setEtapa('localizacao')
+      } else if (etapa === 'localizacao') {
+        setEtapa('tipo')
+      }
+    }
+
+    window.addEventListener('popstate', lidarComPopState)
+    return () => {
+      window.removeEventListener('popstate', lidarComPopState)
+    }
+  }, [etapa, recortando])
+
 
   // Quando o user diz "sim, estou no local", detectar GPS e achar pico
   async function detectarLocalEAbrir() {
@@ -879,7 +916,9 @@ export function CapturePage() {
       {recortando && (
         <RecortarVideo
           file={recortando}
-          onCancelar={() => setRecortando(null)}
+          onCancelar={() => {
+            window.history.back()
+          }}
           onConfirmar={(inicioS) => { void confirmarRecorte(recortando, inicioS) }}
         />
       )}
@@ -894,11 +933,7 @@ export function CapturePage() {
           onVoltar={() => {
             // Refazer: descarta o registro atual e volta para a câmera. Nada
             // foi enviado ainda — o gesto é seguro e reversível.
-            setConfirmar(null)
-            setVideoCapturado(undefined)
-            setBlobCapturado(undefined)
-            setThumbCapturado(undefined)
-            void abrirCamera()
+            window.history.back()
           }}
           onPublicar={async () => {
             const c = confirmar
@@ -910,6 +945,7 @@ export function CapturePage() {
 
       {etapa === 'classificar-alerta' && (
         <div style={{ position: 'fixed', inset: 0, background: '#06222E', zIndex: 50, overflowY: 'auto', padding: '24px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+          <BotaoVoltarOverlay onClick={() => window.history.back()} label="Voltar para a câmera" style={{ marginBottom: 16 }} />
           <h2 style={{ color: '#fff', marginBottom: 4 }}>Classifique o alerta</h2>
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 14 }}>
             Sua foto vira um registro ambiental oficial no mapa da comunidade.
@@ -948,6 +984,46 @@ export function CapturePage() {
             <input type="checkbox" checked={aceiteAlerta} onChange={(e) => setAceiteAlerta(e.target.checked)} style={{ marginTop: 2 }} />
             Declaro que o registro é verdadeiro e feito de forma segura, sem me expor a riscos.
           </label>
+
+          {/* Alerta EXIGE coordenada (denúncia sem lugar não vai ao mapa). Sem
+              GPS — caso típico de vídeo/foto "de outro lugar" — em vez de deixar
+              o botão mudo, explicamos e oferecemos buscar a localização. */}
+          {!posCapturada.lat && (
+            <div style={{
+              background: 'rgba(232,115,74,.13)', border: '1px solid rgba(232,115,74,.34)',
+              borderRadius: 12, padding: '12px 14px', marginBottom: 12,
+            }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
+                <IconMapPin size={16} stroke={2} style={{ color: '#F0A17E', flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 1.45 }}>
+                  Um alerta ambiental precisa de localização para aparecer no mapa. Toque abaixo para informar onde foi.
+                </span>
+              </div>
+              <button
+                className="btn full"
+                disabled={buscandoLocalAlerta}
+                onClick={async () => {
+                  setBuscandoLocalAlerta(true)
+                  const p = await obterCoords()
+                  setPosCapturada(p)
+                  if (p.lat && p.lng) {
+                    try {
+                      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${p.lat}&lon=${p.lng}&format=json&zoom=14`)
+                      const g = await r.json()
+                      const cidade = g.address?.city || g.address?.town || g.address?.municipality || ''
+                      if (cidade) setMunicipioAlerta(cidade)
+                      const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
+                      if (uf) setUfAlerta(uf)
+                    } catch { /* rede: segue com coordenada, sem nome */ }
+                  }
+                  setBuscandoLocalAlerta(false)
+                }}
+              >
+                <IconCurrentLocation size={16} stroke={2} />
+                {buscandoLocalAlerta ? 'Buscando…' : 'Usar minha localização atual'}
+              </button>
+            </div>
+          )}
 
           <button
             className="btn acento full"

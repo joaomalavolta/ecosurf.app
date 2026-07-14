@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
-import { IconCheck, IconX, IconZoomIn } from '@tabler/icons-react'
+import { IconCheck, IconZoomIn } from '@tabler/icons-react'
+import { BotaoVoltarOverlay } from './BotaoVoltarOverlay'
 
 /**
  * Corte de foto antes do upload — a peça que padroniza o acervo.
@@ -88,13 +89,7 @@ export function CorteFoto({
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px', flexShrink: 0,
       }}>
-        <button
-          onClick={onCancelar}
-          aria-label="Cancelar"
-          style={{ background: 'none', border: 0, color: '#fff', cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 4 }}
-        >
-          <IconX size={22} stroke={2} />
-        </button>
+        <BotaoVoltarOverlay onClick={onCancelar} label="Voltar" style={{ padding: '0 8px 0 0' }} />
         <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{titulo}</span>
         <button
           onClick={() => void confirmar()}
