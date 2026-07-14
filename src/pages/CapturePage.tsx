@@ -19,6 +19,7 @@ import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVideoParaClipe, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
+import { RecortarVideo } from '../components/RecortarVideo'
 import { SeletorCategoria } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
@@ -81,6 +82,8 @@ export function CapturePage() {
   const [erroVideo, setErroVideo] = useState<string | null>(null)
   /** 0..1 enquanto recorta um vídeo da galeria; null quando não há corte em curso. */
   const [procVideo, setProcVideo] = useState<number | null>(null)
+  /** Arquivo aguardando o autor escolher o trecho de 5s na linha de edição. */
+  const [recortando, setRecortando] = useState<File | null>(null)
   const [videoCapturado, setVideoCapturado] = useState<{ blob: Blob; mime: string; duracaoS: number } | undefined>()
   const podeGravar = useMemo(() => !!melhorMimeGravacao(), [])
   const cameraBoxRef = useRef<HTMLDivElement>(null)
@@ -101,7 +104,6 @@ export function CapturePage() {
     candidatos: { pico: import('../types/domain').Pico; metros: number }[]
     escolhido: string
     ambiguo: boolean
-    videoBlob?: Blob
   } | null>(null)
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
@@ -259,18 +261,31 @@ export function CapturePage() {
       setErroVideo(veredicto.motivo ?? 'Vídeo não aceito.')
       return
     }
+    if (veredicto.acao === 'recortar') {
+      // Não decidimos por ele: o autor escolhe QUAIS 5 segundos entram.
+      setRecortando(file)
+      return
+    }
+    await prepararClipe({ blob: file, mime: file.type, duracaoS: veredicto.duracaoS ?? 0 })
+  }
+
+  /** Recorta o trecho escolhido na linha de edição e segue para a publicação. */
+  async function confirmarRecorte(file: File, inicioS: number) {
+    setRecortando(null)
+    setProcVideo(0)
     try {
-      let clipe: { blob: Blob; mime: string; duracaoS: number }
-      if (veredicto.acao === 'recortar') {
-        // Roda em tempo real (até 5s) — a barra evita a sensação de travamento.
-        setProcVideo(0)
-        const recortado = await recortarVideoParaClipe(file, setProcVideo)
-        setProcVideo(null)
-        clipe = recortado
-      } else {
-        clipe = { blob: file, mime: file.type, duracaoS: veredicto.duracaoS ?? 0 }
-      }
-      // Poster: sai do clipe FINAL (o que a comunidade vai ver de fato).
+      const clipe = await recortarVideoParaClipe(file, { inicioS, onProgresso: setProcVideo })
+      setProcVideo(null)
+      await prepararClipe(clipe)
+    } catch {
+      setProcVideo(null)
+      setErroVideo('Não deu para preparar este vídeo neste aparelho. Tente gravar pelo app ou escolher outro arquivo.')
+    }
+  }
+
+  /** Poster + envio: sai do clipe FINAL, que é o que a comunidade vai ver. */
+  async function prepararClipe(clipe: { blob: Blob; mime: string; duracaoS: number }) {
+    try {
       const arquivoPoster = clipe.blob instanceof File
         ? clipe.blob
         : new File([clipe.blob], 'clipe', { type: clipe.mime })
@@ -286,7 +301,6 @@ export function CapturePage() {
         posterThumb: poster.thumb,
       })
     } catch {
-      setProcVideo(null)
       setErroVideo('Não deu para preparar este vídeo neste aparelho. Tente gravar pelo app ou escolher outro arquivo.')
     }
   }
@@ -378,7 +392,6 @@ export function CapturePage() {
         candidatos,
         escolhido: picoAutoId,
         ambiguo,
-        videoBlob: videoPronto?.blob,
       })
       setEtapa('confirmar-pico')
       return
@@ -836,7 +849,7 @@ export function CapturePage() {
             ) : (
               <div style={{ width: 220, textAlign: 'center' }}>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,.8)', marginBottom: 6 }}>
-                  Preparando os primeiros 5s…
+                  Preparando o trecho escolhido…
                 </div>
                 <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,.18)', overflow: 'hidden' }}>
                   <div style={{
@@ -862,6 +875,15 @@ export function CapturePage() {
       )}
 
       {/* ETAPA 4: Informar localização (orgânico) */}
+      {/* Linha de edição: o autor escolhe QUAIS 5 segundos do vídeo entram */}
+      {recortando && (
+        <RecortarVideo
+          file={recortando}
+          onCancelar={() => setRecortando(null)}
+          onConfirmar={(inicioS) => { void confirmarRecorte(recortando, inicioS) }}
+        />
+      )}
+
       {etapa === 'confirmar-pico' && confirmar && (
         <ConfirmarPico
           dados={confirmar}

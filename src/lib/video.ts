@@ -137,8 +137,10 @@ export function podeRecortarNoAparelho(): boolean {
  */
 export function recortarVideoParaClipe(
   file: File,
-  onProgresso?: (frac: number) => void,
+  opts?: { inicioS?: number; onProgresso?: (frac: number) => void },
 ): Promise<ClipeGravado> {
+  const inicioS = Math.max(0, opts?.inicioS ?? 0)
+  const onProgresso = opts?.onProgresso
   return new Promise((resolve, reject) => {
     const mime = melhorMimeGravacao()
     if (!mime || !podeRecortarNoAparelho()) {
@@ -194,7 +196,7 @@ export function recortarVideoParaClipe(
         cancelAnimationFrame(raf)
         URL.revokeObjectURL(url)
         onProgresso?.(1)
-        const duracaoS = Math.min(VIDEO_MAX_S, v.duration || VIDEO_MAX_S)
+        const duracaoS = Math.min(VIDEO_MAX_S, Math.max(0.1, (v.duration || VIDEO_MAX_S) - inicioS))
         resolve({ blob: new Blob(pedacos, { type: mime }), mime, duracaoS })
       }
 
@@ -205,11 +207,13 @@ export function recortarVideoParaClipe(
         }
       }
 
+      const fimS = Math.min(v.duration || inicioS + VIDEO_MAX_S, inicioS + VIDEO_MAX_S)
+
       const desenhar = () => {
         if (encerrado) return
         ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
-        onProgresso?.(Math.min(1, v.currentTime / VIDEO_MAX_S))
-        if (v.currentTime >= VIDEO_MAX_S || v.ended) {
+        onProgresso?.(Math.min(1, Math.max(0, (v.currentTime - inicioS) / (fimS - inicioS || 1))))
+        if (v.currentTime >= fimS || v.ended) {
           parar()
           return
         }
@@ -217,11 +221,21 @@ export function recortarVideoParaClipe(
       }
 
       v.onended = parar
-      rec.start(250)
-      v.currentTime = 0
-      void v.play()
-        .then(() => { raf = requestAnimationFrame(desenhar) })
-        .catch(() => falhar('Não foi possível reproduzir este vídeo para recortar.'))
+      // Posiciona no início do trecho ESCOLHIDO antes de começar a gravar —
+      // o recorte é o que o autor selecionou, não os 5 primeiros segundos.
+      const comecar = () => {
+        rec?.start(250)
+        void v.play()
+          .then(() => { raf = requestAnimationFrame(desenhar) })
+          .catch(() => falhar('Não foi possível reproduzir este vídeo para recortar.'))
+      }
+      if (inicioS > 0) {
+        v.onseeked = () => { v.onseeked = null; comecar() }
+        v.currentTime = inicioS
+      } else {
+        v.currentTime = 0
+        comecar()
+      }
     }
   })
 }
