@@ -8,6 +8,7 @@ import {
   textoGrandeAtivo, reduzAnimacaoAtivo, setTextoGrande, setReduzAnimacao,
   soComFotosAtivo, setSoComFotos, restaurarPreferenciasDoApp,
 } from '../lib/preferencias'
+import { PainelNotificacoes } from './PainelNotificacoes'
 
 function LinhaPref({ Icone, titulo, sub, valor, onToggle }: {
   Icone: Icon; titulo: string; sub: string; valor: boolean; onToggle: () => void
@@ -61,6 +62,8 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
       <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
         Com a conta conectada, valem em todos os seus aparelhos. Sem conta, ficam só neste.
       </p>
+
+      <PainelNotificacoes />
     </div>
   )
 }

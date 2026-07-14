@@ -28,6 +28,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Handlers de push (notificação com o app fechado). Fora do bundle:
+        // roda no service worker, não na página.
+        importScripts: ['/sw-push.js'],
         globPatterns: ['**/*.{js,css,html,woff2}'],
         runtimeCaching: [
           {

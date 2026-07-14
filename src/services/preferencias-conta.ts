@@ -16,11 +16,11 @@
  *  - Deslogado, tudo continua funcionando só nas camadas 1–2.
  */
 
-export type CategoriaPref = 'aparencia' | 'timeline' | 'feed' | 'privacidade'
+export type CategoriaPref = 'aparencia' | 'timeline' | 'feed' | 'privacidade' | 'notificacoes'
 type Prefs = Partial<Record<CategoriaPref, Record<string, unknown>>>
 
 const CHAVE = 'ecosurf.prefs'
-const CATEGORIAS: CategoriaPref[] = ['aparencia', 'timeline', 'feed', 'privacidade']
+const CATEGORIAS: CategoriaPref[] = ['aparencia', 'timeline', 'feed', 'privacidade', 'notificacoes']
 const DEBOUNCE_MS = 800
 
 let prefs: Prefs = {}
@@ -117,7 +117,7 @@ export async function carregarPreferencias(): Promise<Prefs> {
     if (!s) return prefs
     const { data } = await s.sb
       .from('user_preferences')
-      .select('aparencia, timeline, feed, privacidade')
+      .select('aparencia, timeline, feed, privacidade, notificacoes')
       .maybeSingle()
     if (data) {
       for (const c of CATEGORIAS) {
