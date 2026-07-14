@@ -117,22 +117,33 @@ export interface FotoAdmin {
   suspeita_motivo?: string | null
   deleted_at: string | null
   url?: string
+  /** Registro em vídeo (≤5s): url segue sendo o poster; videoUrl é o clipe. */
+  tipo?: string | null
+  duracao_s?: number | null
+  video_path?: string | null
+  videoUrl?: string
 }
 
 export async function listarFotos(): Promise<FotoAdmin[]> {
   const c = await sb()
   const { data } = await c
     .from('fotos')
-    .select('id,pico_id,capturada_em,storage_path,status,observacao,procedencia,geofence_ok,suspeita_motivo,deleted_at')
+    .select('id,pico_id,capturada_em,storage_path,status,observacao,procedencia,geofence_ok,suspeita_motivo,deleted_at,tipo,duracao_s,video_path')
     .order('criada_em', { ascending: false })
     .limit(120)
   const fotos = (data ?? []) as FotoAdmin[]
-  const paths = fotos.map((f) => f.storage_path).filter(Boolean) as string[]
+  // Poster e clipe são assinados juntos: moderar vídeo sem poder assistir ao
+  // vídeo seria moderar no escuro.
+  const paths = [
+    ...fotos.map((f) => f.storage_path),
+    ...fotos.map((f) => f.video_path),
+  ].filter(Boolean) as string[]
   if (paths.length) {
     const { data: signed } = await c.storage.from('fotos').createSignedUrls(paths, 3600)
     const mapa = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
     fotos.forEach((f) => {
       if (f.storage_path) f.url = mapa.get(f.storage_path) ?? undefined
+      if (f.video_path) f.videoUrl = mapa.get(f.video_path) ?? undefined
     })
   }
   return fotos
@@ -145,10 +156,12 @@ export async function moderarFoto(id: string, status: 'aprovada' | 'ocultada' | 
 }
 
 /** Soft-delete por padrão (status=removida + deleted_*); hard só admin+. */
-export async function excluirFoto(id: string, motivo: string, opts?: { hard?: boolean; path?: string | null }) {
+export async function excluirFoto(id: string, motivo: string, opts?: { hard?: boolean; path?: string | null; videoPath?: string | null }) {
   const c = await sb()
   if (opts?.hard) {
-    if (opts.path) await c.storage.from('fotos').remove([opts.path])
+    // Apaga poster E clipe: um vídeo órfão no bucket é custo e passivo LGPD.
+    const alvos = [opts.path, opts.videoPath].filter(Boolean) as string[]
+    if (alvos.length) await c.storage.from('fotos').remove(alvos)
     await c.from('fotos').delete().eq('id', id)
     await log(c, 'foto:excluir-definitivo', 'foto', id, undefined, undefined, motivo)
   } else {

@@ -99,6 +99,7 @@ export function CapturePage() {
     candidatos: { pico: import('../types/domain').Pico; metros: number }[]
     escolhido: string
     ambiguo: boolean
+    videoBlob?: Blob
   } | null>(null)
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
@@ -360,6 +361,7 @@ export function CapturePage() {
         candidatos,
         escolhido: picoAutoId,
         ambiguo,
+        videoBlob: videoPronto?.blob,
       })
       setEtapa('confirmar-pico')
       return

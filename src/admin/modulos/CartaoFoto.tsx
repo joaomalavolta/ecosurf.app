@@ -21,12 +21,34 @@ export function CartaoFoto({
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 150, background: 'var(--cinza)', position: 'relative' }}>
-        {f.url ? (
+        {f.videoUrl ? (
+          // Moderador precisa ASSISTIR para julgar — controles nativos, sem autoplay.
+          <video
+            src={f.videoUrl}
+            poster={f.url}
+            controls
+            muted
+            playsInline
+            preload="none"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: removida ? 'grayscale(1) opacity(.5)' : undefined }}
+          />
+        ) : f.url ? (
           <img src={f.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: removida ? 'grayscale(1) opacity(.5)' : undefined }} />
         ) : (
           <div style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--muted)', fontSize: 12 }}>sem imagem</div>
         )}
         <div style={{ position: 'absolute', top: 8, left: 8 }}><StatusBadge status={f.status} /></div>
+        {f.tipo === 'video' && (
+          <span
+            className="badge"
+            style={{
+              position: 'absolute', top: 8, right: 8, fontSize: 10,
+              background: 'rgba(4,20,27,.72)', color: '#fff', pointerEvents: 'none',
+            }}
+          >
+            vídeo · {Math.round(f.duracao_s ?? 5)}s
+          </span>
+        )}
       </div>
       <div className="pad" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>

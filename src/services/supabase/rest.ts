@@ -453,6 +453,7 @@ export interface MinhaFotoRow {
   pico_id: string
   capturada_em: string
   storage_path: string | null
+  tipo?: string | null
   procedencia?: string | null
   captura_lat?: number | null
   captura_lng?: number | null
@@ -468,7 +469,7 @@ export async function restMinhasFotos(): Promise<MinhaFotoRow[]> {
     const u = sess.session?.user
     if (!u) return []
     return rest<MinhaFotoRow[]>(
-      `fotos?select=id,pico_id,capturada_em,storage_path,procedencia,captura_lat,captura_lng&autor_id=eq.${u.id}&order=capturada_em.desc&limit=500`
+      `fotos?select=id,pico_id,capturada_em,storage_path,tipo,procedencia,captura_lat,captura_lng&autor_id=eq.${u.id}&order=capturada_em.desc&limit=500`
     )
   } catch {
     return []

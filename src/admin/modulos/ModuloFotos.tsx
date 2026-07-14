@@ -43,7 +43,7 @@ export function ModuloFotos({ perm }: { perm: Permissoes }) {
     if (!dlg) return
     setTrabalhando(true)
     try {
-      await admin.excluirFoto(dlg.foto.id, dlg.motivo.trim() || 'sem motivo informado', { hard: dlg.hard, path: dlg.foto.storage_path })
+      await admin.excluirFoto(dlg.foto.id, dlg.motivo.trim() || 'sem motivo informado', { hard: dlg.hard, path: dlg.foto.storage_path, videoPath: dlg.foto.video_path })
       if (dlg.hard) {
         setFotos((xs) => xs?.filter((x) => x.id !== dlg.foto.id) ?? null)
       } else {

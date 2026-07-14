@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -34,7 +34,7 @@ export function PerfilPage() {
   const [nAlertas, setNAlertas] = useState(0)
   const [nMutiroes, setNMutiroes] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null}>>([])
+  const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null, tipo?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -263,6 +263,16 @@ export function PerfilPage() {
                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
                             <IconCamera size={20} />
                           </div>
+                        )}
+                        {f.tipo === 'video' && (
+                          <span style={{
+                            position: 'absolute', top: 5, right: 5,
+                            width: 20, height: 20, borderRadius: '50%',
+                            background: 'rgba(4,20,27,.66)', color: '#fff',
+                            display: 'grid', placeItems: 'center',
+                          }}>
+                            <IconPlayerPlayFilled size={10} />
+                          </span>
                         )}
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 4px 4px', background: 'linear-gradient(transparent, rgba(0,0,0,.6))', color: '#fff', fontSize: 10, textAlign: 'center' }}>
                           {new Date(f.capturada_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}

@@ -29,6 +29,8 @@ export function ConfirmarPico({
     candidatos: { pico: Pico; metros: number }[]
     escolhido: string
     ambiguo: boolean
+    /** Clipe (≤5s) quando o registro é vídeo — a prévia reproduz o próprio vídeo. */
+    videoBlob?: Blob
   }
   comunidadeId: string | null
   onComunidade: (id: string | null) => void
@@ -39,6 +41,8 @@ export function ConfirmarPico({
   const [listaAberta, setListaAberta] = useState(dados.ambiguo)
   const [enviando, setEnviando] = useState(false)
   const [previa] = useState(() => (dados.blob ? URL.createObjectURL(dados.blob) : ''))
+  // Quem grava precisa VER o que gravou antes de publicar.
+  const [previaVideo] = useState(() => (dados.videoBlob ? URL.createObjectURL(dados.videoBlob) : ''))
 
   const atual = dados.candidatos.find((c) => c.pico.id === dados.escolhido) ?? dados.candidatos[0]
   const precisao = dados.pos.precisaoM ? Math.round(dados.pos.precisaoM) : null
@@ -54,13 +58,30 @@ export function ConfirmarPico({
         Sua foto entra na linha do tempo deste pico. Confira antes de publicar.
       </p>
 
-      {/* A foto que acabou de ser tirada */}
-      {previa && (
+      {/* O registro que acabou de ser feito — vídeo toca em loop; foto, estática */}
+      {(previaVideo || previa) && (
         <div style={{
           width: '100%', aspectRatio: '4 / 3', borderRadius: 14, overflow: 'hidden',
-          marginBottom: 14, background: '#0a1929',
+          marginBottom: 14, background: '#0a1929', position: 'relative',
         }}>
-          <img src={previa} alt="Foto capturada" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          {previaVideo ? (
+            <video
+              src={previaVideo}
+              poster={previa || undefined}
+              autoPlay muted loop playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <img src={previa} alt="Foto capturada" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          )}
+          {previaVideo && (
+            <span style={{
+              position: 'absolute', top: 10, left: 10, padding: '3px 8px', borderRadius: 99,
+              background: 'rgba(4,20,27,.7)', color: '#fff', fontSize: 11, fontWeight: 600,
+            }}>
+              vídeo
+            </span>
+          )}
         </div>
       )}
 
