@@ -31,6 +31,13 @@ export async function carregarFeed(picoId: string, dia?: Date): Promise<FeedDia>
                 /* sem thumb: o feed usa a foto cheia como fallback */
               }
             }
+            // Vídeo só assina URL quando existe: o feed comum não paga por isso.
+            let videoUrl: string | undefined
+            if (r.video_path) {
+              try {
+                videoUrl = await urlAssinada(r.video_path)
+              } catch { /* sem vídeo: fica o poster, que já é um registro válido */ }
+            }
             return {
               id: r.id,
               picoId: r.pico_id,
@@ -48,6 +55,9 @@ export async function carregarFeed(picoId: string, dia?: Date): Promise<FeedDia>
               observacao: r.observacao ?? undefined,
               procedencia: r.procedencia as Foto['procedencia'],
               rostosBorrados: false,
+              ehVideo: r.tipo === 'video',
+              videoUrl,
+              duracaoS: r.duracao_s ?? undefined,
             }
           }),
         )
@@ -81,6 +91,13 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
                 thumbUrl = await urlAssinada(r.thumb_path)
               } catch { /* sem thumb: usa a foto cheia */ }
             }
+            // Vídeo só assina URL quando existe: o feed comum não paga por isso.
+            let videoUrl: string | undefined
+            if (r.video_path) {
+              try {
+                videoUrl = await urlAssinada(r.video_path)
+              } catch { /* sem vídeo: fica o poster, que já é um registro válido */ }
+            }
             return {
               id: r.id,
               picoId: r.pico_id,
@@ -98,6 +115,9 @@ export async function carregarFeedGlobal(limite = 10): Promise<Foto[]> {
               observacao: r.observacao ?? undefined,
               procedencia: r.procedencia as Foto['procedencia'],
               rostosBorrados: false,
+              ehVideo: r.tipo === 'video',
+              videoUrl,
+              duracaoS: r.duracao_s ?? undefined,
             }
           })
         )

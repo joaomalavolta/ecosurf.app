@@ -85,6 +85,10 @@ export interface Foto {
   observacao?: string;
   procedencia: Procedencia;
   rostosBorrados: boolean;
+  /** Registro em vídeo (≤5s): url/thumbUrl continuam sendo o poster (frame). */
+  ehVideo?: boolean;
+  videoUrl?: string;
+  duracaoS?: number;
 }
 
 export interface FeedDia {

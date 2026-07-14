@@ -5,6 +5,7 @@ import { usePinchZoom } from '../hooks/usePinchZoom'
 import { IconUsers, IconPlus,
   IconX,
   IconCamera,
+  IconVideo,
   IconMapPin,
   IconRipple,
   IconAlertTriangle,
@@ -15,6 +16,7 @@ import { IconUsers, IconPlus,
   IconMap2,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
+import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
 import { SeletorCategoria } from '../components/SeletorCategoria'
@@ -70,6 +72,15 @@ export function CapturePage() {
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  // Vídeo de até 5s: gravação (segurar o botão) ou galeria (com porteiro).
+  const gravacaoRef = useRef<GravacaoAtiva | null>(null)
+  const timerSegurar = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const segurou = useRef(false)
+  const [gravando, setGravando] = useState(false)
+  const [progGrav, setProgGrav] = useState(0)
+  const [erroVideo, setErroVideo] = useState<string | null>(null)
+  const [videoCapturado, setVideoCapturado] = useState<{ blob: Blob; mime: string; duracaoS: number } | undefined>()
+  const podeGravar = useMemo(() => !!melhorMimeGravacao(), [])
   const cameraBoxRef = useRef<HTMLDivElement>(null)
   const uploadId = useRef<string | null>(null)
   const navigate = useNavigate()
@@ -202,15 +213,82 @@ export function CapturePage() {
     }
   }, [])
 
-  async function disparar() {
+  // ─── Vídeo (≤5s) ───────────────────────────────────────────────────────
+  // Dois caminhos, um destino: câmera (selo "no local") e galeria (selo
+  // "galeria"). Ambos terminam em disparar(), reusando GPS, vínculo ao pico
+  // e a decisão de procedência que já existem para a foto.
+  function iniciarGravacao() {
+    const stream = streamRef.current
+    if (!stream || gravando) return
+    const g = gravarClipe(stream, setProgGrav)
+    if (!g) {
+      setErroVideo('Este aparelho não permite gravar vídeo pelo navegador. A foto continua funcionando.')
+      return
+    }
+    gravacaoRef.current = g
+    setErroVideo(null)
+    setGravando(true)
+    void g.clipe
+      .then(async (clipe) => {
+        setGravando(false)
+        setProgGrav(0)
+        const v = videoRef.current
+        if (!v || v.videoWidth === 0) return
+        const { versoesDeVideo } = await import('../lib/imagem')
+        const poster = await versoesDeVideo(v)
+        await disparar({ ...clipe, poster: poster.full, posterThumb: poster.thumb })
+      })
+      .catch(() => {
+        setGravando(false)
+        setProgGrav(0)
+        setErroVideo('Não deu para gravar o vídeo. Tente novamente ou registre uma foto.')
+      })
+  }
+
+  function pararGravacao() {
+    gravacaoRef.current?.parar()
+  }
+
+  async function escolherVideoGaleria(file: File) {
+    setErroVideo(null)
+    const veredicto = await validarVideoGaleria(file)
+    if (!veredicto.ok) {
+      setErroVideo(veredicto.motivo ?? 'Vídeo não aceito.')
+      return
+    }
+    try {
+      const el = await carregarVideoParaPoster(file)
+      const { versoesDeVideo } = await import('../lib/imagem')
+      const poster = await versoesDeVideo(el)
+      URL.revokeObjectURL(el.src)
+      await disparar({
+        blob: file,
+        mime: file.type,
+        duracaoS: veredicto.duracaoS ?? 0,
+        poster: poster.full,
+        posterThumb: poster.thumb,
+      })
+    } catch {
+      setErroVideo('Não deu para ler este vídeo neste aparelho. Tente outro formato.')
+    }
+  }
+
+  async function disparar(videoPronto?: { blob: Blob; mime: string; duracaoS: number; poster?: Blob; posterThumb?: Blob }) {
     const v = videoRef.current
     let blob: Blob | undefined
     let thumb: Blob | undefined
-    if (v && v.videoWidth > 0) {
+    if (videoPronto) {
+      // Vídeo: o "poster" (frame) faz o papel da foto — feed e timeline nem
+      // percebem a diferença; o clipe viaja ao lado.
+      blob = videoPronto.poster
+      thumb = videoPronto.posterThumb
+      setVideoCapturado({ blob: videoPronto.blob, mime: videoPronto.mime, duracaoS: videoPronto.duracaoS })
+    } else if (v && v.videoWidth > 0) {
       const { versoesDeVideo } = await import('../lib/imagem')
       const versoes = await versoesDeVideo(v)
       blob = versoes.full
       thumb = versoes.thumb
+      setVideoCapturado(undefined)
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
@@ -349,6 +427,9 @@ export function CapturePage() {
       capturaLng: pos?.lng,
       picoNovo,
       comunidadeId,
+      videoBlob: videoCapturado?.blob,
+      videoMime: videoCapturado?.mime,
+      videoDuracaoS: videoCapturado?.duracaoS,
     })
     if (tipo) await definirTipo(id, tipo)
     setPicoFinal(picoId)
@@ -661,23 +742,79 @@ export function CapturePage() {
               ))}
             </div>
 
-            <button
-              onClick={disparar}
-              disabled={!!erro}
-              aria-label="Disparar"
-              style={{
-                width: 72, height: 72, borderRadius: '50%', cursor: 'pointer',
-                background: 'radial-gradient(circle at 40% 35%, #29e0d5, #0D6EA8)',
-                border: '4px solid rgba(255,255,255,.85)',
-                boxShadow: '0 4px 20px rgba(30,203,195,.5)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform .1s',
-              }}
-              onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(.9)')}
-              onPointerUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            >
-              <IconCamera size={28} stroke={2.2} color="#fff" />
-            </button>
+            <div style={{ position: 'relative', width: 72, height: 72 }}>
+              {/* Anel de progresso da gravação (5s) */}
+              {gravando && (
+                <svg viewBox="0 0 72 72" style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)', pointerEvents: 'none' }}>
+                  <circle cx="36" cy="36" r="34" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="4" />
+                  <circle
+                    cx="36" cy="36" r="34" fill="none" stroke="#FF4D4D" strokeWidth="4" strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 34}
+                    strokeDashoffset={2 * Math.PI * 34 * (1 - progGrav)}
+                  />
+                </svg>
+              )}
+              <button
+                onClick={() => { if (!segurou.current) void disparar() }}
+                disabled={!!erro}
+                aria-label={gravando ? 'Gravando vídeo — solte para parar' : 'Tocar: foto · Segurar: vídeo de 5s'}
+                style={{
+                  width: 72, height: 72, borderRadius: '50%', cursor: 'pointer',
+                  background: gravando
+                    ? 'radial-gradient(circle at 40% 35%, #ff6b6b, #c22)'
+                    : 'radial-gradient(circle at 40% 35%, #29e0d5, #0D6EA8)',
+                  border: '4px solid rgba(255,255,255,.85)',
+                  boxShadow: gravando ? '0 4px 20px rgba(255,77,77,.55)' : '0 4px 20px rgba(30,203,195,.5)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'transform .1s, background .2s',
+                }}
+                onPointerDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(.9)'
+                  segurou.current = false
+                  timerSegurar.current = setTimeout(() => { segurou.current = true; iniciarGravacao() }, 350)
+                }}
+                onPointerUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)'
+                  if (timerSegurar.current) clearTimeout(timerSegurar.current)
+                  if (gravando) pararGravacao()
+                }}
+                onPointerLeave={() => {
+                  if (timerSegurar.current) clearTimeout(timerSegurar.current)
+                  if (gravando) pararGravacao()
+                }}
+              >
+                {gravando
+                  ? <span style={{ width: 22, height: 22, borderRadius: 4, background: '#fff' }} />
+                  : <IconCamera size={28} stroke={2.2} color="#fff" />}
+              </button>
+            </div>
+
+            {!gravando && podeGravar && (
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', textAlign: 'center', margin: 0 }}>
+                Toque para foto · segure para gravar até 5s
+              </p>
+            )}
+
+            {/* Vídeo da galeria — nasce com selo "galeria", como as fotos */}
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+              fontSize: 12, color: 'rgba(255,255,255,.75)', padding: '6px 12px',
+              border: '1px solid rgba(255,255,255,.18)', borderRadius: 99,
+            }}>
+              <IconVideo size={15} stroke={2} />
+              Enviar vídeo da galeria
+              <input
+                type="file"
+                accept="video/*"
+                style={{ display: 'none' }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) void escolherVideoGaleria(f); e.target.value = '' }}
+              />
+            </label>
+            {erroVideo && (
+              <p style={{ fontSize: 12, color: '#FFB4B4', textAlign: 'center', maxWidth: 280, lineHeight: 1.4 }}>
+                {erroVideo}
+              </p>
+            )}
 
             {noLocal && picoAutoNome && (
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.5)', textAlign: 'center' }}>

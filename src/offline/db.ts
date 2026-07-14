@@ -12,6 +12,9 @@ export interface UploadPendente {
   observacao?: string
   blob?: Blob
   thumbBlob?: Blob
+  videoBlob?: Blob
+  videoMime?: string
+  videoDuracaoS?: number
   capturaLat?: number
   capturaLng?: number
   /** Se preenchido, o pico é criado no envio (permite registrar 100% offline). */

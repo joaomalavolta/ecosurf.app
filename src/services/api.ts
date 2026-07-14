@@ -30,6 +30,10 @@ export interface NovaFoto {
   picoNovo?: PicoNovo
   /** Comunidade que assina a foto (admin/autor). Vazio = assina como pessoa. */
   comunidadeId?: string | null
+  /** Clipe de vídeo (≤5s). blob/thumbBlob viram o poster; o vídeo é aditivo. */
+  videoBlob?: Blob
+  videoMime?: string
+  videoDuracaoS?: number
 }
 
 export interface EcosurfApi {

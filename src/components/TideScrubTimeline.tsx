@@ -347,7 +347,24 @@ export function TideScrubTimeline({
               transition={{ duration: 0.28, ease: 'easeOut' }}
               style={{ position: 'absolute', inset: 0 }}
             >
-              <Photo seed={f.id} url={f.url} alt={f.observacao ?? 'Foto do pico'} style={{ width: '100%', height: '100%' }} />
+              {f.ehVideo && f.videoUrl ? (
+                <video
+                  src={f.videoUrl}
+                  poster={f.url}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  onClick={(e) => {
+                    const el = e.currentTarget
+                    if (el.paused) void el.play().catch(() => {})
+                    else el.pause()
+                  }}
+                />
+              ) : (
+                <Photo seed={f.id} url={f.url} alt={f.observacao ?? 'Foto do pico'} style={{ width: '100%', height: '100%' }} />
+              )}
             </motion.div>
           </AnimatePresence>
 

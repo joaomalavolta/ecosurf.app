@@ -636,7 +636,8 @@ table.adt tr:last-child td { border-bottom: 0; }
 }
 .feed-carousel-track::-webkit-scrollbar { display: none; }
 
-.feed-carousel-track > img {
+.feed-carousel-track > img,
+.feed-carousel-track > video {
   flex: 0 0 100%;
   width: 100%;
   height: auto;

@@ -44,6 +44,19 @@ export const supabaseApi: EcosurfApi = {
       })
       if (!upThumb.error) thumbEnviado = true
     }
+    // Clipe de vídeo (≤5s): aditivo — storage_path/thumb_path seguem sendo o
+    // poster (frame), então todo consumidor antigo continua funcionando.
+    let videoPath: string | null = null
+    if (f.videoBlob && f.videoMime) {
+      const ext = f.videoMime.includes('mp4') ? 'mp4' : 'webm'
+      const vPath = `${picoId}/${f.id}.video.${ext}`
+      const upVideo = await sb().storage.from('fotos').upload(vPath, f.videoBlob, {
+        contentType: f.videoMime.split(';')[0],
+        upsert: false,
+      })
+      if (upVideo.error) throw upVideo.error
+      videoPath = vPath
+    }
     const { error } = await sb()
       .from('fotos')
       .insert({
@@ -57,6 +70,9 @@ export const supabaseApi: EcosurfApi = {
         captura_lat: f.capturaLat ?? null,
         captura_lng: f.capturaLng ?? null,
         comunidade_id: f.comunidadeId ?? null,
+        tipo: videoPath ? 'video' : 'foto',
+        duracao_s: videoPath ? (f.videoDuracaoS ?? null) : null,
+        video_path: videoPath,
         // status, procedencia e geofence_ok são definidos por triggers no servidor
       })
     if (error) throw error

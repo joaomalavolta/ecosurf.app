@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconShieldCheck, IconPhoto, IconShare, IconStar, IconClock } from '@tabler/icons-react'
+import { IconShieldCheck, IconPhoto, IconShare, IconStar, IconClock, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
@@ -77,9 +77,43 @@ export function FeedCard({
       <div className="feed-carousel">
         <div className="feed-carousel-track" ref={trackRef}>
           {fotosComUrl.map((f) => (
-            <img key={f.id} src={f.url!} alt={`Foto de ${nome}`} loading="lazy" />
+            f.ehVideo && f.videoUrl ? (
+              <video
+                key={f.id}
+                src={f.videoUrl}
+                poster={f.url}
+                muted
+                loop
+                playsInline
+                preload="none"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const el = e.currentTarget
+                  if (el.paused) void el.play().catch(() => {})
+                  else el.pause()
+                }}
+              />
+            ) : (
+              <img key={f.id} src={f.url!} alt={`Foto de ${nome}`} loading="lazy" />
+            )
           ))}
         </div>
+
+        {/* Selo de vídeo: dá a dica de que ali tem movimento */}
+        {fotosComUrl[activeIdx]?.ehVideo && (
+          <span
+            className="badge b-glass"
+            style={{
+              position: 'absolute', top: 10, left: 12, zIndex: 3,
+              fontSize: 10.5, display: 'inline-flex', alignItems: 'center', gap: 4,
+              pointerEvents: 'none',
+            }}
+          >
+            <IconPlayerPlayFilled size={11} />
+            {Math.round(fotosComUrl[activeIdx].duracaoS ?? 5)}s
+          </span>
+        )}
 
         {/* Badges overlay */}
         {onToggleFavorito && (
