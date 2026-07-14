@@ -87,7 +87,13 @@ export function CapturePage() {
   const [procVideo, setProcVideo] = useState<number | null>(null)
   /** Arquivo aguardando o autor escolher o trecho de 5s na linha de edição. */
   const [recortando, setRecortando] = useState<File | null>(null)
-  const [videoCapturado, setVideoCapturado] = useState<{ blob: Blob; mime: string; duracaoS: number } | undefined>()
+  // Clipe de vídeo do registro atual. Ref (não state) porque setState é
+  // assíncrono e finalizarUpload podia lê-lo ANTES da atualização — o clipe
+  // se perdia e o registro "sumia". O ref atualiza na hora.
+  const videoCapturadoRef = useRef<{ blob: Blob; mime: string; duracaoS: number } | undefined>(undefined)
+  const definirVideoCapturado = (v: { blob: Blob; mime: string; duracaoS: number } | undefined) => {
+    videoCapturadoRef.current = v
+  }
   const podeGravar = useMemo(() => !!melhorMimeGravacao(), [])
   const cameraBoxRef = useRef<HTMLDivElement>(null)
   const uploadId = useRef<string | null>(null)
@@ -194,7 +200,7 @@ export function CapturePage() {
           break
         case 'abrir-camera':
           setConfirmar(null)
-          setVideoCapturado(undefined)
+          definirVideoCapturado(undefined)
           setBlobCapturado(undefined)
           setThumbCapturado(undefined)
           void abrirCamera()
@@ -406,19 +412,19 @@ export function CapturePage() {
       // Foto da galeria: o próprio arquivo é a foto; nada de clipe.
       blob = pronto.poster
       thumb = pronto.posterThumb
-      setVideoCapturado(undefined)
+      definirVideoCapturado(undefined)
     } else if (pronto) {
       // Vídeo: o "poster" (frame) faz o papel da foto — feed e timeline nem
       // percebem a diferença; o clipe viaja ao lado.
       blob = pronto.poster
       thumb = pronto.posterThumb
-      setVideoCapturado({ blob: pronto.blob, mime: pronto.mime, duracaoS: pronto.duracaoS })
+      definirVideoCapturado({ blob: pronto.blob, mime: pronto.mime, duracaoS: pronto.duracaoS })
     } else if (v && v.videoWidth > 0) {
       const { versoesDeVideo } = await import('../lib/imagem')
       const versoes = await versoesDeVideo(v)
       blob = versoes.full
       thumb = versoes.thumb
-      setVideoCapturado(undefined)
+      definirVideoCapturado(undefined)
     }
     streamRef.current?.getTracks().forEach((t) => t.stop())
 
@@ -562,23 +568,31 @@ export function CapturePage() {
   async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob, picoNovo?: import('../services/api').PicoNovo) {
     const id = crypto.randomUUID()
     uploadId.current = id
-    await enfileirar({
-      id,
-      picoId,
-      capturadaEm: new Date().toISOString(),
-      blob,
-      thumbBlob: thumb,
-      capturaLat: pos?.lat,
-      capturaLng: pos?.lng,
-      picoNovo,
-      comunidadeId,
-      videoBlob: videoCapturado?.blob,
-      videoMime: videoCapturado?.mime,
-      videoDuracaoS: videoCapturado?.duracaoS,
-    })
-    if (tipo) await definirTipo(id, tipo)
-    setPicoFinal(picoId)
-    setEtapa('concluido')
+    try {
+      await enfileirar({
+        id,
+        picoId,
+        capturadaEm: new Date().toISOString(),
+        blob,
+        thumbBlob: thumb,
+        capturaLat: pos?.lat,
+        capturaLng: pos?.lng,
+        picoNovo,
+        comunidadeId,
+        videoBlob: videoCapturadoRef.current?.blob,
+        videoMime: videoCapturadoRef.current?.mime,
+        videoDuracaoS: videoCapturadoRef.current?.duracaoS,
+      })
+      if (tipo) await definirTipo(id, tipo)
+      setPicoFinal(picoId)
+      setEtapa('concluido')
+    } catch (e) {
+      // Sem este guard, uma falha ao gravar na fila (ex.: Blob grande, cota do
+      // IndexedDB, campo não serializável) subia sem ser tratada e a tela de
+      // "enviado" nunca aparecia — o registro "sumia" sem explicação.
+      console.error('falha ao enfileirar o registro', e)
+      setErroVideo('Não deu para salvar o registro neste aparelho. Tente novamente ou reinicie o app.')
+    }
   }
 
   async function criarNovoPico() {
