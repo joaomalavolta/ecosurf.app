@@ -31,7 +31,7 @@ export const supabaseApi: EcosurfApi = {
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
         contentType: 'image/webp',
-        upsert: false,
+        upsert: true,
       })
       if (up.error) throw up.error
     }
@@ -40,7 +40,7 @@ export const supabaseApi: EcosurfApi = {
     if (f.thumbBlob) {
       const upThumb = await sb().storage.from('fotos').upload(thumbPath, f.thumbBlob, {
         contentType: 'image/webp',
-        upsert: false,
+        upsert: true,
       })
       if (!upThumb.error) thumbEnviado = true
     }
@@ -52,14 +52,14 @@ export const supabaseApi: EcosurfApi = {
       const vPath = `${picoId}/${f.id}.video.${ext}`
       const upVideo = await sb().storage.from('fotos').upload(vPath, f.videoBlob, {
         contentType: f.videoMime.split(';')[0],
-        upsert: false,
+        upsert: true,
       })
       if (upVideo.error) throw upVideo.error
       videoPath = vPath
     }
     const { error } = await sb()
       .from('fotos')
-      .insert({
+      .upsert({
         id: f.id,
         pico_id: picoId,
         autor_id: autorId,
@@ -74,7 +74,7 @@ export const supabaseApi: EcosurfApi = {
         duracao_s: videoPath ? (f.videoDuracaoS ?? null) : null,
         video_path: videoPath,
         // status, procedencia e geofence_ok são definidos por triggers no servidor
-      })
+      }, { onConflict: 'id' })
     if (error) throw error
     return { id: f.id }
   },
