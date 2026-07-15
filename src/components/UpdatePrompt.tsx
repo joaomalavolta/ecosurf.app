@@ -12,11 +12,22 @@ export function UpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_url: string, registration: ServiceWorkerRegistration | undefined) {
-      // Verifica atualizações a cada 60 segundos
       if (registration) {
-        setInterval(() => {
-          registration.update()
-        }, 60_000)
+        // Checa nova versão logo ao abrir e a cada 60s — no PWA do iOS a
+        // verificação espontânea é preguiçosa; forçamos na mão.
+        registration.update()
+        setInterval(() => { registration.update() }, 60_000)
+      }
+      // Com autoUpdate + skipWaiting, o SW novo assume o controle sozinho.
+      // Ao assumir, recarrega uma vez para a build nova aparecer sem depender
+      // de o usuário tocar em nada — foi o que deixava gente presa no cache.
+      if ('serviceWorker' in navigator) {
+        let recarregou = false
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (recarregou) return
+          recarregou = true
+          window.location.reload()
+        })
       }
     },
   })

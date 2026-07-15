@@ -7,8 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
-      injectRegister: false,
+      // 'autoUpdate' (não 'prompt'): num app em teste que muda toda hora, o
+      // usuário não pode ficar preso numa build antiga em cache esperando
+      // aceitar um aviso — que no PWA do iOS às vezes nem aparece. O SW novo
+      // assume assim que estiver pronto (skipWaiting + clientsClaim embutidos).
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon_ecosurf.svg', 'atalho_icone_celular.png', 'og.png', 'logo_ecosurf.png'],
       manifest: {
         name: 'Ecosurf',
@@ -28,6 +32,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Assume o controle na hora e limpa caches de builds antigas — sem
+        // isto, o autoUpdate ainda esperaria todas as abas fecharem.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         // Handlers de push (notificação com o app fechado). Fora do bundle:
         // roda no service worker, não na página.
         importScripts: ['/sw-push.js'],
