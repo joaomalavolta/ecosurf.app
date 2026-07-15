@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconWifiOff, IconAlertTriangle, IconX } from '@tabler/icons-react'
 import { useUploads } from '../offline/useUploads'
-import { limparBloqueados } from '../offline/uploadQueue'
+import { limparBloqueados, retentarTudo } from '../offline/uploadQueue'
 
 /** Estado de rede + fila de upload sempre visível quando relevante. */
 export function UploadStatusBar() {
@@ -70,6 +70,22 @@ export function UploadStatusBar() {
             }}
           >
             Fazer login
+          </button>
+          <button
+            onClick={() => void retentarTudo()}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.4)',
+              borderRadius: 8,
+              padding: '4px 12px',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Tentar novamente
           </button>
           <button
             onClick={() => void limparBloqueados()}

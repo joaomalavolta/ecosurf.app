@@ -116,3 +116,25 @@ export function iniciarSincronizacao(): void {
   }
 }
 
+
+/**
+ * Devolve à fila tudo que estava 'bloqueado' ou 'falhou' e força um envio.
+ *
+ * Necessário porque 'bloqueado' não é retentado automaticamente: um registro
+ * que travou por uma causa já corrigida (ex.: sessão expirada, ou o bug do
+ * trigger que derrubava o INSERT) ficaria preso para sempre. Este botão de
+ * escape ressuscita a fila depois que a causa raiz é resolvida.
+ */
+export async function retentarTudo(): Promise<void> {
+  const d = await db()
+  const presos = (await d.getAll('uploads')).filter(
+    (u) => u.status === 'bloqueado' || u.status === 'falhou',
+  )
+  for (const u of presos) {
+    u.status = 'na-fila'
+    u.erro = undefined
+    await d.put('uploads', u)
+  }
+  emitir()
+  await flush()
+}
