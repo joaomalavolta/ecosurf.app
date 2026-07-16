@@ -6,6 +6,7 @@ import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { PainelPreferencias, CardConquistas } from '../components/PreferenciasEConquistas'
+import { DiagnosticoFila } from '../components/DiagnosticoFila'
 import { ehModerador } from '../services/moderacao'
 import { meuStatus, permissoes, sair } from '../services/admin'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
@@ -300,6 +301,8 @@ export function PerfilPage() {
             </div>
 
             {verPrefs && <PainelPreferencias onFechar={() => setVerPrefs(false)} />}
+
+            <DiagnosticoFila />
             {verConquistas && (
               <CardConquistas dados={{
                 fotos: minhasFotos.length,
