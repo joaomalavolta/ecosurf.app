@@ -918,11 +918,9 @@ export function TideScrubTimeline({
 
     {ampliada && f && (
       <VisualizadorMidia
-        ehVideo={f.ehVideo}
-        url={f.url}
-        videoUrl={f.videoUrl}
-        seed={f.id}
-        legenda={f.observacao}
+        fotos={ordenadas}
+        indiceInicial={safeAtivo}
+        picoNome={picoNome}
         onFechar={() => setAmpliada(false)}
       />
     )}
