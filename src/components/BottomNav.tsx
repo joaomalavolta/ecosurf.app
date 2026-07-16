@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   IconRipple,
   IconMap2,
@@ -24,8 +24,7 @@ const itens: Item[] = [
  * O botão central abre a câmera direto (2 toques).
  */
 export function BottomNav() {
-  const navigate = useNavigate()
-  const { onboarded, abrir } = useOnboarding()
+  const { irParaCaptura } = useOnboarding()
   return (
     <nav
       aria-label="Navegação principal"
@@ -55,7 +54,7 @@ export function BottomNav() {
       {/* slot central: captura */}
       <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 60 }}>
         <button
-          onClick={() => (onboarded ? navigate('/capturar') : abrir())}
+          onClick={() => irParaCaptura()}
           aria-label="Registrar agora (abre a câmera)"
           style={{
             width: 62,

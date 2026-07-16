@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { IconRipple } from '@tabler/icons-react'
 import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
@@ -19,8 +19,7 @@ export function MapaPage() {
   const [filtro, setFiltro] = useState<Filtro>('tudo')
   const [soRecentes, setSoRecentes] = useState(false)
   const [sel, setSel] = useState<Pico | null>(null)
-  const navigate = useNavigate()
-  const { onboarded, abrir } = useOnboarding()
+  const { irParaCaptura } = useOnboarding()
 
   useEffect(() => {
     let vivo = true
@@ -112,7 +111,7 @@ export function MapaPage() {
               <Link to={`/pico/${sel.id}`} className="btn full" style={{ minHeight: 40, height: 40, fontSize: 13 }}>
                 Abrir pico
               </Link>
-              <button className="btn outline full" style={{ minHeight: 40, height: 40, fontSize: 13 }} onClick={() => (onboarded ? navigate('/capturar') : abrir())}>
+              <button className="btn outline full" style={{ minHeight: 40, height: 40, fontSize: 13 }} onClick={() => irParaCaptura()}>
                 Registrar
               </button>
             </div>

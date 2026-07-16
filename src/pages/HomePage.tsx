@@ -44,6 +44,11 @@ function MobileHome() {
       // 1. Verificar sessão existente
       sb().auth.getSession().then(({ data }) => {
         if (data.session) {
+          // Sessão já existente (ex.: restaurada no PWA, cujo storage é
+          // separado do Safari). Sem isto, 'onboarded' ficava false e o botão
+          // da câmera mandava para a home em vez de abrir a captura — quem já
+          // está logado pode reportar, ponto.
+          gravaOnboarded()
           setEstado('logado')
         } else {
           setEstado('visitante')
