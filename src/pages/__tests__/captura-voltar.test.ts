@@ -28,6 +28,8 @@ describe('voltar da captura', () => {
   it('etapas lineares recuam uma a uma', () => {
     expect(acaoDoVoltar({ recortando: false, etapa: 'camera' }))
       .toEqual({ tipo: 'ir-etapa', etapa: 'localizacao' })
+    expect(acaoDoVoltar({ recortando: false, etapa: 'onde-quando' }))
+      .toEqual({ tipo: 'ir-etapa', etapa: 'localizacao' })
     expect(acaoDoVoltar({ recortando: false, etapa: 'localizacao' }))
       .toEqual({ tipo: 'ir-etapa', etapa: 'tipo' })
   })

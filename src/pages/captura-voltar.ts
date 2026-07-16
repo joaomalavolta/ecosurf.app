@@ -11,6 +11,7 @@
 export type EtapaCaptura =
   | 'tipo'
   | 'localizacao'
+  | 'onde-quando'
   | 'camera'
   | 'confirmar-pico'
   | 'selecionar-pico'
@@ -42,6 +43,8 @@ export function acaoDoVoltar(estado: {
     case 'selecionar-pico':
       return { tipo: 'abrir-camera' }
     case 'camera':
+      return { tipo: 'ir-etapa', etapa: 'localizacao' }
+    case 'onde-quando':
       return { tipo: 'ir-etapa', etapa: 'localizacao' }
     case 'localizacao':
       return { tipo: 'ir-etapa', etapa: 'tipo' }

@@ -38,7 +38,19 @@ const SIGLA_UF: Record<string, string> = {
   'Sergipe': 'SE', 'Tocantins': 'TO',
 }
 
-type Etapa = 'tipo' | 'localizacao' | 'camera' | 'confirmar-pico' | 'selecionar-pico' | 'classificar-alerta' | 'concluido'
+type Etapa = 'tipo' | 'localizacao' | 'onde-quando' | 'camera' | 'confirmar-pico' | 'selecionar-pico' | 'classificar-alerta' | 'concluido'
+
+/** Data de hoje em 'YYYY-MM-DD' (max do seletor: sem registro no futuro). */
+function hojeISO(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const campoDataEstilo: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', borderRadius: 10,
+  background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.18)',
+  color: '#fff', fontSize: 14, fontFamily: 'inherit',
+}
 
 function obterCoords(): Promise<{ lat?: number; lng?: number; precisaoM?: number }> {
   return new Promise((res) => {
@@ -146,6 +158,11 @@ export function CapturePage() {
   const [picoAutoNome, setPicoAutoNome] = useState<string | null>(null)
   const [picoAutoId, setPicoAutoId] = useState<string | null>(null)
   const [noLocal, setNoLocal] = useState<boolean | null>(null)
+  // "Não estou no local": o ponto vem do mapa e a data é escolhida (pode ser
+  // registro de outro dia/lugar). Sem GPS, "aqui e agora" seria mentira.
+  const [localManual, setLocalManual] = useState<{ lat: number; lng: number } | null>(null)
+  const [dataRegistro, setDataRegistro] = useState('') // 'YYYY-MM-DD'
+  const [horaRegistro, setHoraRegistro] = useState('') // 'HH:MM' (opcional)
   const [detectandoGps, setDetectandoGps] = useState(false)
 
   useEffect(() => {
@@ -565,18 +582,32 @@ export function CapturePage() {
     }
   }
 
+  /** Data ISO do registro: usa a data/hora escolhida (fluxo "não estou no
+   *  local"), senão "agora". Sem hora, ancora ao meio-dia — evita cair no dia
+   *  anterior por fuso e mantém a foto no meio da timeline daquele dia. */
+  function capturadaEmISO(): string {
+    if (noLocal === false && dataRegistro) {
+      const hora = horaRegistro || '12:00'
+      const d = new Date(`${dataRegistro}T${hora}:00`)
+      if (!isNaN(d.getTime())) return d.toISOString()
+    }
+    return new Date().toISOString()
+  }
+
   async function finalizarUpload(picoId: string, blob?: Blob, pos?: {lat?: number, lng?: number}, thumb?: Blob, picoNovo?: import('../services/api').PicoNovo) {
     const id = crypto.randomUUID()
     uploadId.current = id
+    // No fluxo "não estou no local", o ponto do mapa é a coordenada do registro.
+    const coords = (noLocal === false && localManual) ? localManual : pos
     try {
       await enfileirar({
         id,
         picoId,
-        capturadaEm: new Date().toISOString(),
+        capturadaEm: capturadaEmISO(),
         blob,
         thumbBlob: thumb,
-        capturaLat: pos?.lat,
-        capturaLng: pos?.lng,
+        capturaLat: coords?.lat,
+        capturaLng: coords?.lng,
         picoNovo,
         comunidadeId,
         videoBlob: videoCapturadoRef.current?.blob,
@@ -786,11 +817,13 @@ export function CapturePage() {
                 </span>
               </button>
 
-              {/* Não — enviar de outro lugar */}
+              {/* Não — enviar de outro lugar: local no mapa + data ANTES da foto */}
               <button
                 onClick={() => {
                   setNoLocal(false)
-                  abrirCamera()
+                  setDataRegistro(hojeISO()) // padrão hoje; o usuário pode mudar
+                  setHoraRegistro('')
+                  setEtapa('onde-quando')
                 }}
                 style={{
                   textAlign: 'left',
@@ -811,7 +844,7 @@ export function CapturePage() {
                 <span>
                   <b style={{ fontSize: 15 }}>Não, vou escolher o local</b>
                   <div style={{ color: 'rgba(255,255,255,.45)', fontSize: 12, marginTop: 3, lineHeight: 1.4 }}>
-                    Estou em casa ou em outro lugar. Vou selecionar o pico manualmente depois.
+                    Estou em casa ou em outro lugar. Marco o ponto no mapa e a data do registro.
                   </div>
                 </span>
               </button>
@@ -826,6 +859,83 @@ export function CapturePage() {
                 ← Voltar
               </button>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ETAPA "Onde e quando": local (mapa/endereço) + data, ANTES da foto.
+          Só no fluxo "não estou no local", onde "aqui e agora" não vale. */}
+      {etapa === 'onde-quando' && (
+        <div style={{ position: 'fixed', inset: 0, background: '#06222E', zIndex: 50, overflowY: 'auto', padding: '24px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+          <BotaoVoltarOverlay onClick={() => setEtapa('localizacao')} label="Voltar" style={{ marginBottom: 12 }} />
+
+          <h2 style={{ color: '#fff', margin: '0 0 4px', fontSize: 22, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <IconMapPin size={20} stroke={2} /> Onde e quando?
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 18, lineHeight: 1.45 }}>
+            Marque o ponto no mapa e diga quando aconteceu. Depois você tira ou escolhe a foto.
+          </p>
+
+          {/* LOCAL — pin arrastável, toque no mapa ou busca por endereço */}
+          <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+            Local do registro
+          </label>
+          <MapaPicker
+            lat={localManual?.lat}
+            lng={localManual?.lng}
+            height={240}
+            onChange={(lat, lng) => setLocalManual({ lat, lng })}
+          />
+          <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '8px 2px 20px', lineHeight: 1.4 }}>
+            Arraste o pino, toque no mapa ou busque o endereço acima.
+          </p>
+
+          {/* QUANDO — data obrigatória, hora opcional */}
+          <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+            Quando aconteceu?
+          </label>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
+            <div style={{ flex: 1 }}>
+              <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>Data</span>
+              <input type="date" value={dataRegistro} max={hojeISO()}
+                onChange={(e) => setDataRegistro(e.target.value)} style={campoDataEstilo} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>Hora (opcional)</span>
+              <input type="time" value={horaRegistro}
+                onChange={(e) => setHoraRegistro(e.target.value)} style={campoDataEstilo} />
+            </div>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 11, margin: '2px 2px 22px', lineHeight: 1.4 }}>
+            Sem a hora, usamos o meio-dia como referência do dia.
+          </p>
+
+          <button
+            className="btn full"
+            disabled={!localManual || !dataRegistro}
+            onClick={() => {
+              // O ponto do mapa passa a ser a posição do registro: a busca de
+              // picos próximos e a tela de seleção usam posCapturada.
+              if (localManual) {
+                setPosCapturada({ lat: localManual.lat, lng: localManual.lng })
+                const perto = picosExistentes
+                  .map((p) => ({ p, m: haversineKm(localManual.lat, localManual.lng, p.lat, p.lng) * 1000 }))
+                  .sort((a, b) => a.m - b.m)[0]
+                if (perto && perto.m < 500) {
+                  setPicoAutoId(perto.p.id)
+                  setPicoAutoNome(perto.p.nome)
+                }
+              }
+              void abrirCamera()
+            }}
+            style={{ opacity: (!localManual || !dataRegistro) ? 0.5 : 1 }}
+          >
+            <IconCamera size={18} stroke={2} /> Continuar para a foto
+          </button>
+          {(!localManual || !dataRegistro) && (
+            <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 11.5, textAlign: 'center', marginTop: 8 }}>
+              {!localManual ? 'Marque o local no mapa para continuar.' : 'Escolha a data do registro.'}
+            </p>
           )}
         </div>
       )}
