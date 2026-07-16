@@ -6,7 +6,7 @@ import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
 import { denunciarFoto } from '../services/moderacao'
-import { soComFotosAtivo, setSoComFotos as gravarSoComFotos } from '../lib/preferencias'
+import { soComFotosAtivo, setSoComFotos as gravarSoComFotos, autoplayVideosAtivo } from '../lib/preferencias'
 import { Photo } from './Photo'
 import { VisualizadorMidia } from './VisualizadorMidia'
 import { ProvenanceBadge } from './ProvenanceBadge'
@@ -276,6 +276,7 @@ export function TideScrubTimeline({
 
   const [ativo, setAtivo] = useState(initAtivo)
   const [ampliada, setAmpliada] = useState(false)
+  const autoplayVideos = autoplayVideosAtivo()
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
@@ -365,7 +366,7 @@ export function TideScrubTimeline({
                     muted
                     loop
                     playsInline
-                    autoPlay
+                    autoPlay={autoplayVideos}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     onClick={(e) => {
                       const el = e.currentTarget

@@ -49,6 +49,24 @@ export function setSoComFotos(v: boolean): void {
   gravarPreferencia('timeline', 'soComFotos', v)
 }
 
+/** Iniciar vídeos do feed/pico automaticamente. Padrão: ligado (como hoje). */
+export const autoplayVideosAtivo = (): boolean =>
+  lerPreferencia('feed', 'autoplayVideos', true)
+export function setAutoplayVideos(v: boolean): void {
+  gravarPreferencia('feed', 'autoplayVideos', v)
+}
+
+/**
+ * Ao abrir o mapa, aproximar até a localização do usuário (GPS). Padrão:
+ * DESLIGADO — o mapa abre enquadrando a REGIÃO/cidade, dando contexto dos
+ * picos ao redor. Quem quiser pousar direto em si mesmo liga esta opção.
+ */
+export const voarAteMinhaLocalizacaoAtivo = (): boolean =>
+  lerPreferencia('aparencia', 'voarAteLocalizacao', false)
+export function setVoarAteMinhaLocalizacao(v: boolean): void {
+  gravarPreferencia('aparencia', 'voarAteLocalizacao', v)
+}
+
 /**
  * Restaura aparência e timeline ao padrão — na conta E nas chaves locais
  * antigas (senão o fallback de migração ressuscitaria a escolha antiga).

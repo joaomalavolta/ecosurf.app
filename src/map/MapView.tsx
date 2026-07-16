@@ -1,4 +1,5 @@
 import { IconCamera } from '@tabler/icons-react'
+import { voarAteMinhaLocalizacaoAtivo } from '../lib/preferencias'
 import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -411,7 +412,11 @@ export function MapView({
       const { longitude: lng, latitude: lat } = e.coords
       if (primeiraPosicao) {
         primeiraPosicao = false
-        enquadrarRegiao(lng, lat)
+        // Preferência do usuário: por padrão o mapa abre enquadrando a REGIÃO
+        // (contexto dos picos). Só quem liga "voar até minha localização"
+        // aterrissa em si mesmo na abertura.
+        if (voarAteMinhaLocalizacaoAtivo()) aproximarDoUsuario(lng, lat)
+        else enquadrarRegiao(lng, lat)
         return
       }
       if (pediuAproximar.current) {

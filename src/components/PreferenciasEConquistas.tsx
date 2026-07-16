@@ -2,11 +2,14 @@ import { useState } from 'react'
 import {
   IconSettings, IconTextSize, IconWaveSquare,
   IconCamera, IconRipple, IconMap2, IconTargetArrow, IconAlertTriangle, IconUsers,
+  IconPlayerPlay, IconCurrentLocation,
 } from '@tabler/icons-react'
 import type { Icon } from '@tabler/icons-react'
 import {
   textoGrandeAtivo, reduzAnimacaoAtivo, setTextoGrande, setReduzAnimacao,
   soComFotosAtivo, setSoComFotos, restaurarPreferenciasDoApp,
+  autoplayVideosAtivo, setAutoplayVideos,
+  voarAteMinhaLocalizacaoAtivo, setVoarAteMinhaLocalizacao,
 } from '../lib/preferencias'
 import { PainelNotificacoes } from './PainelNotificacoes'
 
@@ -30,6 +33,8 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
   const [texto, setTexto] = useState(textoGrandeAtivo())
   const [anim, setAnim] = useState(reduzAnimacaoAtivo())
   const [soFotos, setSoFotos] = useState(soComFotosAtivo())
+  const [autoplay, setAutoplay] = useState(autoplayVideosAtivo())
+  const [voarLoc, setVoarLoc] = useState(voarAteMinhaLocalizacaoAtivo())
 
   return (
     <div className="card pad" style={{ marginTop: 12 }}>
@@ -46,6 +51,10 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
           valor={anim} onToggle={() => { const v = !anim; setAnim(v); setReduzAnimacao(v) }} />
         <LinhaPref Icone={IconCamera} titulo="Timeline: só dias com fotos" sub="A régua de dias pula os dias sem registro"
           valor={soFotos} onToggle={() => { const v = !soFotos; setSoFotos(v); setSoComFotos(v) }} />
+        <LinhaPref Icone={IconPlayerPlay} titulo="Iniciar vídeos sozinhos" sub="Reproduz os clipes automaticamente ao aparecer"
+          valor={autoplay} onToggle={() => { const v = !autoplay; setAutoplay(v); setAutoplayVideos(v) }} />
+        <LinhaPref Icone={IconCurrentLocation} titulo="Voar até minha localização" sub="Ao abrir o mapa, aproxima de você em vez da região"
+          valor={voarLoc} onToggle={() => { const v = !voarLoc; setVoarLoc(v); setVoarAteMinhaLocalizacao(v) }} />
       </div>
       <button
         className="btn outline full"
@@ -55,6 +64,8 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
           setTexto(false)
           setAnim(false)
           setSoFotos(false)
+          setAutoplay(true)   // padrão: vídeos iniciam sozinhos
+          setVoarLoc(false)   // padrão: mapa abre na região
         }}
       >
         Restaurar padrão
