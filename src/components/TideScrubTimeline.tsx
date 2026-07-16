@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { IconThumbUp, IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX, IconPhoto } from '@tabler/icons-react'
+import { IconThumbUp, IconRipple, IconWaveSine, IconWind, IconCamera, IconFlag, IconChevronLeft, IconChevronRight, IconShare, IconCalendar, IconX, IconPhoto, IconMaximize } from '@tabler/icons-react'
 import type { EventoVento, Foto, PontoMare } from '../types/domain'
 import { corFrescor, frescor, horaCurta, horaDoDia, rotuloFrescor } from '../lib/time'
 import { rotuloVento } from '../lib/surf'
 import { denunciarFoto } from '../services/moderacao'
 import { soComFotosAtivo, setSoComFotos as gravarSoComFotos } from '../lib/preferencias'
 import { Photo } from './Photo'
+import { VisualizadorMidia } from './VisualizadorMidia'
 import { ProvenanceBadge } from './ProvenanceBadge'
 
 const VB_W = 100
@@ -97,6 +98,13 @@ export async function compartilharPico(picoId: string, picoNome: string, condica
     } catch { /* cancelou */ }
   }
   window.open(`https://wa.me/?text=${encodeURIComponent(`${texto}\n${url}`)}`, '_blank')
+}
+
+const botaoAmpliar: React.CSSProperties = {
+  position: 'absolute', bottom: 10, right: 10,
+  width: 34, height: 34, borderRadius: '50%', border: 'none',
+  background: 'rgba(0,0,0,.5)', color: '#fff', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
 }
 
 export function TideScrubTimeline({
@@ -267,6 +275,7 @@ export function TideScrubTimeline({
   }, [initialFotoId, ordenadas, idxMaisProximoDeAgora])
 
   const [ativo, setAtivo] = useState(initAtivo)
+  const [ampliada, setAmpliada] = useState(false)
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
   const [denunciadas, setDenunciadas] = useState<Record<string, boolean>>({})
@@ -334,6 +343,7 @@ export function TideScrubTimeline({
   /* ── RENDER ── */
 
   return (
+    <>
     <div className="card">
       {/* FOTO — conteúdo nobre */}
       {f ? (
@@ -348,22 +358,39 @@ export function TideScrubTimeline({
               style={{ position: 'absolute', inset: 0 }}
             >
               {f.ehVideo && f.videoUrl ? (
-                <video
-                  src={f.videoUrl}
-                  poster={f.url}
-                  muted
-                  loop
-                  playsInline
-                  autoPlay
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  onClick={(e) => {
-                    const el = e.currentTarget
-                    if (el.paused) void el.play().catch(() => {})
-                    else el.pause()
-                  }}
-                />
+                <>
+                  <video
+                    src={f.videoUrl}
+                    poster={f.url}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    onClick={(e) => {
+                      const el = e.currentTarget
+                      if (el.paused) void el.play().catch(() => {})
+                      else el.pause()
+                    }}
+                  />
+                  {/* Ampliar: leva ao visualizador em tela cheia (com som e
+                      controles). Separado do toque de play/pause do vídeo. */}
+                  <button
+                    onClick={() => setAmpliada(true)}
+                    aria-label="Ampliar vídeo"
+                    style={botaoAmpliar}
+                  >
+                    <IconMaximize size={16} stroke={2} />
+                  </button>
+                </>
               ) : (
-                <Photo seed={f.id} url={f.url} alt={f.observacao ?? 'Foto do pico'} style={{ width: '100%', height: '100%' }} />
+                <button
+                  onClick={() => setAmpliada(true)}
+                  aria-label="Ampliar foto"
+                  style={{ position: 'absolute', inset: 0, border: 'none', padding: 0, background: 'none', cursor: 'zoom-in', width: '100%', height: '100%' }}
+                >
+                  <Photo seed={f.id} url={f.url} alt={f.observacao ?? 'Foto do pico'} style={{ width: '100%', height: '100%' }} />
+                </button>
               )}
             </motion.div>
           </AnimatePresence>
@@ -888,6 +915,18 @@ export function TideScrubTimeline({
         </div>
       </div>
     </div>
+
+    {ampliada && f && (
+      <VisualizadorMidia
+        ehVideo={f.ehVideo}
+        url={f.url}
+        videoUrl={f.videoUrl}
+        seed={f.id}
+        legenda={f.observacao}
+        onFechar={() => setAmpliada(false)}
+      />
+    )}
+    </>
   )
 }
 
