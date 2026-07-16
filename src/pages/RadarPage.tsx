@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, Suspense } from 'rea
 import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
 import { PainelPreferencias } from '../components/PreferenciasEConquistas'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding } from '@tabler/icons-react'
+import { IconSettings, IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, IconUserHeart, IconStar, IconRipple, IconMapPin, IconChevronRight, IconList, IconChevronDown, IconWorld, IconSnowboarding, IconLayoutGrid, IconLayoutList } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { CarrosselRegiao } from '../components/CarrosselRegiao'
@@ -11,6 +11,7 @@ import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
 import { VazioFeed } from '../components/VazioFeed'
 import { FeedCard } from '../components/FeedCard'
+import { MosaicoFeed } from '../components/MosaicoFeed'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
 import { buscarForecast } from '../services/forecast'
@@ -33,6 +34,18 @@ function agruparPorPico(fotos: Foto[]): Map<string, Foto[]> {
   return map
 }
 
+/** Estilo dos botões do alternador lista/mosaico. */
+function botaoModo(ativo: boolean): React.CSSProperties {
+  return {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    width: 30, height: 26, borderRadius: 99, border: 'none', cursor: 'pointer',
+    background: ativo ? 'var(--fundo, #fff)' : 'transparent',
+    color: ativo ? '#0D6EA8' : 'var(--muted, #888)',
+    boxShadow: ativo ? '0 1px 3px rgba(0,0,0,.12)' : 'none',
+    transition: 'all .15s',
+  }
+}
+
 export function RadarPage() {
   const [filtro, setFiltroEstado] = useState<Filtro>(() => {
     const salvo = lerPreferencia<string>('feed', 'filtroInicial', 'todos')
@@ -46,6 +59,15 @@ export function RadarPage() {
     gravarPreferencia('feed', 'filtroInicial', f)
   }, [])
   const [picosTodos, setPicosTodos] = useState<Pico[]>([])
+  // Modo de visualização do feed: 'lista' (contexto completo) ou 'mosaico'
+  // (varredura visual). Lembrado entre sessões e aparelhos.
+  const [modoFeed, setModoFeedEstado] = useState<'lista' | 'mosaico'>(
+    () => (lerPreferencia<string>('feed', 'modo', 'lista') === 'mosaico' ? 'mosaico' : 'lista'),
+  )
+  const setModoFeed = useCallback((m: 'lista' | 'mosaico') => {
+    setModoFeedEstado(m)
+    gravarPreferencia('feed', 'modo', m)
+  }, [])
   const [fc, setFc] = useState<Record<string, Forecast>>({})
   const [feed, setFeed] = useState<Foto[]>([])
   const [curtidasMap, setCurtidasMap] = useState<Record<string, number>>({})
@@ -122,6 +144,13 @@ export function RadarPage() {
     }
     return entries
   }, [filtro, fotosPorPico, favoritos, seguidos])
+
+  // Lista achatada de fotos para o mosaico — respeita o mesmo filtro do feed
+  // e ordena por frescor (mais recente primeiro), como manda a alma do Ecosurf.
+  const fotosMosaico = useMemo(() => {
+    const todas = feedCards.flatMap(([, fotos]) => fotos)
+    return todas.sort((a, b) => new Date(b.capturadaEm).getTime() - new Date(a.capturadaEm).getTime())
+  }, [feedCards])
 
   const melhoresOndas = useMemo(() => {
     return [...feed].sort((a, b) => {
@@ -357,8 +386,24 @@ export function RadarPage() {
               <p className="muted" style={{ textAlign: 'center' }}>Carregando picos…</p>
             )}
 
-            <div style={{ padding: '10px 16px 2px' }}>
+            <div style={{ padding: '10px 16px 2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
               <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconRipple size={12} stroke={2} /> O mar agora · fotos da comunidade nos picos</span>
+              <div style={{ display: 'inline-flex', gap: 2, background: 'var(--cinza, rgba(0,0,0,.06))', borderRadius: 99, padding: 2, flexShrink: 0 }}>
+                <button
+                  aria-label="Ver em lista"
+                  onClick={() => setModoFeed('lista')}
+                  style={botaoModo(modoFeed === 'lista')}
+                >
+                  <IconLayoutList size={16} stroke={2} />
+                </button>
+                <button
+                  aria-label="Ver em mosaico"
+                  onClick={() => setModoFeed('mosaico')}
+                  style={botaoModo(modoFeed === 'mosaico')}
+                >
+                  <IconLayoutGrid size={16} stroke={2} />
+                </button>
+              </div>
             </div>
 
             {carregandoFeed && feed.length === 0 && (
@@ -377,7 +422,9 @@ export function RadarPage() {
               </div>
             )}
 
-            {feedCards.map(([picoId, fotos]) => (
+            {modoFeed === 'mosaico'
+              ? <MosaicoFeed fotos={fotosMosaico} picoMap={picoMap} />
+              : feedCards.map(([picoId, fotos]) => (
               <div key={picoId} id={`feed-card-${picoId}`}>
                 <FeedCard
                   fotos={fotos}
