@@ -259,9 +259,15 @@ export function MapView({
   // ponte — atualizado em efeito, nunca durante o render.
   useEffect(() => { picosRef.current = picos }, [picos])
 
+  // Picos "acesos" na janela de frescor. Depende do tempo atual (Date.now),
+  // então é estado derivado em efeito — não useMemo, que não reavaliaria com a
+  // passagem do tempo nem com troca de janela.
   const [ativosEfetivos, setAtivosEfetivos] = useState<Set<string> | undefined>(ativos)
   useEffect(() => {
-    if (janelaH == null || !atividade) { setAtivosEfetivos(ativos); return }
+    if (janelaH == null || !atividade) {
+      setAtivosEfetivos(ativos)
+      return
+    }
     const corte = Date.now() - janelaH * 3600_000
     const s = new Set<string>()
     for (const a of atividade) {
@@ -271,12 +277,18 @@ export function MapView({
   }, [janelaH, atividade, ativos])
 
   const dadosRef = useRef<Dados>({ picos, alertas, mutiroes, ativos: ativosEfetivos })
-  dadosRef.current = { picos, alertas, mutiroes, ativos: ativosEfetivos }
   const navigate = useNavigate()
   const navRef = useRef(navigate)
-  navRef.current = navigate
   const onSelRef = useRef(onSelectPico)
-  onSelRef.current = onSelectPico
+  // Refs-ponte atualizados em efeito (nunca durante o render): o efeito de init
+  // do mapa roda uma vez e lê sempre o valor fresco por aqui. Escrever ref no
+  // corpo do componente dispara re-render em cascata e já causou bug de
+  // exibição antes — por isso fica isolado neste efeito.
+  useEffect(() => {
+    dadosRef.current = { picos, alertas, mutiroes, ativos: ativosEfetivos }
+    navRef.current = navigate
+    onSelRef.current = onSelectPico
+  })
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return
