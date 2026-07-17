@@ -27,6 +27,7 @@ interface AlertaDetalhe {
   recorrente: boolean
   images: string[] | null
   criada_em: string
+  ocorrido_em: string | null
   autor_id: string | null
   comunidade_id: string | null
   comunidade_nome: string | null
@@ -141,11 +142,18 @@ export function AlertaPage() {
   const CategoriaIcon = cat?.icone ?? IconAlertTriangle
   const corCategoria = cat?.cor ?? 'var(--muted)'
   // Render variables that are safe now that !alerta is checked
-  const dataFormatada = new Date(alerta.criada_em).toLocaleDateString('pt-BR', {
+  // Prefere a data em que o impacto foi OBSERVADO (fluxo fora-do-local);
+  // na ausência dela, cai na data de registro no sistema.
+  const dataParaMostrar = alerta.ocorrido_em ?? alerta.criada_em
+  const dataFormatada = new Date(dataParaMostrar).toLocaleDateString('pt-BR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
+  // Se a observação é de dia diferente do registro, deixa claro que a data
+  // exibida é a do ocorrido (honestidade temporal, como na timeline de fotos).
+  const dataEhDoOcorrido = !!alerta.ocorrido_em &&
+    new Date(alerta.ocorrido_em).toDateString() !== new Date(alerta.criada_em).toDateString()
   const localTexto = `${alerta.local_nome ? `${alerta.local_nome} — ` : ''}${alerta.municipio}/${alerta.uf}`
 
   async function compartilhar() {
@@ -405,7 +413,7 @@ export function AlertaPage() {
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <IconCalendar size={16} stroke={2} color="var(--turq)" />
-              <span style={{ fontSize: 13 }}>Registrado em {dataFormatada}</span>
+              <span style={{ fontSize: 13 }}>{dataEhDoOcorrido ? 'Observado em' : 'Registrado em'} {dataFormatada}</span>
             </div>
             {alerta.gravidade && (
               <div style={{ fontSize: 13 }}>

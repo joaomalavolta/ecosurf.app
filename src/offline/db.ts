@@ -37,6 +37,7 @@ export interface AlertaPendente {
   uf: string
   lat: number
   lng: number
+  ocorridoEm?: string
   blob?: Blob
   status: 'na-fila' | 'bloqueado'
   erro?: string

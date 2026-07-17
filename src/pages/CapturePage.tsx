@@ -551,6 +551,9 @@ export function CapturePage() {
       lat: posCapturada.lat,
       lng: posCapturada.lng,
       comunidadeId,
+      // No fluxo "não estou no local", a data escolhida é quando o impacto foi
+      // observado (pode ser outro dia). Senão, undefined → servidor usa criada_em.
+      ocorridoEm: (noLocal === false && dataRegistro) ? capturadaEmISO() : undefined,
     }
 
     // Sem sinal? Direto pra fila — denúncia não espera rede.

@@ -34,6 +34,8 @@ export interface DadosAlerta {
   checkboxAceite: boolean
   images?: File[]
   keptImages?: string[]
+  /** Quando o impacto foi observado (fluxo fora-do-local). Nulo = criada_em. */
+  ocorridoEm?: string
 }
 
 export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
@@ -69,6 +71,7 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
     recorrente: dados.recorrente ?? false,
     checkbox_aceite: dados.checkboxAceite,
     comunidade_id: dados.comunidadeId ?? null,
+    ocorrido_em: dados.ocorridoEm ?? null,
   }
 
   const { data, error } = await sb.from('ameacas').insert(body).select('id').single()

@@ -276,6 +276,23 @@ export function TideScrubTimeline({
 
   const [ativo, setAtivo] = useState(initAtivo)
   const [ampliada, setAmpliada] = useState(false)
+  // Chegou via ?foto= (toque no mosaico): a pessoa tocou querendo VER a foto,
+  // então abrimos o visualizador direto nela — uma vez, sem reabrir se fechar.
+  const jaAbriuInicial = useRef(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (initialFotoId && !jaAbriuInicial.current && ordenadas.length > 0) {
+      const idx = ordenadas.findIndex((f) => f.id === initialFotoId)
+      if (idx !== -1) {
+        jaAbriuInicial.current = true
+        setAtivo(idx)
+        setAmpliada(true)
+        // Rola a timeline até a vista: se o visualizador for fechado, a foto
+        // referenciada fica visível em vez de perdida no meio da página.
+        setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+      }
+    }
+  }, [initialFotoId, ordenadas])
   const autoplayVideos = autoplayVideosAtivo()
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
@@ -345,7 +362,7 @@ export function TideScrubTimeline({
 
   return (
     <>
-    <div className="card">
+    <div className="card" ref={cardRef}>
       {/* FOTO — conteúdo nobre */}
       {f ? (
         <div style={{ position: 'relative', aspectRatio: '4 / 3', background: 'var(--azul-abissal)' }}>

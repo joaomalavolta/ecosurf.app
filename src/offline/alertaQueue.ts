@@ -45,6 +45,7 @@ export async function flushAlertas(): Promise<void> {
           uf: a.uf,
           lat: a.lat,
           lng: a.lng,
+          ocorridoEm: a.ocorridoEm,
           checkboxAceite: true, // aceite foi dado na captura, antes de enfileirar
           images: a.blob ? [new File([a.blob], `alerta-${a.id}.webp`, { type: 'image/webp' })] : undefined,
         })
