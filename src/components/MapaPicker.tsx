@@ -50,7 +50,7 @@ export function MapaPicker({
     setBuscando(true)
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=0`,
+        `https://nominatim.openstreetmap.org/search?email=ecosurf%40ecosurf.org.br&format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=0`,
         { headers: { 'Accept-Language': 'pt-BR' } }
       )
       const data: NominatimResult[] = await res.json()

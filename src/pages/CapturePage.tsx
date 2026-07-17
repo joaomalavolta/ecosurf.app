@@ -258,7 +258,7 @@ export function CapturePage() {
 
     if (pos.lat && pos.lng) {
       try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
         const geo = await geoRes.json()
         const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
         if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
@@ -458,7 +458,7 @@ export function CapturePage() {
       setPosCapturada(pos)
       if (pos.lat && pos.lng) {
         try {
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
           const geo = await geoRes.json()
           const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
           if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
@@ -525,7 +525,7 @@ export function CapturePage() {
   async function definirLocalAlerta(lat: number, lng: number) {
     setPosCapturada({ lat, lng })
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=14`)
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${lat}&lon=${lng}&format=json&zoom=14`)
       const g = await r.json()
       const cidade = g.address?.city || g.address?.town || g.address?.municipality || g.address?.village || ''
       if (cidade) setMunicipioAlerta(cidade)
@@ -637,7 +637,7 @@ export function CapturePage() {
       let uf = 'SP'
       if (posCapturada.lat && posCapturada.lng) {
         try {
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${posCapturada.lat}&lon=${posCapturada.lng}&format=json&zoom=10`)
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${posCapturada.lat}&lon=${posCapturada.lng}&format=json&zoom=10`)
           const geo = await geoRes.json()
           municipio = geo.address?.city || geo.address?.town || geo.address?.village || geo.address?.municipality || ''
           uf = geo.address?.state_code?.toUpperCase() || geo.address?.['ISO3166-2-lvl4']?.split('-')[1] || 'SP'

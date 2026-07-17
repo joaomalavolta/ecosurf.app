@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { IconX, IconChevronLeft, IconChevronRight, IconMapPin, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { Photo } from './Photo'
 import type { Foto } from '../types/domain'
@@ -32,6 +32,20 @@ export function VisualizadorMidia({
 
   const irAnterior = () => setI((v) => Math.max(0, v - 1))
   const irProxima = () => setI((v) => Math.min(fotos.length - 1, v + 1))
+
+  // Swipe: num app 100% mobile, deslizar o dedo entre registros é o gesto
+  // esperado (galeria, stories). As setas ficam como afford visual e para
+  // teclado; o dedo manda. Limiar de 48px evita disparo em toque parado.
+  const toqueX = useRef<number | null>(null)
+  const aoTocar = (e: React.TouchEvent) => { toqueX.current = e.touches[0].clientX }
+  const aoSoltar = (e: React.TouchEvent) => {
+    if (toqueX.current == null) return
+    const dx = e.changedTouches[0].clientX - toqueX.current
+    toqueX.current = null
+    if (Math.abs(dx) < 48) return
+    if (dx < 0) irProxima()
+    else irAnterior()
+  }
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -99,6 +113,8 @@ export function VisualizadorMidia({
       {/* MÍDIA */}
       <div
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={aoTocar}
+        onTouchEnd={aoSoltar}
         style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}
       >
         {f.ehVideo && f.videoUrl ? (

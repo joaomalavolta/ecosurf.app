@@ -38,7 +38,9 @@ function agruparPorPico(fotos: Foto[]): Map<string, Foto[]> {
 function botaoModo(ativo: boolean): React.CSSProperties {
   return {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    width: 30, height: 26, borderRadius: 99, border: 'none', cursor: 'pointer',
+    // Alvo de toque confortável para o dedo (30×26 era pequeno; diretriz da
+    // Apple pede ~44pt — 40×34 dentro do pill chega perto sem inflar o visual).
+    width: 40, height: 34, borderRadius: 99, border: 'none', cursor: 'pointer',
     background: ativo ? 'var(--fundo, #fff)' : 'transparent',
     color: ativo ? '#0D6EA8' : 'var(--muted, #888)',
     boxShadow: ativo ? '0 1px 3px rgba(0,0,0,.12)' : 'none',

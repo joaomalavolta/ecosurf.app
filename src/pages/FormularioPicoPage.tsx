@@ -183,7 +183,7 @@ export function FormularioPicoPage() {
               setLat(newLat)
               setLng(newLng)
               // Geocodificação reversa para preencher cidade/UF
-              fetch(`https://nominatim.openstreetmap.org/reverse?lat=${newLat}&lon=${newLng}&format=json&zoom=10`, {
+              fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${newLat}&lon=${newLng}&format=json&zoom=10`, {
                 headers: { 'Accept-Language': 'pt-BR' },
               })
                 .then((r) => r.json())
