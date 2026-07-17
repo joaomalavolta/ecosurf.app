@@ -14,7 +14,6 @@ import { PerfilPage } from './pages/PerfilPage'
 import { ComunidadePage } from './pages/ComunidadePage'
 import { CriarComunidadePage } from './pages/CriarComunidadePage'
 import { GerenciarComunidadePage } from './pages/GerenciarComunidadePage'
-import { CapturePage } from './pages/CapturePage'
 import { ModeracaoPage } from './pages/ModeracaoPage'
 import { TermosPage } from './pages/TermosPage'
 import { NovaAcaoPage } from './pages/NovaAcaoPage'
@@ -34,6 +33,9 @@ const MapaPage = lazy(() => import('./pages/MapaPage').then((m) => ({ default: m
 // fora do bundle principal — só carrega quando alguém abre /admin.
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })))
 const EstiloDemoPage = lazy(() => import('./pages/EstiloDemoPage').then((m) => ({ default: m.EstiloDemoPage })))
+// Captura puxa o MapaPicker (maplibre ~800KB): fora do bundle inicial, só
+// carrega quando o usuário vai de fato registrar. Alívio grande no 3G da praia.
+const CapturePage = lazy(() => import('./pages/CapturePage').then((m) => ({ default: m.CapturePage })))
 
 export default function App() {
   const { pathname } = useLocation()
@@ -86,7 +88,7 @@ export default function App() {
         <Route path="/comunidade/:comunidadeId/gerenciar" element={<GerenciarComunidadePage />} />
         <Route path="/comunidade/:comunidadeId" element={<ComunidadePage />} />
         <Route path="/moderacao" element={<ModeracaoPage />} />
-        <Route path="/capturar" element={<CapturePage />} />
+        <Route path="/capturar" element={<Suspense fallback={<div className="page" style={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><p className="muted">Abrindo câmera…</p></div>}><CapturePage /></Suspense>} />
         <Route path="/termos" element={<TermosPage />} />
         <Route path="/nova-acao" element={<NovaAcaoPage />} />
         <Route path="/nova-acao/alerta" element={<FormularioAlertaPage />} />
@@ -97,7 +99,9 @@ export default function App() {
         <Route path="/mutirao/:mutiraoId" element={<MutiraoPage />} />
         <Route path="/alerta/:id" element={<AlertaPage />} />
         <Route path="/usuario/:userId" element={<UsuarioPage />} />
-        <Route path="/estilo" element={<Suspense fallback={<div className="page page-pad"><p className="muted">Carregando…</p></div>}><EstiloDemoPage /></Suspense>} />
+        {!/(^|\.)ecosurf\.app$/.test(window.location.hostname) && (
+          <Route path="/estilo" element={<Suspense fallback={<div className="page page-pad"><p className="muted">Carregando…</p></div>}><EstiloDemoPage /></Suspense>} />
+        )}
         </Routes>
         {!semNav && <BottomNav />}
         <UpdatePrompt />

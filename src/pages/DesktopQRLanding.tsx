@@ -34,7 +34,7 @@ export function DesktopQRLanding() {
         inset: 0,
         zIndex: 50,
         overflow: 'auto',
-        background: "url('/wave-header.png') center/cover no-repeat #06222E",
+        background: "url('/wave-header.webp') center/cover no-repeat #06222E",
       }}
     >
       {/* Véu para o texto respirar sobre a foto */}

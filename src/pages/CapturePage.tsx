@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, lazy, Suspense } from 'react'
 import { toast } from '../lib/toast'
 import { useNavigate } from 'react-router-dom'
 import { usePinchZoom } from '../hooks/usePinchZoom'
@@ -19,7 +19,8 @@ import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVideoParaClipe, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { ConfirmarPico } from '../components/ConfirmarPico'
-import { MapaPicker } from '../components/MapaPicker'
+
+const MapaPicker = lazy(() => import('../components/MapaPicker').then((m) => ({ default: m.MapaPicker })))
 import { acaoDoVoltar } from './captura-voltar'
 import { RecortarVideo } from '../components/RecortarVideo'
 import { SeletorCategoria } from '../components/SeletorCategoria'
@@ -680,7 +681,7 @@ export function CapturePage() {
       {/* Background — mesmo da Landing Page */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0,
-        backgroundImage: "url('/wave-header.png')",
+        backgroundImage: "url('/wave-header.webp')",
         backgroundSize: 'cover', backgroundPosition: 'center',
       }}>
         <div style={{
@@ -880,12 +881,14 @@ export function CapturePage() {
           <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
             Local do registro
           </label>
-          <MapaPicker
-            lat={localManual?.lat}
-            lng={localManual?.lng}
-            height={240}
-            onChange={(lat, lng) => setLocalManual({ lat, lng })}
-          />
+          <Suspense fallback={<div style={{ height: 240, borderRadius: 12, background: 'rgba(255,255,255,.06)', display: 'grid', placeItems: 'center' }}><span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>Carregando mapa…</span></div>}>
+            <MapaPicker
+              lat={localManual?.lat}
+              lng={localManual?.lng}
+              height={240}
+              onChange={(lat, lng) => setLocalManual({ lat, lng })}
+            />
+          </Suspense>
           <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '8px 2px 20px', lineHeight: 1.4 }}>
             Arraste o pino, toque no mapa ou busque o endereço acima.
           </p>
@@ -1218,12 +1221,14 @@ export function CapturePage() {
 
               {mostrarMapaAlerta ? (
                 <>
-                  <MapaPicker
-                    lat={posCapturada.lat}
-                    lng={posCapturada.lng}
-                    height={220}
-                    onChange={(lat, lng) => { void definirLocalAlerta(lat, lng) }}
-                  />
+                  <Suspense fallback={<div style={{ height: 220, borderRadius: 12, background: 'rgba(255,255,255,.06)', display: 'grid', placeItems: 'center' }}><span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>Carregando mapa…</span></div>}>
+                    <MapaPicker
+                      lat={posCapturada.lat}
+                      lng={posCapturada.lng}
+                      height={220}
+                      onChange={(lat, lng) => { void definirLocalAlerta(lat, lng) }}
+                    />
+                  </Suspense>
                   <p style={{ color: 'rgba(255,255,255,.55)', fontSize: 11, margin: '8px 2px 0', lineHeight: 1.4 }}>
                     Arraste o pino, toque no mapa ou busque o endereço do local do registro.
                   </p>
