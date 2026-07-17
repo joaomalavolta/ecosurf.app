@@ -412,6 +412,11 @@ export async function restInserirPico(dados: {
 }): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb } = await import('./client')
+  // A política de INSERT de picos exige criado_por = usuário atual (autoria +
+  // rate-limit). Sem isto, o INSERT legítimo do app é recusado pela RLS.
+  const { data: sessao } = await sb().auth.getSession()
+  const criadoPor = sessao.session?.user?.id
+  if (!criadoPor) throw new Error('Entre na sua conta para criar um pico.')
   const nome = titleCase(dados.nome)
   const id = slug(nome)
   const body = {
@@ -423,6 +428,7 @@ export async function restInserirPico(dados: {
     uf: dados.uf.toUpperCase().slice(0, 2),
     orientacao_praia_deg: 180,
     fundo: 'areia',
+    criado_por: criadoPor,
   }
 
   // A praia tem conexão instável (4G/5G). Uma falha de rede ("Load failed" no
