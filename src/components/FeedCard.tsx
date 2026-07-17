@@ -4,6 +4,7 @@ import { IconShieldCheck, IconPhoto, IconShare, IconStar, IconClock, IconPlayerP
 import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
+import { autoplayVideosAtivo } from '../lib/preferencias'
 
 /**
  * Card feed-first: a foto é protagonista, o pico é metadata.
@@ -37,6 +38,7 @@ export function FeedCard({
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIdx, setActiveIdx] = useState(0)
+  const autoplayVideos = autoplayVideosAtivo()
 
   // Detect which photo is visible via scroll position
   const handleScroll = useCallback(() => {
@@ -86,13 +88,7 @@ export function FeedCard({
                 loop
                 playsInline
                 preload="none"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  const el = e.currentTarget
-                  if (el.paused) void el.play().catch(() => {})
-                  else el.pause()
-                }}
+                autoPlay={autoplayVideos}
               />
             ) : (
               <img key={f.id} src={f.url!} alt={`Foto de ${nome}`} loading="lazy" />
