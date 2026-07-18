@@ -1,4 +1,4 @@
-import { IconCamera, IconMap, IconSatellite } from '@tabler/icons-react'
+import { IconCamera } from '@tabler/icons-react'
 import { voarAteMinhaLocalizacaoAtivo } from '../lib/preferencias'
 import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
@@ -41,6 +41,10 @@ const WAVE = '<path d="M3 9c3 -2 6 -2 9 0s6 2 9 0"/><path d="M3 15c3 -2 6 -2 9 0
 const PEOPLE = '<path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/>'
 const DROP = '<path d="M12 3c-3.2 4.5-6 7.5-6 10.5a6 6 0 0 0 12 0c0-3-2.8-6-6-10.5z"/>'
 const TRASH = '<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/>'
+
+// Ícone de mapa (Tabler) para o botão de alternar base — cor escura para
+// contrastar com o fundo branco padrão dos controles do MapLibre.
+const ICONE_MAPA_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13"/><path d="M9 4v13"/><path d="M15 7v13"/></svg>'
 const BOTTLE = '<path d="M10 5h4"/><path d="M10 5v-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/><rect x="8" y="5" width="8" height="14" rx="1.5"/><path d="M11 8v6"/><path d="M13 8v6"/>'
 const MOUNTAIN = '<path d="M3 20h18"/><path d="M12 4l-8 16h16z"/>'
 const FLAME = '<path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z"/>'
@@ -258,6 +262,7 @@ export function MapView({
   const picosRef = useRef<Pico[]>([])
   /** Marca que o voo pedido veio do BOTÃO de GPS (aproximar), não da abertura. */
   const pediuAproximar = useRef(false)
+  const controleBaseBtnRef = useRef<HTMLButtonElement | null>(null)
   const prontoRef = useRef(false)
   const janelaH = JANELAS[janelaIdx].h
   // O efeito de init roda uma vez; os picos chegam depois (rede). Este ref é a
@@ -304,6 +309,9 @@ export function MapView({
       map.setLayoutProperty('carto-ruas-layer', 'visibility', baseSatelite ? 'none' : 'visible')
     } catch { /* estilo ainda carregando: o valor inicial já cobre */ }
     try { localStorage.setItem('ecosurf.map-base', baseSatelite ? 'satelite' : 'ruas') } catch { /* privado */ }
+    // Feedback visual no botão nativo: leve destaque quando em modo ruas.
+    const btn = controleBaseBtnRef.current
+    if (btn) btn.style.background = baseSatelite ? '' : '#e8f0f4'
   }, [baseSatelite])
 
   useEffect(() => {
@@ -368,6 +376,27 @@ export function MapView({
       fitBoundsOptions: { maxZoom: 15.5 },
     })
     map.addControl(geolocate, 'top-right')
+
+    // Alternador satélite/ruas como CONTROLE nativo do MapLibre: entra no mesmo
+    // grupo top-right, logo abaixo do GPS, herdando medida e estilo dos demais
+    // botões (29px, quadrado). Ícone de mapa — intuitivo, dispensa rótulo.
+    const controleBase: maplibregl.IControl = {
+      onAdd: () => {
+        const div = document.createElement('div')
+        div.className = 'maplibregl-ctrl maplibregl-ctrl-group'
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.setAttribute('aria-label', 'Alternar satélite e mapa de ruas')
+        btn.style.cssText = 'display:flex;align-items:center;justify-content:center;'
+        btn.innerHTML = ICONE_MAPA_SVG
+        btn.addEventListener('click', () => setBaseSatelite((v) => !v))
+        div.appendChild(btn)
+        controleBaseBtnRef.current = btn
+        return div
+      },
+      onRemove: () => { controleBaseBtnRef.current = null },
+    }
+    map.addControl(controleBase, 'top-right')
     map.on('error', () => {})
     mapRef.current = map
 
@@ -713,23 +742,6 @@ export function MapView({
   return (
     <div className={className} style={{ position: 'absolute', inset: 0, ...style }}>
       <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#0a1929' }} />
-
-      {/* Alternador satélite / ruas: estudar o pico vs. se localizar */}
-      <button
-        onClick={() => setBaseSatelite((v) => !v)}
-        aria-label={baseSatelite ? 'Mudar para mapa de ruas' : 'Mudar para satélite'}
-        style={{
-          position: 'absolute', left: 10, top: 10, zIndex: 3,
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '7px 11px', borderRadius: 10, border: '1px solid rgba(255,255,255,.18)',
-          background: 'rgba(28,32,36,.62)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
-          color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-        }}
-      >
-        {baseSatelite
-          ? <><IconMap size={15} stroke={2} /> Ruas</>
-          : <><IconSatellite size={15} stroke={2} /> Satélite</>}
-      </button>
       {atividade && atividade.length > 0 && (
         <div
           style={{
