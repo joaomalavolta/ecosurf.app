@@ -2,18 +2,15 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { IconSearch, IconMapPin, IconLoader2 } from '@tabler/icons-react'
+import type { ResultadoGeocode } from '../services/geocoding'
 
 /**
  * Mini-mapa clicável para selecionar localização.
  * Permite: arrastar pin, clicar no mapa, ou buscar endereço por texto.
- * Geocoding via Nominatim (OpenStreetMap) — gratuito, sem API key.
+ * Geocoding via Photon/OSM (serviço em src/services/geocoding.ts) — gratuito,
+ * sem API key, com busca tolerante a erros.
  */
 
-interface NominatimResult {
-  display_name: string
-  lat: string
-  lon: string
-}
 
 export function MapaPicker({
   lat,
@@ -32,7 +29,7 @@ export function MapaPicker({
 
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
-  const [resultados, setResultados] = useState<NominatimResult[]>([])
+  const [resultados, setResultados] = useState<ResultadoGeocode[]>([])
   const [mostrarResultados, setMostrarResultados] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -41,7 +38,7 @@ export function MapaPicker({
   const defaultLat = lat ?? -23.96
   const defaultLng = lng ?? -46.33
 
-  // Geocoding via Nominatim
+  // Geocoding via serviço Photon (OSM) — busca tolerante a erros e type-ahead.
   const buscarEndereco = useCallback(async (query: string) => {
     if (query.trim().length < 3) {
       setResultados([])
@@ -49,11 +46,10 @@ export function MapaPicker({
     }
     setBuscando(true)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?email=ecosurf%40ecosurf.org.br&format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=0`,
-        { headers: { 'Accept-Language': 'pt-BR' } }
-      )
-      const data: NominatimResult[] = await res.json()
+      const { buscarLugar } = await import('../services/geocoding')
+      // Viés para o ponto atual do pin, quando houver: resultados perto de onde
+      // o usuário já está sobem na lista.
+      const data = await buscarLugar(query, (lat && lng) ? { lat, lng } : undefined)
       setResultados(data)
       setMostrarResultados(data.length > 0)
     } catch {
@@ -61,7 +57,7 @@ export function MapaPicker({
     } finally {
       setBuscando(false)
     }
-  }, [])
+  }, [lat, lng])
 
   // Debounce na busca
   function handleBuscaChange(val: string) {
@@ -75,7 +71,7 @@ export function MapaPicker({
     debounceRef.current = setTimeout(() => buscarEndereco(val), 400)
   }
 
-  function selecionarLocal(result: NominatimResult) {
+  function selecionarLocal(result: ResultadoGeocode) {
     const newLat = parseFloat(result.lat)
     const newLng = parseFloat(result.lon)
     onChange(newLat, newLng)
