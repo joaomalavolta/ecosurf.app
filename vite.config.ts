@@ -43,9 +43,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2,webp,png,svg}'],
         runtimeCaching: [
           {
-            // tiles/estilo do mapa (CARTO dark-matter): cache do litoral do usuário
+            // tiles/estilo do mapa (satélite Esri + ruas CARTO): cache do
+            // litoral do usuário para funcionar na praia com sinal ruim.
             urlPattern: ({ url }) =>
-              url.host.endsWith('basemaps.cartocdn.com') || url.host === 'tiles.openfreemap.org',
+              url.host.endsWith('basemaps.cartocdn.com')
+              || url.host === 'tiles.openfreemap.org'
+              || url.host.endsWith('arcgisonline.com'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'mapa-tiles',

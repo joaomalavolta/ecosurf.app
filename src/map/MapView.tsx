@@ -1,4 +1,4 @@
-import { IconCamera } from '@tabler/icons-react'
+import { IconCamera, IconMap, IconSatellite } from '@tabler/icons-react'
 import { voarAteMinhaLocalizacaoAtivo } from '../lib/preferencias'
 import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
@@ -247,6 +247,11 @@ export function MapView({
 }) {
   // Scrubber temporal: qual janela de frescor "acende" um pico no mapa.
   const [janelaIdx, setJanelaIdx] = useState(JANELAS.length - 1) // padrão: tudo
+  // Base do mapa: satélite (estudar o pico — areia, costão, forma da onda) ou
+  // ruas (se localizar — nomes de praia, bairro, referências). Persistido local.
+  const [baseSatelite, setBaseSatelite] = useState<boolean>(() => {
+    try { return localStorage.getItem('ecosurf.map-base') !== 'ruas' } catch { return true }
+  })
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   /** Picos atuais visíveis para o efeito de init (que roda uma vez só). */
@@ -290,6 +295,17 @@ export function MapView({
     onSelRef.current = onSelectPico
   })
 
+  // Alterna a base satélite/ruas sem recriar o mapa (preserva pins e câmera).
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !map.isStyleLoaded()) return
+    try {
+      map.setLayoutProperty('esri-satellite-layer', 'visibility', baseSatelite ? 'visible' : 'none')
+      map.setLayoutProperty('carto-ruas-layer', 'visibility', baseSatelite ? 'none' : 'visible')
+    } catch { /* estilo ainda carregando: o valor inicial já cobre */ }
+    try { localStorage.setItem('ecosurf.map-base', baseSatelite ? 'satelite' : 'ruas') } catch { /* privado */ }
+  }, [baseSatelite])
+
   useEffect(() => {
     if (!ref.current || mapRef.current) return
     let descartado = false
@@ -305,8 +321,24 @@ export function MapView({
           tileSize: 256,
           maxzoom: 19,
         },
+        // Base de ruas alternativa (CARTO Voyager): nomes de praia/bairro para
+        // o usuário se localizar. Gratuita, OSM, sem key.
+        'carto-ruas': {
+          type: 'raster',
+          tiles: [
+            'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+            'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+        },
       },
-      layers: [{ id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite' }],
+      layers: [
+        { id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite',
+          layout: { visibility: baseSatelite ? 'visible' : 'none' } },
+        { id: 'carto-ruas-layer', type: 'raster', source: 'carto-ruas',
+          layout: { visibility: baseSatelite ? 'none' : 'visible' } },
+      ],
       glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     }
 
@@ -642,6 +674,10 @@ export function MapView({
       map.remove()
       mapRef.current = null
     }
+    // baseSatelite é lido só para a visibilidade INICIAL das camadas; a troca
+    // em runtime é feita por effect próprio (setLayoutProperty) sem recriar o
+    // mapa. Incluí-la aqui recriaria o mapa a cada toque no botão — indesejado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // atualiza dados quando picos/alertas/mutiroes mudam
@@ -677,6 +713,23 @@ export function MapView({
   return (
     <div className={className} style={{ position: 'absolute', inset: 0, ...style }}>
       <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#0a1929' }} />
+
+      {/* Alternador satélite / ruas: estudar o pico vs. se localizar */}
+      <button
+        onClick={() => setBaseSatelite((v) => !v)}
+        aria-label={baseSatelite ? 'Mudar para mapa de ruas' : 'Mudar para satélite'}
+        style={{
+          position: 'absolute', left: 10, top: 10, zIndex: 3,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '7px 11px', borderRadius: 10, border: '1px solid rgba(255,255,255,.18)',
+          background: 'rgba(28,32,36,.62)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
+          color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        {baseSatelite
+          ? <><IconMap size={15} stroke={2} /> Ruas</>
+          : <><IconSatellite size={15} stroke={2} /> Satélite</>}
+      </button>
       {atividade && atividade.length > 0 && (
         <div
           style={{
