@@ -417,28 +417,24 @@ export function MapView({
       })
     }
 
-    // A primeira posição emitida pelo controle comanda a abertura (uma vez).
-    // Dali em diante, quem manda é o botão — e o botão aproxima.
-    let primeiraPosicao = true
+    // A abertura NÃO liga o controle de GPS. O botão nasce DESATIVADO, sempre
+    // — regra de produto. Para abrir "sobre a cidade", fazemos UMA leitura
+    // passiva de posição (getCurrentPosition não acende o botão nem entra em
+    // modo seguir), e só se a permissão JÁ foi concedida — sem prompt novo.
+    // O trigger() do controle (que ativa o rastreamento com câmera própria)
+    // fica reservado a: toque humano no botão, ou preferência explícita
+    // "voar até minha localização" ligada.
     geolocate.on('geolocate', (e: { coords: { longitude: number; latitude: number } }) => {
-      const { longitude: lng, latitude: lat } = e.coords
-      if (primeiraPosicao) {
-        primeiraPosicao = false
-        // Preferência do usuário: por padrão o mapa abre enquadrando a REGIÃO
-        // (contexto dos picos). Só quem liga "voar até minha localização"
-        // aterrissa em si mesmo na abertura.
-        if (voarAteMinhaLocalizacaoAtivo()) aproximarDoUsuario(lng, lat)
-        else enquadrarRegiao(lng, lat)
-        return
-      }
+      // Eventos aqui só chegam com o controle ATIVADO (toque no botão ou
+      // preferência ligada). A aproximação usa nossa animação; o lock do
+      // controle converge no mesmo zoom, sem briga de câmera.
       if (pediuAproximar.current) {
         pediuAproximar.current = false
-        aproximarDoUsuario(lng, lat)
+        aproximarDoUsuario(e.coords.longitude, e.coords.latitude)
       }
     })
-    // Permissão negada / GPS indisponível: no voo intro, desce ao litoral.
     geolocate.on('error', () => {
-      if (primeiraPosicao && vooIntro) { primeiraPosicao = false; enquadrarRegiao(-46.79, -24.19) }
+      if (vooIntro) enquadrarRegiao(-46.79, -24.19)
     })
 
     // O toque no botão do controle marca a intenção de APROXIMAR. (O trigger
@@ -450,11 +446,38 @@ export function MapView({
     botaoGeo?.addEventListener('click', aoTocarGeo)
 
     if ('geolocation' in navigator) {
-      // Dispara o MESMO controle programaticamente após o mapa carregar: o
-      // voo automático e o toque no botão passam a compartilhar um único
-      // watch, sem corrida. (trigger precisa do controle já montado no mapa.)
       map.once('load', () => {
-        if (!descartado) setTimeout(() => { try { geolocate.trigger() } catch { /* iOS pode exigir gesto: botão cobre */ } }, 300)
+        if (descartado) return
+        setTimeout(() => {
+          if (descartado || vooCancelado) return
+          // Preferência explícita ligada: aí sim ativa o controle (rastreio +
+          // aproximação), como o usuário pediu ao ligar a opção.
+          if (voarAteMinhaLocalizacaoAtivo()) {
+            pediuAproximar.current = true
+            try { geolocate.trigger() } catch { /* iOS pode exigir gesto */ }
+            return
+          }
+          // Padrão: botão de GPS permanece DESATIVADO. Para abrir na cidade,
+          // uma leitura única e silenciosa — e só se a permissão já existe
+          // (sem prompt na cara do usuário; o prompt fica para o toque no botão).
+          const lerUmaVez = () => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => { if (!descartado && !vooCancelado) enquadrarRegiao(pos.coords.longitude, pos.coords.latitude) },
+              () => { if (vooIntro) enquadrarRegiao(-46.79, -24.19) },
+              { enableHighAccuracy: false, timeout: 6000, maximumAge: 600000 },
+            )
+          }
+          if ('permissions' in navigator) {
+            navigator.permissions.query({ name: 'geolocation' as PermissionName })
+              .then((st) => {
+                if (st.state === 'granted') lerUmaVez()
+                else if (vooIntro) enquadrarRegiao(-46.79, -24.19)
+              })
+              .catch(() => lerUmaVez())
+          } else {
+            lerUmaVez()
+          }
+        }, 300)
       })
       // Se o usuário mexer antes do GPS responder, respeita e cancela o voo.
       map.once('dragstart', () => { vooCancelado = true })
