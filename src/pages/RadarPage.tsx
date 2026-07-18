@@ -495,7 +495,16 @@ export function RadarPage() {
           onClick={() => setVerPrefs(false)}
           style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(4,20,27,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px, 100%)', padding: '0 12px 14px' }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(560px, 100%)', padding: '0 12px 14px',
+              // Rola quando o conteúdo passa da tela (telas pequenas / teclado
+              // aberto): sem isto o topo com o "fechar" ficava inalcançável.
+              maxHeight: '88vh', overflowY: 'auto',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 14px)',
+            }}
+          >
             <PainelPreferencias onFechar={() => setVerPrefs(false)} modoOverlay />
           </div>
         </div>

@@ -948,7 +948,7 @@ export function CapturePage() {
 
       {/* ETAPA 3: Câmera */}
       {etapa === 'camera' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflowY: 'auto' }}>
           {/* Badge tipo + local */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {tipoInfo && (
@@ -971,7 +971,7 @@ export function CapturePage() {
             )}
           </div>
 
-          <div ref={cameraBoxRef} style={{ flex: 1, position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden', touchAction: 'none' }}>
+          <div ref={cameraBoxRef} style={{ flex: 1, minHeight: '46vh', position: 'relative', background: '#000', margin: '0 8px', borderRadius: 20, overflow: 'hidden', touchAction: 'none' }}>
             <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {zoomDisponivel && zoomAtual > 1.05 && (
               <div className="dado" style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 3, background: 'rgba(4,20,27,.6)', color: '#fff', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, pointerEvents: 'none' }}>
