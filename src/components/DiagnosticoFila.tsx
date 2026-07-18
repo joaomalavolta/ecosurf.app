@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { IconRefresh, IconAlertTriangle, IconVideo, IconPhoto } from '@tabler/icons-react'
-import { pendentes, retentarTudo, onMudanca } from '../offline/uploadQueue'
+import { IconRefresh, IconAlertTriangle, IconVideo, IconPhoto, IconTrash } from '@tabler/icons-react'
+import { pendentes, retentarTudo, removerDaFila, onMudanca } from '../offline/uploadQueue'
 import type { UploadPendente } from '../offline/db'
 
 /**
@@ -70,6 +70,23 @@ export function DiagnosticoFila() {
                   </div>
                 )}
               </div>
+              {/* Excluir este envio: para registros presos que o usuário
+                  desistiu de enviar. Pede confirmação — descarta a mídia. */}
+              <button
+                onClick={() => {
+                  if (confirm('Excluir este envio? A foto ou vídeo será descartado e não será enviado.')) {
+                    void removerDaFila(i.id)
+                  }
+                }}
+                aria-label="Excluir este envio"
+                style={{
+                  flexShrink: 0, marginTop: 2, width: 30, height: 30, borderRadius: 8,
+                  border: 'none', background: 'transparent', color: '#c0392b', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <IconTrash size={16} stroke={2} />
+              </button>
             </div>
           ))}
 

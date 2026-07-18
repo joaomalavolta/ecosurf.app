@@ -496,7 +496,7 @@ export function RadarPage() {
           style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(4,20,27,.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px, 100%)', padding: '0 12px 14px' }}>
-            <PainelPreferencias onFechar={() => setVerPrefs(false)} />
+            <PainelPreferencias onFechar={() => setVerPrefs(false)} modoOverlay />
           </div>
         </div>
       )}

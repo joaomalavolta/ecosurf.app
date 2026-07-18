@@ -60,6 +60,13 @@ export async function limparBloqueados(): Promise<void> {
   emitir()
 }
 
+/** Remove UM envio da fila pelo id (o usuário desistiu daquele registro). */
+export async function removerDaFila(id: string): Promise<void> {
+  const d = await db()
+  await d.delete('uploads', id)
+  emitir()
+}
+
 let rodando = false
 export async function flush(): Promise<void> {
   if (rodando || !navigator.onLine) return

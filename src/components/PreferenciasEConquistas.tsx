@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   IconSettings, IconTextSize, IconWaveSquare,
   IconCamera, IconRipple, IconMap2, IconTargetArrow, IconAlertTriangle, IconUsers,
-  IconPlayerPlay, IconCurrentLocation,
+  IconPlayerPlay, IconCurrentLocation, IconChevronLeft,
 } from '@tabler/icons-react'
 import type { Icon } from '@tabler/icons-react'
 import {
@@ -29,7 +29,7 @@ function LinhaPref({ Icone, titulo, sub, valor, onToggle }: {
 }
 
 /** Painel de preferências: acessibilidade que realmente muda o app. */
-export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
+export function PainelPreferencias({ onFechar, modoOverlay = false }: { onFechar: () => void; modoOverlay?: boolean }) {
   const [texto, setTexto] = useState(textoGrandeAtivo())
   const [anim, setAnim] = useState(reduzAnimacaoAtivo())
   const [soFotos, setSoFotos] = useState(soComFotosAtivo())
@@ -38,6 +38,20 @@ export function PainelPreferencias({ onFechar }: { onFechar: () => void }) {
 
   return (
     <div className="card pad" style={{ marginTop: 12 }}>
+      {/* Aberto como overlay (hambúrguer do mapa): botão voltar proeminente,
+          para retornar ao mapa. Inline no Perfil: só o "fechar" discreto. */}
+      {modoOverlay && (
+        <button
+          onClick={onFechar}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10,
+            background: 'none', border: 'none', color: 'var(--turq, #1ECBC3)',
+            cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', padding: 0,
+          }}
+        >
+          <IconChevronLeft size={18} stroke={2.4} /> Voltar
+        </button>
+      )}
       <div className="between">
         <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           <IconSettings size={12} stroke={2} /> Preferências do app
