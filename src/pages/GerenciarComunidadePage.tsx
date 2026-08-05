@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IconShieldCheck, IconPencil, IconEye, IconShare2, IconPhoto, IconCamera } from '@tabler/icons-react'
+import { IconShieldCheck, IconPencil, IconEye, IconShare2, IconPhoto, IconCamera, IconTrash } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { SkeletonLinha } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { CorteFoto } from '../components/CorteFotoLazy'
+import { restMinhaConta } from '../services/conta'
 import {
   carregarComunidade, listarMembros, definirPapel, meuPapel, atualizarComunidade,
   type Comunidade, type PapelComunidade,
@@ -30,6 +31,15 @@ export function GerenciarComunidadePage() {
   const [cortando, setCortando] = useState<{ file: File; tipo: 'avatar' | 'capa' } | null>(null)
   const refCapa = useRef<HTMLInputElement>(null)
   const refAvatar = useRef<HTMLInputElement>(null)
+  const [conta, setConta] = useState<{ id?: string; papel: string }>({ papel: 'user' })
+  const [nomeEdit, setNomeEdit] = useState('')
+  const [descEdit, setDescEdit] = useState('')
+  const [salvandoDados, setSalvandoDados] = useState(false)
+  const [confirmExcluir, setConfirmExcluir] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+
+  const souSuperAdmin = conta.papel === 'admin' || conta.papel === 'super_admin'
+  const podeExcluir = souSuperAdmin || (!!conta.id && conta.id === c?.criadorId)
 
   // Escolher a foto abre o corte; o upload só acontece com o enquadramento
   // confirmado — capa e logo mantêm a proporção padrão do sistema.
@@ -59,9 +69,11 @@ export function GerenciarComunidadePage() {
     if (!comunidadeId) return
     let vivo = true
     void (async () => {
-      const p = await meuPapel(comunidadeId)
+      const [p, minhaConta] = await Promise.all([meuPapel(comunidadeId), restMinhaConta()])
       if (!vivo) return
-      if (p !== 'admin') {
+      setConta({ id: minhaConta.id, papel: minhaConta.papel })
+      const sa = minhaConta.papel === 'admin' || minhaConta.papel === 'super_admin'
+      if (p !== 'admin' && !sa) {
         toast('Só administradores gerenciam a comunidade.')
         navigate(`/comunidade/${comunidadeId}`)
         return
@@ -69,6 +81,8 @@ export function GerenciarComunidadePage() {
       const [com, ms] = await Promise.all([carregarComunidade(comunidadeId), listarMembros(comunidadeId)])
       if (!vivo) return
       setC(com)
+      setNomeEdit(com?.nome ?? '')
+      setDescEdit(com?.descricao ?? '')
       setMembros(ms)
       setCarregando(false)
     })()
@@ -93,6 +107,37 @@ export function GerenciarComunidadePage() {
     const texto = `Participe da comunidade ${c?.nome} no Ecosurf`
     if (navigator.share) navigator.share({ title: c?.nome, text: texto, url }).catch(() => {})
     else window.open(`https://wa.me/?text=${encodeURIComponent(`${texto}\n${url}`)}`, '_blank')
+  }
+
+  async function salvarDados() {
+    if (!comunidadeId || !nomeEdit.trim()) return
+    setSalvandoDados(true)
+    try {
+      await atualizarComunidade(comunidadeId, { nome: nomeEdit, descricao: descEdit })
+      setC((prev) => prev ? { ...prev, nome: nomeEdit.trim(), descricao: descEdit.trim() || undefined } : prev)
+      toast('Dados atualizados!', 'sucesso')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Não foi possível salvar os dados.')
+    } finally {
+      setSalvandoDados(false)
+    }
+  }
+
+  async function excluir() {
+    if (!comunidadeId) return
+    setExcluindo(true)
+    try {
+      // Soft-delete: some do app (comunidades_leitura filtra deleted_at) mas
+      // fica no banco. A RLS libera ao fundador e ao super admin.
+      const { sb } = await import('../services/supabase/client')
+      const { error } = await sb().from('comunidades').update({ deleted_at: new Date().toISOString() }).eq('id', comunidadeId)
+      if (error) throw new Error(error.message)
+      toast('Comunidade excluída.', 'sucesso')
+      navigate('/acoes')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Não foi possível excluir a comunidade.')
+      setExcluindo(false)
+    }
   }
 
   return (
@@ -153,6 +198,34 @@ export function GerenciarComunidadePage() {
           <IconShare2 size={17} stroke={2} /> Convidar pessoas
         </button>
 
+        <div className="card pad" style={{ marginTop: 16 }}>
+          <span className="eyebrow" style={{ display: 'block' }}>Dados da comunidade</span>
+          <input
+            className="input"
+            style={{ marginTop: 10 }}
+            value={nomeEdit}
+            onChange={(e) => setNomeEdit(e.target.value)}
+            placeholder="Nome da comunidade"
+            maxLength={60}
+          />
+          <textarea
+            className="input"
+            style={{ marginTop: 8, minHeight: 74, resize: 'vertical' }}
+            value={descEdit}
+            onChange={(e) => setDescEdit(e.target.value)}
+            placeholder="Descrição (opcional)"
+            maxLength={280}
+          />
+          <button
+            className="btn full"
+            style={{ marginTop: 10 }}
+            disabled={salvandoDados || !nomeEdit.trim() || (nomeEdit.trim() === c?.nome && descEdit.trim() === (c?.descricao ?? ''))}
+            onClick={() => void salvarDados()}
+          >
+            {salvandoDados ? 'Salvando…' : 'Salvar dados'}
+          </button>
+        </div>
+
         <span className="eyebrow" style={{ display: 'block', margin: '20px 0 10px' }}>
           Membros ({membros.length})
         </span>
@@ -203,6 +276,33 @@ export function GerenciarComunidadePage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {!carregando && podeExcluir && (
+          <div className="card pad" style={{ marginTop: 22, border: '1px solid color-mix(in srgb, var(--coral) 55%, transparent)' }}>
+            <span className="eyebrow" style={{ color: 'var(--coral)' }}>Zona de perigo</span>
+            <p className="muted" style={{ marginTop: 6 }}>
+              {souSuperAdmin && conta.id !== c?.criadorId
+                ? 'Excluir tira a comunidade do ar. Você está excluindo como super administrador.'
+                : 'Excluir tira a comunidade do ar. Só o fundador e um super administrador podem fazer isso.'}
+            </p>
+            {!confirmExcluir ? (
+              <button
+                className="btn outline full"
+                style={{ marginTop: 10, color: 'var(--coral)', borderColor: 'color-mix(in srgb, var(--coral) 55%, transparent)' }}
+                onClick={() => setConfirmExcluir(true)}
+              >
+                <IconTrash size={16} stroke={2} /> Excluir comunidade
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button className="btn outline full" disabled={excluindo} onClick={() => setConfirmExcluir(false)}>Cancelar</button>
+                <button className="btn full" style={{ background: 'var(--coral)' }} disabled={excluindo} onClick={() => void excluir()}>
+                  {excluindo ? 'Excluindo…' : 'Confirmar exclusão'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
