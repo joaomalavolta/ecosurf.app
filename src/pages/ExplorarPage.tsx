@@ -42,7 +42,8 @@ export function ExplorarPage() {
   // Busca por texto: acha picos e cidades pelo nome (sem acento-sensível
   // demais: normaliza os dois lados). É o refinamento que faltava — antes o
   // diretório só navegava por níveis.
-  const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  const norm = (s: string) =>
+    [...s.normalize('NFD')].filter((c) => c.charCodeAt(0) < 0x300 || c.charCodeAt(0) > 0x36f).join('').toLowerCase()
   const resultados = useMemo(() => {
     const q = norm(busca.trim())
     if (q.length < 2) return null
