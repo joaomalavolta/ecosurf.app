@@ -17,7 +17,7 @@ import { MosaicoFeed } from '../components/MosaicoFeed'
 import { mesclarFeed, tilesMosaico, type UnidadeFeed, type TileMosaico } from '../lib/mesclarFeed'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
-import { buscarForecast } from '../services/forecast'
+import { buscarForecastEmLote } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
 import { MapViewLazy as MapView } from '../map/MapViewLazy'
@@ -105,8 +105,9 @@ export function RadarPage() {
     carregarPicos().then((ps) => {
       if (!vivo) return
       setPicosTodos(ps)
-      Promise.all(ps.map(async (p) => [p.id, await buscarForecast(p)] as const)).then((es) => {
-        if (vivo) setFc(Object.fromEntries(es))
+      // Um lote (2 requests + cache) no lugar de 2 requests por pico.
+      buscarForecastEmLote(ps).then((mapa) => {
+        if (vivo) setFc(mapa)
       })
     })
     carregarFeedGlobal(50).then(async (fs) => {
@@ -114,12 +115,12 @@ export function RadarPage() {
       setFeed(fs)
       setCarregandoFeed(false)
       try {
-        const { getCurtidas } = await import('../services/supabase/rest')
-        const likes = await Promise.all(fs.map(async f => [f.id, await getCurtidas(f.id)] as const))
-        if (vivo) setCurtidasMap(Object.fromEntries(likes))
+        // Um request para todas as curtidas do feed (era 1 HEAD por foto).
+        const { getCurtidasEmLote } = await import('../services/curtidas')
+        const likes = await getCurtidasEmLote(fs.map((f) => f.id))
+        if (vivo) setCurtidasMap(likes)
       } catch { /* curtidas são opcionais: segue sem elas */ }
-    })
-    carregarFeedGlobal(50).catch(() => vivo && setCarregandoFeed(false))
+    }).catch(() => vivo && setCarregandoFeed(false))
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     carregarPicosComRelato().then((ids) => vivo && setAtivos(new Set(ids)))
