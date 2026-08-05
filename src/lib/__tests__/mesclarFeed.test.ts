@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mesclarFeed } from '../mesclarFeed'
+import { mesclarFeed, tilesMosaico } from '../mesclarFeed'
 import type { Alerta, Mutirao, Pico, Foto } from '../../types/domain'
 
 const pico = (id: string, municipio: string) => [id, { id, municipio } as Pico] as const
@@ -41,5 +41,24 @@ describe('mesclarFeed', () => {
     const out = mesclarFeed(feedCards, [], [] as Mutirao[], picoMap)
     expect(out).toHaveLength(2)
     expect(out.every((u) => u.tipo === 'surf')).toBe(true)
+  })
+})
+
+describe('tilesMosaico', () => {
+  const ft = (id: string) => ({ id, picoId: 'p', capturadaEm: '2026-01-01' } as Foto)
+
+  it('intercala eco entre as fotos e inclui todas', () => {
+    const fotos = [ft('1'), ft('2'), ft('3'), ft('4'), ft('5'), ft('6')]
+    const tiles = tilesMosaico(fotos, [alerta('a1', {}), alerta('a2', {})], [])
+    expect(tiles.filter((t) => t.tipo === 'foto')).toHaveLength(6)
+    expect(tiles.filter((t) => t.tipo === 'eco')).toHaveLength(2)
+    // a primeira posição continua sendo uma foto (as fotos mantêm a ordem)
+    expect(tiles[0]).toMatchObject({ tipo: 'foto' })
+  })
+
+  it('sem eco, devolve só tiles de foto', () => {
+    const tiles = tilesMosaico([ft('1')], [], [] as Mutirao[])
+    expect(tiles).toHaveLength(1)
+    expect(tiles[0]).toMatchObject({ tipo: 'foto', foto: { id: '1' } })
   })
 })
