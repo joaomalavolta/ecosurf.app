@@ -22,6 +22,11 @@ export type UnidadeFeed =
   | { tipo: 'surf'; picoId: string; fotos: Foto[] }
   | { tipo: 'eco'; item: ItemEcoFeed }
 
+/** Um tile do mosaico: uma foto ou uma ocorrência ambiental. */
+export type TileMosaico =
+  | { tipo: 'foto'; foto: Foto }
+  | { tipo: 'eco'; item: ItemEcoFeed }
+
 /** Normaliza texto p/ casar cidade sem depender de acento/caixa. */
 const norm = (s: string) =>
   [...(s ?? '').normalize('NFD')]
@@ -117,4 +122,25 @@ export function mesclarFeed(
   for (const e of sobra()) saida.push({ tipo: 'eco', item: e })
 
   return saida
+}
+
+/**
+ * Tiles do mosaico com eco intercalado uniformemente entre as fotos: as fotos
+ * mantêm sua ordem e 1 card ambiental entra a cada N tiles. Assim o mosaico
+ * também mostra alertas/mutirões, não só ondas.
+ */
+export function tilesMosaico(fotos: Foto[], alertas: Alerta[], mutiroes: Mutirao[]): TileMosaico[] {
+  const fotoTiles: TileMosaico[] = fotos.map((f) => ({ tipo: 'foto', foto: f }))
+  const eco: ItemEcoFeed[] = [...alertas.map(alertaParaEco), ...mutiroes.map(mutiraoParaEco)]
+  if (eco.length === 0) return fotoTiles
+
+  const passo = Math.max(3, Math.floor(fotoTiles.length / (eco.length + 1)) || 3)
+  const out: TileMosaico[] = []
+  let ei = 0
+  fotoTiles.forEach((t, i) => {
+    out.push(t)
+    if ((i + 1) % passo === 0 && ei < eco.length) out.push({ tipo: 'eco', item: eco[ei++] })
+  })
+  while (ei < eco.length) out.push({ tipo: 'eco', item: eco[ei++] })
+  return out
 }
