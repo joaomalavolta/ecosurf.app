@@ -12,7 +12,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # npm ci exige lockfile 100% sincronizado; sob npm novo ele rejeita as
+      # deps opcionais de plataforma do esbuild que faltam no lock. Cai para
+      # npm install (que reconcilia) quando isso acontece, sem travar a CI.
+      - run: npm ci || npm install --no-audit --no-fund
       - run: npm run lint
       - run: npm test
       - run: npm run build
