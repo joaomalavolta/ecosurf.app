@@ -6,7 +6,7 @@ import { IconSettings, IconUsersGroup, IconCompass, IconThumbUp, IconMenu2, Icon
 import { Header } from '../components/Header'
 import { StoryBubbles } from '../components/StoryBubbles'
 import { SegFiltroEcosurf } from '../components/SegFiltroEcosurf'
-import { FeedLente } from '../components/FeedLente'
+import { CarrosselRegiao } from '../components/CarrosselRegiao'
 import { TiraComunidades } from '../components/TiraComunidades'
 import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
@@ -89,16 +89,6 @@ export function RadarPage() {
   const [ufMenu, setUfMenu] = useState<string | null>(null)
   const [destinoMapa, setDestinoMapa] = useState<{ lng: number; lat: number; zoom?: number } | null>(null)
   const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
-  // Lente do FEED, independente do mapa: Surf (ondas), Eco (alertas+mutirões)
-  // ou Ecosurf (as duas coisas num fluxo intercalado por tempo). Lembrada.
-  const [lenteFeed, setLenteFeedEstado] = useState<FiltroMapa>(() => {
-    const salvo = lerPreferencia<string>('feed', 'lente', 'ecosurf')
-    return (['ecosurf', 'eco', 'surf'] as const).includes(salvo as FiltroMapa) ? (salvo as FiltroMapa) : 'ecosurf'
-  })
-  const setLenteFeed = useCallback((l: FiltroMapa) => {
-    setLenteFeedEstado(l)
-    gravarPreferencia('feed', 'lente', l)
-  }, [])
   const feedRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -344,42 +334,22 @@ export function RadarPage() {
       </div>
 
       <div className="radar-col-feed">
-      {lenteFeed !== 'eco' && <StoryBubbles fotos={feed} picos={picosTodos} />}
+      <StoryBubbles fotos={feed} picos={picosTodos} />
 
       <TiraComunidades />
 
-      {/* Lente do FEED — independente do mapa */}
-      <SegFiltroEcosurf valor={lenteFeed} onChange={setLenteFeed} />
-
-      {/* Refino do feed de ondas — só faz sentido na lente Surf */}
-      {lenteFeed === 'surf' && (
-        <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px 6px' }}>
-          <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
-          <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Curtidas</Pill>
+      {/* ─── FEED SECTION ─── */}
+      <div className="pills full rolavel" role="tablist" aria-label="Filtro do radar" style={{ margin: '10px 12px 6px' }}>
+        <Pill on={filtro === 'favoritos'} onClick={() => setFiltro('favoritos')}><IconStar size={15} stroke={2} /> Favoritos</Pill>
+        <Pill on={filtro === 'melhores'} onClick={() => setFiltro('melhores')}><IconRipple size={15} stroke={2} /> Curtidas</Pill>
           <Pill on={filtro === 'seguindo'} onClick={() => setFiltro('seguindo')}><IconUserHeart size={15} stroke={2} /> Seguindo</Pill>
-          <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
-        </div>
-      )}
+        <Pill on={filtro === 'todos'} onClick={() => setFiltro('todos')}><IconMapPin size={15} stroke={2} /> Todos</Pill>
+      </div>
 
+      <CarrosselRegiao alertas={alertas} mutiroes={mutiroes} />
       <div className="page-pad stack" ref={feedRef}>
 
-        {lenteFeed !== 'surf' ? (
-          <FeedLente
-            lente={lenteFeed === 'eco' ? 'eco' : 'ecosurf'}
-            feed={feed}
-            picoMap={picoMap}
-            fc={fc}
-            favoritos={favoritos}
-            onToggleFavorito={(picoId) => {
-              toggleFavorito(picoId)
-              setFavoritos((s) => {
-                const n = new Set(s)
-                if (n.has(picoId)) n.delete(picoId); else n.add(picoId)
-                return n
-              })
-            }}
-          />
-        ) : filtro === 'melhores' ? (
+        {filtro === 'melhores' ? (
           melhoresOndas.length === 0 ? <p className="muted" style={{ textAlign: 'center' }}>Carregando ondas...</p> :
           melhoresOndas.map(f => {
             const pico = picoMap.get(f.picoId)
