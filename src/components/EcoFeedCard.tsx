@@ -42,20 +42,20 @@ export function EcoFeedCard({ item }: { item: ItemEcoFeed }) {
           )}
         </div>
 
-        {/* Tag que distingue do surf, canto superior esquerdo */}
-        <span
-          className="badge b-glass"
-          style={{
-            position: 'absolute', top: 10, left: 12, zIndex: 3,
-            fontSize: 10.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: `color-mix(in srgb, ${cor} 60%, rgba(4,20,27,.5))`, pointerEvents: 'none',
-          }}
-        >
-          {ehAlerta ? <><IconAlertTriangle size={11} stroke={2.5} /> Alerta</> : <><IconUsers size={11} stroke={2.5} /> Mutirão</>}
-        </span>
-
-        {/* TOPO: título + local — espelha o FeedCard */}
+        {/* TOPO: tipo (sobrancelha) + título + local — a tag fica ACIMA do
+            título, no fluxo, pra nunca sobrepor como no canto absoluto. */}
         <div className="feed-top-grad">
+          <div style={{ marginBottom: 8 }}>
+            <span
+              className="badge b-glass"
+              style={{
+                fontSize: 10, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: `color-mix(in srgb, ${cor} 60%, rgba(4,20,27,.5))`,
+              }}
+            >
+              {ehAlerta ? <><IconAlertTriangle size={11} stroke={2.5} /> Alerta</> : <><IconUsers size={11} stroke={2.5} /> Mutirão</>}
+            </span>
+          </div>
           <h3 className="disp" style={{ fontSize: 21, lineHeight: 1.1, margin: 0, textShadow: '0 1px 8px rgba(0,0,0,.4)' }}>{item.titulo}</h3>
           <div style={{ fontSize: 12, opacity: .85, marginTop: 2 }}>{item.municipio}{item.uf ? `/${item.uf}` : ''}</div>
         </div>
