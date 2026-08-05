@@ -20,7 +20,7 @@ export function NovosSurfistas() {
   return (
     <div style={{ marginBottom: 14 }}>
       <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-        <IconUserPlus size={13} stroke={2} /> Novos surfistas
+        <IconUserPlus size={13} stroke={2} /> Novos Ecosurfistas
       </span>
       <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
         {us.map((u) => (
