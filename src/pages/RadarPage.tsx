@@ -12,7 +12,9 @@ import { SkeletonFeedCard } from '../components/Skeleton'
 import { TourInicial } from '../components/TourInicial'
 import { VazioFeed } from '../components/VazioFeed'
 import { FeedCard } from '../components/FeedCard'
+import { EcoFeedCard } from '../components/EcoFeedCard'
 import { MosaicoFeed } from '../components/MosaicoFeed'
+import { mesclarFeed, type UnidadeFeed } from '../lib/mesclarFeed'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFavoritos, toggleFavorito } from '../services/favoritos'
 import { buscarForecast } from '../services/forecast'
@@ -154,6 +156,13 @@ export function RadarPage() {
     const todas = feedCards.flatMap(([, fotos]) => fotos)
     return todas.sort((a, b) => new Date(b.capturadaEm).getTime() - new Date(a.capturadaEm).getTime())
   }, [feedCards])
+
+  // Feed mesclado (A+D): fotos como espinha dorsal + alertas/mutirões ancorados
+  // no pico do mesmo lugar. Só na aba "Todos" — as outras seguem puras.
+  const unidadesFeed = useMemo<UnidadeFeed[]>(() => {
+    if (filtro !== 'todos') return feedCards.map(([picoId, fotos]) => ({ tipo: 'surf', picoId, fotos }))
+    return mesclarFeed(feedCards, alertas, mutiroes, picoMap)
+  }, [filtro, feedCards, alertas, mutiroes, picoMap])
 
   const melhoresOndas = useMemo(() => {
     return [...feed].sort((a, b) => {
@@ -410,18 +419,20 @@ export function RadarPage() {
 
             {modoFeed === 'mosaico'
               ? <MosaicoFeed fotos={fotosMosaico} picoMap={picoMap} />
-              : feedCards.map(([picoId, fotos]) => (
-              <div key={picoId} id={`feed-card-${picoId}`}>
+              : unidadesFeed.map((u) => u.tipo === 'eco' ? (
+              <EcoFeedCard key={`eco-${u.item.id}`} item={u.item} />
+            ) : (
+              <div key={u.picoId} id={`feed-card-${u.picoId}`}>
                 <FeedCard
-                  fotos={fotos}
-                  pico={picoMap.get(picoId)}
-                  forecast={fc[picoId]}
-                  favorito={favoritos.has(picoId)}
+                  fotos={u.fotos}
+                  pico={picoMap.get(u.picoId)}
+                  forecast={fc[u.picoId]}
+                  favorito={favoritos.has(u.picoId)}
                   onToggleFavorito={() => {
-                    toggleFavorito(picoId)
+                    toggleFavorito(u.picoId)
                     setFavoritos((s) => {
                       const n = new Set(s)
-                      if (n.has(picoId)) n.delete(picoId); else n.add(picoId)
+                      if (n.has(u.picoId)) n.delete(u.picoId); else n.add(u.picoId)
                       return n
                     })
                   }}
