@@ -6,6 +6,7 @@ import { carregarPicos, carregarAmeacas, carregarMutiroes } from '../services/pi
 import { carregarFeedGlobal } from '../services/feed'
 import { restPicosStats } from '../services/supabase/rest'
 import { categoriaPorId } from '../components/SeletorCategoria'
+import { NovosSurfistas } from '../components/NovosSurfistas'
 import type { Pico, Alerta, Mutirao, Foto } from '../types/domain'
 
 /**
@@ -41,7 +42,7 @@ export function ExplorarPage() {
   // Busca por texto: acha picos e cidades pelo nome (sem acento-sensível
   // demais: normaliza os dois lados). É o refinamento que faltava — antes o
   // diretório só navegava por níveis.
-  const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
   const resultados = useMemo(() => {
     const q = norm(busca.trim())
     if (q.length < 2) return null
@@ -146,6 +147,8 @@ export function ExplorarPage() {
             </button>
           )}
         </div>
+
+        {!uf && !cidade && !resultados && <NovosSurfistas />}
 
         {resultados && (
           <div className="card" style={{ overflow: 'hidden', marginBottom: 12 }}>
