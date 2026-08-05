@@ -4,6 +4,7 @@ import { RadarPage } from './RadarPage'
 import { LandingPage } from './LandingPage'
 import { DesktopLandingPage } from './DesktopLandingPage'
 import { gravaOnboarded } from '../onboarding/OnboardingContext'
+import { restMinhaConta } from '../services/conta'
 import { useEhDesktop } from '../hooks/useEhDesktop'
 
 /**
@@ -38,16 +39,34 @@ function MobileHome() {
       return
     }
 
-    let sub: { unsubscribe: () => void } | undefined
+    // Caminho comum (sem redirect de login): decide logado/visitante por REST,
+    // sem carregar o SDK — o Radar abre leve. O SDK só entra quando o usuário
+    // faz algo que precisa dele (login, captura, sair).
+    const url = window.location.hash + window.location.search
+    const ehCallbackOAuth = url.includes('access_token=') || /[?&]code=/.test(url)
 
+    if (!ehCallbackOAuth) {
+      let vivo = true
+      restMinhaConta().then((c) => {
+        if (!vivo) return
+        if (c.id) {
+          // Sessão existente (ex.: restaurada no PWA). Marca onboarded para o
+          // botão da câmera abrir a captura — quem já está logado reporta.
+          gravaOnboarded()
+          setEstado('logado')
+        } else {
+          setEstado('visitante')
+        }
+      }).catch(() => setEstado('visitante'))
+      return () => { vivo = false }
+    }
+
+    // Retorno de OAuth/magic-link: aí sim carrega o SDK para processar o token
+    // na URL e reagir ao SIGNED_IN.
+    let sub: { unsubscribe: () => void } | undefined
     import('../services/supabase/client').then(({ sb }) => {
-      // 1. Verificar sessão existente
       sb().auth.getSession().then(({ data }) => {
         if (data.session) {
-          // Sessão já existente (ex.: restaurada no PWA, cujo storage é
-          // separado do Safari). Sem isto, 'onboarded' ficava false e o botão
-          // da câmera mandava para a home em vez de abrir a captura — quem já
-          // está logado pode reportar, ponto.
           gravaOnboarded()
           setEstado('logado')
         } else {
@@ -55,7 +74,6 @@ function MobileHome() {
         }
       }).catch(() => setEstado('visitante'))
 
-      // 2. Escutar mudanças de auth (OAuth callback via URL hash)
       const { data } = sb().auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN') {
           gravaOnboarded()

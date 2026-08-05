@@ -11,10 +11,11 @@ import {
   IconUserCircle,
   IconChevronRight,
 } from '@tabler/icons-react'
-import { meuStatus, permissoes, sair, type Papel } from '../services/admin'
+import { permissoes, sair, type Papel } from '../services/admin'
+import { restMinhaConta } from '../services/conta'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 
-/* ── Helpers de PWA ──────────────────────────────────────────────────── */
+/* ── Helpers de PWA ───────────────────────────────────── */
 let _deferredPrompt: BeforeInstallPromptEvent | null = null
 
 interface BeforeInstallPromptEvent extends Event {
@@ -36,7 +37,7 @@ function jaInstalado(): boolean {
   )
 }
 
-/* ── Rótulo do papel ─────────────────────────────────────────────────── */
+/* ── Rótulo do papel ──────────────────────────────────── */
 const labelPapel: Record<string, string> = {
   super_admin: 'Super Admin',
   admin: 'Administrador',
@@ -51,7 +52,7 @@ function corPapel(p: Papel): string {
   return ''
 }
 
-/* ── Componente ──────────────────────────────────────────────────────── */
+/* ── Componente ─────────────────────────────────────── */
 export function AccountMenu() {
   const [aberto, setAberto] = useState(false)
   const [status, setStatus] = useState<{
@@ -67,20 +68,12 @@ export function AccountMenu() {
   const { abrir } = useOnboarding()
 
   useEffect(() => {
+    // Leitura via REST (sem SDK) — o Radar não puxa o cliente do Supabase só
+    // para saber quem está logado; o SDK carrega em ações que precisam dele.
     let vivo = true
-    meuStatus().then(async (s) => {
+    restMinhaConta().then((c) => {
       if (!vivo) return
-      let nome: string | undefined
-      let avatarUrl: string | undefined
-      if (s.id) {
-        try {
-          const { carregarPerfilAtual } = await import('../services/perfil')
-          const perfil = await carregarPerfilAtual()
-          nome = perfil?.nome
-          avatarUrl = perfil?.avatarUrl
-        } catch { /* ignora */ }
-      }
-      setStatus({ ...s, nome, avatarUrl })
+      setStatus({ id: c.id, papel: c.papel as Papel, email: c.email, nome: c.nome, avatarUrl: c.avatarUrl })
     })
     return () => { vivo = false }
   }, [])
@@ -404,7 +397,7 @@ export function AccountMenu() {
   )
 }
 
-/* ── Item do menu ─────────────────────────────────────────────────────── */
+/* ── Item do menu ────────────────────────────────────── */
 function MenuItem({
   icon,
   titulo,
