@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-react'
 import { Brand } from '../components/Brand'
 import { AuthCard } from '../components/AuthCard'
+import { ContadorAcessos } from '../components/ContadorAcessos'
 
 const PILARES = [
   { Icon: IconAlertTriangle, texto: 'Registre lixo, esgoto, erosão e outros impactos' },
@@ -61,6 +62,8 @@ export function LandingPage() {
           <Link to="/mapa" className="landing-secondary">
             Explorar o mapa primeiro <IconChevronRight size={16} stroke={2.5} />
           </Link>
+
+          <ContadorAcessos style={{ color: 'rgba(255,255,255,.72)', fontSize: 13, fontWeight: 600, marginTop: 14 }} />
 
           {/* Scroll hint */}
           <button className="landing-scroll-hint" onClick={scrollToSignup} aria-label="Ver mais">
