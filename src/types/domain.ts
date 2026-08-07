@@ -144,6 +144,8 @@ export interface Alerta {
   municipio: string;
   uf: UF;
   localNome?: string;
+  /** Quando foi publicado (ISO) — é o que faz o novo subir no feed. */
+  criadaEm?: string;
   lat?: number;
   lng?: number;
   descricao?: string;

@@ -37,6 +37,32 @@ describe('mesclarFeed', () => {
     expect(out[out.length - 1]).toMatchObject({ tipo: 'eco', item: { id: 'a3' } })
   })
 
+  it('alerta recém-publicado aparece ANTES de antigos mais graves', () => {
+    // O caso real: publiquei um alerta "media" e ele sumiu no fim do feed,
+    // atrás de um emergencial e um alta bem mais velhos.
+    const antigoGrave = alerta('velho-emergencial', {
+      municipio: 'Santos', gravidade: 'emergencial', criadaEm: '2026-07-11T00:00:00Z',
+    })
+    const novo = alerta('recem-publicado', {
+      municipio: 'Santos', gravidade: 'media', criadaEm: '2026-08-06T00:00:00Z',
+    })
+    const out = mesclarFeed(feedCards, [antigoGrave, novo], [], picoMap)
+    const ecoIds = out.filter((u) => u.tipo === 'eco').map((u) => (u as { item: { id: string } }).item.id)
+    expect(ecoIds[0]).toBe('recem-publicado')
+    // e ele fica logo abaixo do card do pico da mesma cidade
+    expect(out[0]).toMatchObject({ tipo: 'surf', picoId: 'pico-1' })
+    expect(out[1]).toMatchObject({ tipo: 'eco', item: { id: 'recem-publicado' } })
+  })
+
+  it('gravidade continua desempatando quando a data é a mesma', () => {
+    const em = '2026-08-06T00:00:00Z'
+    const leve = alerta('leve', { municipio: 'Santos', gravidade: 'baixa', criadaEm: em })
+    const grave = alerta('grave', { municipio: 'Santos', gravidade: 'emergencial', criadaEm: em })
+    const out = mesclarFeed(feedCards, [leve, grave], [], picoMap)
+    const ecoIds = out.filter((u) => u.tipo === 'eco').map((u) => (u as { item: { id: string } }).item.id)
+    expect(ecoIds[0]).toBe('grave')
+  })
+
   it('sem eco, devolve só os cards de pico', () => {
     const out = mesclarFeed(feedCards, [], [] as Mutirao[], picoMap)
     expect(out).toHaveLength(2)
