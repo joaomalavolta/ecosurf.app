@@ -15,6 +15,8 @@ export interface ItemEcoFeed {
   autorNome?: string
   autorFoto?: string
   picoId?: string
+  /** Instante para ordenar por novidade (0 = sem data conhecida). */
+  ts: number
 }
 
 /** Uma linha do feed: ou um card de pico (fotos) ou um card ambiental. */
@@ -50,6 +52,7 @@ export function alertaParaEco(a: Alerta): ItemEcoFeed {
     autorNome: a.comunidadeNome ?? a.autorNome,
     autorFoto: a.comunidadeAvatar ?? a.autorFoto,
     picoId: a.picoId,
+    ts: paraTs(a.criadaEm),
   }
 }
 
@@ -65,10 +68,32 @@ export function mutiraoParaEco(m: Mutirao): ItemEcoFeed {
     autorNome: m.comunidadeNome ?? m.autorNome ?? m.organizador,
     autorFoto: m.comunidadeAvatar ?? m.autorFoto,
     picoId: m.picoId,
+    ts: paraTs(m.quando),
   }
 }
 
+/** Data ISO → epoch, limitado ao "agora" (mutirão futuro não pina o topo). */
+function paraTs(raw?: string | null): number {
+  if (!raw) return 0
+  const t = new Date(raw).getTime()
+  return Number.isNaN(t) ? 0 : Math.min(t, Date.now())
+}
+
 const PESO_GRAV: Record<string, number> = { emergencial: 0, alta: 1, media: 2, baixa: 3 }
+
+/**
+ * Ordem do eco no feed: NOVIDADE primeiro, gravidade só como desempate.
+ *
+ * Antes era só gravidade — então um alerta recém-publicado de gravidade
+ * média entrava atrás de todos os antigos mais graves e sumia no fim do
+ * feed (quem publicava não via o próprio post). A urgência continua sendo
+ * o critério do carrossel no topo; aqui embaixo o feed é cronológico.
+ */
+function ordenarEco(a: ItemEcoFeed, b: ItemEcoFeed): number {
+  if (a.ts !== b.ts) return b.ts - a.ts
+  if (a.tipo !== b.tipo) return a.tipo === 'alerta' ? -1 : 1
+  return (PESO_GRAV[a.gravidade ?? 'media'] ?? 2) - (PESO_GRAV[b.gravidade ?? 'media'] ?? 2)
+}
 
 /**
  * Mescla A + D: as fotos são a espinha dorsal e cada alerta/mutirão é
@@ -84,12 +109,7 @@ export function mesclarFeed(
   { maxPorPico = 2, cadenciaSobra = 4 }: { maxPorPico?: number; cadenciaSobra?: number } = {},
 ): UnidadeFeed[] {
   const eco: ItemEcoFeed[] = [...alertas.map(alertaParaEco), ...mutiroes.map(mutiraoParaEco)]
-  // alertas mais graves primeiro; mutirões depois
-  eco.sort((a, b) => {
-    if (a.tipo !== b.tipo) return a.tipo === 'alerta' ? -1 : 1
-    if (a.tipo === 'alerta') return (PESO_GRAV[a.gravidade ?? 'media'] ?? 2) - (PESO_GRAV[b.gravidade ?? 'media'] ?? 2)
-    return 0
-  })
+  eco.sort(ordenarEco)
 
   const usados = new Set<string>()
   const saida: UnidadeFeed[] = []
@@ -132,6 +152,7 @@ export function mesclarFeed(
 export function tilesMosaico(fotos: Foto[], alertas: Alerta[], mutiroes: Mutirao[]): TileMosaico[] {
   const fotoTiles: TileMosaico[] = fotos.map((f) => ({ tipo: 'foto', foto: f }))
   const eco: ItemEcoFeed[] = [...alertas.map(alertaParaEco), ...mutiroes.map(mutiraoParaEco)]
+  eco.sort(ordenarEco) // novidade primeiro, igual ao feed em lista
   if (eco.length === 0) return fotoTiles
 
   const passo = Math.max(3, Math.floor(fotoTiles.length / (eco.length + 1)) || 3)
