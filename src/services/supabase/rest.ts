@@ -145,10 +145,13 @@ interface AmeacaRow {
   comunidade_id: string | null
   comunidade_nome: string | null
   comunidade_avatar: string | null
+  criada_em: string | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
-  const rows = await rest<AmeacaRow[]>('ameacas_publicas?select=*')
+  // Mais recentes primeiro: sem ORDER BY o que acabou de ser publicado
+  // chegava em posição arbitrária e sumia no meio do feed.
+  const rows = await rest<AmeacaRow[]>('ameacas_publicas?select=*&order=criada_em.desc')
   return rows.map((r) => ({
     id: r.id,
     titulo: r.titulo,
@@ -167,6 +170,7 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     comunidadeAvatar: r.comunidade_avatar ?? undefined,
     autorNome: r.autor_nome ?? undefined,
     autorFoto: r.autor_foto ?? undefined,
+    criadaEm: r.criada_em ?? undefined,
     images: (r as { images?: string[] | null }).images ?? undefined,
   }))
 }
@@ -397,7 +401,7 @@ function titleCase(s: string): string {
 /** Gera um slug a partir do nome: "Praia dos Pescadores" → "praia-dos-pescadores" */
 export function slug(nome: string): string {
   return nome.trim().toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
