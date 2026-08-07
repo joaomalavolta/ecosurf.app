@@ -122,14 +122,18 @@ export function FormularioAlertaPage() {
     setEnviando(true)
     try {
       const catInfo = categoriaPorId(categoria)
+      // trim em tudo: um espaço sobrando no município cria uma "outra cidade"
+      // no Explorar (que agrupa por nome) — foi o que aconteceu com Itanhaém.
+      const municipioLimpo = municipio.trim()
+      const localLimpo = localNome.trim()
       const dados: DadosAlerta = {
-        titulo: `${catInfo.label} — ${localNome || municipio}`,
+        titulo: `${catInfo.label} — ${localLimpo || municipioLimpo}`,
         categoria,
         gravidade,
-        descricao,
-        localNome: localNome || undefined,
-        municipio,
-        uf,
+        descricao: descricao.trim(),
+        localNome: localLimpo || undefined,
+        municipio: municipioLimpo,
+        uf: uf.trim().toUpperCase(),
         lat,
         lng,
         recorrente,
