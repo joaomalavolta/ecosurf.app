@@ -44,6 +44,12 @@ export function ExplorarPage() {
   // diretório só navegava por níveis.
   const norm = (s: string) =>
     [...s.normalize('NFD')].filter((c) => c.charCodeAt(0) < 0x300 || c.charCodeAt(0) > 0x36f).join('').toLowerCase()
+
+  // Cidade/UF entram aqui como texto livre dos formulários. Um espaço
+  // sobrando fazia "Itanhaém " virar uma cidade separada de "Itanhaém" na
+  // lista — então tudo que agrupa ou compara território passa por aqui.
+  const terr = (s?: string | null) => (s ?? '').trim()
+
   const resultados = useMemo(() => {
     const q = norm(busca.trim())
     if (q.length < 2) return null
@@ -51,15 +57,15 @@ export function ExplorarPage() {
       .filter((p) => norm(p.nome).includes(q) || norm(p.praia ?? '').includes(q))
       .slice(0, 8)
     const cidadesSet = new Map<string, string>() // cidade -> uf
-    picos.forEach((p) => { if (norm(p.municipio).includes(q)) cidadesSet.set(p.municipio, p.uf) })
-    alertas.forEach((a) => { if (a.municipio && norm(a.municipio).includes(q)) cidadesSet.set(a.municipio, a.uf ?? '') })
+    picos.forEach((p) => { if (norm(p.municipio).includes(q)) cidadesSet.set(terr(p.municipio), terr(p.uf)) })
+    alertas.forEach((a) => { if (a.municipio && norm(a.municipio).includes(q)) cidadesSet.set(terr(a.municipio), terr(a.uf)) })
     return { picos: picosHit, cidades: [...cidadesSet.entries()].slice(0, 6) }
   }, [busca, picos, alertas])
 
   // Alertas por tipo (categoria) dentro de um filtro territorial
   const alertasPorTipo = (filtro: (m: string, u: string) => boolean) => {
     const mapa = new Map<Alerta['categoria'], number>()
-    alertas.filter((a) => filtro(a.municipio ?? '', a.uf ?? '')).forEach((a) => {
+    alertas.filter((a) => filtro(terr(a.municipio), terr(a.uf))).forEach((a) => {
       mapa.set(a.categoria, (mapa.get(a.categoria) ?? 0) + 1)
     })
     return [...mapa.entries()].sort((a, b) => b[1] - a[1])
@@ -67,31 +73,31 @@ export function ExplorarPage() {
 
   // pulso por chave territorial (uf ou uf+cidade)
   const pulso = (filtro: (municipio: string, ufX: string) => boolean) => {
-    const ps = picos.filter((p) => filtro(p.municipio, p.uf))
+    const ps = picos.filter((p) => filtro(terr(p.municipio), terr(p.uf)))
     const idsPicos = new Set(ps.map((p) => p.id))
     return {
       picos: ps.length,
       fotosHoje: fotosHoje.filter((f) => idsPicos.has(f.picoId)).length,
-      alertas: alertas.filter((a) => filtro(a.municipio ?? '', a.uf ?? '')).length,
-      mutiroes: mutiroes.filter((m) => filtro(m.municipio, m.uf)).length,
+      alertas: alertas.filter((a) => filtro(terr(a.municipio), terr(a.uf))).length,
+      mutiroes: mutiroes.filter((m) => filtro(terr(m.municipio), terr(m.uf))).length,
     }
   }
 
   const ufs = useMemo(() => {
     const s = new Set<string>()
-    picos.forEach((p) => s.add(p.uf))
-    alertas.forEach((a) => a.uf && s.add(a.uf))
-    mutiroes.forEach((m) => s.add(m.uf))
-    return [...s].sort()
+    picos.forEach((p) => s.add(terr(p.uf)))
+    alertas.forEach((a) => a.uf && s.add(terr(a.uf)))
+    mutiroes.forEach((m) => s.add(terr(m.uf)))
+    return [...s].filter(Boolean).sort()
   }, [picos, alertas, mutiroes])
 
   const cidades = useMemo(() => {
     if (!uf) return []
     const s = new Set<string>()
-    picos.filter((p) => p.uf === uf).forEach((p) => s.add(p.municipio))
-    alertas.filter((a) => a.uf === uf && a.municipio).forEach((a) => s.add(a.municipio!))
-    mutiroes.filter((m) => m.uf === uf).forEach((m) => s.add(m.municipio))
-    return [...s].sort()
+    picos.filter((p) => terr(p.uf) === uf).forEach((p) => s.add(terr(p.municipio)))
+    alertas.filter((a) => terr(a.uf) === uf && terr(a.municipio)).forEach((a) => s.add(terr(a.municipio)))
+    mutiroes.filter((m) => terr(m.uf) === uf).forEach((m) => s.add(terr(m.municipio)))
+    return [...s].filter(Boolean).sort()
   }, [uf, picos, alertas, mutiroes])
 
   const Contadores = ({ p }: { p: { picos: number; fotosHoje: number; alertas: number; mutiroes: number } }) => (
@@ -211,7 +217,7 @@ export function ExplorarPage() {
           ))}
 
           {/* Nível 3: picos da cidade */}
-          {uf && cidade && picos.filter((p) => p.uf === uf && p.municipio === cidade).map((p) => {
+          {uf && cidade && picos.filter((p) => terr(p.uf) === uf && terr(p.municipio) === cidade).map((p) => {
             const fotosDoPico = fotosHoje.filter((f) => f.picoId === p.id).length
             return (
               <Link key={p.id} to={`/pico/${p.id}`} style={linha}>
@@ -234,7 +240,7 @@ export function ExplorarPage() {
         {/* Alertas e mutirões da cidade selecionada */}
         {uf && cidade && (
           <>
-            {alertas.filter((a) => a.uf === uf && a.municipio === cidade).length > 0 && (
+            {alertas.filter((a) => terr(a.uf) === uf && terr(a.municipio) === cidade).length > 0 && (
               <div className="card pad" style={{ marginTop: 12 }}>
                 <span className="eyebrow" style={{ color: '#E8734A', display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconAlertTriangle size={12} stroke={2} /> Alertas ativos</span>
                 {/* Refinamento: a cidade contada por TIPO de ocorrência */}
@@ -250,7 +256,7 @@ export function ExplorarPage() {
                   })}
                 </div>
                 <div className="stack" style={{ marginTop: 8 }}>
-                  {alertas.filter((a) => a.uf === uf && a.municipio === cidade).slice(0, 5).map((a) => (
+                  {alertas.filter((a) => terr(a.uf) === uf && terr(a.municipio) === cidade).slice(0, 5).map((a) => (
                     <Link key={a.id} to={`/alerta/${a.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{a.titulo}</div>
                       <div className="muted" style={{ fontSize: 12 }}>{a.gravidade ?? 'média'}</div>
@@ -259,11 +265,11 @@ export function ExplorarPage() {
                 </div>
               </div>
             )}
-            {mutiroes.filter((m) => m.uf === uf && m.municipio === cidade).length > 0 && (
+            {mutiroes.filter((m) => terr(m.uf) === uf && terr(m.municipio) === cidade).length > 0 && (
               <div className="card pad" style={{ marginTop: 12 }}>
                 <span className="eyebrow" style={{ color: '#2E9B6B', display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconUsers size={12} stroke={2} /> Mutirões</span>
                 <div className="stack" style={{ marginTop: 8 }}>
-                  {mutiroes.filter((m) => m.uf === uf && m.municipio === cidade).slice(0, 5).map((m) => (
+                  {mutiroes.filter((m) => terr(m.uf) === uf && terr(m.municipio) === cidade).slice(0, 5).map((m) => (
                     <Link key={m.id} to={`/mutirao/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{m.titulo}</div>
                       <div className="muted" style={{ fontSize: 12 }}>{m.quando}{m.horario ? ` · ${m.horario}` : ''}</div>
