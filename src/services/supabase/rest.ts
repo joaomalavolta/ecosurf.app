@@ -400,9 +400,12 @@ function titleCase(s: string): string {
 
 /** Gera um slug a partir do nome: "Praia dos Pescadores" → "praia-dos-pescadores" */
 export function slug(nome: string): string {
-  return nome.trim().toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  // Tira os acentos sem regex de combining marks (que não sobrevive ao
+  // escaping da API de push e ainda tropeça no no-misleading-character-class).
+  const semAcento = [...nome.trim().toLowerCase().normalize('NFD')]
+    .filter((c) => c.charCodeAt(0) < 0x300 || c.charCodeAt(0) > 0x36f)
+    .join('')
+  return semAcento.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
 /** Insere um novo pico no Supabase (autenticado). */
