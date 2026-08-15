@@ -140,7 +140,7 @@ export function PainelNotificacoes() {
               />
               <LinhaAssunto
                 Icone={IconSpeakerphone} titulo="Suas comunidades"
-                sub="Membro novo e publicações, para quem administra"
+                sub="Publicações de quem você segue, e movimento nas que administra"
                 valor={comunidades} onToggle={() => alternarAssunto('comunidades', comunidades, setComunidades)}
               />
             </div>

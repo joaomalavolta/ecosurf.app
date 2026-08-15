@@ -172,6 +172,18 @@ export function ComunidadePage() {
           </button>
         </div>
 
+        {/* Seguir passou a ter consequência: quem segue é avisado das
+            publicações. Dizer isso aqui é mais honesto do que deixar o
+            primeiro aviso surpreender. */}
+        {papel && (
+          <p className="muted" style={{ fontSize: 11.5, lineHeight: 1.45, marginTop: 8 }}>
+            Você recebe aviso quando esta comunidade publicar. Dá para desligar em
+            {' '}<Link to="/perfil" style={{ color: 'var(--turq)', fontWeight: 600, textDecoration: 'none' }}>
+              Perfil → Notificações
+            </Link>.
+          </p>
+        )}
+
         {papel === 'admin' && (
           <Link to={`/comunidade/${c.id}/gerenciar`} className="btn outline full" style={{ marginTop: 8 }}>
             <IconSettings size={16} stroke={2} /> Gerenciar comunidade
