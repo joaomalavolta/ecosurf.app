@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { IconCheck,
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { IconCheck, IconMessageCircle,
   IconMapPin, IconCalendar, IconUser, IconPhoto, IconAlertTriangle, IconHeartHandshake,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -29,9 +29,12 @@ function Metrica({ n, rotulo, Icone }: { n: number; rotulo: string; Icone: typeo
 
 export function UsuarioPage() {
   const { userId } = useParams<{ userId: string }>()
+  const navigate = useNavigate()
   const [perfil, setPerfil] = useState<PerfilPublico | null | undefined>(undefined)
   const [seguindo, setSeguindo] = useState(false)
   const [meuId, setMeuId] = useState<string | null>(null)
+  const [abrindoConversa, setAbrindoConversa] = useState(false)
+  const [erroConversa, setErroConversa] = useState<string | null>(null)
   const [contribs, setContribs] = useState<ContribsUsuario | null>(null)
   const [picoMap, setPicoMap] = useState<Map<string, Pico>>(new Map())
   const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
@@ -90,6 +93,21 @@ export function UsuarioPage() {
 
   const dataEntrada = new Date(perfil.criadoEm).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
   const nomePico = (id: string) => picoMap.get(id)?.nome ?? 'pico'
+  const souOutraPessoa = !!meuId && !!userId && meuId !== userId
+
+  /** Abre (ou recupera) a conversa 1:1 e leva para ela. */
+  async function conversar() {
+    if (!userId || abrindoConversa) return
+    setAbrindoConversa(true)
+    setErroConversa(null)
+    try {
+      const { abrirConversa } = await import('../services/mensagens')
+      navigate(`/mensagens/${await abrirConversa(userId)}`)
+    } catch (e) {
+      setErroConversa(e instanceof Error ? e.message : 'Não foi possível abrir a conversa.')
+      setAbrindoConversa(false)
+    }
+  }
 
   return (
     <div className="page">
@@ -108,18 +126,36 @@ export function UsuarioPage() {
             <div style={{ fontSize: 20, fontWeight: 700 }}>{perfil.nome ?? 'Usuário'}</div>
             <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Nível: {perfil.nivel || "1 - Gota d'Água"}</div>
           </div>
-          {meuId && userId && meuId !== userId && (
-            <button
-              className={seguindo ? 'btn outline' : 'btn acento'}
-              style={{ flexShrink: 0 }}
-              onClick={() => {
-                import('../services/seguindo').then(({ toggleSeguir }) => setSeguindo(toggleSeguir(userId)))
-              }}
-            >
-              {seguindo ? <><IconCheck size={15} stroke={2} /> Seguindo</> : '+ Seguir'}
-            </button>
-          )}
         </div>
+
+        {/* Ações sobre a pessoa — seguir e conversar em pé de igualdade. */}
+        {souOutraPessoa && (
+          <div className="stack" style={{ gap: 6 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className={seguindo ? 'btn outline' : 'btn acento'}
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => {
+                  import('../services/seguindo').then(({ toggleSeguir }) => setSeguindo(toggleSeguir(userId!)))
+                }}
+              >
+                {seguindo ? <><IconCheck size={15} stroke={2} /> Seguindo</> : '+ Seguir'}
+              </button>
+              <button
+                className="btn outline"
+                style={{ flex: 1, justifyContent: 'center', gap: 6 }}
+                onClick={conversar}
+                disabled={abrindoConversa}
+              >
+                <IconMessageCircle size={16} stroke={2} />
+                {abrindoConversa ? 'Abrindo…' : 'Mensagem'}
+              </button>
+            </div>
+            {erroConversa && (
+              <p style={{ color: 'var(--coral)', fontSize: 12.5, margin: 0 }}>{erroConversa}</p>
+            )}
+          </div>
+        )}
 
         {/* Métricas de contribuição */}
         {contribs && (

@@ -10,6 +10,7 @@ import {
   IconCheck,
   IconUserCircle,
   IconChevronRight,
+  IconMessageCircle,
 } from '@tabler/icons-react'
 import { permissoes, sair, type Papel } from '../services/admin'
 import { restMinhaConta } from '../services/conta'
@@ -63,6 +64,7 @@ export function AccountMenu() {
     avatarUrl?: string
   }>({ papel: 'user' })
   const [instalado, setInstalado] = useState(jaInstalado())
+  const [naoLidas, setNaoLidas] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const { abrir } = useOnboarding()
@@ -74,6 +76,14 @@ export function AccountMenu() {
     restMinhaConta().then((c) => {
       if (!vivo) return
       setStatus({ id: c.id, papel: c.papel as Papel, email: c.email, nome: c.nome, avatarUrl: c.avatarUrl })
+      // Selo de mensagens: só para quem está logado, e também por PostgREST
+      // (view pronta) — nada de SDK no caminho crítico só por um número.
+      if (c.id) {
+        import('../services/mensagens')
+          .then(({ restNaoLidas }) => restNaoLidas())
+          .then((n) => vivo && setNaoLidas(n))
+          .catch(() => {})
+      }
     })
     return () => { vivo = false }
   }, [])
@@ -155,6 +165,32 @@ export function AccountMenu() {
           ) : inicial
         ) : <IconUser size={20} stroke={2} />}
       </button>
+
+      {/* Ponto de mensagem nova: fica FORA do botão (que corta o conteúdo). */}
+      {naoLidas > 0 && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: -3,
+            right: -3,
+            minWidth: 17,
+            height: 17,
+            padding: '0 4px',
+            borderRadius: 99,
+            background: 'var(--coral)',
+            color: '#fff',
+            fontSize: 10,
+            fontWeight: 800,
+            display: 'grid',
+            placeItems: 'center',
+            border: '2px solid var(--bg)',
+            pointerEvents: 'none',
+          }}
+        >
+          {naoLidas > 9 ? '9+' : naoLidas}
+        </span>
+      )}
 
       {/* Popover */}
       {aberto && (
@@ -287,6 +323,15 @@ export function AccountMenu() {
                 sub="Gestão, moderação e auditoria"
                 destaque
                 onClick={() => ir('/admin')}
+              />
+            )}
+
+            {logado && (
+              <MenuItem
+                icon={<IconMessageCircle size={20} stroke={2} />}
+                titulo={naoLidas > 0 ? `Mensagens (${naoLidas > 9 ? '9+' : naoLidas})` : 'Mensagens'}
+                sub={naoLidas > 0 ? 'Você tem mensagem nova' : 'Conversas privadas'}
+                onClick={() => ir('/mensagens')}
               />
             )}
 
