@@ -132,18 +132,21 @@ export async function outroParticipante(
   return { id: outroId, nome: pf?.nome ?? null, fotoUrl: pf?.foto_url ?? null }
 }
 
-/** Mensagens de uma conversa, em ordem cronológica. */
+/** Últimas mensagens de uma conversa, devolvidas em ordem cronológica. */
 export async function carregarMensagens(conversaId: string): Promise<Mensagem[]> {
   const { sb } = await import('./supabase/client')
+  // Busca da mais nova para a mais velha e inverte: num papo comprido, o teto
+  // tem que cortar o começo, não o fim — quem abre quer ver o que é recente.
   const { data, error } = await sb()
     .from('mensagens')
     .select('id, autor_id, corpo, criada_em')
     .eq('conversa_id', conversaId)
-    .order('criada_em', { ascending: true })
+    .order('criada_em', { ascending: false })
     .limit(500)
   if (error) throw new Error(error.message)
   return ((data ?? []) as { id: string; autor_id: string; corpo: string; criada_em: string }[])
     .map((m) => ({ id: m.id, autorId: m.autor_id, corpo: m.corpo, criadaEm: m.criada_em }))
+    .reverse()
 }
 
 /** Envia uma mensagem. O autor vem da sessão — a RLS confere. */
