@@ -38,6 +38,7 @@ const SurfistasPage = rota(() => import('./pages/SurfistasPage'), 'SurfistasPage
 const MensagensPage = rota(() => import('./pages/MensagensPage'), 'MensagensPage')
 const ConversaPage = rota(() => import('./pages/ConversaPage'), 'ConversaPage')
 const NotificacoesPage = rota(() => import('./pages/NotificacoesPage'), 'NotificacoesPage')
+const BloqueadosPage = rota(() => import('./pages/BloqueadosPage'), 'BloqueadosPage')
 const AlertaPage = rota(() => import('./pages/AlertaPage'), 'AlertaPage')
 const AdminPage = rota(() => import('./pages/AdminPage'), 'AdminPage')
 const EstiloDemoPage = rota(() => import('./pages/EstiloDemoPage'), 'EstiloDemoPage')
@@ -110,6 +111,7 @@ export default function App() {
             <Route path="/mensagens" element={<MensagensPage />} />
             <Route path="/mensagens/:conversaId" element={<ConversaPage />} />
             <Route path="/avisos" element={<NotificacoesPage />} />
+            <Route path="/bloqueados" element={<BloqueadosPage />} />
             {!/(^|\.)ecosurf\.app$/.test(window.location.hostname) && (
               <Route path="/estilo" element={<EstiloDemoPage />} />
             )}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { diasAtras, horaMin, tempoCurto, rotuloDia, agruparPorDia, mesmaLista } from '../conversa'
+import { diasAtras, horaMin, tempoCurto, rotuloDia, agruparPorDia, mesmaLista, semBloqueados } from '../conversa'
 
 // Quinta-feira, 13/08/2026, 15:00 (hora local).
 const agora = new Date(2026, 7, 13, 15, 0, 0)
@@ -115,5 +115,34 @@ describe('agruparPorDia', () => {
 
   it('lista vazia devolve nenhum grupo', () => {
     expect(agruparPorDia([], agora)).toEqual([])
+  })
+})
+
+describe('semBloqueados', () => {
+  const c = (id: string, outroId: string) => ({ id, outroId })
+
+  it('tira da caixa quem foi bloqueado', () => {
+    const r = semBloqueados([c('1', 'ana'), c('2', 'zeca')], new Set(['zeca']))
+    expect(r.map((x) => x.id)).toEqual(['1'])
+  })
+
+  it('sem bloqueio nenhum, devolve a lista intacta', () => {
+    const lista = [c('1', 'ana'), c('2', 'zeca')]
+    expect(semBloqueados(lista, new Set())).toBe(lista)
+  })
+
+  it('bloquear todo mundo esvazia a caixa', () => {
+    expect(semBloqueados([c('1', 'ana')], new Set(['ana']))).toEqual([])
+  })
+
+  it('conversa sem o outro lado identificado nao some', () => {
+    const r = semBloqueados([c('1', '')], new Set(['ana']))
+    expect(r).toHaveLength(1)
+  })
+
+  it('nao altera a lista recebida', () => {
+    const lista = [c('1', 'ana'), c('2', 'zeca')]
+    semBloqueados(lista, new Set(['ana']))
+    expect(lista).toHaveLength(2)
   })
 })
