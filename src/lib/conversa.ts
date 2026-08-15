@@ -81,6 +81,21 @@ export function mesmaLista(a: { id: string }[] | null, b: { id: string }[]): boo
   return a.every((item, i) => item.id === b[i].id)
 }
 
+/**
+ * Tira da caixa de entrada as conversas com gente bloqueada.
+ *
+ * O banco já barra o envio; isto é o outro lado da mesma decisão — sumir da
+ * vista. Fica aqui, puro e testado, porque a regressão é silenciosa: alguém
+ * bloqueado voltando a aparecer na lista não quebra nada, só magoa.
+ */
+export function semBloqueados<T extends { outroId: string }>(
+  conversas: T[],
+  bloqueados: Set<string>,
+): T[] {
+  if (bloqueados.size === 0) return conversas
+  return conversas.filter((c) => !c.outroId || !bloqueados.has(c.outroId))
+}
+
 export interface GrupoDia<T> {
   /** AAAA-MM-DD local — chave estável para o React. */
   chave: string

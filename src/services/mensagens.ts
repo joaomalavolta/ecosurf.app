@@ -6,6 +6,8 @@
  * o cliente nunca é a única barreira.
  */
 
+import { semBloqueados } from '../lib/conversa'
+
 export interface Conversa {
   id: string
   ultimaEm: string
@@ -71,6 +73,11 @@ export async function listarConversas(): Promise<Conversa[]> {
     else outroDe.set(p.conversa_id, p.usuario_id)
   }
 
+  // Bloqueou? A conversa sai da caixa de entrada. O banco já barra o envio;
+  // isto é o outro lado da mesma decisão — sumir da vista.
+  const { idsBloqueados } = await import('./bloqueios')
+  const bloqueados = await idsBloqueados()
+
   const perfisIds = [...new Set(outroDe.values())]
   const { data: perfis } = perfisIds.length
     ? await sb().from('perfis').select('id, nome, foto_url').in('id', perfisIds)
@@ -79,7 +86,7 @@ export async function listarConversas(): Promise<Conversa[]> {
 
   const todas = (msgs ?? []) as { conversa_id: string; corpo: string; criada_em: string; autor_id: string }[]
 
-  return minhas
+  const montadas = minhas
     .map((c) => {
       const doChat = todas.filter((m) => m.conversa_id === c.id)
       const outroId = outroDe.get(c.id) ?? ''
@@ -102,6 +109,8 @@ export async function listarConversas(): Promise<Conversa[]> {
       }
     })
     .sort((a, b) => new Date(b.ultimaEm).getTime() - new Date(a.ultimaEm).getTime())
+
+  return semBloqueados(montadas, bloqueados)
 }
 
 /** Quem está do outro lado — o cabeçalho da conversa precisa do nome e da foto. */

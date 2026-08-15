@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../lib/toast'
 import { Link } from 'react-router-dom'
-import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight, IconPlayerPlayFilled } from '@tabler/icons-react'
+import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDiscountCheck, IconShieldCheck, IconShieldLock, IconLogout, IconMapPin, IconTargetArrow, IconCamera, IconPhoto, IconMail, IconBrandInstagram, IconBug, IconHeartHandshake, IconChevronRight, IconPlayerPlayFilled, IconBan } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
@@ -395,6 +395,20 @@ export function PerfilPage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Privacidade — quem você não quer que fale com você */}
+            <div className="card pad" style={{ marginTop: 12 }}>
+              <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <IconBan size={12} stroke={2} /> Privacidade
+              </span>
+              <div className="stack" style={{ marginTop: 10 }}>
+                <Link to="/bloqueados" className="row" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <IconBan size={20} stroke={2} />
+                  <span style={{ flex: 1 }}>Pessoas bloqueadas</span>
+                  <IconChevronRight size={16} stroke={2} style={{ color: 'var(--muted)' }} />
+                </Link>
+              </div>
             </div>
 
             {/* Fale conosco */}

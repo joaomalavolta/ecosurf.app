@@ -4,6 +4,7 @@ import { IconCheck, IconMessageCircle,
   IconMapPin, IconCalendar, IconUser, IconPhoto, IconAlertTriangle, IconHeartHandshake,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { MenuDenunciaBloqueio } from '../components/MenuDenunciaBloqueio'
 import { Photo } from '../components/Photo'
 import { restPerfilPublico, restContribuicoesUsuario, type ContribsUsuario } from '../services/supabase/rest'
 import { carregarPicos } from '../services/picos'
@@ -150,6 +151,10 @@ export function UsuarioPage() {
                 <IconMessageCircle size={16} stroke={2} />
                 {abrindoConversa ? 'Abrindo…' : 'Mensagem'}
               </button>
+              {/* Bloquear/denunciar também aqui: nem sempre há conversa aberta. */}
+              <span style={{ display: 'grid', placeItems: 'center' }}>
+                <MenuDenunciaBloqueio alvoId={userId!} alvoNome={perfil.nome ?? null} variante="corpo" />
+              </span>
             </div>
             {erroConversa && (
               <p style={{ color: 'var(--coral)', fontSize: 12.5, margin: 0 }}>{erroConversa}</p>

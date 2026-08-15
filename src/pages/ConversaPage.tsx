@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IconSend, IconLock } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AvatarPessoa } from '../components/AvatarPessoa'
+import { MenuDenunciaBloqueio } from '../components/MenuDenunciaBloqueio'
 import { agruparPorDia, horaMin, mesmaLista } from '../lib/conversa'
 import type { Mensagem } from '../services/mensagens'
 
@@ -17,6 +18,7 @@ type Outro = { id: string; nome: string | null; fotoUrl: string | null }
  */
 export function ConversaPage() {
   const { conversaId } = useParams<{ conversaId: string }>()
+  const navigate = useNavigate()
   const [msgs, setMsgs] = useState<Mensagem[] | null>(null)
   // undefined = ainda buscando; null = conversa que não é minha (ou sem sessão).
   const [outro, setOutro] = useState<Outro | null | undefined>(undefined)
@@ -133,12 +135,23 @@ export function ConversaPage() {
     <div className="page" style={{ paddingBottom: 0 }}>
       <Header title={outro?.nome ?? 'Conversa'} sub="Mensagem privada">
         {outro && (
-          <Link
-            to={`/usuario/${outro.id}`}
-            style={{ display: 'inline-block', marginTop: 8, marginLeft: 56, fontSize: 12, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,.18)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 99, padding: '4px 12px', textDecoration: 'none' }}
-          >
-            Ver perfil
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 56 }}>
+            <Link
+              to={`/usuario/${outro.id}`}
+              style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,.18)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 99, padding: '4px 12px', textDecoration: 'none' }}
+            >
+              Ver perfil
+            </Link>
+            <span style={{ marginLeft: 'auto' }}>
+              {/* Bloqueou? A conversa deixa de existir para você — volta para a caixa. */}
+              <MenuDenunciaBloqueio
+                alvoId={outro.id}
+                alvoNome={outro.nome}
+                conversaId={conversaId}
+                aoBloquear={() => navigate('/mensagens')}
+              />
+            </span>
+          </div>
         )}
       </Header>
 
