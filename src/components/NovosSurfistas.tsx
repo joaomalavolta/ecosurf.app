@@ -19,9 +19,15 @@ export function NovosSurfistas() {
   if (us.length === 0) return null
   return (
     <div style={{ marginBottom: 14 }}>
-      <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
-        <IconUserPlus size={13} stroke={2} /> Novos Ecosurfistas
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <IconUserPlus size={13} stroke={2} /> Novos Ecosurfistas
+        </span>
+        {/* A faixa mostra os recém-chegados; o diretório tem todo mundo. */}
+        <Link to="/surfistas" style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--turq)', textDecoration: 'none' }}>
+          Ver todos →
+        </Link>
+      </div>
       <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
         {us.map((u) => (
           <Link

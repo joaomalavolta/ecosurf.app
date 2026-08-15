@@ -33,6 +33,7 @@ const FormularioPicoPage = rota(() => import('./pages/FormularioPicoPage'), 'For
 const MutiraoPage = rota(() => import('./pages/MutiraoPage'), 'MutiraoPage')
 const ExplorarPage = rota(() => import('./pages/ExplorarPage'), 'ExplorarPage')
 const UsuarioPage = rota(() => import('./pages/UsuarioPage'), 'UsuarioPage')
+const SurfistasPage = rota(() => import('./pages/SurfistasPage'), 'SurfistasPage')
 const AlertaPage = rota(() => import('./pages/AlertaPage'), 'AlertaPage')
 const AdminPage = rota(() => import('./pages/AdminPage'), 'AdminPage')
 const EstiloDemoPage = rota(() => import('./pages/EstiloDemoPage'), 'EstiloDemoPage')
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="/mutirao/:mutiraoId" element={<MutiraoPage />} />
             <Route path="/alerta/:id" element={<AlertaPage />} />
             <Route path="/usuario/:userId" element={<UsuarioPage />} />
+            <Route path="/surfistas" element={<SurfistasPage />} />
             {!/(^|\.)ecosurf\.app$/.test(window.location.hostname) && (
               <Route path="/estilo" element={<EstiloDemoPage />} />
             )}
