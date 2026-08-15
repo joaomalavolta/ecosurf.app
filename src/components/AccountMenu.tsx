@@ -14,6 +14,8 @@ import {
 } from '@tabler/icons-react'
 import { permissoes, sair, type Papel } from '../services/admin'
 import { restMinhaConta } from '../services/conta'
+import { restContadores } from '../services/contadores'
+import { SinoAvisos } from './SinoAvisos'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 
 /* ── Helpers de PWA ───────────────────────────────────── */
@@ -76,13 +78,11 @@ export function AccountMenu() {
     restMinhaConta().then((c) => {
       if (!vivo) return
       setStatus({ id: c.id, papel: c.papel as Papel, email: c.email, nome: c.nome, avatarUrl: c.avatarUrl })
-      // Selo de mensagens: só para quem está logado, e também por PostgREST
-      // (view pronta) — nada de SDK no caminho crítico só por um número.
+      // Selo de mensagens: só para quem está logado, e por PostgREST numa
+      // view pronta — nada de SDK no caminho crítico só por um número. O
+      // sino usa a MESMA consulta (cache curto), então não custa outra.
       if (c.id) {
-        import('../services/mensagens')
-          .then(({ restNaoLidas }) => restNaoLidas())
-          .then((n) => vivo && setNaoLidas(n))
-          .catch(() => {})
+        restContadores().then((n) => vivo && setNaoLidas(n.mensagens)).catch(() => {})
       }
     })
     return () => { vivo = false }
@@ -133,7 +133,10 @@ export function AccountMenu() {
   }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* O sino fica ao lado do avatar: um lugar só para "tem coisa nova". */}
+      <SinoAvisos logado={logado} />
+      <div ref={ref} style={{ position: 'relative' }}>
       {/* Gatilho: avatar */}
       <button
         onClick={() => setAberto(!aberto)}
@@ -166,31 +169,9 @@ export function AccountMenu() {
         ) : <IconUser size={20} stroke={2} />}
       </button>
 
-      {/* Ponto de mensagem nova: fica FORA do botão (que corta o conteúdo). */}
-      {naoLidas > 0 && (
-        <span
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: -3,
-            right: -3,
-            minWidth: 17,
-            height: 17,
-            padding: '0 4px',
-            borderRadius: 99,
-            background: 'var(--coral)',
-            color: '#fff',
-            fontSize: 10,
-            fontWeight: 800,
-            display: 'grid',
-            placeItems: 'center',
-            border: '2px solid var(--bg)',
-            pointerEvents: 'none',
-          }}
-        >
-          {naoLidas > 9 ? '9+' : naoLidas}
-        </span>
-      )}
+      {/* Sem selo no avatar: o sino ao lado já diz que tem coisa nova, e dois
+          pontos vermelhos para o mesmo fato viram ruído. A contagem de
+          mensagens aparece no item do menu, onde ela é acionável. */}
 
       {/* Popover */}
       {aberto && (
@@ -438,6 +419,7 @@ export function AccountMenu() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+      </div>
     </div>
   )
 }

@@ -9,6 +9,8 @@
  * Papéis: admin (gerencia e publica) · autor (publica) · seguidor (acompanha).
  */
 
+import { rest } from './supabase/rest'
+
 export type CategoriaComunidade =
   | 'territorial' | 'ambiental' | 'projeto' | 'escola' | 'coletivo' | 'outro'
 
@@ -227,6 +229,61 @@ export async function listarMembros(comunidadeId: string): Promise<{ usuarioId: 
       papel: l.papel,
     }
   })
+}
+
+export interface MembroPublico {
+  usuarioId: string
+  nome: string | null
+  fotoUrl: string | null
+  cidade: string | null
+  papel: PapelComunidade
+  fundador: boolean
+}
+
+/** Ordem da lista: fundador, depois admins, autores e seguidores. */
+const PESO_PAPEL: Record<PapelComunidade, number> = { admin: 0, autor: 1, seguidor: 2 }
+
+export function ordenarMembros(ms: MembroPublico[]): MembroPublico[] {
+  return [...ms].sort((a, b) => {
+    if (a.fundador !== b.fundador) return a.fundador ? -1 : 1
+    if (a.papel !== b.papel) return PESO_PAPEL[a.papel] - PESO_PAPEL[b.papel]
+    return (a.nome ?? 'zzz').localeCompare(b.nome ?? 'zzz', 'pt-BR')
+  })
+}
+
+/**
+ * Quem faz parte da comunidade — visível para qualquer visitante.
+ *
+ * Via REST (sem SDK): `membros_comunidade` e `perfis_publicos` têm leitura
+ * pública, então saber quem é quem não exige sessão nem pesar o bundle.
+ */
+export async function restMembros(comunidadeId: string, criadorId?: string): Promise<MembroPublico[]> {
+  try {
+    const linhas = await rest<{ usuario_id: string; papel: PapelComunidade }[]>(
+      `membros_comunidade?select=usuario_id,papel&comunidade_id=eq.${encodeURIComponent(comunidadeId)}&limit=500`,
+    )
+    if (linhas.length === 0) return []
+
+    const ids = linhas.map((l) => l.usuario_id).join(',')
+    const perfis = await rest<{ id: string; nome: string | null; foto_url: string | null; cidade: string | null }[]>(
+      `perfis_publicos?select=id,nome,foto_url,cidade&id=in.(${ids})`,
+    )
+    const mapa = new Map(perfis.map((p) => [p.id, p]))
+
+    return ordenarMembros(linhas.map((l) => {
+      const p = mapa.get(l.usuario_id)
+      return {
+        usuarioId: l.usuario_id,
+        nome: p?.nome ?? null,
+        fotoUrl: p?.foto_url ?? null,
+        cidade: p?.cidade ?? null,
+        papel: l.papel,
+        fundador: !!criadorId && l.usuario_id === criadorId,
+      }
+    }))
+  } catch {
+    return []
+  }
 }
 
 /**

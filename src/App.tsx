@@ -24,6 +24,7 @@ const PerfilPage = rota(() => import('./pages/PerfilPage'), 'PerfilPage')
 const ComunidadePage = rota(() => import('./pages/ComunidadePage'), 'ComunidadePage')
 const CriarComunidadePage = rota(() => import('./pages/CriarComunidadePage'), 'CriarComunidadePage')
 const GerenciarComunidadePage = rota(() => import('./pages/GerenciarComunidadePage'), 'GerenciarComunidadePage')
+const MembrosComunidadePage = rota(() => import('./pages/MembrosComunidadePage'), 'MembrosComunidadePage')
 const ModeracaoPage = rota(() => import('./pages/ModeracaoPage'), 'ModeracaoPage')
 const TermosPage = rota(() => import('./pages/TermosPage'), 'TermosPage')
 const NovaAcaoPage = rota(() => import('./pages/NovaAcaoPage'), 'NovaAcaoPage')
@@ -36,6 +37,7 @@ const UsuarioPage = rota(() => import('./pages/UsuarioPage'), 'UsuarioPage')
 const SurfistasPage = rota(() => import('./pages/SurfistasPage'), 'SurfistasPage')
 const MensagensPage = rota(() => import('./pages/MensagensPage'), 'MensagensPage')
 const ConversaPage = rota(() => import('./pages/ConversaPage'), 'ConversaPage')
+const NotificacoesPage = rota(() => import('./pages/NotificacoesPage'), 'NotificacoesPage')
 const AlertaPage = rota(() => import('./pages/AlertaPage'), 'AlertaPage')
 const AdminPage = rota(() => import('./pages/AdminPage'), 'AdminPage')
 const EstiloDemoPage = rota(() => import('./pages/EstiloDemoPage'), 'EstiloDemoPage')
@@ -90,6 +92,7 @@ export default function App() {
             <Route path="/perfil" element={<PerfilPage />} />
             <Route path="/comunidades/nova" element={<CriarComunidadePage />} />
             <Route path="/comunidade/:comunidadeId/gerenciar" element={<GerenciarComunidadePage />} />
+            <Route path="/comunidade/:comunidadeId/membros" element={<MembrosComunidadePage />} />
             <Route path="/comunidade/:comunidadeId" element={<ComunidadePage />} />
             <Route path="/moderacao" element={<ModeracaoPage />} />
             <Route path="/capturar" element={<CapturePage />} />
@@ -106,6 +109,7 @@ export default function App() {
             <Route path="/surfistas" element={<SurfistasPage />} />
             <Route path="/mensagens" element={<MensagensPage />} />
             <Route path="/mensagens/:conversaId" element={<ConversaPage />} />
+            <Route path="/avisos" element={<NotificacoesPage />} />
             {!/(^|\.)ecosurf\.app$/.test(window.location.hostname) && (
               <Route path="/estilo" element={<EstiloDemoPage />} />
             )}

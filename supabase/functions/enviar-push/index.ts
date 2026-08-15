@@ -8,7 +8,7 @@ import webpush from 'npm:web-push@3.6.7'
 // VAPID_PRIVATE_KEY. Chaves divergentes = a Apple/Google rejeita com 403 e
 // nada é enviado. Já aconteceu; por isso o comentário.
 const VAPID_PUBLICA = 'BMfCQugHDqz2TuS3lSCw-pENT3JZkgcwTGhq2VsuBYrNWhrqlWBE-fz-2LS9OmTBbGjrgkZR-sndc8xwsVDBsmU'
-const ASSUNTOS = ['alertas', 'mutiroes', 'picos'] as const
+const ASSUNTOS = ['alertas', 'mutiroes', 'picos', 'mensagens', 'comunidades'] as const
 type Assunto = typeof ASSUNTOS[number]
 
 Deno.serve(async (req: Request) => {
@@ -37,6 +37,9 @@ Deno.serve(async (req: Request) => {
     tag?: string
     excetoUserId?: string | null
     somenteFavoritosDoPico?: string | null
+    // Entrega dirigida: só estas pessoas recebem. É o que mensagem privada
+    // exige — sem isso, avisar uma pessoa significaria varrer a base inteira.
+    paraUserIds?: string[] | null
   }
   try {
     corpo = await req.json()
@@ -59,16 +62,25 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  const { data: inscricoes, error } = await admin
-    .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, user_id')
+  // Entrega dirigida busca só as inscrições de quem vai receber. Varrer a
+  // base inteira para avisar uma pessoa não escala — e não faz sentido.
+  const dirigido = Array.isArray(corpo.paraUserIds) && corpo.paraUserIds.length > 0
+  if (dirigido && corpo.paraUserIds!.length > 500) {
+    return new Response(JSON.stringify({ erro: 'paraUserIds acima do limite (500)' }), { status: 400 })
+  }
+
+  const consulta = admin.from('push_subscriptions').select('endpoint, p256dh, auth, user_id')
+  const { data: inscricoes, error } = dirigido
+    ? await consulta.in('user_id', corpo.paraUserIds!)
+    : await consulta
   if (error) {
     return new Response(JSON.stringify({ erro: error.message }), { status: 500 })
   }
 
-  const { data: prefs } = await admin
-    .from('user_preferences')
-    .select('user_id, notificacoes')
+  const consultaPrefs = admin.from('user_preferences').select('user_id, notificacoes')
+  const { data: prefs } = dirigido
+    ? await consultaPrefs.in('user_id', corpo.paraUserIds!)
+    : await consultaPrefs
 
   const desligou = new Map<string, boolean>()
   for (const p of prefs ?? []) {
