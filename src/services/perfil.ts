@@ -93,15 +93,16 @@ export async function salvarPerfil(d: DadosPerfil): Promise<void> {
     }
   }
 
+  // upsert (ver definirNome): sem linha em perfis, um UPDATE não erra nem grava.
   const { error } = await sb()
     .from('perfis')
-    .update({
+    .upsert({
+      id: u.id,
       nome: d.nome.trim(),
       cidade: d.cidade.trim(),
       pico_principal: d.picoPrincipal || null,
       foto_url,
       onboarded: true,
-    })
-    .eq('id', u.id)
+    }, { onConflict: 'id' })
   if (error) throw error
 }

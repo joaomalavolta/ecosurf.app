@@ -47,6 +47,8 @@ export async function definirNome(nome: string): Promise<void> {
   const { data } = await sb().auth.getSession()
   const u = data.session?.user
   if (!u || u.is_anonymous) throw new Error('Entre primeiro (telefone ou e-mail).')
-  const { error } = await sb().from('perfis').update({ nome }).eq('id', u.id)
+  // upsert, não update: contas antigas podem não ter linha em perfis, e um
+  // UPDATE em 0 linhas não dá erro — o usuário via "salvo" sem nada gravado.
+  const { error } = await sb().from('perfis').upsert({ id: u.id, nome }, { onConflict: 'id' })
   if (error) throw error
 }
