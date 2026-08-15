@@ -229,15 +229,26 @@ export async function listarMembros(comunidadeId: string): Promise<{ usuarioId: 
   })
 }
 
-/** Promove/rebaixa um membro (só admins — a RLS garante). */
+/**
+ * Promove/rebaixa um membro. A RLS decide quem pode o quê: o fundador dá e
+ * tira 'admin'; um admin promovido só mexe em autor/seguidor.
+ *
+ * O `.select()` no fim não é enfeite: quando a RLS recusa, o UPDATE atinge
+ * 0 linhas e o PostgREST NÃO devolve erro — sem isso a tela diria "papel
+ * atualizado" sem ter mudado nada.
+ */
 export async function definirPapel(comunidadeId: string, usuarioId: string, papel: PapelComunidade): Promise<void> {
   const { sb } = await import('./supabase/client')
-  const { error } = await sb()
+  const { data, error } = await sb()
     .from('membros_comunidade')
     .update({ papel })
     .eq('comunidade_id', comunidadeId)
     .eq('usuario_id', usuarioId)
+    .select('usuario_id')
   if (error) throw new Error(error.message)
+  if (!data || data.length === 0) {
+    throw new Error('Sem permissão para alterar este papel. Só o fundador define quem é admin.')
+  }
 }
 
 /** Comunidades em que o usuário pode publicar (admin ou autor). */

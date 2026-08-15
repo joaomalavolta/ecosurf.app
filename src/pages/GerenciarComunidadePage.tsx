@@ -39,7 +39,11 @@ export function GerenciarComunidadePage() {
   const [excluindo, setExcluindo] = useState(false)
 
   const souSuperAdmin = conta.papel === 'admin' || conta.papel === 'super_admin'
-  const podeExcluir = souSuperAdmin || (!!conta.id && conta.id === c?.criadorId)
+  const souCriador = !!conta.id && conta.id === c?.criadorId
+  const podeExcluir = souSuperAdmin || souCriador
+  // Só o fundador entrega (e tira) a chave de admin. Um admin promovido
+  // gerencia a comunidade, mas não cria outros admins nem se auto-perpetua.
+  const podeDarAdmin = souCriador || souSuperAdmin
 
   // Escolher a foto abre o corte; o upload só acontece com o enquadramento
   // confirmado — capa e logo mantêm a proporção padrão do sistema.
@@ -96,9 +100,10 @@ export function GerenciarComunidadePage() {
     try {
       await definirPapel(comunidadeId, usuarioId, papel)
       toast('Papel atualizado.', 'sucesso')
-    } catch {
+    } catch (e) {
       setMembros(antes)
-      toast('Não foi possível atualizar o papel.')
+      const msg = e instanceof Error ? e.message : ''
+      toast(msg || 'Não foi possível atualizar o papel.')
     }
   }
 
@@ -250,30 +255,48 @@ export function GerenciarComunidadePage() {
 
                 {/* Seletor de papel */}
                 <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                  {PAPEIS.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => m.papel !== p.id && void mudarPapel(m.usuarioId, p.id)}
-                      disabled={m.usuarioId === c?.criadorId}
-                      style={{
-                        flex: 1, padding: '7px 6px', borderRadius: 10, cursor: m.usuarioId === c?.criadorId ? 'default' : 'pointer',
-                        border: m.papel === p.id ? '1.5px solid var(--turq)' : '1px solid var(--line)',
-                        background: m.papel === p.id ? 'color-mix(in srgb, var(--turq) 10%, transparent)' : 'transparent',
-                        color: m.papel === p.id ? 'var(--turq)' : 'var(--muted)',
-                        fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                        opacity: m.usuarioId === c?.criadorId && m.papel !== p.id ? 0.4 : 1,
-                      }}
-                    >
-                      <p.Icone size={13} stroke={2} /> {p.label}
-                    </button>
-                  ))}
+                  {PAPEIS.map((p) => {
+                    const ehFundador = m.usuarioId === c?.criadorId
+                    // Conceder/retirar 'admin' é privilégio do fundador. Os
+                    // demais papéis qualquer admin da comunidade ajusta.
+                    const bloqueado = ehFundador
+                      || (p.id === 'admin' && !podeDarAdmin)
+                      || (m.papel === 'admin' && !podeDarAdmin)
+                    const selecionado = m.papel === p.id
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => !bloqueado && !selecionado && void mudarPapel(m.usuarioId, p.id)}
+                        disabled={bloqueado}
+                        title={bloqueado && !ehFundador ? 'Só o fundador define quem é admin.' : undefined}
+                        style={{
+                          flex: 1, padding: '7px 6px', borderRadius: 10, cursor: bloqueado ? 'default' : 'pointer',
+                          border: selecionado ? '1.5px solid var(--turq)' : '1px solid var(--line)',
+                          background: selecionado ? 'color-mix(in srgb, var(--turq) 10%, transparent)' : 'transparent',
+                          color: selecionado ? 'var(--turq)' : 'var(--muted)',
+                          fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                          opacity: bloqueado && !selecionado ? 0.4 : 1,
+                        }}
+                      >
+                        <p.Icone size={13} stroke={2} /> {p.label}
+                      </button>
+                    )
+                  })}
                 </div>
-                {m.usuarioId === c?.criadorId && (
+                {m.usuarioId === c?.criadorId ? (
                   <p className="muted" style={{ fontSize: 10.5, marginTop: 6 }}>
                     Fundador — o papel não pode ser alterado.
                   </p>
-                )}
+                ) : m.papel === 'admin' ? (
+                  <p className="muted" style={{ fontSize: 10.5, marginTop: 6 }}>
+                    Administrador da comunidade{podeDarAdmin ? ' — você pode remover este status.' : ' — só o fundador pode remover este status.'}
+                  </p>
+                ) : !podeDarAdmin ? (
+                  <p className="muted" style={{ fontSize: 10.5, marginTop: 6 }}>
+                    Só o fundador pode tornar alguém administrador.
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>
