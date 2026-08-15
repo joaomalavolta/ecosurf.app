@@ -23,7 +23,7 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
     setMsg(null)
   }
 
-  async function uploadAvatar(file: File): Promise<string | null> {
+  async function uploadAvatar(file: File): Promise<string> {
     try {
       const img = await createImageBitmap(file)
       const size = 512
@@ -34,7 +34,7 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
       c.width = w
       c.height = h
       const ctx = c.getContext('2d')
-      if (!ctx) return null
+      if (!ctx) throw new Error('Navegador não suporta o preparo da imagem.')
       ctx.drawImage(img, 0, 0, w, h)
       if (typeof img.close === 'function') img.close()
 
@@ -45,18 +45,20 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
       const { sb } = await import('../services/supabase/client')
       const { data } = await sb().auth.getSession()
       const u = data.session?.user
-      if (!u) return null
+      if (!u) throw new Error('Sessão expirada — entre novamente.')
 
       const path = `${u.id}/avatar.webp`
       await sb().storage.from('avatars').remove([path]).catch(() => {})
       const up = await sb().storage.from('avatars').upload(path, blob, { contentType: 'image/webp', upsert: true })
-      if (up.error) return null
+      if (up.error) throw new Error(up.error.message)
 
       const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now()
-      await sb().from('perfis').update({ foto_url: url }).eq('id', u.id)
+      const { error } = await sb().from('perfis').upsert({ id: u.id, foto_url: url }, { onConflict: 'id' })
+      if (error) throw new Error(error.message)
       return url
-    } catch {
-      return null
+    } catch (e) {
+      // Antes engolia a falha e devolvia null: a foto "sumia" sem explicação.
+      throw e instanceof Error ? e : new Error('Falha ao enviar a foto.')
     }
   }
 
@@ -77,17 +79,18 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
       // Upload avatar se selecionado
       if (avatarFile) {
         const url = await uploadAvatar(avatarFile)
-        if (url) {
-          setAvatarUrl(url)
-          setAvatarFile(null)
-          if (previewUrl) URL.revokeObjectURL(previewUrl)
-          setPreviewUrl(null)
-        }
+        setAvatarUrl(url)
+        setAvatarFile(null)
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
       }
 
       setMsg('Perfil salvo com sucesso!')
-    } catch {
-      setMsg('Não foi possível salvar agora.')
+    } catch (e) {
+      // Mostrar o motivo real: a mensagem genérica escondia coisas simples de
+      // resolver (sessão expirada, por exemplo) e travava o diagnóstico.
+      const motivo = e instanceof Error ? e.message : ''
+      setMsg(motivo ? `Não foi possível salvar: ${motivo}` : 'Não foi possível salvar agora.')
     } finally {
       setSalvando(false)
     }
