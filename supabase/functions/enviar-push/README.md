@@ -3,6 +3,20 @@
 Envia Web Push (VAPID) para os inscritos, respeitando opt-out por assunto.
 Chamada apenas por triggers do banco (via `pg_net`), autenticada por `x-ecosurf-key`.
 
+## Assuntos
+`alertas` · `mutiroes` · `picos` · `mensagens` · `comunidades`
+
+Cada um pode ser recusado à parte pelo usuário, e o filtro é aplicado **aqui**
+(servidor), não no cliente.
+
+## Entrega dirigida (`paraUserIds`)
+Sem esse campo, a função transmite: varre todas as inscrições e filtra. Com ele
+(lista de até 500 uuids), busca só as inscrições dessas pessoas — é o que
+mensagem privada exige, já que avisar uma pessoa não pode custar uma varredura
+da base inteira.
+
+Quem usa: `push_notificar_usuarios()` no banco, chamada por `notificar()`.
+
 ## Secrets necessários (Supabase → Edge Functions → Secrets)
 - `VAPID_PRIVATE_KEY` — par da pública `BMfCQug...` (a mesma de `src/lib/push.ts`)
 - `PUSH_ENVIO_KEY` — segredo compartilhado com o trigger `push_notificar`

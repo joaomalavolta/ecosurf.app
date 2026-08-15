@@ -138,9 +138,13 @@ export function ComunidadePage() {
                   <IconMapPin size={13} stroke={2} /> {c.municipio}{c.uf ? `/${c.uf}` : ''}
                 </span>
               )}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                <IconUsers size={13} stroke={2} /> {c.membros} {c.membros === 1 ? 'membro' : 'membros'}
-              </span>
+              {/* Toca e vê quem são — comunidade é gente, não número. */}
+              <Link
+                to={`/comunidade/${c.id}/membros`}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--turq)', fontWeight: 600, textDecoration: 'none' }}
+              >
+                <IconUsers size={13} stroke={2} /> {c.membros} {c.membros === 1 ? 'membro' : 'membros'} →
+              </Link>
             </div>
           </div>
         </div>

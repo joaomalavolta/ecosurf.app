@@ -191,29 +191,9 @@ export async function totalNaoLidas(): Promise<number> {
   }
 }
 
-/* ── Selo do menu de conta ──────────────────────────────────────────────
- * O menu aparece em toda tela, então o contador NÃO pode arrastar o SDK
- * para o caminho crítico: vai por PostgREST puro, numa view que já devolve
- * a conta pronta. Um cache curto em memória evita repetir a cada navegação.
+/* ── Selo ─────────────────────────────────────────────────
+ * O contador de não lidas mora em services/notificacoes.ts: lá ele vem junto
+ * com o dos avisos, numa consulta só. Reexportado aqui para quem mexe com
+ * mensagens não precisar saber disso.
  */
-let cacheSelo: { em: number; total: number } | null = null
-const VALIDADE_SELO = 30_000
-
-export function esquecerSeloNaoLidas() {
-  cacheSelo = null
-}
-
-export async function restNaoLidas(): Promise<number> {
-  if (cacheSelo && Date.now() - cacheSelo.em < VALIDADE_SELO) return cacheSelo.total
-  try {
-    const { rest } = await import('./supabase/rest')
-    const linhas = await rest<{ total: number }[]>('minhas_nao_lidas?select=total')
-    const total = linhas[0]?.total ?? 0
-    cacheSelo = { em: Date.now(), total }
-    return total
-  } catch {
-    // Sem sessão (ou token vencido) o PostgREST barra — sem selo, sem drama.
-    cacheSelo = { em: Date.now(), total: 0 }
-    return 0
-  }
-}
+export { esquecerContadores as esquecerSeloNaoLidas } from './contadores'

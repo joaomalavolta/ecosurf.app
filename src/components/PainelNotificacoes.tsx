@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconBell, IconBellOff, IconAlertTriangle, IconUsersGroup, IconRipple, IconDeviceMobileShare } from '@tabler/icons-react'
+import { IconBell, IconBellOff, IconAlertTriangle, IconUsersGroup, IconRipple, IconDeviceMobileShare, IconMessageCircle, IconSpeakerphone } from '@tabler/icons-react'
 import { estadoPush, ligarPush, desligarPush, type EstadoPush } from '../lib/push'
 import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
 
@@ -19,6 +19,8 @@ export function PainelNotificacoes() {
   const [alertas, setAlertas] = useState(() => lerPreferencia('notificacoes', 'alertas', true))
   const [mutiroes, setMutiroes] = useState(() => lerPreferencia('notificacoes', 'mutiroes', true))
   const [picos, setPicos] = useState(() => lerPreferencia('notificacoes', 'picos', true))
+  const [mensagens, setMensagens] = useState(() => lerPreferencia('notificacoes', 'mensagens', true))
+  const [comunidades, setComunidades] = useState(() => lerPreferencia('notificacoes', 'comunidades', true))
 
   useEffect(() => { void estadoPush().then(setEstado) }, [])
 
@@ -41,7 +43,7 @@ export function PainelNotificacoes() {
   }
 
   function alternarAssunto(
-    chave: 'alertas' | 'mutiroes' | 'picos',
+    chave: 'alertas' | 'mutiroes' | 'picos' | 'mensagens' | 'comunidades',
     valor: boolean,
     set: (v: boolean) => void,
   ) {
@@ -130,6 +132,16 @@ export function PainelNotificacoes() {
                 Icone={IconRipple} titulo="Picos favoritos"
                 sub="Quando um pico que você segue acende"
                 valor={picos} onToggle={() => alternarAssunto('picos', picos, setPicos)}
+              />
+              <LinhaAssunto
+                Icone={IconMessageCircle} titulo="Mensagens"
+                sub="Quando alguém te escreve (o texto nunca vai no aviso)"
+                valor={mensagens} onToggle={() => alternarAssunto('mensagens', mensagens, setMensagens)}
+              />
+              <LinhaAssunto
+                Icone={IconSpeakerphone} titulo="Suas comunidades"
+                sub="Membro novo e publicações, para quem administra"
+                valor={comunidades} onToggle={() => alternarAssunto('comunidades', comunidades, setComunidades)}
               />
             </div>
           )}
