@@ -16,6 +16,7 @@ import { IconCheck,
   IconEdit,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
+import { acaoEncerrada, rotuloStatusAcao } from '../lib/agenda'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { CreditoComunidade } from '../components/CreditoComunidade'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
@@ -91,6 +92,9 @@ export function MutiraoPage() {
   }
 
   const data = mutirao.quando ? new Date(mutirao.quando).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'
+  // Um mutirão de junho não pode seguir aceitando inscrição em agosto.
+  const encerrado = acaoEncerrada(mutirao.quando)
+  const aberto = mutirao.status === 'agendado' && !encerrado
 
   async function participar() {
     if (!mutirao || jaParticipou) return
@@ -117,8 +121,11 @@ export function MutiraoPage() {
         ...prev,
         { user_id: user.id, nome: perfil.data?.nome ?? user.email ?? 'Voluntário', foto_url: perfil.data?.foto_url ?? null },
       ])
-    } catch {
-      toast('Erro ao participar. Tente novamente.')
+    } catch (e) {
+      // O banco recusa com motivo ("Este mutirão já aconteceu."); mostrar o
+      // texto real ajuda mais que um "tente novamente" genérico.
+      const msg = e instanceof Error ? e.message : ''
+      toast(msg || 'Erro ao participar. Tente novamente.')
     } finally {
       setParticipando(false)
     }
@@ -172,10 +179,10 @@ export function MutiraoPage() {
         {/* Status + Compartilhar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="tag" style={{
-            background: mutirao.status === 'agendado' ? 'var(--tag-ok-bg)' : mutirao.status === 'realizado' ? 'var(--cinza)' : 'var(--tag-warn-bg)',
-            color: mutirao.status === 'agendado' ? 'var(--tag-ok-fg)' : mutirao.status === 'realizado' ? 'var(--muted)' : 'var(--tag-warn-fg)',
+            background: aberto ? 'var(--tag-ok-bg)' : mutirao.status === 'cancelado' ? 'var(--tag-warn-bg)' : 'var(--cinza)',
+            color: aberto ? 'var(--tag-ok-fg)' : mutirao.status === 'cancelado' ? 'var(--tag-warn-fg)' : 'var(--muted)',
           }}>
-            {mutirao.status === 'agendado' ? 'Agendado' : mutirao.status === 'realizado' ? 'Realizado' : mutirao.status}
+            {rotuloStatusAcao(mutirao.status, mutirao.quando)}
           </span>
           <button
             className="btn outline"
@@ -253,8 +260,8 @@ export function MutiraoPage() {
           </div>
         )}
 
-        {/* Ação — Quero participar */}
-        {mutirao.status === 'agendado' && (
+        {/* Ação — Quero participar (só enquanto a data não passou) */}
+        {aberto && (
           <button
             className="btn acento full"
             style={{ minHeight: 50, fontSize: 15, marginTop: 8 }}
@@ -263,6 +270,17 @@ export function MutiraoPage() {
           >
             {jaParticipou ? <><IconCheck size={16} stroke={2} /> Participação confirmada!</> : participando ? 'Confirmando...' : 'Quero participar'}
           </button>
+        )}
+        {encerrado && (
+          <div className="card pad" style={{ marginTop: 8, textAlign: 'center' }}>
+            <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Esta ação já aconteceu</p>
+            <p className="muted" style={{ fontSize: 13 }}>
+              As inscrições estão encerradas. Veja as próximas ações e participe da próxima!
+            </p>
+            <button className="btn outline" style={{ marginTop: 10 }} onClick={() => navigate('/acoes')}>
+              Ver próximas ações
+            </button>
+          </div>
         )}
 
         {/* Lista de participantes */}

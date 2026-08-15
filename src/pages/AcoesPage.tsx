@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { ComponentType } from 'react'
 import {
@@ -13,6 +13,7 @@ import {
 import { Header } from '../components/Header'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { categoriaPorId } from '../components/SeletorCategoria'
+import { acaoEncerrada } from '../lib/agenda'
 import { carregarAmeacas, carregarMutiroes } from '../services/picos'
 import { listarRascunhos, excluirRascunho } from '../services/alertas'
 import type { Alerta, Mutirao, Rascunho } from '../types/domain'
@@ -115,6 +116,15 @@ export function AcoesPage() {
     }
   }, [])
 
+  // Próximas primeiro (mais perto de acontecer no topo); as encerradas caem
+  // para o fim da lista, da mais recente para a mais antiga.
+  const mutiroesOrdenados = useMemo(() => {
+    const t = (m: Mutirao) => new Date(m.quando).getTime() || 0
+    const abertos = mutiroes.filter((m) => !acaoEncerrada(m.quando)).sort((a, b) => t(a) - t(b))
+    const encerrados = mutiroes.filter((m) => acaoEncerrada(m.quando)).sort((a, b) => t(b) - t(a))
+    return [...abertos, ...encerrados]
+  }, [mutiroes])
+
   async function removerRascunho(id: string) {
     await excluirRascunho(id)
     setRascunhos((rs) => rs.filter((r) => r.id !== id))
@@ -169,19 +179,25 @@ export function AcoesPage() {
         <div className="g-lista2">{(tab === 'tudo' || tab === 'mutiroes') && (
         <Secao titulo={<><IconHeartHandshake size={19} stroke={2} color="#FF8C42" /> Mutirões</>}>
           {mutiroes.length === 0 && <p className="muted">Nenhum mutirão agendado no momento.</p>}
-          {mutiroes.map((m) => (
-            <Linha
-              key={m.id}
-              Icon={IconHeartHandshake}
-              cor="#FF8C42"
-              titulo={m.titulo}
-              texto={`${m.municipio}/${m.uf} · ${m.horario ?? new Date(m.quando).toLocaleDateString('pt-BR')}${m.vagas ? ` · ${m.vagas} vagas` : ''}`}
-              to={`/mutirao/${m.id}`}
-              autorNome={m.autorNome}
-              autorFoto={m.autorFoto}
-              autorId={m.autorId}
-            />
-          ))}
+          {mutiroesOrdenados.map((m) => {
+            const encerrado = acaoEncerrada(m.quando)
+            const quandoTxt = m.horario ?? new Date(m.quando).toLocaleDateString('pt-BR')
+            return (
+              <Linha
+                key={m.id}
+                Icon={IconHeartHandshake}
+                cor={encerrado ? 'var(--muted)' : '#FF8C42'}
+                titulo={m.titulo}
+                // Encerrado vem primeiro no texto: evita o convite a entrar
+                // numa ação que já passou.
+                texto={`${encerrado ? 'Encerrado · ' : ''}${m.municipio}/${m.uf} · ${quandoTxt}${!encerrado && m.vagas ? ` · ${m.vagas} vagas` : ''}`}
+                to={`/mutirao/${m.id}`}
+                autorNome={m.autorNome}
+                autorFoto={m.autorFoto}
+                autorId={m.autorId}
+              />
+            )
+          })}
         </Secao>
         )}
 
