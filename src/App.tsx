@@ -34,6 +34,8 @@ const MutiraoPage = rota(() => import('./pages/MutiraoPage'), 'MutiraoPage')
 const ExplorarPage = rota(() => import('./pages/ExplorarPage'), 'ExplorarPage')
 const UsuarioPage = rota(() => import('./pages/UsuarioPage'), 'UsuarioPage')
 const SurfistasPage = rota(() => import('./pages/SurfistasPage'), 'SurfistasPage')
+const MensagensPage = rota(() => import('./pages/MensagensPage'), 'MensagensPage')
+const ConversaPage = rota(() => import('./pages/ConversaPage'), 'ConversaPage')
 const AlertaPage = rota(() => import('./pages/AlertaPage'), 'AlertaPage')
 const AdminPage = rota(() => import('./pages/AdminPage'), 'AdminPage')
 const EstiloDemoPage = rota(() => import('./pages/EstiloDemoPage'), 'EstiloDemoPage')
@@ -46,7 +48,9 @@ const Carregando = () => (
 export default function App() {
   const { pathname } = useLocation()
   const ehDesktop = useEhDesktop()
-  const semNav = pathname === '/capturar' || pathname === '/termos' || pathname.startsWith('/nova-acao')
+  // A conversa aberta usa o rodapé para escrever — a navegação sai de cena.
+  const semNav = pathname === '/capturar' || pathname === '/termos' ||
+    pathname.startsWith('/nova-acao') || /^\/mensagens\/.+/.test(pathname)
 
   useEffect(() => {
     iniciarSincronizacao()
@@ -100,6 +104,8 @@ export default function App() {
             <Route path="/alerta/:id" element={<AlertaPage />} />
             <Route path="/usuario/:userId" element={<UsuarioPage />} />
             <Route path="/surfistas" element={<SurfistasPage />} />
+            <Route path="/mensagens" element={<MensagensPage />} />
+            <Route path="/mensagens/:conversaId" element={<ConversaPage />} />
             {!/(^|\.)ecosurf\.app$/.test(window.location.hostname) && (
               <Route path="/estilo" element={<EstiloDemoPage />} />
             )}
