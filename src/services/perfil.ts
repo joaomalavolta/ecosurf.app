@@ -104,5 +104,6 @@ export async function salvarPerfil(d: DadosPerfil): Promise<void> {
       foto_url,
       onboarded: true,
     }, { onConflict: 'id' })
-  if (error) throw error
+  // Ver definirNome: erro do PostgREST não é Error, e a tela perdia o motivo.
+  if (error) throw new Error(error.message || 'Falha ao salvar o perfil.')
 }

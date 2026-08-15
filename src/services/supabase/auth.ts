@@ -50,5 +50,9 @@ export async function definirNome(nome: string): Promise<void> {
   // upsert, não update: contas antigas podem não ter linha em perfis, e um
   // UPDATE em 0 linhas não dá erro — o usuário via "salvo" sem nada gravado.
   const { error } = await sb().from('perfis').upsert({ id: u.id, nome }, { onConflict: 'id' })
-  if (error) throw error
+  // `throw error` cru some com o motivo na tela: o erro do PostgREST é um
+  // objeto simples, não um Error, e o `instanceof Error` de quem chama dava
+  // falso. Foi assim que uma recursão de RLS ficou dois meses invisível,
+  // aparecendo só como "Não foi possível salvar agora".
+  if (error) throw new Error(error.message || 'Falha ao salvar o nome.')
 }

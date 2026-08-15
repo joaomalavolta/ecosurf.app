@@ -89,7 +89,13 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
     } catch (e) {
       // Mostrar o motivo real: a mensagem genérica escondia coisas simples de
       // resolver (sessão expirada, por exemplo) e travava o diagnóstico.
-      const motivo = e instanceof Error ? e.message : ''
+      // Aceita também o formato do PostgREST ({ message }), que não é Error:
+      // mensagem genérica esconde justamente as falhas que precisam ser vistas.
+      const motivo = e instanceof Error
+        ? e.message
+        : (typeof e === 'object' && e !== null && typeof (e as { message?: unknown }).message === 'string'
+            ? (e as { message: string }).message
+            : '')
       setMsg(motivo ? `Não foi possível salvar: ${motivo}` : 'Não foi possível salvar agora.')
     } finally {
       setSalvando(false)
