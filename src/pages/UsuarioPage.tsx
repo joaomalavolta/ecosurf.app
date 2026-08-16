@@ -111,6 +111,14 @@ export function UsuarioPage() {
     }
   }
 
+  // Tem conteúdo, mas está escondido? É diferente de não ter conteúdo.
+  const total = (contribs?.totalFotos ?? 0) + (contribs?.totalAlertas ?? 0) + (contribs?.totalMutiroes ?? 0)
+  const temAlgoVisivel =
+    (perfil.mostrarFotos && (contribs?.totalFotos ?? 0) > 0) ||
+    (perfil.mostrarAcoes && ((contribs?.totalAlertas ?? 0) + (contribs?.totalMutiroes ?? 0)) > 0) ||
+    (perfil.mostrarMapa && total > 0)
+  const escondeuTudo = total > 0 && !temAlgoVisivel
+
   return (
     <div className="page">
       <Header title={perfil.nome ?? 'Usuário Ecosurf'} sub="Perfil público" />
@@ -188,10 +196,11 @@ export function UsuarioPage() {
 
         {/* O território desta pessoa — vem antes das listas porque um mapa
             conta em dois segundos o que a lista leva um scroll para dizer. */}
-        {userId && <CardMapaContribuicoes tipo="usuario" id={userId} nome={perfil.nome} />}
+        {userId && perfil.mostrarMapa && <CardMapaContribuicoes tipo="usuario" id={userId} nome={perfil.nome}
+            mostrarFotos={perfil.mostrarFotos} mostrarAcoes={perfil.mostrarAcoes} />}
 
         {/* Fotos */}
-        {contribs && contribs.fotos.length > 0 && (
+        {contribs && perfil.mostrarFotos && contribs.fotos.length > 0 && (
           <div className="stack" style={{ gap: 10 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>Fotos</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
@@ -205,7 +214,7 @@ export function UsuarioPage() {
         )}
 
         {/* Alertas */}
-        {contribs && contribs.alertas.length > 0 && (
+        {contribs && perfil.mostrarAcoes && contribs.alertas.length > 0 && (
           <div className="stack" style={{ gap: 10 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>Alertas ambientais</h3>
             {contribs.alertas.map((a) => (
@@ -223,7 +232,7 @@ export function UsuarioPage() {
         )}
 
         {/* Mutirões */}
-        {contribs && contribs.mutiroes.length > 0 && (
+        {contribs && perfil.mostrarAcoes && contribs.mutiroes.length > 0 && (
           <div className="stack" style={{ gap: 10 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>Mutirões</h3>
             {contribs.mutiroes.map((m) => (
@@ -240,10 +249,15 @@ export function UsuarioPage() {
           </div>
         )}
 
-        {/* Sem contribuições */}
-        {contribs && contribs.totalFotos === 0 && contribs.totalAlertas === 0 && contribs.totalMutiroes === 0 && (
+        {/* Nada a mostrar. Duas razões diferentes, e confundir seria feio:
+            quem escondeu não está "sem contribuições". */}
+        {contribs && !temAlgoVisivel && (
           <div className="card pad" style={{ textAlign: 'center' }}>
-            <p className="muted" style={{ fontSize: 13 }}>Ainda sem contribuições públicas.</p>
+            <p className="muted" style={{ fontSize: 13 }}>
+              {escondeuTudo
+                ? 'Esta pessoa preferiu não exibir suas publicações aqui.'
+                : 'Ainda sem contribuições públicas.'}
+            </p>
           </div>
         )}
       </div>

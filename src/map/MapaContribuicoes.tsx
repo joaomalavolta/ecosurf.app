@@ -21,10 +21,14 @@ import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
 
 const SRC = 'contribuicoes'
 
-function colecao(c: ContribuicoesGeo): FeatureCollection<Point> {
-  const features: FeatureCollection<Point>['features'] = []
+/** Camadas que os botões acima do mapa acendem e apagam. */
+export type FiltroContrib = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
 
-  for (const p of c.picosCriados) {
+function colecao(c: ContribuicoesGeo, filtro: FiltroContrib = 'tudo'): FeatureCollection<Point> {
+  const features: FeatureCollection<Point>['features'] = []
+  const quer = (t: FiltroContrib) => filtro === 'tudo' || filtro === t
+
+  if (quer('picos')) for (const p of c.picosCriados) {
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
@@ -34,7 +38,7 @@ function colecao(c: ContribuicoesGeo): FeatureCollection<Point> {
       },
     })
   }
-  for (const p of c.picosFotografados) {
+  if (quer('picos')) for (const p of c.picosFotografados) {
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
@@ -44,7 +48,7 @@ function colecao(c: ContribuicoesGeo): FeatureCollection<Point> {
       },
     })
   }
-  for (const a of c.alertas) {
+  if (quer('alertas')) for (const a of c.alertas) {
     if (a.lat == null || a.lng == null) continue
     features.push({
       type: 'Feature',
@@ -55,7 +59,7 @@ function colecao(c: ContribuicoesGeo): FeatureCollection<Point> {
       },
     })
   }
-  for (const m of c.mutiroes) {
+  if (quer('mutiroes')) for (const m of c.mutiroes) {
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [m.lng, m.lat] },
@@ -93,9 +97,12 @@ function destinoDe(p: Record<string, unknown>): string {
 export function MapaContribuicoes({
   contribuicoes,
   altura = 260,
+  filtro = 'tudo',
 }: {
   contribuicoes: ContribuicoesGeo
   altura?: number
+  /** Trocar de camada reenquadra o mapa — é o que faz "abrir os mutirões". */
+  filtro?: FiltroContrib
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -103,17 +110,19 @@ export function MapaContribuicoes({
   const navigate = useNavigate()
   const navRef = useRef(navigate)
   const dadosRef = useRef(contribuicoes)
+  const filtroRef = useRef(filtro)
   const btnBaseRef = useRef<HTMLButtonElement | null>(null)
 
   const [satelite, setSatelite] = useState<boolean>(() => {
     try { return localStorage.getItem('ecosurf.map-base') !== 'ruas' } catch { return true }
   })
 
-  const dados = useMemo(() => colecao(contribuicoes), [contribuicoes])
+  const dados = useMemo(() => colecao(contribuicoes, filtro), [contribuicoes, filtro])
 
   useEffect(() => {
     dadosRef.current = contribuicoes
     navRef.current = navigate
+    filtroRef.current = filtro
   })
 
   /** Enquadra tudo o que a pessoa mapeou — o recorte É o conteúdo. */
@@ -224,7 +233,7 @@ export function MapaContribuicoes({
       const [, comTexto] = await Promise.all([carregarIcones(map), temGlyphs()])
       if (descartado) return
 
-      const fc = colecao(dadosRef.current)
+      const fc = colecao(dadosRef.current, filtroRef.current)
       // Agrupar era para ficar de fora — a ideia era que com poucos pontos a
       // bolha escondesse o que se veio ver. O primeiro render mostrou o
       // contrário: oito alertas dentro da mesma praia viram uma pilha de pinos

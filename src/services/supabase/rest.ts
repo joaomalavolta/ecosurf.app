@@ -242,7 +242,11 @@ export async function restMutiroes(): Promise<Mutirao[]> {
 
 /** Perfil público de um usuário. */
 export async function restPerfilPublico(userId: string): Promise<import('../../types/domain').PerfilPublico | null> {
-  const rows = await rest<{ id: string; nome: string | null; foto_url: string | null; nivel: string | null; cidade: string | null; criado_em: string }[]>(
+  const rows = await rest<{
+    id: string; nome: string | null; foto_url: string | null; nivel: string | null
+    cidade: string | null; criado_em: string
+    mostrar_fotos?: boolean | null; mostrar_mapa?: boolean | null; mostrar_acoes?: boolean | null
+  }[]>(
     `perfis_publicos?id=eq.${userId}&select=*`
   )
   if (!rows.length) return null
@@ -254,6 +258,12 @@ export async function restPerfilPublico(userId: string): Promise<import('../../t
     nivel: r.nivel,
     cidade: r.cidade,
     criadoEm: r.criado_em,
+    // `?? true` e não `!!`: enquanto o deploy do banco e o do app não se
+    // encontram, a coluna pode não vir — e o padrão é mostrar, nunca esconder
+    // o perfil de alguém por causa de uma resposta incompleta.
+    mostrarFotos: r.mostrar_fotos ?? true,
+    mostrarMapa: r.mostrar_mapa ?? true,
+    mostrarAcoes: r.mostrar_acoes ?? true,
   }
 }
 
