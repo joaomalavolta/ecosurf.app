@@ -3,11 +3,12 @@ import { toast } from '../lib/toast'
 import { dentroDoBrasil } from '../lib/regiao'
 import { carregarPicos } from '../services/picos'
 import type { Pico } from '../types/domain'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IconAlertTriangle, IconRipple, IconChevronRight, IconCheck, IconMapPin, IconBeach } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { statusPerfil } from '../services/perfil'
+import { podeEditarPico } from '../services/picoPermissao'
 
 const FUNDOS = [
   { id: 'areia', label: 'Areia' },
@@ -40,6 +41,11 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
 
 export function FormularioPicoPage() {
   const navigate = useNavigate()
+  // A MESMA tela cadastra e edita. Com `picoId` na rota (/pico/:id/editar), o
+  // formulário nasce preenchido e salva por UPDATE — como já acontece nos
+  // mutirões. Duas telas quase idênticas divergem no primeiro ajuste.
+  const { picoId: editandoId } = useParams<{ picoId: string }>()
+  const modoEdicao = !!editandoId
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [picoId, setPicoId] = useState('')
@@ -63,14 +69,34 @@ export function FormularioPicoPage() {
     })
   }, [navigate])
 
+  // Edição: carrega o pico e confere se esta pessoa pode mexer. A permissão
+  // de verdade é a RLS; isto aqui é só para não mostrar um formulário que o
+  // banco vai recusar no fim.
   useEffect(() => {
-    if (!lat) {
+    if (!editandoId) return
+    let vivo = true
+    Promise.all([carregarPicos(), podeEditarPico(editandoId)]).then(([todos, pode]) => {
+      if (!vivo) return
+      const p = todos.find((x) => x.id === editandoId)
+      if (!p) { toast('Pico não encontrado.'); navigate('/mapa', { replace: true }); return }
+      if (!pode) { toast('Só quem cadastrou o pico (ou a moderação) pode editar.'); navigate(`/pico/${editandoId}`, { replace: true }); return }
+      setNome(p.nome); setMunicipio(p.municipio); setUf(p.uf)
+      setLat(p.lat); setLng(p.lng)
+      setFundo(p.fundo); setDescricao(p.descricao ?? '')
+    }).catch(() => { if (vivo) toast('Não foi possível carregar o pico.') })
+    return () => { vivo = false }
+  }, [editandoId, navigate])
+
+  useEffect(() => {
+    // No modo edição a coordenada vem do pico, não do GPS de quem edita —
+    // senão abrir a tela já moveria o pico para onde a pessoa está.
+    if (!lat && !modoEdicao) {
       obterCoords().then((pos) => {
         if (pos.lat) setLat(pos.lat)
         if (pos.lng) setLng(pos.lng)
       })
     }
-  }, [lat])
+  }, [lat, modoEdicao])
 
   useEffect(() => {
     carregarPicos().then(setPicos).catch(() => { /* sem lista: o banco ainda barra duplicata */ })
@@ -82,11 +108,12 @@ export function FormularioPicoPage() {
   const vizinhos = useMemo(() => {
     if (!lat || !lng) return []
     return picos
+      .filter((p) => p.id !== editandoId) // ele não é duplicata de si mesmo
       .map((p) => ({ pico: p, metros: Math.round(haversineKm(lat, lng, p.lat, p.lng) * 1000) }))
       .filter((v) => v.metros <= 300)
       .sort((a, b) => a.metros - b.metros)
       .slice(0, 3)
-  }, [lat, lng, picos])
+  }, [lat, lng, picos, editandoId])
 
   function podePublicar(): boolean {
     return nome.trim().length > 2 && municipio.trim().length > 0 && uf.trim().length === 2
@@ -105,22 +132,24 @@ export function FormularioPicoPage() {
     }
     setEnviando(true)
     try {
-      const { restInserirPico } = await import('../services/supabase/rest')
-      const id = await restInserirPico({
+      const campos = {
         nome: nome.trim(),
         lat,
         lng,
         municipio: municipio.trim(),
         uf: uf.toUpperCase(),
-      })
-
-      // Atualizar fundo se diferente do padrão
-      if (fundo !== 'areia') {
-        const { sb } = await import('../services/supabase/client')
-        await sb().from('picos').update({ fundo }).eq('id', id)
+        fundo,
+        descricao,
       }
-
-      setPicoId(id)
+      if (modoEdicao) {
+        const { restAtualizarPico } = await import('../services/supabase/rest')
+        await restAtualizarPico(editandoId!, campos)
+        toast('Pico atualizado.')
+        navigate(`/pico/${editandoId}`, { replace: true })
+        return
+      }
+      const { restInserirPico } = await import('../services/supabase/rest')
+      setPicoId(await restInserirPico(campos))
       setSucesso(true)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'desconhecido'
@@ -164,7 +193,12 @@ export function FormularioPicoPage() {
 
   return (
     <div className="page">
-      <Header title="Novo Pico de Surf" sub="Cadastre uma praia, costão ou área de surf que ainda não está no mapa." />
+      <Header
+        title={modoEdicao ? 'Editar pico' : 'Novo Pico de Surf'}
+        sub={modoEdicao
+          ? 'Corrija o nome, o fundo, a descrição ou a posição no mapa.'
+          : 'Cadastre uma praia, costão ou área de surf que ainda não está no mapa.'}
+      />
 
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 100, gap: 16 }}>
         {/* Nome */}
@@ -309,7 +343,9 @@ export function FormularioPicoPage() {
         zIndex: 40,
       }}>
         <button className="btn acento full" disabled={!podePublicar() || enviando} onClick={publicar}>
-          {enviando ? 'Cadastrando...' : <><IconBeach size={16} stroke={2} /> Cadastrar Pico</>}
+          {enviando
+            ? (modoEdicao ? 'Salvando...' : 'Cadastrando...')
+            : <><IconBeach size={16} stroke={2} /> {modoEdicao ? 'Salvar alterações' : 'Cadastrar Pico'}</>}
         </button>
       </div>
     </div>

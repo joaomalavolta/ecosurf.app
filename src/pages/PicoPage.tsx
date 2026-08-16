@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { SkeletonDetalhe, Skeleton } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { IconCamera, IconAlertTriangle, IconShare, IconStar } from '@tabler/icons-react'
+import { IconCamera, IconAlertTriangle, IconShare, IconStar, IconPencil } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { ForecastStrip } from '../components/ForecastStrip'
@@ -145,11 +145,23 @@ export function PicoPage() {
 
   const navigate = useNavigate()
   const [meuId, setMeuId] = useState<string | null>(null)
+  const [podeEditar, setPodeEditar] = useState(false)
   useEffect(() => {
     import('../services/supabase/client').then(({ sb }) =>
       sb().auth.getSession().then(({ data }) => setMeuId(data.session?.user?.id ?? null))
     ).catch(() => {})
   }, [])
+
+  // Autor OU moderação — a mesma dupla que a RLS autoriza a editar.
+  useEffect(() => {
+    if (!picoId) return
+    let vivo = true
+    import('../services/picoPermissao')
+      .then(({ podeEditarPico }) => podeEditarPico(picoId))
+      .then((pode) => { if (vivo) setPodeEditar(pode) })
+      .catch(() => {})
+    return () => { vivo = false }
+  }, [picoId])
 
   const aoMudarDia = useCallback((diaKey: string) => {
     if (!pico) return
@@ -227,6 +239,19 @@ export function PicoPage() {
             ))}
           </div>
         </div>
+
+        {/* Editar aparece para quem cadastrou E para a moderação — a mesma
+            dupla que a RLS autoriza (migration 0062). Excluir continua só do
+            autor: apagar leva fotos junto, corrigir não. */}
+        {podeEditar && (
+          <Link
+            to={`/pico/${pico.id}/editar`}
+            className="btn outline full"
+            style={{ marginTop: 10 }}
+          >
+            <IconPencil size={16} stroke={2} /> Editar pico
+          </Link>
+        )}
 
         {meuId && pico.criadoPor === meuId && (
           <p style={{ textAlign: 'center', margin: '2px 0 0' }}>

@@ -135,8 +135,21 @@ export function carregarIcones(map: Parameters<typeof carregarIcone>[0]): Promis
   return Promise.all(Object.entries(ICONES).map(([nome, svg]) => carregarIcone(map, nome, svg)))
 }
 
-/** Fonte dos rótulos. É de terceiros — ver `temGlyphs()` logo abaixo. */
-export const GLYPHS = 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+/**
+ * Fonte dos rótulos do mapa — servida por nós, em `public/font/`.
+ *
+ * Vinha do `demotiles.maplibre.org`, o servidor de demonstração do projeto
+ * MapLibre: mantido por boa vontade, sem SLA e explicitamente não recomendado
+ * para produção. Quando ele não respondia, o MapLibre não desenhava NADA — nem
+ * os pinos, que são imagens e não dependem de fonte. O mapa ficava um retângulo
+ * vazio, e a leitura de quem olha é "não há nada mapeado aqui".
+ *
+ * Os .pbf foram gerados a partir do Noto Sans Bold (SIL Open Font License) e
+ * versionados no repositório. Só as faixas que o app usa: 0–255 cobre o
+ * português inteiro (á, ã, ç, é, í, ó, ú vivem no latim-1) e 256–511 pega o
+ * latim estendido. O resto do Unicode seriam megabytes para nada.
+ */
+export const GLYPHS = '/font/{fontstack}/{range}.pbf'
 
 /** A única fonte que os mapas usam, e o único intervalo que importa. */
 const GLYPH_TESTE = GLYPHS
@@ -146,17 +159,18 @@ const GLYPH_TESTE = GLYPHS
 let promessaGlyphs: Promise<boolean> | null = null
 
 /**
- * O CDN de fontes está de pé?
+ * As fontes responderam?
  *
- * Descoberta feita testando no navegador: quando `demotiles.maplibre.org` não
- * responde, o MapLibre não desenha NADA — nem os pinos, que são imagens e não
- * dependem de fonte nenhuma. O mapa fica um retângulo vazio, e a leitura de
- * quem olha é "não há nada mapeado aqui", não "a rede falhou".
+ * Continua valendo mesmo agora que os .pbf são nossos. O motivo é o que a
+ * investigação mostrou no navegador: quando a fonte não vem, o MapLibre não
+ * desenha NADA — nem os pinos, que são imagens e não dependem de fonte. O mapa
+ * fica um retângulo vazio, e quem olha lê "não há nada mapeado aqui", não "a
+ * rede falhou".
  *
- * O demotiles é o servidor de demonstração do projeto MapLibre, mantido por
- * boa vontade e explicitamente não recomendado para produção. Enquanto as
- * fontes não forem servidas por nós, esta checagem evita o pior: se elas não
- * vêm, o mapa entra sem as camadas de texto — perde os nomes dos picos e o
+ * Servir por conta própria tira o terceiro do caminho, mas não torna a
+ * requisição infalível: um deploy que esqueça a pasta `public/font`, um cache
+ * do service worker meio gravado, a rede caindo entre o HTML e o .pbf. Nesses
+ * casos o mapa entra sem as camadas de texto — perde os nomes dos picos e o
  * número dentro das bolhas, e mantém os pinos, que são o conteúdo.
  *
  * Uma consulta por sessão, compartilhada entre os dois mapas.

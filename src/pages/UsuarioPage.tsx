@@ -6,6 +6,8 @@ import { IconCheck, IconMessageCircle,
 import { Header } from '../components/Header'
 import { MenuDenunciaBloqueio } from '../components/MenuDenunciaBloqueio'
 import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
+import { BotaoVerFotos } from '../components/BotaoVerFotos'
+import { fotosVisiveis, gravarFotosVisiveis } from '../lib/verFotos'
 import { Photo } from '../components/Photo'
 import { restPerfilPublico, restContribuicoesUsuario, type ContribsUsuario } from '../services/supabase/rest'
 import { carregarPicos } from '../services/picos'
@@ -34,6 +36,8 @@ export function UsuarioPage() {
   const [contribs, setContribs] = useState<ContribsUsuario | null>(null)
   const [picoMap, setPicoMap] = useState<Map<string, Pico>>(new Map())
   const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
+  // Preferência de quem OLHA, não de quem é olhado — ver lib/verFotos.ts.
+  const [verFotos, setVerFotos] = useState(fotosVisiveis)
 
   useEffect(() => {
     if (!userId) return
@@ -112,6 +116,7 @@ export function UsuarioPage() {
     (perfil.mostrarAcoes && ((contribs?.totalAlertas ?? 0) + (contribs?.totalMutiroes ?? 0)) > 0) ||
     (perfil.mostrarMapa && total > 0)
   const escondeuTudo = total > 0 && !temAlgoVisivel
+  const temFotos = !!contribs && perfil.mostrarFotos && contribs.fotos.length > 0
 
   return (
     <div className="page">
@@ -190,20 +195,34 @@ export function UsuarioPage() {
 
         {/* O território desta pessoa — vem antes das listas porque um mapa
             conta em dois segundos o que a lista leva um scroll para dizer. */}
-        {userId && perfil.mostrarMapa && <CardMapaContribuicoes tipo="usuario" id={userId} nome={perfil.nome}
-            mostrarFotos={perfil.mostrarFotos} mostrarAcoes={perfil.mostrarAcoes} />}
+        {userId && perfil.mostrarMapa && (
+          <CardMapaContribuicoes
+            tipo="usuario" id={userId} nome={perfil.nome}
+            mostrarFotos={perfil.mostrarFotos} mostrarAcoes={perfil.mostrarAcoes}
+            /* Sem a grade de fotos ocupando a tela, o mapa cresce — é o
+               "destaque" que o botão de recolher promete. */
+            altura={temFotos && !verFotos ? 360 : 260}
+          />
+        )}
 
         {/* Fotos */}
-        {contribs && perfil.mostrarFotos && contribs.fotos.length > 0 && (
+        {temFotos && (
           <div className="stack" style={{ gap: 10 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Fotos</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            <div className="between" style={{ alignItems: 'center' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Fotos</h3>
+              <BotaoVerFotos
+                visiveis={verFotos}
+                quantas={contribs!.fotos.length}
+                onAlternar={() => { const v = !verFotos; setVerFotos(v); gravarFotosVisiveis(v) }}
+              />
+            </div>
+            {verFotos && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
               {contribs.fotos.map((f) => (
                 <Link key={f.id} to={`/pico/${f.picoId}?foto=${f.id}`} style={{ aspectRatio: '1', borderRadius: 12, overflow: 'hidden', display: 'block' }}>
                   <Photo seed={f.id} url={thumbs.get(f.thumbPath ?? f.storagePath ?? '')} alt={`Foto em ${nomePico(f.picoId)}`} style={{ width: '100%', height: '100%' }} />
                 </Link>
               ))}
-            </div>
+            </div>}
           </div>
         )}
 

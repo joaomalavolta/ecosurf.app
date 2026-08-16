@@ -7,6 +7,8 @@ import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
 import { CardVisibilidadePerfil } from '../components/CardVisibilidadePerfil'
+import { BotaoVerFotos } from '../components/BotaoVerFotos'
+import { fotosVisiveis, gravarFotosVisiveis } from '../lib/verFotos'
 import { PainelPreferencias, CardConquistas } from '../components/PreferenciasEConquistas'
 import { DiagnosticoFila } from '../components/DiagnosticoFila'
 import { ehModerador } from '../services/moderacao'
@@ -37,6 +39,8 @@ export function PerfilPage() {
   const [nAlertas, setNAlertas] = useState(0)
   const [nMutiroes, setNMutiroes] = useState(0)
   const [meuId, setMeuId] = useState<string | null>(null)
+  // Conforto de leitura, não privacidade — a privacidade é o card logo abaixo.
+  const [verFotos, setVerFotos] = useState(fotosVisiveis)
   const [loading, setLoading] = useState(true)
   const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null, tipo?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
@@ -265,14 +269,24 @@ export function PerfilPage() {
 
             {/* Seu território — o mesmo mapa que os outros veem no seu perfil
                 público, para você conferir o que está aparecendo. */}
-            {meuId && <CardMapaContribuicoes tipo="usuario" id={meuId} nome={perfil.nome} />}
+            {meuId && <CardMapaContribuicoes tipo="usuario" id={meuId} nome={perfil.nome}
+              altura={minhasFotos.length > 0 && !verFotos ? 360 : 260} />}
 
             {/* Minhas publicações */}
             <div className="card pad g-pubs">
-              <span className="eyebrow"><IconPhoto size={14} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />Minhas publicações ({minhasFotos.length})</span>
+              <div className="between" style={{ alignItems: 'center' }}>
+                <span className="eyebrow"><IconPhoto size={14} stroke={2} style={{ verticalAlign: -2, marginRight: 4 }} />Minhas publicações ({minhasFotos.length})</span>
+                {minhasFotos.length > 0 && (
+                  <BotaoVerFotos
+                    visiveis={verFotos}
+                    quantas={minhasFotos.length}
+                    onAlternar={() => { const v = !verFotos; setVerFotos(v); gravarFotosVisiveis(v) }}
+                  />
+                )}
+              </div>
               {minhasFotos.length === 0 ? (
                 <p className="muted" style={{ marginTop: 10, textAlign: 'center' }}>Você ainda não publicou nenhuma foto. Vá até um pico e registre as ondas!</p>
-              ) : (
+              ) : !verFotos ? null : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginTop: 10 }}>
                   {minhasFotos.map((f) => {
                     const thumb = fotosUrls[f.id]
