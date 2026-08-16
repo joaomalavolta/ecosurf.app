@@ -1,4 +1,4 @@
-import { IconCamera } from '@tabler/icons-react'
+import { IconCamera, IconMapPinPlus } from '@tabler/icons-react'
 import { voarAteMinhaLocalizacaoAtivo } from '../lib/preferencias'
 import React, { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
@@ -129,6 +129,42 @@ const JANELAS: { h: number | null; rotulo: string; curto: string }[] = [
   { h: null, rotulo: 'todas', curto: 'tudo' },
 ]
 
+/**
+ * O que dizer quando a região visível não tem nada mapeado.
+ *
+ * Fora da Baixada Santista o mapa está quase todo vazio — quem abre de
+ * Imbituba enquadra a praia certa e não vê ponto nenhum. Sem uma palavra, o
+ * vazio se lê como "este app não serve para mim"; com ela, vira o convite que
+ * de fato é. O texto acompanha o filtro para não prometer o que não cabe:
+ * quem está vendo só picos é convidado a cadastrar um pico.
+ */
+const CONVITES: Record<string, { titulo: string; corpo: string; botao: string; para: string }> = {
+  tudo: {
+    titulo: 'Ninguém mapeou nada por aqui ainda',
+    corpo: 'Esta parte do litoral está em branco. Um pico, um alerta ou um mutirão seu começa o mapa desta região.',
+    botao: 'Começar o mapa daqui',
+    para: '/nova-acao',
+  },
+  picos: {
+    titulo: 'Nenhum pico cadastrado por aqui',
+    corpo: 'Conhece uma onda nesta região? Coloque no mapa para quem vier depois.',
+    botao: 'Cadastrar um pico',
+    para: '/nova-acao/pico',
+  },
+  alertas: {
+    titulo: 'Nenhum registro ambiental por aqui',
+    corpo: 'Viu lixo, esgoto ou erosão nesta região? Registrar é o primeiro passo para cobrar.',
+    botao: 'Registrar um alerta',
+    para: '/nova-acao/alerta',
+  },
+  mutiroes: {
+    titulo: 'Nenhum mutirão por aqui',
+    corpo: 'Chame gente para uma limpeza ou uma ação nesta praia.',
+    botao: 'Criar um mutirão',
+    para: '/nova-acao/mutirao',
+  },
+}
+
 /** Distância em km entre dois pontos (haversine) — usada para enquadrar a região. */
 function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371
@@ -189,6 +225,13 @@ export function MapView({
   const pediuAproximar = useRef(false)
   const controleBaseBtnRef = useRef<HTMLButtonElement | null>(null)
   const prontoRef = useRef(false)
+  /**
+   * O que há na área visível. `regiao` = não existe ponto nenhum ali (convite a
+   * mapear); `filtro` = existe, mas o filtro escondeu (aviso, sem convite).
+   * A distinção importa: dizer "ninguém mapeou nada" com o filtro em Mutirões,
+   * tendo cinco alertas na tela ao lado, seria mentira.
+   */
+  const [vazio, setVazio] = useState<'regiao' | 'filtro' | null>(null)
   /** Cidade do perfil, sempre fresca — chega da rede depois do mapa nascer. */
   const cidadeRef = useRef<string | null | undefined>(cidadePerfil)
   /** Ainda não sabemos a região desta pessoa? Só então vale palpitar. */
@@ -532,6 +575,39 @@ export function MapView({
 
     enquadrarRef.current = enquadrarRegiao
 
+    /**
+     * "Tem alguma coisa mapeada aqui?"
+     *
+     * Conta os pontos dentro do enquadramento a partir dos DADOS, não do que o
+     * MapLibre desenhou — assim o filtro por tipo não confunde "esta região
+     * está vazia" com "escondi o que havia". Só depois, se a área tem pontos e
+     * mesmo assim nada aparece, é o filtro que está falando.
+     */
+    const conferirVazio = () => {
+      if (!prontoRef.current) return
+      const d = dadosRef.current
+      // Ainda sem dado nenhum (rede em curso): calado, não é hora de convidar.
+      if (d.picos.length + d.alertas.length + d.mutiroes.length === 0) { setVazio(null); return }
+
+      const area = map.getBounds()
+      const dentro = (lng?: number | null, lat?: number | null) =>
+        lng != null && lat != null && area.contains([lng, lat])
+
+      const naArea =
+        d.picos.filter((p) => dentro(p.lng, p.lat)).length +
+        d.alertas.filter((a) => dentro(a.lng, a.lat)).length +
+        d.mutiroes.filter((m) => dentro(m.lng, m.lat)).length
+
+      if (naArea === 0) { setVazio('regiao'); return }
+
+      const camadas = ['pontos-icone', 'clusters'].filter((l) => map.getLayer(l))
+      const desenhados = camadas.length ? map.queryRenderedFeatures({ layers: camadas }).length : 0
+      setVazio(desenhados === 0 ? 'filtro' : null)
+    }
+    // `idle` e não `moveend`: só quando o mapa parou de se mexer E terminou de
+    // desenhar. Em moveend a conta pegaria o meio do voo e piscaria o convite.
+    map.on('idle', conferirVazio)
+
     function aplicar() {
       const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
       if (src) src.setData(colecao(dadosRef.current))
@@ -728,9 +804,66 @@ export function MapView({
     }
   }, [filtro])
 
+  const convite = vazio === 'regiao' ? CONVITES[filtro ?? 'tudo'] : null
+
   return (
     <div className={className} style={{ position: 'absolute', inset: 0, ...style }}>
       <div ref={ref} style={{ position: 'absolute', inset: 0, background: '#0a1929' }} />
+
+      {/* Região sem nada mapeado: o vazio vira convite, não conclusão. */}
+      {convite && (
+        <div
+          style={{
+            position: 'absolute', zIndex: 4,
+            left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            width: 'min(300px, 82%)', textAlign: 'center',
+            background: 'rgba(10,25,41,.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,.16)', borderRadius: 16,
+            padding: '18px 16px 16px',
+            // O aviso não pode roubar o gesto de arrastar o mapa; só o botão
+            // volta a receber toque.
+            pointerEvents: 'none',
+          }}
+        >
+          <IconMapPinPlus size={26} stroke={1.6} style={{ color: 'rgba(255,255,255,.9)' }} />
+          <p style={{ margin: '7px 0 0', fontSize: 14.5, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>
+            {convite.titulo}
+          </p>
+          <p style={{ margin: '5px 0 0', fontSize: 12.5, lineHeight: 1.45, color: 'rgba(255,255,255,.76)' }}>
+            {convite.corpo}
+          </p>
+          <button
+            onClick={() => navRef.current(convite.para)}
+            style={{
+              pointerEvents: 'auto', marginTop: 12,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'var(--turq, #1c8aad)', color: '#fff',
+              border: 0, borderRadius: 999, padding: '9px 17px',
+              fontSize: 13, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+            }}
+          >
+            {convite.botao}
+          </button>
+        </div>
+      )}
+
+      {/* Tem coisa aqui, mas o filtro escondeu — avisar sem convidar a nada. */}
+      {vazio === 'filtro' && (
+        <div
+          style={{
+            position: 'absolute', zIndex: 4, pointerEvents: 'none',
+            left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            background: 'rgba(10,25,41,.72)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,.14)', borderRadius: 12,
+            padding: '9px 15px', maxWidth: '80%', textAlign: 'center',
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 12.5, color: 'rgba(255,255,255,.86)', lineHeight: 1.4 }}>
+            Nada deste tipo por aqui. Há outros registros nesta área — troque o filtro para ver.
+          </p>
+        </div>
+      )}
+
       {atividade && atividade.length > 0 && (
         <div
           style={{
