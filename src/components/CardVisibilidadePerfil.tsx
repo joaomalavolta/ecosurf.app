@@ -63,11 +63,12 @@ export function CardVisibilidadePerfil() {
   return (
     <div className="card pad" style={{ marginTop: 12 }}>
       <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-        <IconEye size={12} stroke={2} /> O que aparece no meu perfil público
+        <IconEye size={12} stroke={2} /> Mostrar ou esconder no meu perfil
       </span>
       <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.45, margin: '5px 0 10px' }}>
-        Isto controla só a sua página de perfil. Suas fotos continuam no feed do pico,
-        seus alertas no mapa e seus mutirões abertos para inscrição.
+        Desligue o que você não quer que apareça para quem visita seu perfil. Isto
+        controla só esta página: suas fotos continuam no feed do pico, seus alertas
+        no mapa e seus mutirões abertos para inscrição.
       </p>
 
       <div className="stack" style={{ gap: 2 }}>
