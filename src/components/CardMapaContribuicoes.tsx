@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers, IconLayoutGrid } from '@tabler/icons-react'
+import { Link } from 'react-router-dom'
+import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers, IconLayoutGrid, IconChevronRight } from '@tabler/icons-react'
 import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
 import type { FiltroContrib } from '../map/MapaContribuicoes'
 
@@ -87,6 +88,7 @@ export function CardMapaContribuicoes({
 }) {
   const [brutos, setBrutos] = useState<ContribuicoesGeo | null>(null)
   const [filtro, setFiltro] = useState<FiltroContrib>('tudo')
+  const [foco, setFoco] = useState<{ id: string; lng: number; lat: number; toque: number } | null>(null)
   const [caixa, podeCarregarMapa] = useVisivel()
 
   useEffect(() => {
@@ -125,6 +127,32 @@ export function CardMapaContribuicoes({
     { chave: 'alertas' as const, rotulo: 'Alertas', n: dados.alertas.length, Icone: IconAlertTriangle },
     { chave: 'mutiroes' as const, rotulo: 'Mutirões', n: dados.mutiroes.length, Icone: IconUsers },
   ]).filter((a) => a.n > 0)
+
+  const dia = (iso?: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : ''
+  const lugar = (m?: string | null, uf?: string | null) => `${m ?? ''}${uf ? `/${uf}` : ''}`
+
+  const itens = [
+    ...(filtro === 'tudo' || filtro === 'alertas' ? dados.alertas.map((a) => ({
+      id: a.id, titulo: a.titulo || 'Alerta ambiental',
+      sub: [dia(a.criadaEm), lugar(a.municipio, a.uf)].filter(Boolean).join(' · '),
+      lng: a.lng as number, lat: a.lat as number, href: `/alerta/${a.id}`,
+      Icone: IconAlertTriangle, cor: '#E84855',
+    })) : []),
+    ...(filtro === 'tudo' || filtro === 'mutiroes' ? dados.mutiroes.map((m) => ({
+      id: m.id, titulo: m.titulo,
+      sub: [dia(m.quando), lugar(m.municipio, m.uf)].filter(Boolean).join(' · '),
+      lng: m.lng, lat: m.lat, href: `/mutirao/${m.id}`,
+      Icone: IconUsers, cor: '#FF8C42',
+    })) : []),
+    ...(filtro === 'tudo' || filtro === 'picos'
+      ? [...dados.picosCriados, ...dados.picosFotografados].map((p) => ({
+          id: p.id, titulo: p.nome, sub: lugar(p.municipio, p.uf),
+          lng: p.lng, lat: p.lat, href: `/pico/${p.id}`,
+          Icone: IconMapPin, cor: '#0D6EA8',
+        }))
+      : []),
+  ]
 
   const nPicos = dados.picosCriados.length
   const nFotografados = dados.picosFotografados.length
@@ -185,11 +213,53 @@ export function CardMapaContribuicoes({
               />
             }
           >
-            <MapaInterno contribuicoes={dados} altura={altura} filtro={filtro} />
+            <MapaInterno contribuicoes={dados} altura={altura} filtro={filtro} foco={foco} />
           </Suspense>
         ) : (
           <div style={{ height: altura, borderRadius: 14, background: '#0a1929' }} />
         )}
+      </div>
+
+      {/* O conteúdo do mapa, em lista. Tocar numa linha leva o MAPA até ela,
+          sem sair da página; o "→" abre o registro inteiro. Os dois caminhos
+          existem porque são vontades diferentes: "onde é isso?" e "quero ler". */}
+      <div className="stack" style={{ gap: 2, marginTop: 10 }}>
+        {itens.map((it) => (
+          <div
+            key={it.id}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid var(--line)' }}
+          >
+            <button
+              onClick={() => setFoco({ id: it.id, lng: it.lng, lat: it.lat, toque: Date.now() })}
+              style={{
+                flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 9,
+                background: 'none', border: 0, padding: '9px 0', cursor: 'pointer',
+                textAlign: 'left', font: 'inherit', color: 'inherit',
+              }}
+              aria-label={`Ver ${it.titulo} no mapa`}
+            >
+              <it.Icone size={17} stroke={2} style={{ color: it.cor, flexShrink: 0 }} />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{
+                  display: 'block', fontSize: 13.5, fontWeight: 600,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {it.titulo}
+                </span>
+                <span className="muted" style={{ display: 'block', fontSize: 11.5, marginTop: 1 }}>
+                  {it.sub}
+                </span>
+              </span>
+            </button>
+            <Link
+              to={it.href}
+              aria-label={`Abrir ${it.titulo}`}
+              style={{ padding: '9px 2px 9px 8px', color: 'var(--muted)', display: 'grid', placeItems: 'center' }}
+            >
+              <IconChevronRight size={17} stroke={2} />
+            </Link>
+          </div>
+        ))}
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 10 }}>

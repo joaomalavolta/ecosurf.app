@@ -204,13 +204,14 @@ export function ComunidadePage() {
         {/* Onde a comunidade atua — o mapa do território dela. */}
         <CardMapaContribuicoes tipo="comunidade" id={c.id} nome={c.nome} />
 
-        {/* Publicações da comunidade */}
-        <div style={{ marginTop: 22 }}>
-          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <IconSeeding size={13} stroke={2} /> Publicações da comunidade
-          </span>
-
-          {alertas.length === 0 && mutiroes.length === 0 ? (
+        {/* As publicações agora vivem na lista do card do mapa, onde tocar leva
+            o mapa até o ponto. Aqui sobra só o caso vazio — sem lista embaixo,
+            o cabeçalho "Publicações da comunidade" ficaria pendurado sozinho. */}
+        {alertas.length === 0 && mutiroes.length === 0 && (
+          <div style={{ marginTop: 22 }}>
+            <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <IconSeeding size={13} stroke={2} /> Publicações da comunidade
+            </span>
             <div className="card pad" style={{ textAlign: 'center', padding: '26px 18px', marginTop: 10 }}>
               <IconSeeding size={28} stroke={1.7} style={{ color: 'var(--turq)', marginBottom: 8 }} />
               <p style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 4 }}>Nada publicado ainda</p>
@@ -220,29 +221,8 @@ export function ComunidadePage() {
                   : 'Quando a comunidade publicar, aparece aqui.'}
               </p>
             </div>
-          ) : (
-            <div className="stack" style={{ marginTop: 10 }}>
-              {alertas.map((a) => (
-                <Link key={a.id} to={`/alerta/${a.id}`} className="card pad" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <IconAlertTriangle size={20} stroke={2} style={{ color: '#E8734A', flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{a.titulo}</div>
-                    <div className="muted" style={{ fontSize: 11.5 }}>{a.municipio ?? ''}{a.uf ? `/${a.uf}` : ''}</div>
-                  </div>
-                </Link>
-              ))}
-              {mutiroes.map((m) => (
-                <Link key={m.id} to={`/mutirao/${m.id}`} className="card pad" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <IconUsers size={20} stroke={2} style={{ color: '#2E9B6B', flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{m.titulo}</div>
-                    <div className="muted" style={{ fontSize: 11.5 }}>{m.municipio}{m.uf ? `/${m.uf}` : ''} · {m.quando}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <VoltarFlutuante />

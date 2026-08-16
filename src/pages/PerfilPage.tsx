@@ -309,6 +309,12 @@ export function PerfilPage() {
               )}
             </div>
 
+            {/* Fica AQUI, colado nas fotos. Estava sete blocos abaixo, depois
+                de Aparência, Conta e Comunidades — quem procurava "esconder
+                minhas fotos" não chegava lá. Controle de uma coisa mora ao
+                lado da coisa. */}
+            <CardVisibilidadePerfil />
+
             <div className="card pad g-aparencia">
               <span className="eyebrow">Aparência</span>
               <div style={{ marginTop: 10 }}><ThemeToggle /></div>
@@ -420,8 +426,6 @@ export function PerfilPage() {
                 </div>
               )}
             </div>
-
-            <CardVisibilidadePerfil />
 
             {/* Privacidade — quem você não quer que fale com você */}
             <div className="card pad" style={{ marginTop: 12 }}>

@@ -98,11 +98,18 @@ export function MapaContribuicoes({
   contribuicoes,
   altura = 260,
   filtro = 'tudo',
+  foco = null,
 }: {
   contribuicoes: ContribuicoesGeo
   altura?: number
   /** Trocar de camada reenquadra o mapa — é o que faz "abrir os mutirões". */
   filtro?: FiltroContrib
+  /**
+   * Item escolhido na lista abaixo do mapa: o mapa voa até ele e abre o balão.
+   * O `toque` é um contador, não enfeite — tocar DUAS vezes no mesmo item tem
+   * de voar de novo, e sem ele o objeto seria igual e o efeito não rodaria.
+   */
+  foco?: { id: string; lng: number; lat: number; toque: number } | null
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -112,6 +119,8 @@ export function MapaContribuicoes({
   const dadosRef = useRef(contribuicoes)
   const filtroRef = useRef(filtro)
   const btnBaseRef = useRef<HTMLButtonElement | null>(null)
+  const balaoRef = useRef<maplibregl.Popup | null>(null)
+  const abrirBalaoRef = useRef<((c: [number, number], p: Record<string, unknown>) => void) | null>(null)
 
   const [satelite, setSatelite] = useState<boolean>(() => {
     try { return localStorage.getItem('ecosurf.map-base') !== 'ruas' } catch { return true }
@@ -321,11 +330,10 @@ export function MapaContribuicoes({
       map.on('mouseenter', 'grupos', () => { map.getCanvas().style.cursor = 'pointer' })
       map.on('mouseleave', 'grupos', () => { map.getCanvas().style.cursor = '' })
 
-      map.on('click', 'pontos', (e) => {
-        const f = e.features?.[0]
-        if (!f) return
-        const p = f.properties as Record<string, unknown>
-        const coord = (f.geometry as Point).coordinates as [number, number]
+      // Um balão só na tela por vez: tocar na lista várias vezes empilhava
+      // popups em cima uns dos outros.
+      const abrirBalao = (coord: [number, number], p: Record<string, unknown>) => {
+        balaoRef.current?.remove()
         // Popup primeiro, navegação no toque dele: num mapa pequeno o dedo
         // erra o alvo com frequência, e sair da página por engano é pior do
         // que um toque a mais.
@@ -336,6 +344,15 @@ export function MapaContribuicoes({
         popup.getElement()?.addEventListener('click', () => navRef.current(destinoDe(p)))
         const el = popup.getElement()
         if (el) el.style.cursor = 'pointer'
+        balaoRef.current = popup
+      }
+      abrirBalaoRef.current = abrirBalao
+
+      map.on('click', 'pontos', (e) => {
+        const f = e.features?.[0]
+        if (!f) return
+        abrirBalao((f.geometry as Point).coordinates as [number, number],
+                   f.properties as Record<string, unknown>)
       })
       map.on('mouseenter', 'pontos', () => { map.getCanvas().style.cursor = 'pointer' })
       map.on('mouseleave', 'pontos', () => { map.getCanvas().style.cursor = '' })
@@ -348,6 +365,9 @@ export function MapaContribuicoes({
     return () => {
       descartado = true
       prontoRef.current = false
+      balaoRef.current?.remove()
+      balaoRef.current = null
+      abrirBalaoRef.current = null
       ro?.disconnect()
       map.remove()
       mapRef.current = null
@@ -356,6 +376,32 @@ export function MapaContribuicoes({
     // efeito próprio. Incluí-la aqui recriaria o mapa a cada toque no botão.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /**
+   * Tocou num item da lista: o mapa vai até ele e abre o balão.
+   *
+   * Fica na PÁGINA — é o que o pedido tinha de mais específico ("tudo isso na
+   * própria página do perfil"). Quem quiser abrir o registro inteiro toca no
+   * balão; quem só quer ver onde fica, já viu.
+   */
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !prontoRef.current || !foco) return
+    map.flyTo({
+      center: [foco.lng, foco.lat],
+      zoom: Math.max(map.getZoom(), 14),
+      ...(document.documentElement.dataset.reduzAnimacao ? { duration: 0 } : { speed: 1.2 }),
+      essential: true,
+    })
+    // O balão espera o voo: aberto antes, ele chega deslocado e "escorrega"
+    // pela tela até a câmera parar.
+    const abrir = () => {
+      const f = dados.features.find((x) => x.properties?.id === foco.id)
+      if (f) abrirBalaoRef.current?.(f.geometry.coordinates as [number, number], f.properties ?? {})
+    }
+    map.once('moveend', abrir)
+    return () => { map.off('moveend', abrir) }
+  }, [foco, dados])
 
   // Dados chegam depois da rede: atualiza a fonte e reenquadra.
   useEffect(() => {
