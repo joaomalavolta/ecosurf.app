@@ -9,6 +9,9 @@ import type { Alerta, Mutirao, Pico } from '../types/domain'
 // Os pinos moram em pins.ts desde que o mapa de contribuições (perfil e
 // comunidade) passou a desenhá-los também — ver o cabeçalho de lá.
 import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones, temGlyphs, GLYPHS } from './pins'
+import {
+  BRASIL, CHAVE_POSICAO, localDaCidade, lerPosicao, gravarPosicao, type Local,
+} from '../lib/regiao'
 
 const SRC = 'feicoes'
 
@@ -146,6 +149,7 @@ export function MapView({
   scrubberAncora = 'topo',
   destino,
   filtro,
+  cidadePerfil,
   onSelectPico,
   className,
   style,
@@ -156,6 +160,11 @@ export function MapView({
   ativos?: Set<string>
   /** Eventos de foto (picoId + quando) — liga o scrubber temporal do mapa. */
   atividade?: { picoId: string; em: string }[]
+  /**
+   * Cidade do perfil, se a pessoa preencheu. Serve de palpite de região quando
+   * não há posição guardada nem permissão de GPS — ver `lib/regiao.ts`.
+   */
+  cidadePerfil?: string | null
   /** Onde ancorar o scrubber, para não colidir com controles de cada tela. */
   scrubberAncora?: 'topo' | 'rodape' | 'rodape-esq'
   /** Voo comandado de fora (ex.: menu territorial escolheu uma cidade). */
@@ -180,6 +189,12 @@ export function MapView({
   const pediuAproximar = useRef(false)
   const controleBaseBtnRef = useRef<HTMLButtonElement | null>(null)
   const prontoRef = useRef(false)
+  /** Cidade do perfil, sempre fresca — chega da rede depois do mapa nascer. */
+  const cidadeRef = useRef<string | null | undefined>(cidadePerfil)
+  /** Ainda não sabemos a região desta pessoa? Só então vale palpitar. */
+  const faltaRegiao = useRef(false)
+  /** Ponte para o enquadramento, que mora dentro do efeito de init. */
+  const enquadrarRef = useRef<((lng: number, lat: number) => void) | null>(null)
   const janelaH = JANELAS[janelaIdx].h
   // O efeito de init roda uma vez; os picos chegam depois (rede). Este ref é a
   // ponte — atualizado em efeito, nunca durante o render.
@@ -214,6 +229,7 @@ export function MapView({
     dadosRef.current = { picos, alertas, mutiroes, ativos: ativosEfetivos }
     navRef.current = navigate
     onSelRef.current = onSelectPico
+    cidadeRef.current = cidadePerfil
   })
 
   // Alterna a base satélite/ruas sem recriar o mapa (preserva pins e câmera).
@@ -266,21 +282,56 @@ export function MapView({
       glyphs: GLYPHS,
     }
 
+    // Onde abrir. Antes eram duas coordenadas fixas de Itanhaém/SP, e quem
+    // entrava de Tramandaí ou de Imbituba via a costa paulista. A ordem de
+    // certeza está explicada em lib/regiao.ts; aqui só se aplica.
+    const salva = (() => {
+      try { return lerPosicao(localStorage.getItem(CHAVE_POSICAO)) } catch { return null }
+    })()
+
+    // Palpite pelo perfil. NÃO dá para calcular aqui e esquecer: quando o mapa
+    // nasce, nem os picos nem a cidade do perfil chegaram da rede ainda —
+    // calcular agora dá null sempre. Quem aplica é o efeito reativo lá embaixo;
+    // aqui só se registra que ainda falta descobrir a região.
+    const regiaoPerfil = localDaCidade(cidadeRef.current, [
+      ...picosRef.current, ...dadosRef.current.alertas, ...dadosRef.current.mutiroes,
+    ])
+    faltaRegiao.current = !salva
+
     // Voo cinematográfico (1ª abertura da sessão): o mapa nasce mostrando o
     // Brasil inteiro com os pontos da rede acesos e, quando o GPS responde,
     // voa até a praia do usuário — "isso é uma rede nacional, e você é parte".
-    // Nas aberturas seguintes vai direto ao GPS (sem pedágio diário).
-    const vooIntro = (() => {
+    // Quem já tem posição guardada não passa por isso: já sabemos a região
+    // dele, e repetir o sobrevoo do país a cada sessão vira pedágio.
+    const vooIntro = !salva && (() => {
       try { return !sessionStorage.getItem('ecosurf.voo-intro') } catch { return false }
     })()
     if (vooIntro) { try { sessionStorage.setItem('ecosurf.voo-intro', '1') } catch { /* privado */ } }
 
+    // Sem nada em que se apoiar, o Brasil inteiro — honesto, e ainda diz que
+    // isto é uma rede nacional. Mostrar São Paulo para quem está no Sul é só
+    // estar errado com confiança.
+    const abertura: Local = salva ?? (vooIntro ? BRASIL : (regiaoPerfil ?? BRASIL))
+
     const map = new maplibregl.Map({
       container: ref.current,
       style: estiloSatelite,
-      center: vooIntro ? [-52.5, -14.5] : [-46.79, -24.19],
-      zoom: vooIntro ? 3.2 : 12,
+      center: [abertura.lng, abertura.lat],
+      zoom: abertura.zoom ?? (salva ? 12 : regiaoPerfil ? 11 : BRASIL.zoom!),
       attributionControl: false,
+    })
+
+    // Guarda onde a pessoa parou. `lerPosicao` recusa zoom de país, então o
+    // sobrevoo de abertura não se grava como se fosse a região dela.
+    let ultimoGravado = 0
+    map.on('moveend', () => {
+      const agora = Date.now()
+      if (agora - ultimoGravado < 1500) return
+      ultimoGravado = agora
+      try {
+        const c = map.getCenter()
+        localStorage.setItem(CHAVE_POSICAO, gravarPosicao({ lng: c.lng, lat: c.lat, zoom: map.getZoom() }))
+      } catch { /* modo privado ou cota cheia: o mapa não depende disso */ }
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     const geolocate = new maplibregl.GeolocateControl({
@@ -347,6 +398,8 @@ export function MapView({
      */
     const enquadrarRegiao = (lng: number, lat: number, tentativa = 0) => {
       if (vooCancelado) return
+      // Enquadrou: a região está resolvida, o palpite pelo perfil não entra mais.
+      faltaRegiao.current = false
       // Corrida de partida: o GPS pode responder antes de os picos chegarem do
       // Supabase. Em vez de cair no fallback de cidade, espera um pouco — é o
       // enquadramento regional que dá sentido à abertura.
@@ -410,16 +463,28 @@ export function MapView({
         aproximarDoUsuario(e.coords.longitude, e.coords.latitude)
       }
     })
-    geolocate.on('error', () => {
-      if (vooIntro) enquadrarRegiao(-46.79, -24.19)
-    })
+    /**
+     * O GPS não respondeu (negado, sem sinal, sem permissão).
+     *
+     * Antes isto voava para Itanhaém/SP — a coordenada estava fixa no código,
+     * então TODO usuário sem GPS aterrissava na costa paulista. Agora só se
+     * mexe se houver um palpite de verdade; sem palpite, o mapa fica no Brasil
+     * inteiro, que é o que de fato sabemos.
+     */
+    const semGps = () => {
+      if (!regiaoPerfil) return
+      enquadrarRegiao(regiaoPerfil.lng, regiaoPerfil.lat)
+    }
+
+    geolocate.on('error', semGps)
 
     // O toque no botão do controle marca a intenção de APROXIMAR. (O trigger
     // programático da abertura não passa por aqui — só o clique humano.)
     const botaoGeo = map.getContainer().querySelector<HTMLButtonElement>(
       '.maplibregl-ctrl-geolocate',
     )
-    const aoTocarGeo = () => { pediuAproximar.current = true; vooCancelado = true }
+    // Dedo no botão de GPS: a pessoa disse onde quer estar, palpite encerrado.
+    const aoTocarGeo = () => { pediuAproximar.current = true; vooCancelado = true; faltaRegiao.current = false }
     botaoGeo?.addEventListener('click', aoTocarGeo)
 
     if ('geolocation' in navigator) {
@@ -431,6 +496,7 @@ export function MapView({
           // aproximação), como o usuário pediu ao ligar a opção.
           if (voarAteMinhaLocalizacaoAtivo()) {
             pediuAproximar.current = true
+            faltaRegiao.current = false
             try { geolocate.trigger() } catch { /* iOS pode exigir gesto */ }
             return
           }
@@ -440,15 +506,15 @@ export function MapView({
           const lerUmaVez = () => {
             navigator.geolocation.getCurrentPosition(
               (pos) => { if (!descartado && !vooCancelado) enquadrarRegiao(pos.coords.longitude, pos.coords.latitude) },
-              () => { if (vooIntro) enquadrarRegiao(-46.79, -24.19) },
+              semGps,
               { enableHighAccuracy: false, timeout: 6000, maximumAge: 600000 },
             )
           }
           if ('permissions' in navigator) {
             navigator.permissions.query({ name: 'geolocation' as PermissionName })
               .then((st) => {
-                if (st.state === 'granted') lerUmaVez()
-                else if (vooIntro) enquadrarRegiao(-46.79, -24.19)
+                if (st.state === 'granted') { faltaRegiao.current = false; lerUmaVez() }
+                else semGps()
               })
               .catch(() => lerUmaVez())
           } else {
@@ -457,11 +523,14 @@ export function MapView({
         }, 300)
       })
       // Se o usuário mexer antes do GPS responder, respeita e cancela o voo.
-      map.once('dragstart', () => { vooCancelado = true })
-      map.once('zoomstart', () => { vooCancelado = true })
+      // Mexeu no mapa antes de decidirmos: respeita e não voa mais para lugar nenhum.
+      map.once('dragstart', () => { vooCancelado = true; faltaRegiao.current = false })
+      map.once('zoomstart', () => { vooCancelado = true; faltaRegiao.current = false })
     } else if (vooIntro) {
-      setTimeout(() => enquadrarRegiao(-46.79, -24.19), 1600)
+      setTimeout(semGps, 1600)
     }
+
+    enquadrarRef.current = enquadrarRegiao
 
     function aplicar() {
       const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
@@ -596,6 +665,7 @@ export function MapView({
       descartado = true
       prontoRef.current = false
       ro?.disconnect()
+      enquadrarRef.current = null
       botaoGeo?.removeEventListener('click', aoTocarGeo)
       map.remove()
       mapRef.current = null
@@ -613,6 +683,25 @@ export function MapView({
     const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
     if (src) src.setData(colecao({ picos, alertas, mutiroes, ativos: ativosEfetivos }))
   }, [picos, alertas, mutiroes, ativosEfetivos])
+
+  /**
+   * Palpite de região pelo perfil — precisa ser reativo.
+   *
+   * Quando o mapa nasce, nem os picos nem a cidade do perfil voltaram da rede:
+   * calcular ali dá null sempre, e foi o que fez o primeiro teste aterrissar no
+   * meio do Brasil. Aqui a conta refaz a cada chegada de dado, e só age
+   * enquanto `faltaRegiao` continua verdadeiro — o GPS concedido, o toque no
+   * botão de localização e qualquer gesto no mapa desligam esse sinal, então o
+   * palpite nunca passa por cima de algo mais certo nem do dedo do usuário.
+   */
+  useEffect(() => {
+    if (!faltaRegiao.current) return
+    const enquadrar = enquadrarRef.current
+    if (!enquadrar) return
+    const l = localDaCidade(cidadePerfil, [...picos, ...alertas, ...mutiroes])
+    if (!l) return
+    enquadrar(l.lng, l.lat) // ele próprio zera `faltaRegiao`
+  }, [cidadePerfil, picos, alertas, mutiroes])
 
   // Voo comandado (menu territorial): escolheu a cidade, o mapa vai até ela.
   useEffect(() => {

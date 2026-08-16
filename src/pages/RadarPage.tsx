@@ -21,6 +21,7 @@ import { buscarForecastEmLote } from '../services/forecast'
 import { carregarFeedGlobal } from '../services/feed'
 import { temBackend } from '../services/api'
 import { MapViewLazy as MapView } from '../map/MapViewLazy'
+import { restMinhaConta } from '../services/conta'
 import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos' | 'seguindo'
@@ -91,11 +92,16 @@ export function RadarPage() {
   const [ufMenu, setUfMenu] = useState<string | null>(null)
   const [destinoMapa, setDestinoMapa] = useState<{ lng: number; lat: number; zoom?: number } | null>(null)
   const [filtroMapa, setFiltroMapa] = useState<FiltroMapa>('ecosurf')
+  // Palpite de região quando não há posição guardada nem GPS — ver lib/regiao.ts.
+  const [cidadePerfil, setCidadePerfil] = useState<string | null>(null)
   const feedRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     void carregarFavoritos().then(setFavoritos)
     import('../services/seguindo').then(({ carregarSeguindo }) => carregarSeguindo().then(setSeguidos)).catch(() => {})
+    let vivo = true
+    restMinhaConta().then((c) => { if (vivo) setCidadePerfil(c.cidade ?? null) }).catch(() => {})
+    return () => { vivo = false }
   }, [])
 
   // Modo portal (desktop): só esta rota alarga o shell — as outras páginas
@@ -313,6 +319,7 @@ export function RadarPage() {
               destino={destinoMapa}
               atividade={feed.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))}
               scrubberAncora="topo"
+              cidadePerfil={cidadePerfil}
               filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
             />

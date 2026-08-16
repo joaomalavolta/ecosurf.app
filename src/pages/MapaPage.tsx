@@ -5,6 +5,7 @@ import { MapView } from '../map/MapView'
 import { Header } from '../components/Header'
 import { carregarPicos, carregarAmeacas, carregarMutiroes, carregarPicosComRelato } from '../services/picos'
 import { carregarFeedGlobal } from '../services/feed'
+import { restMinhaConta } from '../services/conta'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 
@@ -19,10 +20,13 @@ export function MapaPage() {
   const [filtro, setFiltro] = useState<Filtro>('tudo')
   const [soRecentes, setSoRecentes] = useState(false)
   const [sel, setSel] = useState<Pico | null>(null)
+  // Palpite de região quando não há posição guardada nem GPS — ver lib/regiao.ts.
+  const [cidadePerfil, setCidadePerfil] = useState<string | null>(null)
   const { irParaCaptura } = useOnboarding()
 
   useEffect(() => {
     let vivo = true
+    restMinhaConta().then((c) => vivo && setCidadePerfil(c.cidade ?? null)).catch(() => {})
     carregarPicos().then((p) => vivo && setPicos(p))
     carregarAmeacas().then((a) => vivo && setAlertas(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
@@ -84,6 +88,7 @@ export function MapaPage() {
           atividade={atividade}
           scrubberAncora="rodape"
           filtro={filtro}
+          cidadePerfil={cidadePerfil}
           onSelectPico={setSel}
         />
 
