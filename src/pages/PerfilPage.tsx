@@ -5,6 +5,7 @@ import { IconSettings, IconAward, IconUsersGroup, IconDownload, IconRosetteDisco
 import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
+import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
 import { PainelPreferencias, CardConquistas } from '../components/PreferenciasEConquistas'
 import { DiagnosticoFila } from '../components/DiagnosticoFila'
 import { ehModerador } from '../services/moderacao'
@@ -34,6 +35,7 @@ export function PerfilPage() {
   const [verConquistas, setVerConquistas] = useState(false)
   const [nAlertas, setNAlertas] = useState(0)
   const [nMutiroes, setNMutiroes] = useState(0)
+  const [meuId, setMeuId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null, tipo?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
@@ -52,6 +54,7 @@ export function PerfilPage() {
             sb().auth.getSession().then(({ data }) => {
               const uid = data.session?.user?.id
               if (!uid) return
+              if (vivo) setMeuId(uid)
               import('../services/supabase/rest').then(({ rest }) => {
                 // A coluna é `autor_id` — `denunciante_id` existe na tabela
                 // `ameacas`, não nesta view. O nome errado derrubava a consulta,
@@ -258,6 +261,10 @@ export function PerfilPage() {
             </div>
 
             <div className="g-editor"><NomeCard defaultNome={perfil.nome || ''} defaultAvatar={perfil.avatarUrl || ''} /></div>
+
+            {/* Seu território — o mesmo mapa que os outros veem no seu perfil
+                público, para você conferir o que está aparecendo. */}
+            {meuId && <CardMapaContribuicoes tipo="usuario" id={meuId} nome={perfil.nome} />}
 
             {/* Minhas publicações */}
             <div className="card pad g-pubs">
