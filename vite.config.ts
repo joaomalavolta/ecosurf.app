@@ -43,6 +43,19 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2,webp,png,svg}'],
         runtimeCaching: [
           {
+            // Glifos do mapa (nossos, em public/font). Ficam fora do
+            // globPatterns de propósito — 214 kB não precisam entrar no
+            // precache de todo mundo, e quem nunca abre o mapa nunca baixa.
+            // Depois da primeira vez, valem offline como os tiles.
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/font/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mapa-glifos',
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // tiles/estilo do mapa (satélite Esri + ruas CARTO): cache do
             // litoral do usuário para funcionar na praia com sinal ruim.
             urlPattern: ({ url }) =>
