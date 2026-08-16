@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconBell, IconMessageCircle, IconUsersGroup, IconSpeakerphone, IconX, IconChecks } from '@tabler/icons-react'
+import { IconBell, IconMessageCircle, IconUsersGroup, IconSpeakerphone, IconX, IconChecks, IconInfoCircle } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { AvatarPessoa } from '../components/AvatarPessoa'
 import { SkeletonLinha } from '../components/Skeleton'
@@ -12,6 +12,7 @@ const ICONE: Record<TipoNotificacao, typeof IconBell> = {
   mensagem: IconMessageCircle,
   comunidade_membro: IconUsersGroup,
   comunidade_publicacao: IconSpeakerphone,
+  sistema: IconInfoCircle,
 }
 
 /**

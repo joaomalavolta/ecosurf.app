@@ -11,7 +11,12 @@
 
 import { esquecerContadores as esquecer } from './contadores'
 
-export type TipoNotificacao = 'mensagem' | 'comunidade_membro' | 'comunidade_publicacao'
+export type TipoNotificacao =
+  | 'mensagem'
+  | 'comunidade_membro'
+  | 'comunidade_publicacao'
+  /** Recado do próprio Ecosurf — não veio de outra pessoa, então não tem rosto. */
+  | 'sistema'
 
 export interface Notificacao {
   id: string
