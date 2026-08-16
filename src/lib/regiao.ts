@@ -32,6 +32,29 @@ export interface Local {
 /** O país inteiro: o enquadramento de quando não se sabe. */
 export const BRASIL: Local = { lng: -52.5, lat: -14.5, zoom: 3.2 }
 
+/**
+ * A coordenada faz sentido para este app?
+ *
+ * O Brasil cabe, com folga, nesta caixa. Não é o recorte do país — inclui
+ * pedaços de vizinhos e de mar aberto — e é de propósito: serve para pegar o
+ * erro grosseiro, não para desenhar fronteira.
+ *
+ * Existe porque um mutirão de Tramandaí foi parar a 1.058 km dali, no mar da
+ * Argentina, e ficou meses invisível. Num mapa afastado, um toque de poucos
+ * pixels vale centenas de quilômetros. O banco tem a mesma checagem (migration
+ * 0060); esta aqui é para avisar a pessoa ANTES de ela mandar, com uma frase
+ * que se entende, em vez de devolver uma violação de constraint.
+ *
+ * ⚠️ Não confundir com "está no litoral": alerta em rio, no interior, é
+ * legítimo e passa.
+ */
+export function dentroDoBrasil(lng: number, lat: number): boolean {
+  return (
+    Number.isFinite(lng) && Number.isFinite(lat) &&
+    lng >= -74 && lng <= -34 && lat >= -34 && lat <= 6
+  )
+}
+
 /** Ponto com coordenada e município — o mínimo para deduzir região. */
 export interface PontoRegiao {
   lat?: number | null

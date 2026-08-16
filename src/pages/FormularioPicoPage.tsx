@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from '../lib/toast'
+import { dentroDoBrasil } from '../lib/regiao'
 import { carregarPicos } from '../services/picos'
 import type { Pico } from '../types/domain'
 import { Link, useNavigate } from 'react-router-dom'
@@ -92,6 +93,12 @@ export function FormularioPicoPage() {
   }
 
   async function publicar() {
+    // Mesma guarda dos outros formulários: num mapa afastado o dedo erra por
+    // centenas de quilômetros. Ver lib/regiao.ts e a migration 0060.
+    if (lat && lng && !dentroDoBrasil(lng, lat)) {
+      toast('Esse ponto está fora do Brasil. Toque no mapa de novo, mais perto do local.')
+      return
+    }
     if (!lat || !lng) {
       toast('Selecione a localização no mapa.')
       return

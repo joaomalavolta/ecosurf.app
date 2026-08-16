@@ -1,8 +1,38 @@
 import { describe, it, expect } from 'vitest'
 import {
   BRASIL, normalizarNome, partirCidade, localDaCidade, caixaDe,
-  centroDosPontos, lerPosicao, gravarPosicao,
+  centroDosPontos, lerPosicao, gravarPosicao, dentroDoBrasil,
 } from '../regiao'
+
+describe('dentroDoBrasil', () => {
+  it('aceita as praias que o app já conhece', () => {
+    expect(dentroDoBrasil(-46.7939, -24.1917)).toBe(true) // Itanhaém/SP
+    expect(dentroDoBrasil(-50.1318, -30.0035)).toBe(true) // Tramandaí/RS
+    expect(dentroDoBrasil(-48.665, -28.24)).toBe(true)    // Imbituba/SC
+  })
+
+  it('recusa o ponto que mandou um mutirão para o mar da Argentina', () => {
+    // O caso real: "Limpeza de Praia Tramandaí" gravado a 1.058 km do lugar.
+    expect(dentroDoBrasil(-57.1792, -37.5196)).toBe(false)
+  })
+
+  it('aceita as pontas do país', () => {
+    expect(dentroDoBrasil(-60.0, 4.5)).toBe(true)    // Roraima
+    expect(dentroDoBrasil(-53.1, -33.7)).toBe(true)  // Chuí/RS
+    expect(dentroDoBrasil(-34.8, -7.1)).toBe(true)   // João Pessoa/PB
+  })
+
+  it('recusa coordenada trocada de lugar (lat no lugar da lng)', () => {
+    // Itanhaém invertida: -24.19 vira longitude e -46.79 vira latitude.
+    expect(dentroDoBrasil(-24.1917, -46.7939)).toBe(false)
+  })
+
+  it('recusa zero-zero e valores impossíveis', () => {
+    expect(dentroDoBrasil(0, 0)).toBe(false)
+    expect(dentroDoBrasil(NaN, -24)).toBe(false)
+    expect(dentroDoBrasil(-46, Infinity)).toBe(false)
+  })
+})
 
 /** Os pontos que existem hoje em produção — o caso real, não um inventado. */
 const PONTOS = [

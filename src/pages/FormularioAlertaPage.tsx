@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { SkeletonFormulario } from '../components/Skeleton'
 import { toast } from '../lib/toast'
+import { dentroDoBrasil } from '../lib/regiao'
 import { useNavigate } from 'react-router-dom'
 import { IconUsers,
   IconArrowLeft, IconArrowRight, IconCheck, IconMapPin,
@@ -118,6 +119,12 @@ export function FormularioAlertaPage() {
   }
 
   async function publicar() {
+    // Mesma guarda dos outros formulários: num mapa afastado o dedo erra por
+    // centenas de quilômetros. Ver lib/regiao.ts e a migration 0060.
+    if (lat && lng && !dentroDoBrasil(lng, lat)) {
+      toast('Esse ponto está fora do Brasil. Toque no mapa de novo, mais perto do local.')
+      return
+    }
     if (!categoria || !gravidade || !lat || !lng) return
     setEnviando(true)
     try {
