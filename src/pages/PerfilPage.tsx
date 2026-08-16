@@ -52,13 +52,29 @@ export function PerfilPage() {
             sb().auth.getSession().then(({ data }) => {
               const uid = data.session?.user?.id
               if (!uid) return
-              import('../services/supabase/rest').then(async ({ rest }) => {
-                try {
-                  const a = await rest<unknown[]>(`ameacas_publicas?denunciante_id=eq.${uid}&select=id`)
-                  if (vivo) setNAlertas(a.length)
-                  const m = await rest<unknown[]>(`mutiroes_publicos?autor_id=eq.${uid}&select=id`)
-                  if (vivo) setNMutiroes(m.length)
-                } catch { /* silencioso */ }
+              import('../services/supabase/rest').then(({ rest }) => {
+                // A coluna é `autor_id` — `denunciante_id` existe na tabela
+                // `ameacas`, não nesta view. O nome errado derrubava a consulta,
+                // e como as duas estavam na MESMA cadeia, o contador de mutirões
+                // também nunca rodava: os dois ficavam zerados no próprio perfil.
+                //
+                // Agora são independentes. Uma falhar não apaga a outra, e o
+                // erro vai para o console em vez de sumir — foi catch mudo que
+                // escondeu isso por semanas.
+                const conta = async (
+                  caminho: string,
+                  aplicar: (n: number) => void,
+                  oQue: string,
+                ) => {
+                  try {
+                    const linhas = await rest<unknown[]>(caminho)
+                    if (vivo) aplicar(linhas.length)
+                  } catch (e) {
+                    console.warn(`[perfil] não deu para contar ${oQue}:`, e)
+                  }
+                }
+                void conta(`ameacas_publicas?autor_id=eq.${uid}&select=id`, setNAlertas, 'alertas')
+                void conta(`mutiroes_publicos?autor_id=eq.${uid}&select=id`, setNMutiroes, 'mutirões')
               })
             })
           ).catch(() => {})
