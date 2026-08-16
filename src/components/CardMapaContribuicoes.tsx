@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers } from '@tabler/icons-react'
+import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers, IconLayoutGrid } from '@tabler/icons-react'
 import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
+import type { FiltroContrib } from '../map/MapaContribuicoes'
 
 /**
  * "O que essa pessoa mapeou?" — o card que responde, no perfil e na comunidade.
@@ -67,14 +68,25 @@ export function CardMapaContribuicoes({
   id,
   nome,
   altura = 260,
+  mostrarFotos = true,
+  mostrarAcoes = true,
 }: {
   tipo: 'usuario' | 'comunidade'
   id: string
   /** Primeiro nome de quem é o território — entra na legenda. */
   nome?: string | null
   altura?: number
+  /**
+   * O que o dono do perfil deixou visível. Cada chave vale para o conteúdo
+   * ONDE QUER QUE ELE APAREÇA: esconder os alertas da lista e mantê-los
+   * plotados aqui do lado seria privacidade de mentira. No próprio perfil não
+   * se passa nada — você vê o que é seu.
+   */
+  mostrarFotos?: boolean
+  mostrarAcoes?: boolean
 }) {
-  const [dados, setDados] = useState<ContribuicoesGeo | null>(null)
+  const [brutos, setBrutos] = useState<ContribuicoesGeo | null>(null)
+  const [filtro, setFiltro] = useState<FiltroContrib>('tudo')
   const [caixa, podeCarregarMapa] = useVisivel()
 
   useEffect(() => {
@@ -84,13 +96,35 @@ export function CardMapaContribuicoes({
       .then(({ contribuicoesGeoUsuario, contribuicoesGeoComunidade }) =>
         tipo === 'usuario' ? contribuicoesGeoUsuario(id) : contribuicoesGeoComunidade(id),
       )
-      .then((c) => { if (vivo) setDados(c) })
-      .catch(() => { if (vivo) setDados(null) })
+      .then((c) => { if (vivo) setBrutos(c) })
+      .catch(() => { if (vivo) setBrutos(null) })
     return () => { vivo = false }
   }, [tipo, id])
 
+  // A escolha do dono corta os dados ANTES de qualquer contagem, senão os
+  // botões prometeriam "Alertas 8" e o mapa entregaria nada.
+  const dados: ContribuicoesGeo | null = brutos && {
+    picosCriados: brutos.picosCriados,
+    picosFotografados: mostrarFotos ? brutos.picosFotografados : [],
+    alertas: mostrarAcoes ? brutos.alertas : [],
+    mutiroes: mostrarAcoes ? brutos.mutiroes : [],
+    total: brutos.picosCriados.length +
+      (mostrarFotos ? brutos.picosFotografados.length : 0) +
+      (mostrarAcoes ? brutos.alertas.length + brutos.mutiroes.length : 0),
+  }
+
   // Sem pontos (ou ainda carregando): nada na tela. Ver o cabeçalho.
   if (!dados || dados.total === 0) return null
+
+  const nTodosPicos = dados.picosCriados.length + dados.picosFotografados.length
+  // Só entram as camadas que têm ponto. Com uma camada só, "Tudo" e ela seriam
+  // o mesmo botão duas vezes — daí o `abas.length > 2` na hora de desenhar.
+  const abas = ([
+    { chave: 'tudo' as const, rotulo: 'Tudo', n: dados.total, Icone: IconLayoutGrid },
+    { chave: 'picos' as const, rotulo: 'Picos', n: nTodosPicos, Icone: IconMapPin },
+    { chave: 'alertas' as const, rotulo: 'Alertas', n: dados.alertas.length, Icone: IconAlertTriangle },
+    { chave: 'mutiroes' as const, rotulo: 'Mutirões', n: dados.mutiroes.length, Icone: IconUsers },
+  ]).filter((a) => a.n > 0)
 
   const nPicos = dados.picosCriados.length
   const nFotografados = dados.picosFotografados.length
@@ -106,6 +140,41 @@ export function CardMapaContribuicoes({
         O que {sujeito} mapeou, registrou e convocou.
       </p>
 
+      {/* Botões de camada: tocar em Mutirões deixa só os mutirões e reenquadra
+          o mapa neles. Camada sem nenhum ponto não vira botão — botão que não
+          faz nada é pior do que botão que não existe. */}
+      {abas.length > 2 && (
+        <div
+          role="tablist"
+          aria-label="Camadas do mapa"
+          style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 9 }}
+        >
+          {abas.map(({ chave, rotulo, n, Icone }) => {
+            const on = filtro === chave
+            return (
+              <button
+                key={chave}
+                role="tab"
+                aria-selected={on}
+                onClick={() => setFiltro(chave)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '6px 11px', borderRadius: 999, cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 12.5, fontWeight: on ? 700 : 600,
+                  background: on ? 'var(--turq, #1c8aad)' : 'transparent',
+                  color: on ? '#fff' : 'var(--text)',
+                  border: on ? '1px solid transparent' : '1px solid var(--line)',
+                }}
+              >
+                <Icone size={14} stroke={2} />
+                {rotulo}
+                <span style={{ opacity: 0.75, fontWeight: 600 }}>{n}</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div style={{ minHeight: altura }}>
         {podeCarregarMapa ? (
           <Suspense
@@ -116,7 +185,7 @@ export function CardMapaContribuicoes({
               />
             }
           >
-            <MapaInterno contribuicoes={dados} altura={altura} />
+            <MapaInterno contribuicoes={dados} altura={altura} filtro={filtro} />
           </Suspense>
         ) : (
           <div style={{ height: altura, borderRadius: 14, background: '#0a1929' }} />

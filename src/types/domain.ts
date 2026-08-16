@@ -224,4 +224,12 @@ export interface PerfilPublico {
   nivel: string | null;
   cidade: string | null;
   criadoEm: string;
+  /**
+   * O que a pessoa deixou visível no próprio perfil público. É escolha dela,
+   * não do app — e vale para quem VISITA, por isso vem da view e não das
+   * preferências locais (ver migration 0061). Padrão: tudo à mostra.
+   */
+  mostrarFotos: boolean;
+  mostrarMapa: boolean;
+  mostrarAcoes: boolean;
 }

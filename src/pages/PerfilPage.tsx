@@ -6,6 +6,7 @@ import { Header } from '../components/Header'
 import { AuthCard } from '../components/AuthCard'
 import { NomeCard } from '../components/NomeCard'
 import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
+import { CardVisibilidadePerfil } from '../components/CardVisibilidadePerfil'
 import { PainelPreferencias, CardConquistas } from '../components/PreferenciasEConquistas'
 import { DiagnosticoFila } from '../components/DiagnosticoFila'
 import { ehModerador } from '../services/moderacao'
@@ -419,6 +420,8 @@ export function PerfilPage() {
                 </div>
               )}
             </div>
+
+            <CardVisibilidadePerfil />
 
             {/* Privacidade — quem você não quer que fale com você */}
             <div className="card pad" style={{ marginTop: 12 }}>
