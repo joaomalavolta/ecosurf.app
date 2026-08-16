@@ -13,6 +13,8 @@ export interface MinhaConta {
   papel: string
   nome?: string
   avatarUrl?: string
+  /** Cidade do perfil — palpite de região para a abertura do mapa (lib/regiao.ts). */
+  cidade?: string
 }
 
 const BASE = SUPABASE_URL
@@ -50,17 +52,18 @@ export async function restMinhaConta(): Promise<MinhaConta> {
     const email: string | undefined = ses?.user?.email
     if (!uid) return { papel: 'user' }
     const r = await fetch(
-      `${BASE}/rest/v1/perfis?select=papel,nome,foto_url&id=eq.${encodeURIComponent(uid)}`,
+      `${BASE}/rest/v1/perfis?select=papel,nome,foto_url,cidade&id=eq.${encodeURIComponent(uid)}`,
       { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } },
     )
     if (!r.ok) return { id: uid, email, papel: 'user' }
-    const rows = (await r.json()) as { papel: string; nome: string | null; foto_url: string | null }[]
+    const rows = (await r.json()) as { papel: string; nome: string | null; foto_url: string | null; cidade: string | null }[]
     return {
       id: uid,
       email,
       papel: rows[0]?.papel ?? 'user',
       nome: rows[0]?.nome ?? undefined,
       avatarUrl: rows[0]?.foto_url ?? undefined,
+      cidade: rows[0]?.cidade ?? undefined,
     }
   } catch {
     return { papel: 'user' }
