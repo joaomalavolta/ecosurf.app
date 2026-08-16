@@ -426,6 +426,8 @@ export async function restInserirPico(dados: {
   municipio: string
   uf: string
   praia?: string
+  fundo?: string
+  descricao?: string
 }): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb } = await import('./client')
@@ -444,7 +446,12 @@ export async function restInserirPico(dados: {
     municipio: titleCase(dados.municipio),
     uf: dados.uf.toUpperCase().slice(0, 2),
     orientacao_praia_deg: 180,
-    fundo: 'areia',
+    // `fundo` e `descricao` vinham fixos: o formulário perguntava a descrição
+    // e o texto era descartado no caminho. O fundo era gravado como 'areia' e
+    // corrigido por um UPDATE logo depois — duas idas ao servidor para um
+    // campo que cabia aqui.
+    fundo: dados.fundo ?? 'areia',
+    descricao: dados.descricao?.trim() || null,
     criado_por: criadoPor,
   }
 
@@ -469,6 +476,37 @@ export async function restInserirPico(dados: {
     }
   }
   throw ultimoErro instanceof Error ? ultimoErro : new Error('Sem conexão')
+}
+
+/**
+ * Salva a edição de um pico.
+ *
+ * O `id` não entra no corpo de propósito: ele é o slug da URL e é apontado por
+ * seis tabelas, e um gatilho no banco recusa a troca (migration 0062). Mudar o
+ * nome exibido é o campo `nome`.
+ */
+export async function restAtualizarPico(id: string, dados: {
+  nome: string
+  lat: number
+  lng: number
+  municipio: string
+  uf: string
+  fundo?: string
+  descricao?: string
+}): Promise<void> {
+  if (!TEM_BACKEND) throw new Error('Backend não disponível')
+  const { sb } = await import('./client')
+  const { error } = await sb().from('picos').update({
+    nome: titleCase(dados.nome),
+    geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
+    municipio: titleCase(dados.municipio),
+    uf: dados.uf.toUpperCase().slice(0, 2),
+    fundo: dados.fundo ?? 'areia',
+    descricao: dados.descricao?.trim() || null,
+  }).eq('id', id)
+  // Erro do PostgREST é objeto simples, não Error: `throw error` faria
+  // `e instanceof Error` dar false e a tela cairia numa mensagem genérica.
+  if (error) throw new Error(error.message || 'Não foi possível salvar o pico.')
 }
 
 export interface MinhaFotoRow {
