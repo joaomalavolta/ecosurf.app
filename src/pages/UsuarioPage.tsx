@@ -5,6 +5,7 @@ import { IconCheck, IconMessageCircle,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MenuDenunciaBloqueio } from '../components/MenuDenunciaBloqueio'
+import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
 import { Photo } from '../components/Photo'
 import { restPerfilPublico, restContribuicoesUsuario, type ContribsUsuario } from '../services/supabase/rest'
 import { carregarPicos } from '../services/picos'
@@ -184,6 +185,10 @@ export function UsuarioPage() {
             <span style={{ fontSize: 14 }}>Membro desde {dataEntrada}</span>
           </div>
         </div>
+
+        {/* O território desta pessoa — vem antes das listas porque um mapa
+            conta em dois segundos o que a lista leva um scroll para dizer. */}
+        {userId && <CardMapaContribuicoes tipo="usuario" id={userId} nome={perfil.nome} />}
 
         {/* Fotos */}
         {contribs && contribs.fotos.length > 0 && (

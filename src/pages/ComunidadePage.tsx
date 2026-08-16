@@ -6,6 +6,7 @@ import {
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
+import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
 import { SkeletonDetalhe } from '../components/Skeleton'
 import { toast } from '../lib/toast'
 import {
@@ -199,6 +200,9 @@ export function ComunidadePage() {
             </button>
           </div>
         )}
+
+        {/* Onde a comunidade atua — o mapa do território dela. */}
+        <CardMapaContribuicoes tipo="comunidade" id={c.id} nome={c.nome} />
 
         {/* Publicações da comunidade */}
         <div style={{ marginTop: 22 }}>
