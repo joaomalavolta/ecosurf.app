@@ -12,12 +12,6 @@ import { carregarPicos } from '../services/picos'
 import { temBackend } from '../services/api'
 import type { PerfilPublico, Pico } from '../types/domain'
 
-const CATEGORIA_ROTULO: Record<string, string> = {
-  'lixo-praia': 'Lixo na praia', 'lixo-rio': 'Lixo no rio', esgoto: 'Esgoto',
-  erosao: 'Erosão', oleo: 'Óleo', animal: 'Animal', entulho: 'Entulho',
-  microplasticos: 'Microplásticos', espuma: 'Espuma', queimada: 'Queimada',
-  ocupacao: 'Ocupação irregular', outro: 'Outro',
-}
 
 function Metrica({ n, rotulo, Icone }: { n: number; rotulo: string; Icone: typeof IconPhoto }) {
   return (
@@ -213,41 +207,9 @@ export function UsuarioPage() {
           </div>
         )}
 
-        {/* Alertas */}
-        {contribs && perfil.mostrarAcoes && contribs.alertas.length > 0 && (
-          <div className="stack" style={{ gap: 10 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Alertas ambientais</h3>
-            {contribs.alertas.map((a) => (
-              <Link key={a.id} to={`/alerta/${a.id}`} className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: 'inherit' }}>
-                <IconAlertTriangle size={20} stroke={2} color="var(--sinal, #E84855)" style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.titulo || CATEGORIA_ROTULO[a.categoria] || 'Alerta'}</div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                    {CATEGORIA_ROTULO[a.categoria] ?? a.categoria}{a.municipio ? ` · ${a.municipio}${a.uf ? `/${a.uf}` : ''}` : ''}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Mutirões */}
-        {contribs && perfil.mostrarAcoes && contribs.mutiroes.length > 0 && (
-          <div className="stack" style={{ gap: 10 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Mutirões</h3>
-            {contribs.mutiroes.map((m) => (
-              <Link key={m.id} to={`/mutirao/${m.id}`} className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: 'inherit' }}>
-                <IconHeartHandshake size={20} stroke={2} color="var(--turq)" style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.titulo}</div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                    {m.tipoAcao ?? 'Mutirão'}{m.municipio ? ` · ${m.municipio}${m.uf ? `/${m.uf}` : ''}` : ''}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        {/* Alertas e mutirões saíram daqui: agora estão na lista do card do
+            mapa, onde tocar leva o mapa até o ponto. Mantê-los nos dois
+            lugares seria a mesma coisa duas vezes na mesma rolagem. */}
 
         {/* Nada a mostrar. Duas razões diferentes, e confundir seria feio:
             quem escondeu não está "sem contribuições". */}
