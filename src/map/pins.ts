@@ -134,3 +134,36 @@ export function carregarIcone(
 export function carregarIcones(map: Parameters<typeof carregarIcone>[0]): Promise<void[]> {
   return Promise.all(Object.entries(ICONES).map(([nome, svg]) => carregarIcone(map, nome, svg)))
 }
+
+/** Fonte dos rótulos. É de terceiros — ver `temGlyphs()` logo abaixo. */
+export const GLYPHS = 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+
+/** A única fonte que os mapas usam, e o único intervalo que importa. */
+const GLYPH_TESTE = GLYPHS
+  .replace('{fontstack}', encodeURIComponent('Noto Sans Bold'))
+  .replace('{range}', '0-255')
+
+let promessaGlyphs: Promise<boolean> | null = null
+
+/**
+ * O CDN de fontes está de pé?
+ *
+ * Descoberta feita testando no navegador: quando `demotiles.maplibre.org` não
+ * responde, o MapLibre não desenha NADA — nem os pinos, que são imagens e não
+ * dependem de fonte nenhuma. O mapa fica um retângulo vazio, e a leitura de
+ * quem olha é "não há nada mapeado aqui", não "a rede falhou".
+ *
+ * O demotiles é o servidor de demonstração do projeto MapLibre, mantido por
+ * boa vontade e explicitamente não recomendado para produção. Enquanto as
+ * fontes não forem servidas por nós, esta checagem evita o pior: se elas não
+ * vêm, o mapa entra sem as camadas de texto — perde os nomes dos picos e o
+ * número dentro das bolhas, e mantém os pinos, que são o conteúdo.
+ *
+ * Uma consulta por sessão, compartilhada entre os dois mapas.
+ */
+export function temGlyphs(): Promise<boolean> {
+  promessaGlyphs ??= fetch(GLYPH_TESTE, { method: 'GET' })
+    .then((r) => r.ok)
+    .catch(() => false)
+  return promessaGlyphs
+}

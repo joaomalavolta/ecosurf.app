@@ -3,7 +3,7 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useNavigate } from 'react-router-dom'
 import type { FeatureCollection, Point } from 'geojson'
-import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones } from './pins'
+import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones, temGlyphs, GLYPHS } from './pins'
 import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
 
 /**
@@ -177,7 +177,7 @@ export function MapaContribuicoes({
           { id: 'satelite', type: 'raster', source: 'satelite', layout: { visibility: satelite ? 'visible' : 'none' } },
           { id: 'ruas', type: 'raster', source: 'ruas', layout: { visibility: satelite ? 'none' : 'visible' } },
         ],
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+        glyphs: GLYPHS,
       },
       // Abre no Brasil e o fitBounds leva ao território assim que os pinos
       // entram: sem GPS, sem pedir permissão. Não é o mapa de ninguém que está
@@ -220,7 +220,8 @@ export function MapaContribuicoes({
     }
 
     map.on('load', async () => {
-      await carregarIcones(map)
+      // Em paralelo: ícones são locais, a checagem de fonte é rede.
+      const [, comTexto] = await Promise.all([carregarIcones(map), temGlyphs()])
       if (descartado) return
 
       const fc = colecao(dadosRef.current)
@@ -246,7 +247,9 @@ export function MapaContribuicoes({
           'circle-stroke-color': '#ffffff',
         },
       })
-      map.addLayer({
+      // Sem fonte, camada de texto nenhuma entra — senão o MapLibre não
+      // desenha nem os pinos. Ver `temGlyphs()` em pins.ts.
+      if (comTexto) map.addLayer({
         id: 'grupos-conta',
         type: 'symbol',
         source: SRC,
@@ -275,7 +278,7 @@ export function MapaContribuicoes({
         },
       })
 
-      map.addLayer({
+      if (comTexto) map.addLayer({
         id: 'rotulos',
         type: 'symbol',
         source: SRC,

@@ -8,7 +8,7 @@ import type { FeatureCollection, Point } from 'geojson'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 // Os pinos moram em pins.ts desde que o mapa de contribuições (perfil e
 // comunidade) passou a desenhá-los também — ver o cabeçalho de lá.
-import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones } from './pins'
+import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones, temGlyphs, GLYPHS } from './pins'
 
 const SRC = 'feicoes'
 
@@ -263,7 +263,7 @@ export function MapView({
         { id: 'carto-ruas-layer', type: 'raster', source: 'carto-ruas',
           layout: { visibility: baseSatelite ? 'none' : 'visible' } },
       ],
-      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      glyphs: GLYPHS,
     }
 
     // Voo cinematográfico (1ª abertura da sessão): o mapa nasce mostrando o
@@ -469,7 +469,8 @@ export function MapView({
     }
 
     map.on('load', async () => {
-      await carregarIcones(map)
+      // As duas em paralelo: os ícones são locais, a checagem de fonte é rede.
+      const [, comTexto] = await Promise.all([carregarIcones(map), temGlyphs()])
       if (descartado) return
 
       map.addSource(SRC, {
@@ -494,7 +495,9 @@ export function MapView({
           'circle-stroke-color': '#ffffff',
         },
       })
-      map.addLayer({
+      // Sem fonte, camada de texto nenhuma entra — senão o MapLibre não
+      // desenha nem os pinos e o mapa fica vazio. Ver `temGlyphs()` em pins.ts.
+      if (comTexto) map.addLayer({
         id: 'cluster-count',
         type: 'symbol',
         source: SRC,
@@ -541,7 +544,7 @@ export function MapView({
         },
       })
 
-      map.addLayer({
+      if (comTexto) map.addLayer({
         id: 'pico-labels',
         type: 'symbol',
         source: SRC,
@@ -625,6 +628,9 @@ export function MapView({
     const expr = filtroLayer(filtro)
     const semCluster: maplibregl.ExpressionSpecification = ['!', ['has', 'point_count']]
     map.setFilter('pontos-icone', expr ? ['all', semCluster, expr] : semCluster)
+    // A camada de rótulos pode não existir (CDN de fontes fora) — sem esta
+    // guarda, setFilter num layer inexistente derruba o filtro dos pinos.
+    if (!map.getLayer('pico-labels')) return
     const picoVisivel = !filtro || filtro === 'tudo' || filtro === 'picos'
     if (picoVisivel) {
       map.setFilter('pico-labels', ['all', semCluster, ['any', ['==', ['get', 'tipo'], 'pico'], ['==', ['get', 'tipo'], 'pico-ativo']]])
