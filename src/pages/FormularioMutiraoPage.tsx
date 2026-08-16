@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { SkeletonFormulario } from '../components/Skeleton'
 import { toast } from '../lib/toast'
+import { dentroDoBrasil } from '../lib/regiao'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IconCrop, IconCalendar, IconUsers, IconUser, IconCheck, IconMapPin, IconCamera, IconUpload, IconBookmark, IconTrash, IconArrowBack } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -166,6 +167,13 @@ export function FormularioMutiraoPage() {
   }
 
   async function publicar(comoRascunho = false) {
+    // Longe demais para ser engano de metros: num mapa afastado o dedo erra
+    // por centenas de quilômetros, e já mandou um mutirão para o mar da
+    // Argentina. Ver lib/regiao.ts e a migration 0060.
+    if (lat && lng && !dentroDoBrasil(lng, lat)) {
+      toast('Esse ponto está fora do Brasil. Toque no mapa de novo, mais perto do local.')
+      return
+    }
     if (!modoEdicao && (!lat || !lng)) {
       toast('Aguarde a localização GPS ou informe manualmente.')
       return

@@ -16,6 +16,8 @@
  * lon como string), então a troca é transparente para os componentes.
  */
 
+import { dentroDoBrasil } from '../lib/regiao'
+
 export interface ResultadoGeocode {
   display_name: string
   lat: string
@@ -79,8 +81,17 @@ export async function buscarLugar(
     if (!res.ok) throw new Error(`geocode ${res.status}`)
     const data = (await res.json()) as { features?: PhotonFeature[] }
     return (data.features ?? [])
-      // Prioriza resultados no Brasil sem excluir fronteira (surf no exterior é raro no beta)
-      .filter((f) => !f.properties.country || f.properties.country === 'Brasil' || f.properties.country === 'Brazil')
+      // Resultado sem país declarado passava — e ponto em mar aberto costuma
+      // vir exatamente assim. Foi por aí que um mutirão de Tramandaí pôde ir
+      // parar no Atlântico argentino (migration 0060). Agora, na dúvida sobre
+      // o país, a coordenada decide.
+      .filter((f) => {
+        const pais = f.properties.country
+        if (pais === 'Brasil' || pais === 'Brazil') return true
+        if (pais) return false
+        const [lon, lat] = f.geometry.coordinates
+        return dentroDoBrasil(lon, lat)
+      })
       .map((f) => ({
         display_name: rotular(f.properties),
         lat: String(f.geometry.coordinates[1]),
