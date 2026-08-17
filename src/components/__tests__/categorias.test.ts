@@ -81,6 +81,28 @@ describe('categorias e o mapa', () => {
     expect([...TIPOS_POSITIVO].sort()).toEqual(CATEGORIAS_POSITIVAS.map((c) => c.id).sort())
   })
 
+  it('duas categorias nunca compartilham o mesmo desenho', () => {
+    // Foi assim que "entulho" passou meses com a MESMA lixeira de
+    // "lixo-praia", distinguíveis só pela cor, e que "óleo" e
+    // "microplásticos" dividiram uma mira. Cor não basta: no mapa os pinos
+    // aparecem a 42% do tamanho e sobre satélite, onde tom escuro contra tom
+    // escuro some.
+    //
+    // Compara o MIOLO do SVG (o grupo com os paths), não o arquivo inteiro:
+    // dois pinos de cores diferentes têm SVG diferente mesmo desenhando
+    // exatamente a mesma coisa — que é justamente o caso que passava batido.
+    const glifo = (svg: string) => svg.slice(svg.indexOf('<g '), svg.lastIndexOf('</g>'))
+      .replace(/^<g [^>]*>/, '')
+
+    const porGlifo = new Map<string, string[]>()
+    for (const c of CATEGORIAS) {
+      const g = glifo(ICONES[iconeDe(c.id)])
+      porGlifo.set(g, [...(porGlifo.get(g) ?? []), c.id])
+    }
+    const repetidos = [...porGlifo.values()].filter((ids) => ids.length > 1)
+    expect(repetidos).toEqual([])
+  })
+
   it('o pino e o chip da categoria usam a mesma cor', () => {
     // O SVG do pino traz a cor hex no `fill` do círculo. Se o catálogo mudar
     // de cor e o pino não, o mesmo registro fica de uma cor na lista e de
