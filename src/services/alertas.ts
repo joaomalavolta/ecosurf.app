@@ -49,13 +49,36 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
   const { sb, user } = await authed()
 
   // Upload de imagens
+  //
+  // ⚠️ O `if (!error)` daqui descartava a foto EM SILÊNCIO: a ocorrência era
+  // publicada sem imagem e a tela dizia "publicado com sucesso". Quem
+  // fotografou um ninho uma vez perdia a evidência sem saber.
+  //
+  // Agora a falha aparece. Se NENHUMA das fotos anexadas subiu, jogamos o
+  // erro: quem chama já tem rede de proteção para isso — a câmera manda o
+  // registro para a fila offline (com o blob) e o formulário mostra o recado.
+  // Falha parcial (2 de 3) publica com o que subiu, porque perder o registro
+  // inteiro por causa da terceira foto seria pior.
   const imagePaths: string[] = []
-  if (dados.images) {
-    for (const file of dados.images.slice(0, 3)) {
-      const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-      const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
-      if (!error) imagePaths.push(path)
+  let falharam = 0
+  const anexadas = dados.images?.slice(0, 3) ?? []
+  for (const file of anexadas) {
+    const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')
+    const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
+    if (error) {
+      falharam++
+      console.error('falha ao subir foto do registro', error)
+    } else {
+      imagePaths.push(path)
     }
+  }
+  if (anexadas.length > 0 && imagePaths.length === 0) {
+    throw new Error(
+      falharam === 1
+        ? 'Não foi possível enviar a foto. Verifique a conexão e tente de novo.'
+        : 'Não foi possível enviar as fotos. Verifique a conexão e tente de novo.',
+    )
   }
 
   const body = {
@@ -126,14 +149,27 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb, user } = await authed()
 
-  // Upload de novas imagens
+  // Upload de novas imagens — mesma correção da publicação: falha de upload
+  // não desaparece. Aqui o risco é maior, porque a edição também é o caminho
+  // do "reenquadrar": a foto antiga sai de `keptImages` e a ajustada entra
+  // como nova. Se a nova não subir em silêncio, o registro perde a foto que
+  // tinha — a pessoa só quis mexer no corte.
   const imagePaths: string[] = dados.keptImages ? [...dados.keptImages] : []
-  if (dados.images && dados.images.length > 0) {
-    for (const file of dados.images.slice(0, 3 - imagePaths.length)) {
-      const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-      const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
-      if (!error) imagePaths.push(path)
+  const novas = dados.images?.slice(0, 3 - imagePaths.length) ?? []
+  let subiram = 0
+  for (const file of novas) {
+    const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')
+    const path = `alertas/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type })
+    if (error) {
+      console.error('falha ao subir foto na edição do registro', error)
+    } else {
+      imagePaths.push(path)
+      subiram++
     }
+  }
+  if (novas.length > 0 && subiram === 0) {
+    throw new Error('Não foi possível enviar a foto. Nada foi alterado — verifique a conexão e tente de novo.')
   }
 
   const body: Record<string, unknown> = {

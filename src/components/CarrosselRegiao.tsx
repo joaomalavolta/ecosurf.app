@@ -17,18 +17,46 @@ const COR_GRAVIDADE: Record<string, string> = {
 
 const PESO_GRAV: Record<string, number> = { critica: 0, alta: 1, media: 2, baixa: 3 }
 
+const TOTAL_VAGAS = 8
+const VAGAS_POSITIVAS = 3
+
+/**
+ * Quais registros entram no trilho, e em que ordem.
+ *
+ * ── Vagas reservadas, e não uma fila única ────────────────────────────────
+ *
+ * A primeira versão ordenava tudo junto dando aos positivos um peso pior que
+ * o da gravidade mais baixa, e cortava em oito. Com dez alertas no ar — o caso
+ * real de hoje — as oito vagas eram todas de alerta e nenhum positivo chegava
+ * ao carrossel: o recurso existia e era invisível.
+ *
+ * Fila única não resolve, porque os critérios são diferentes de verdade —
+ * alerta ordena por GRAVIDADE, positivo por NOVIDADE — e a urgência do alerta
+ * sempre ganharia. Então o espaço é dividido: havendo positivo, três das oito
+ * vagas são dele; sem positivo, o alerta ocupa as oito como antes.
+ *
+ * Exportada para poder ser testada sem montar o componente.
+ */
+export function vagasDoCarrossel(registros: Alerta[]): Alerta[] {
+  const ehPositivo = (a: Alerta) => categoriaPorId(a.categoria).tipo === 'positivo'
+  const grav = (a: Alerta) => PESO_GRAV[a.gravidade ?? 'media'] ?? 2
+  const nova = (a: Alerta) => (a.criadaEm ? new Date(a.criadaEm).getTime() : 0)
+
+  const positivos = registros.filter(ehPositivo)
+    .sort((a, b) => nova(b) - nova(a))
+    .slice(0, VAGAS_POSITIVAS)
+  const soAlertas = registros.filter((a) => !ehPositivo(a))
+    .sort((a, b) => grav(a) - grav(b))
+    .slice(0, TOTAL_VAGAS - positivos.length)
+
+  // Alertas primeiro: a urgência abre o trilho.
+  return [...soAlertas, ...positivos]
+}
+
 export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; mutiroes: Mutirao[] }) {
   if (alertas.length === 0 && mutiroes.length === 0) return null
 
-  // Alerta ordena por gravidade; registro positivo não tem gravidade e por
-  // isso entra depois, na ordem em que veio (mais recente primeiro).
-  const registrosOrd = [...alertas]
-    .sort((a, b) => {
-      const pa = categoriaPorId(a.categoria).tipo === 'positivo' ? 9 : (PESO_GRAV[a.gravidade ?? 'media'] ?? 2)
-      const pb = categoriaPorId(b.categoria).tipo === 'positivo' ? 9 : (PESO_GRAV[b.gravidade ?? 'media'] ?? 2)
-      return pa - pb
-    })
-    .slice(0, 8)
+  const registrosOrd = vagasDoCarrossel(alertas)
 
   return (
     <>

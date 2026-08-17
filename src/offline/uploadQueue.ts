@@ -67,6 +67,41 @@ export async function removerDaFila(id: string): Promise<void> {
   emitir()
 }
 
+/**
+ * Devolve à fila o que ficou preso em 'enviando'.
+ *
+ * ── Como uma foto ficava presa para sempre ────────────────────────────────
+ *
+ * `flush()` marca 'enviando' e GRAVA antes de chamar a rede, para a barra de
+ * status mostrar o progresso. Se o app morre nesse intervalo — trocar de app
+ * no celular, o sistema descartar a aba, a pessoa fechar o navegador com a
+ * foto subindo — o registro fica 'enviando' no IndexedDB e nunca mais sai:
+ *
+ *  · `flush()` só recolhe 'na-fila' e 'falhou'
+ *  · `retentarTudo()` só ressuscitava 'bloqueado' e 'falhou'
+ *  · o painel de diagnóstico conta como problema só 'falhou' e 'bloqueado'
+ *  · a barra de status, com `enviando > 0`, nunca voltava a se esconder
+ *
+ * Resultado: "enviando 1 foto…" para sempre, sem nenhum caminho de saída e
+ * sem aparecer como erro em lugar nenhum. Numa praia com 3G, subindo um
+ * arquivo de 3 MB, é o cenário comum — não o raro.
+ *
+ * Chamada UMA vez por carregamento da página, antes do primeiro flush: neste
+ * instante nada pode estar em voo nesta página, então todo 'enviando' que
+ * exista é necessariamente de uma sessão anterior.
+ */
+export async function recuperarTravados(): Promise<number> {
+  const d = await db()
+  const travados = (await d.getAll('uploads')).filter((u) => u.status === 'enviando')
+  for (const u of travados) {
+    u.status = 'na-fila'
+    u.erro = undefined
+    await d.put('uploads', u)
+  }
+  if (travados.length) emitir()
+  return travados.length
+}
+
 let rodando = false
 export async function flush(): Promise<void> {
   if (rodando || !navigator.onLine) return
@@ -113,7 +148,9 @@ export async function flush(): Promise<void> {
 /** Liga os gatilhos de sincronização (chamado uma vez no boot). */
 export function iniciarSincronizacao(): void {
   window.addEventListener('online', () => void flush())
-  void flush()
+  // Recuperar ANTES do primeiro flush: o que ficou 'enviando' de uma sessão
+  // anterior volta para a fila e sobe neste mesmo flush.
+  void recuperarTravados().then(() => flush())
   // Background Sync (progressive enhancement): com backend real, o SW
   // reenvia a fila mesmo com o app fechado.
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
@@ -131,11 +168,14 @@ export function iniciarSincronizacao(): void {
  * que travou por uma causa já corrigida (ex.: sessão expirada, ou o bug do
  * trigger que derrubava o INSERT) ficaria preso para sempre. Este botão de
  * escape ressuscita a fila depois que a causa raiz é resolvida.
+ *
+ * 'enviando' entra na lista também: se a pessoa está tocando neste botão, a
+ * foto que aparece como "enviando" há vinte minutos não está enviando nada.
  */
 export async function retentarTudo(): Promise<void> {
   const d = await db()
   const presos = (await d.getAll('uploads')).filter(
-    (u) => u.status === 'bloqueado' || u.status === 'falhou',
+    (u) => u.status === 'bloqueado' || u.status === 'falhou' || u.status === 'enviando',
   )
   for (const u of presos) {
     u.status = 'na-fila'
