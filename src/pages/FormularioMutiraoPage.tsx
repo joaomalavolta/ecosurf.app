@@ -9,6 +9,7 @@ import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { publicarMutirao, salvarRascunho, atualizarMutirao, carregarMutiraoParaEdicao, excluirMutirao, type DadosMutirao } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { CorteFoto } from '../components/CorteFotoLazy'
+import { arquivoDe } from '../lib/imagem'
 import { statusPerfil } from '../services/perfil'
 
 const TIPOS_ACAO = [
@@ -154,8 +155,7 @@ export function FormularioMutiraoPage() {
   }
 
   function aoCortarCapa(blob: Blob) {
-    const nome = (cortando?.name ?? 'capa').replace(/\.[^.]+$/, '') + '.webp'
-    const arquivo = new File([blob], nome, { type: 'image/webp' })
+    const arquivo = arquivoDe(blob, cortando?.name ?? 'capa')
     setCortando(null)
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setImagemCapa(arquivo)

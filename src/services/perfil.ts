@@ -83,9 +83,11 @@ export async function salvarPerfil(d: DadosPerfil): Promise<void> {
   let foto_url: string | undefined
   if (d.fotoBlob) {
     // Pasta do dono: a policy do bucket exige avatars/<uid>/... (só o dono grava ali)
+    // Caminho fixo (a URL vai gravada em `perfis.foto_url`): a extensão fica.
+    // O contentType segue o blob — ver a nota em services/supabase/api.ts.
     const path = `${u.id}/avatar.webp`
     const up = await sb().storage.from('avatars').upload(path, d.fotoBlob, {
-      contentType: 'image/webp',
+      contentType: d.fotoBlob.type || 'image/webp',
       upsert: true,
     })
     if (!up.error) {

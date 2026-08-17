@@ -73,7 +73,7 @@ async function subirImagem(comunidadeId: string, tipo: 'avatar' | 'capa', blob: 
   const { sb } = await import('./supabase/client')
   const path = `${comunidadeId}/${tipo}.webp`
   const up = await sb().storage.from('comunidades').upload(path, blob, {
-    contentType: 'image/webp',
+    contentType: blob.type || 'image/webp',
     upsert: true,
   })
   if (up.error) return undefined

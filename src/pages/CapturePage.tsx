@@ -29,6 +29,7 @@ import { SeletorCategoria, categoriaPorId, categoriaSensivel } from '../componen
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
 import { BotaoVoltarOverlay } from '../components/BotaoVoltarOverlay'
+import { arquivoDe } from '../lib/imagem'
 
 /**
  * O que a câmera está registrando.
@@ -593,7 +594,7 @@ export function CapturePage() {
       const id = await publicarAlerta({
         ...dados,
         checkboxAceite: aceiteAlerta,
-        images: [new File([blobCapturado], `alerta-${Date.now()}.webp`, { type: 'image/webp' })],
+        images: [arquivoDe(blobCapturado, `alerta-${Date.now()}`)],
       })
       setAlertaCriadoId(id)
       setEtapa('concluido')

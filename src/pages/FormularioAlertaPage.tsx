@@ -15,6 +15,7 @@ import { CheckboxAceite } from '../components/CheckboxAceite'
 import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { CorteFoto } from '../components/CorteFotoLazy'
+import { arquivoDe } from '../lib/imagem'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
@@ -164,7 +165,10 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
 
   function aoCortarFoto(blob: Blob) {
     const original = filaCorte[0]
-    const cortada = new File([blob], (original?.name ?? 'foto').replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' })
+    // O nome e o tipo saem do blob, não de um palpite: em aparelho sem
+    // encoder webp o corte volta JPEG (ou PNG), e carimbar '.webp' fazia o
+    // storage guardar a etiqueta errada. Ver lib/imagem.ts.
+    const cortada = arquivoDe(blob, original?.name)
     setFotos((prev) => [...prev, cortada])
     setPreviewUrls((prev) => [...prev, URL.createObjectURL(cortada)])
     setFilaCorte((f) => f.slice(1))
