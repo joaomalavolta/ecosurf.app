@@ -45,7 +45,34 @@ const BOTTLE = '<path d="M10 5h4"/><path d="M10 5v-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1
 const MOUNTAIN = '<path d="M3 20h18"/><path d="M12 4l-8 16h16z"/>'
 const FLAME = '<path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z"/>'
 const FISH = '<path d="M16.69 7.44a6.973 6.973 0 0 0-1.69 4.56c0 1.747 .642 3.346 1.7 4.57"/><path d="M2 9.504c7.4 8.83 14.6 7.83 19-1.504-4.4-9.33-11.6-10.33-19-1.504z"/><circle cx="14.5" cy="11.5" r=".5" fill="#fff"/>'
-const DOT = '<circle cx="12" cy="12" r="4"/><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/>'
+/*
+ * Óleo, microplásticos e entulho tinham desenho errado, e por dois motivos
+ * diferentes:
+ *
+ *  · óleo e microplásticos dividiam um `DOT` que era um círculo com quatro
+ *    traços em cruz — ou seja, uma MIRA. No mapa não lia como derramamento
+ *    nem como partícula: lia como alvo de tiro, e destoava de todos os
+ *    vizinhos, que têm objeto reconhecível (lixeira, gota, casa, chama).
+ *  · entulho usava o MESMO `TRASH` de lixo-praia. Dois pinos idênticos para
+ *    categorias diferentes, distinguíveis só pela cor.
+ */
+/**
+ * Gota caindo sobre a mancha espalhada — derramamento, e não a gota limpa do
+ * esgoto. A poça é larga e baixa de propósito: na primeira versão ela era
+ * pequena e colada na gota, e o conjunto lia como uma TAÇA. Afastada e
+ * alargada, lê como superfície atingida.
+ */
+const OLEO = '<path d="M12 3c-2.4 3.4-4.4 5.7-4.4 7.9a4.4 4.4 0 0 0 8.8 0C16.4 8.7 14.4 6.4 12 3z"/><ellipse cx="12" cy="19.4" rx="8.4" ry="1.7"/>'
+/** Partículas espalhadas de tamanhos diferentes — o que "micro" quer dizer. */
+const MICRO = '<circle cx="6.8" cy="8" r="1.9"/><circle cx="14.4" cy="6.4" r="1.35"/><circle cx="17.4" cy="12.2" r="2.1"/><circle cx="10.2" cy="13.8" r="1.6"/><circle cx="15.2" cy="17.6" r="1.3"/><circle cx="6.2" cy="16.2" r="1.2"/>'
+/**
+ * Blocos empilhados com o de cima TORTO — resto de obra, não saco de lixo.
+ *
+ * A primeira tentativa foram três retângulos centrados, um menor que o outro:
+ * a 44 px aquilo lia como pilha de pratos. A inclinação do bloco do topo e a
+ * junta vertical na base é o que diz "desabou" em vez de "foi empilhado".
+ */
+const ENTULHO = '<rect x="2.8" y="15.8" width="8" height="4.4" rx="0.5"/><rect x="12.2" y="15.8" width="8" height="4.4" rx="0.5"/><rect x="7.4" y="10.8" width="8" height="4.4" rx="0.5"/><rect x="11.6" y="5.4" width="7" height="4.4" rx="0.5" transform="rotate(-17 15.1 7.6)"/>'
 const WAVESINE = '<path d="M21 12h-2c-.894 0-1.662-.857-1.761-2c-.296-3.45-.749-6-2.749-6s-2.5 3.582-2.5 8s-.5 8-2.5 8s-2.452-2.547-2.749-6c-.1-1.147-.867-2-1.763-2h-1.928"/>'
 const HOME = '<path d="M5 12l-2 0l9-9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>'
 const QUESTION = '<path d="M8 8a3.5 3 0 0 1 3.5-3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1-2 3c-1.113.667-2 1.667-2 3"/><path d="M12 19v.01"/>'
@@ -80,10 +107,10 @@ export const ICONES: Record<string, string> = {
   'ic-lixo-rio':       ZURB_PIN('#D64045', BOTTLE, 44),
   'ic-esgoto':         ZURB_PIN('#7B8794', DROP, 44),
   'ic-erosao':         ZURB_PIN('#C17817', MOUNTAIN, 44),
-  'ic-oleo':           ZURB_PIN('#3D3D3D', DOT, 44),
+  'ic-oleo':           ZURB_PIN('#3D3D3D', OLEO, 44),
   'ic-animal':         ZURB_PIN('#5B8C5A', FISH, 44),
-  'ic-entulho':        ZURB_PIN('#9B6B4D', TRASH, 44),
-  'ic-microplasticos': ZURB_PIN('#B266B2', DOT, 44),
+  'ic-entulho':        ZURB_PIN('#9B6B4D', ENTULHO, 44),
+  'ic-microplasticos': ZURB_PIN('#B266B2', MICRO, 44),
   'ic-espuma':         ZURB_PIN('#5E8C61', WAVESINE, 44),
   'ic-queimada':       ZURB_PIN('#FF6B35', FLAME, 44),
   'ic-ocupacao':       ZURB_PIN('#8B6914', HOME, 44),
