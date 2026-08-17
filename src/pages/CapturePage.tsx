@@ -14,6 +14,8 @@ import { IconUsers, IconPlus,
   IconPhoto,
   IconCurrentLocation,
   IconMap2,
+  IconPaw,
+  IconShieldLock,
 } from '@tabler/icons-react'
 import { enfileirar, definirTipo } from '../offline/uploadQueue'
 import { gravarClipe, validarVideoGaleria, carregarVideoParaPoster, recortarVideoParaClipe, melhorMimeGravacao, type GravacaoAtiva } from '../lib/video'
@@ -23,12 +25,20 @@ import { ConfirmarPico } from '../components/ConfirmarPico'
 const MapaPicker = lazy(() => import('../components/MapaPicker').then((m) => ({ default: m.MapaPicker })))
 import { acaoDoVoltar } from './captura-voltar'
 import { RecortarVideo } from '../components/RecortarVideo'
-import { SeletorCategoria } from '../components/SeletorCategoria'
+import { SeletorCategoria, categoriaPorId, categoriaSensivel } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
 import { BotaoVoltarOverlay } from '../components/BotaoVoltarOverlay'
 
-type TipoRegistro = 'report' | 'alerta' | 'lixo'
+/**
+ * O que a câmera está registrando.
+ *
+ * Nome mudou de `TipoRegistro` para `TipoCaptura` porque `TipoRegistro` agora
+ * é do domínio ('alerta' | 'positivo') e os dois precisam conviver neste
+ * arquivo. São coisas diferentes: aqui é o CAMINHO da captura ('lixo' é um
+ * atalho para um alerta já classificado), lá é a família do registro.
+ */
+type TipoCaptura = 'report' | 'alerta' | 'lixo' | 'positivo'
 const SIGLA_UF: Record<string, string> = {
   'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
   'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
@@ -76,15 +86,21 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-const TIPOS: { id: TipoRegistro; icone: typeof IconRipple; titulo: string; desc: string; cor: string }[] = [
+const TIPOS: { id: TipoCaptura; icone: typeof IconRipple; titulo: string; desc: string; cor: string }[] = [
   { id: 'report', icone: IconRipple, titulo: 'Report do mar', desc: 'Registro das condições de surf agora', cor: '#1ECBC3' },
   { id: 'alerta', icone: IconAlertTriangle, titulo: 'Alerta ambiental', desc: 'Esgoto, erosão, obra, poluição, óleo', cor: '#E84855' },
   { id: 'lixo', icone: IconTrash, titulo: 'Lixo na praia', desc: 'Resíduo na praia ou no mar', cor: '#FF8C42' },
+  { id: 'positivo', icone: IconPaw, titulo: 'Registro positivo', desc: 'Fauna, desova, filhotes, mata em pé, coleta seletiva', cor: '#2E9B6B' },
 ]
 
 export function CapturePage() {
   const [etapa, setEtapa] = useState<Etapa>('tipo')
-  const [tipo, setTipo] = useState<TipoRegistro | null>(null)
+  const [tipo, setTipo] = useState<TipoCaptura | null>(null)
+  /** Vai para a tabela `ameacas` (mapa), e não para a timeline do pico. */
+  const ehRegistroDeMapa = tipo === 'alerta' || tipo === 'lixo' || tipo === 'positivo'
+  const ehPositivo = tipo === 'positivo'
+  /** Família do registro, no vocabulário do domínio. */
+  const familia: import('../types/domain').TipoRegistro = ehPositivo ? 'positivo' : 'alerta'
   const [comunidadeId, setComunidadeId] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -150,6 +166,8 @@ export function CapturePage() {
   // categorias de alerta — mas o tipo acompanha o que o componente devolve.
   const [catAlerta, setCatAlerta] = useState<import('../types/domain').CategoriaRegistro | undefined>()
   const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
+  /** Categoria cujo ponto exato o banco vai guardar em vez de publicar. */
+  const catProtegida = !!catAlerta && categoriaSensivel(catAlerta)
   const [aceiteAlerta, setAceiteAlerta] = useState(false)
   const [municipioAlerta, setMunicipioAlerta] = useState('')
   const [ufAlerta, setUfAlerta] = useState('')
@@ -451,9 +469,9 @@ export function CapturePage() {
     setThumbCapturado(thumb)
     setBlobCapturado(blob)
 
-    // Alerta/lixo: o GPS é essencial (denúncia sem lugar não existe),
-    // então buscamos mesmo se a pessoa marcou "estou em casa".
-    const precisaGPS = !noLocal || tipo === 'alerta' || tipo === 'lixo'
+    // Alerta/lixo/positivo: o GPS é essencial (registro sem lugar não vai
+    // ao mapa), então buscamos mesmo se a pessoa marcou "estou em casa".
+    const precisaGPS = !noLocal || ehRegistroDeMapa
     let pos: { lat?: number; lng?: number; precisaoM?: number } = {}
     if (precisaGPS) {
       pos = await obterCoords()
@@ -473,11 +491,11 @@ export function CapturePage() {
     }
 
     // ── BIFURCAÇÃO POR NATUREZA ──
-    // Report do mar → foto de pico (timeline). Alerta/lixo → registro de
-    // AMEAÇA com a foto anexa: nasce no carrossel, no mapa e nas Ações —
-    // nunca na tábua de marés. (Antes, tudo virava foto de pico: o tipo
-    // escolhido era descartado no salvamento.)
-    if (tipo === 'alerta' || tipo === 'lixo') {
+    // Report do mar → foto de pico (timeline). Alerta/lixo/positivo →
+    // registro na tabela `ameacas` com a foto anexa: nasce no carrossel, no
+    // mapa e nas Ações — nunca na tábua de marés. (Antes, tudo virava foto de
+    // pico: o tipo escolhido era descartado no salvamento.)
+    if (ehRegistroDeMapa) {
       if (tipo === 'lixo' && !catAlerta) setCatAlerta('lixo-praia')
       setEtapa('classificar-alerta')
       return
@@ -539,14 +557,16 @@ export function CapturePage() {
   }
 
   async function publicarAlertaDaCamera() {
-    if (!catAlerta || !gravAlerta || !posCapturada.lat || !posCapturada.lng || !blobCapturado) return
+    if (!catAlerta || !posCapturada.lat || !posCapturada.lng || !blobCapturado) return
+    if (!ehPositivo && !gravAlerta) return
     setPublicandoAlerta(true)
-    const { categoriaPorId } = await import('../components/SeletorCategoria')
     const rotulo = categoriaPorId(catAlerta).label
     const dados = {
       titulo: `${rotulo} — ${novaPraiaNome || municipioAlerta || 'local registrado'}`,
       categoria: catAlerta,
-      gravidade: gravAlerta,
+      tipoRegistro: familia,
+      // Registro positivo grava NULL: não há intensidade para avaliar.
+      gravidade: ehPositivo ? undefined : gravAlerta,
       localNome: novaPraiaNome || undefined,
       municipio: municipioAlerta || 'Não informado',
       uf: ufAlerta || 'SP',
@@ -620,7 +640,11 @@ export function CapturePage() {
         videoMime: videoCapturadoRef.current?.mime,
         videoDuracaoS: videoCapturadoRef.current?.duracaoS,
       })
-      if (tipo) await definirTipo(id, tipo)
+      // `finalizarUpload` só é alcançado no caminho 'report': alerta, lixo e
+      // positivo desviam antes, para `classificar-alerta`. O guard existe para
+      // a fila de FOTOS não precisar conhecer 'positivo' — um registro
+      // positivo nunca vira foto de pico na timeline.
+      if (tipo && tipo !== 'positivo') await definirTipo(id, tipo)
       setPicoFinal(picoId)
       setEtapa('concluido')
     } catch (e) {
@@ -706,7 +730,18 @@ export function CapturePage() {
 
       {/* ETAPA 1: Escolher tipo */}
       {etapa === 'tipo' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24, position: 'relative', zIndex: 1 }}>
+        /* Medido em 375×553 (iPhone SE com as barras): com três cards o
+           conteúdo dava 510 px numa caixa de 510 — encostado no limite. O
+           quarto card leva a 524 px, e num contêiner centralizado SEM rolagem
+           o excedente sai pelas DUAS pontas: o título some por cima e o botão
+           "Próximo" por baixo, os dois inalcançáveis. Não é um corte feio, é
+           o fluxo travado — sem o botão não dá para avançar.
+
+           `safe center` centraliza enquanto cabe e passa a alinhar pelo topo
+           quando não cabe. Navegador que desconheça `safe` descarta a
+           declaração inteira e cai em `flex-start`, que é justamente o
+           comportamento seguro — com `overflowY` cobrindo o resto. */
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'safe center', overflowY: 'auto', padding: 24, position: 'relative', zIndex: 1 }}>
           <h2 style={{ color: '#fff', textAlign: 'center', marginBottom: 4 }}>O que você vai registrar?</h2>
           <p style={{ color: 'rgba(255,255,255,.6)', textAlign: 'center', fontSize: 13, marginBottom: 20 }}>
             Escolha o tipo para organizar melhor o registro.
@@ -719,6 +754,17 @@ export function CapturePage() {
                 <button
                   key={t.id}
                   onClick={() => {
+                    // Trocar de família ZERA a classificação. Sem isto:
+                    // escolher "Alerta ambiental" → "Esgoto aparente", voltar,
+                    // escolher "Registro positivo" e publicar gravaria esgoto
+                    // com tipo_registro = positivo. O seletor não mostraria a
+                    // categoria selecionada (ela não está na grade da outra
+                    // família), então nada na tela denunciaria o engano.
+                    const mudouDeFamilia = (t.id === 'positivo') !== (tipo === 'positivo')
+                    if (mudouDeFamilia) {
+                      setCatAlerta(undefined)
+                      setGravAlerta(undefined)
+                    }
                     setTipo(t.id)
                     setNoLocal(null) // reset
                   }}
@@ -1168,20 +1214,45 @@ export function CapturePage() {
       {etapa === 'classificar-alerta' && (
         <div style={{ position: 'fixed', inset: 0, background: '#06222E', zIndex: 50, overflowY: 'auto', padding: '24px 18px calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
           <BotaoVoltarOverlay onClick={() => window.history.back()} label="Voltar para a câmera" style={{ marginBottom: 16 }} />
-          <h2 style={{ color: '#fff', marginBottom: 4 }}>Classifique o alerta</h2>
+          <h2 style={{ color: '#fff', marginBottom: 4 }}>
+            {ehPositivo ? 'O que você encontrou?' : 'Classifique o alerta'}
+          </h2>
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, marginBottom: 14 }}>
-            Sua foto vira um registro ambiental oficial no mapa da comunidade.
+            {ehPositivo
+              ? 'Sua foto entra no mapa ao lado dos alertas — o litoral também é feito do que está dando certo.'
+              : 'Sua foto vira um registro ambiental oficial no mapa da comunidade.'}
           </p>
 
           <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} escuro />
 
           <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
-            <SeletorCategoria selecionada={catAlerta} onSelecionar={setCatAlerta} />
+            <SeletorCategoria tipo={familia} selecionada={catAlerta} onSelecionar={setCatAlerta} />
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
-            <CampoGravidade valor={gravAlerta} onChange={setGravAlerta} />
-          </div>
+          {/* O aviso aparece assim que a categoria sensível é escolhida, antes
+              de publicar — é quando a informação ainda muda a decisão. */}
+          {catProtegida && (
+            <div style={{
+              display: 'flex', gap: 9, alignItems: 'flex-start',
+              background: 'rgba(14,154,167,.14)', border: '1px solid rgba(14,154,167,.4)',
+              borderRadius: 14, padding: '12px 13px', marginBottom: 14,
+            }}>
+              <IconShieldLock size={18} stroke={2} style={{ color: '#4FD3E0', flexShrink: 0, marginTop: 1 }} />
+              <span style={{ color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 1.45 }}>
+                <b>Localização protegida.</b> O mapa público vai mostrar uma área
+                aproximada deste ponto. A coordenada exata do GPS fica guardada e
+                só você e a moderação enxergam.
+              </span>
+            </div>
+          )}
+
+          {/* Gravidade só no alerta: uma tartaruga avistada não tem
+              intensidade para avaliar. */}
+          {!ehPositivo && (
+            <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+              <CampoGravidade valor={gravAlerta} onChange={setGravAlerta} />
+            </div>
+          )}
 
           <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
             <label style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, display: 'block', marginBottom: 6 }}>Nome do local</label>
@@ -1204,7 +1275,9 @@ export function CapturePage() {
 
           <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', color: 'rgba(255,255,255,.75)', fontSize: 12.5, marginBottom: 16, cursor: 'pointer' }}>
             <input type="checkbox" checked={aceiteAlerta} onChange={(e) => setAceiteAlerta(e.target.checked)} style={{ marginTop: 2 }} />
-            Declaro que o registro é verdadeiro e feito de forma segura, sem me expor a riscos.
+            {ehPositivo
+              ? 'Declaro que observei de longe, sem tocar, alimentar ou perturbar, e que o registro é verdadeiro.'
+              : 'Declaro que o registro é verdadeiro e feito de forma segura, sem me expor a riscos.'}
           </label>
 
           {/* Alerta EXIGE coordenada (denúncia sem lugar não vai ao mapa). Sem
@@ -1220,7 +1293,9 @@ export function CapturePage() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
                 <IconMapPin size={16} stroke={2} style={{ color: '#F0A17E', flexShrink: 0, marginTop: 1 }} />
                 <span style={{ color: 'rgba(255,255,255,.9)', fontSize: 12.5, lineHeight: 1.45 }}>
-                  Um alerta ambiental precisa de localização para aparecer no mapa. Onde isto aconteceu?
+                  {ehPositivo
+                    ? 'Um registro positivo precisa de localização para aparecer no mapa. Onde você viu isto?'
+                    : 'Um alerta ambiental precisa de localização para aparecer no mapa. Onde isto aconteceu?'}
                 </span>
               </div>
 
@@ -1274,10 +1349,10 @@ export function CapturePage() {
 
           <button
             className="btn acento full"
-            disabled={!catAlerta || !gravAlerta || !aceiteAlerta || !posCapturada.lat || publicandoAlerta}
+            disabled={!catAlerta || (!ehPositivo && !gravAlerta) || !aceiteAlerta || !posCapturada.lat || publicandoAlerta}
             onClick={publicarAlertaDaCamera}
           >
-            {publicandoAlerta ? 'Publicando…' : 'Publicar alerta'}
+            {publicandoAlerta ? 'Publicando…' : ehPositivo ? 'Publicar registro positivo' : 'Publicar alerta'}
           </button>
         </div>
       )}
@@ -1479,9 +1554,13 @@ export function CapturePage() {
             )}
           </div>
           <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13, lineHeight: 1.5, maxWidth: 280 }}>
-            Sua foto está sendo enviada em background. Obrigado por contribuir!
+            {ehPositivo
+              ? 'Seu registro entrou no mapa. Obrigado por mostrar o que está dando certo!'
+              : 'Sua foto está sendo enviada em background. Obrigado por contribuir!'}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24, width: '100%', maxWidth: 320 }}>
+            {/* Mutirão só a partir de problema: não se convoca gente para
+                limpar uma área de desova. */}
             {(tipo === 'lixo' || tipo === 'alerta') && (
               <button
                 className="btn full"
@@ -1510,12 +1589,14 @@ export function CapturePage() {
             )}
             {alertaNaFila && (
               <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 13.5, textAlign: 'center', lineHeight: 1.55, background: 'rgba(30,203,195,.12)', border: '1px solid rgba(30,203,195,.35)', borderRadius: 12, padding: '12px 14px' }}>
-                Sem sinal por aqui — seu alerta ficou <b style={{ color: '#1ECBC3' }}>guardado na fila</b> e será publicado sozinho assim que a conexão voltar. A denúncia não se perde.
+                Sem sinal por aqui — seu {ehPositivo ? 'registro' : 'alerta'} ficou <b style={{ color: '#1ECBC3' }}>guardado na fila</b> e será publicado sozinho assim que a conexão voltar. {ehPositivo ? 'Nada se perde.' : 'A denúncia não se perde.'}
               </p>
             )}
             {alertaCriadoId && (
               <button className="btn acento full" onClick={() => navigate(`/alerta/${alertaCriadoId}`)}>
-                <IconAlertTriangle size={18} stroke={2} /> Ver alerta no mapa
+                {ehPositivo
+                  ? <><IconPaw size={18} stroke={2} /> Ver registro no mapa</>
+                  : <><IconAlertTriangle size={18} stroke={2} /> Ver alerta no mapa</>}
               </button>
             )}
             {picoFinal && (
@@ -1530,6 +1611,18 @@ export function CapturePage() {
               setBlobCapturado(undefined)
               setPicoFinal(null)
               setPicoAutoNome(null)
+              // A classificação também sai daqui. O aceite ficava marcado de um
+              // registro para o outro, e agora o texto dele MUDA entre as
+              // famílias — quem aceitou "sem me expor a riscos" apareceria com
+              // "observei de longe, sem tocar" já aceito, sem ter lido.
+              setCatAlerta(undefined)
+              setGravAlerta(undefined)
+              setAceiteAlerta(false)
+              // E os resultados do registro anterior: sem isto, a próxima tela
+              // de conclusão oferecia "Ver no mapa" apontando para o registro
+              // passado, mesmo depois de uma foto de pico comum.
+              setAlertaCriadoId(null)
+              setAlertaNaFila(false)
             }}>
               <IconCamera size={18} /> Novo registro
             </button>
