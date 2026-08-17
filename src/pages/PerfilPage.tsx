@@ -16,6 +16,7 @@ import { meuStatus, permissoes, sair } from '../services/admin'
 import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
+import { codificar } from '../lib/imagem'
 
 function Stat({ k, v, icon: Icon }: { k: string; v: string | number; icon: React.ElementType }) {
   return (
@@ -156,9 +157,9 @@ export function PerfilPage() {
       ctx.drawImage(img, 0, 0, w, h)
       if (typeof img.close === 'function') img.close()
       
-      const blob = await new Promise<Blob>((resolve, reject) => 
-        c.toBlob((b) => b ? resolve(b) : reject(new Error('Falha ao converter imagem')), 'image/webp', 0.85)
-      )
+      // Ver lib/imagem.ts: pedir webp num navegador sem encoder webp devolve
+      // PNG em silêncio, e o avatar sobe com megabytes em vez de dezenas de KB.
+      const blob = await codificar(c, 0.85)
       
       const { sb } = await import('../services/supabase/client')
       const { data } = await sb().auth.getSession()
@@ -172,7 +173,7 @@ export function PerfilPage() {
       
       // Upload como novo arquivo
       const up = await sb().storage.from('avatars').upload(path, blob, {
-        contentType: 'image/webp',
+        contentType: blob.type || 'image/webp',
         upsert: true,
       })
       if (up.error) throw new Error(`Upload falhou: ${up.error.message}`)

@@ -26,11 +26,16 @@ export const supabaseApi: EcosurfApi = {
       const { restInserirPico } = await import('./rest')
       picoId = await restInserirPico(f.picoNovo)
     }
+    // O `.webp` no caminho fica: é CHAVE, guardada em `fotos.storage_path` e
+    // usada para derivar o thumb. Trocar a extensão por causa do formato real
+    // renomearia objetos que o banco já aponta. O que precisa ser honesto é o
+    // contentType — é ele que o navegador usa para desenhar, e ele vinha fixo
+    // em webp mesmo quando o canvas devolvia JPEG ou PNG. Ver lib/imagem.ts.
     const path = `${picoId}/${f.id}.webp`
     const thumbPath = `${picoId}/${f.id}.thumb.webp`
     if (f.blob) {
       const up = await sb().storage.from('fotos').upload(path, f.blob, {
-        contentType: 'image/webp',
+        contentType: f.blob.type || 'image/webp',
         upsert: true,
       })
       if (up.error) throw up.error
@@ -39,7 +44,7 @@ export const supabaseApi: EcosurfApi = {
     let thumbEnviado = false
     if (f.thumbBlob) {
       const upThumb = await sb().storage.from('fotos').upload(thumbPath, f.thumbBlob, {
-        contentType: 'image/webp',
+        contentType: f.thumbBlob.type || 'image/webp',
         upsert: true,
       })
       if (!upThumb.error) thumbEnviado = true

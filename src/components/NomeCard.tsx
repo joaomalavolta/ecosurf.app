@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { IconCamera, IconCheck } from '@tabler/icons-react'
 import { temBackend } from '../services/api'
+import { codificar } from '../lib/imagem'
 
 /**
  * Card de setup inicial: define nome de exibição + avatar.
@@ -38,9 +39,9 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
       ctx.drawImage(img, 0, 0, w, h)
       if (typeof img.close === 'function') img.close()
 
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        c.toBlob((b) => b ? resolve(b) : reject(new Error('Falha')), 'image/webp', 0.85)
-      )
+      // `codificar` confere o formato que o navegador devolveu: sem encoder
+      // webp, `toBlob` cai em PNG calado e o avatar vai com megabytes.
+      const blob = await codificar(c, 0.85)
 
       const { sb } = await import('../services/supabase/client')
       const { data } = await sb().auth.getSession()
@@ -49,7 +50,7 @@ export function NomeCard({ defaultNome = '', defaultAvatar = '' }: { defaultNome
 
       const path = `${u.id}/avatar.webp`
       await sb().storage.from('avatars').remove([path]).catch(() => {})
-      const up = await sb().storage.from('avatars').upload(path, blob, { contentType: 'image/webp', upsert: true })
+      const up = await sb().storage.from('avatars').upload(path, blob, { contentType: blob.type || 'image/webp', upsert: true })
       if (up.error) throw new Error(up.error.message)
 
       const url = sb().storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now()

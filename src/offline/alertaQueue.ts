@@ -1,4 +1,5 @@
 import { db, type AlertaPendente } from './db'
+import { arquivoDe } from '../lib/imagem'
 
 /**
  * Fila offline de alertas ambientais — a promessa do manual, cumprida
@@ -51,7 +52,9 @@ export async function flushAlertas(): Promise<void> {
           lng: a.lng,
           ocorridoEm: a.ocorridoEm,
           checkboxAceite: true, // aceite foi dado na captura, antes de enfileirar
-          images: a.blob ? [new File([a.blob], `alerta-${a.id}.webp`, { type: 'image/webp' })] : undefined,
+          // O blob veio do canvas e pode ser webp, jpeg ou png — o nome e o
+          // tipo saem dele, nunca de um palpite. Ver lib/imagem.ts.
+          images: a.blob ? [arquivoDe(a.blob, `alerta-${a.id}`)] : undefined,
         })
         await d.delete('alertas', a.id)
         const { toast } = await import('../lib/toast')

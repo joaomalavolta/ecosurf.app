@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
 import { IconCheck, IconZoomIn } from '@tabler/icons-react'
 import { BotaoVoltarOverlay } from './BotaoVoltarOverlay'
+import { codificar } from '../lib/imagem'
 
 /**
  * Corte de foto antes do upload — a peça que padroniza o acervo.
@@ -34,13 +35,10 @@ async function recortar(src: string, area: Area, maxLargura: number): Promise<Bl
   if (!ctx) throw new Error('Canvas indisponível')
   ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, w, h)
 
-  return new Promise<Blob>((res, rej) =>
-    canvas.toBlob(
-      (b) => (b ? res(b) : rej(new Error('Falha ao gerar a imagem'))),
-      'image/webp',
-      0.86,
-    ),
-  )
+  // `codificar` confere o que o navegador devolveu: pedir webp num aparelho
+  // sem encoder webp cai em PNG SEM avisar, e um PNG de 1600×1200 pesa ~5 MB
+  // contra ~770 KB do webp. Ver lib/imagem.ts.
+  return codificar(canvas, 0.86)
 }
 
 export function CorteFoto({

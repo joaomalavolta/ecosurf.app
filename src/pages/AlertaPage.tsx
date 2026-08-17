@@ -12,6 +12,7 @@ import { SeletorCategoria, categoriaPorId, categoriaSensivel } from '../componen
 import { CampoGravidade } from '../components/CampoGravidade'
 import { SUPABASE_URL } from '../services/supabase/config'
 import { atualizarAlerta } from '../services/alertas'
+import { arquivoDe } from '../lib/imagem'
 import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 
 interface AlertaDetalhe {
@@ -197,7 +198,7 @@ export function AlertaPage() {
 
   function aoCortarNova(blob: Blob) {
     const orig = filaCorte[0]
-    const arq = new File([blob], (orig?.name ?? 'foto').replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' })
+    const arq = arquivoDe(blob, orig?.name)
     setEditFotos((prev) => [...prev, arq])
     setPreviewUrls((prev) => [...prev, URL.createObjectURL(arq)])
     setFilaCorte((f) => f.slice(1))
@@ -224,7 +225,7 @@ export function AlertaPage() {
     const alvo = reajustando
     setReajustando(null)
     if (!alvo) return
-    const arq = new File([blob], 'reenquadrada.webp', { type: 'image/webp' })
+    const arq = arquivoDe(blob, 'reenquadrada')
     setKeptImages((prev) => prev.filter((p) => p !== alvo.path)) // sai a antiga
     setEditFotos((prev) => [...prev, arq])                        // entra a ajustada
     setPreviewUrls((prev) => [...prev, URL.createObjectURL(arq)])
