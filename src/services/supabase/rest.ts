@@ -131,6 +131,7 @@ interface AmeacaRow {
   id: string
   titulo: string
   categoria: string
+  tipo_registro: string | null
   status: string
   gravidade: string | null
   pico_id: string | null
@@ -156,6 +157,9 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     id: r.id,
     titulo: r.titulo,
     categoria: r.categoria as Ameaca['categoria'],
+    // Linha anterior à 0063 não tem a coluna preenchida no cache do navegador;
+    // 'alerta' é o default da coluna e o que todas elas são.
+    tipoRegistro: (r.tipo_registro ?? 'alerta') as Ameaca['tipoRegistro'],
     status: r.status as Ameaca['status'],
     gravidade: (r.gravidade ?? 'media') as Ameaca['gravidade'],
     picoId: r.pico_id ?? undefined,
@@ -267,35 +271,50 @@ export async function restPerfilPublico(userId: string): Promise<import('../../t
   }
 }
 
+export interface ContribuicaoRegistro {
+  id: string; titulo: string; categoria: string
+  municipio: string | null; uf: string | null; criadaEm: string
+}
+
 export interface ContribsUsuario {
   fotos: { id: string; picoId: string; capturadaEm: string; thumbPath: string | null; storagePath: string | null }[]
-  alertas: { id: string; titulo: string; categoria: string; municipio: string | null; uf: string | null; criadaEm: string }[]
+  alertas: ContribuicaoRegistro[]
+  positivos: ContribuicaoRegistro[]
   mutiroes: { id: string; titulo: string; tipoAcao: string | null; municipio: string | null; uf: string | null; quando: string | null }[]
   totalFotos: number
   totalAlertas: number
+  totalPositivos: number
   totalMutiroes: number
 }
 
-/** Contribuições públicas de um usuário: fotos, alertas e mutirões que assinou. */
+/** Contribuições públicas de um usuário: fotos, registros e mutirões que assinou. */
 export async function restContribuicoesUsuario(userId: string): Promise<ContribsUsuario> {
   const uid = encodeURIComponent(userId)
-  const [fotosR, alertasR, mutiroesR] = await Promise.all([
+  const [fotosR, registrosR, mutiroesR] = await Promise.all([
     rest<{ id: string; pico_id: string; capturada_em: string; thumb_path: string | null; storage_path: string | null }[]>(
       `fotos_publicas?autor_id=eq.${uid}&select=id,pico_id,capturada_em,thumb_path,storage_path&order=capturada_em.desc&limit=48`,
     ).catch(() => []),
-    rest<{ id: string; titulo: string; categoria: string; municipio: string | null; uf: string | null; criada_em: string }[]>(
-      `ameacas_publicas?autor_id=eq.${uid}&select=id,titulo,categoria,municipio,uf,criada_em&order=criada_em.desc&limit=48`,
+    // As duas famílias numa consulta só; separar aqui é de graça, uma segunda
+    // requisição não seria.
+    rest<{ id: string; titulo: string; categoria: string; tipo_registro: string | null; municipio: string | null; uf: string | null; criada_em: string }[]>(
+      `ameacas_publicas?autor_id=eq.${uid}&select=id,titulo,categoria,tipo_registro,municipio,uf,criada_em&order=criada_em.desc&limit=96`,
     ).catch(() => []),
     rest<{ id: string; titulo: string; tipo_acao: string | null; municipio: string | null; uf: string | null; quando: string | null }[]>(
       `mutiroes_publicos?autor_id=eq.${uid}&select=id,titulo,tipo_acao,municipio,uf,quando&order=quando.desc&limit=48`,
     ).catch(() => []),
   ])
+  const paraRegistro = (r: typeof registrosR[number]): ContribuicaoRegistro =>
+    ({ id: r.id, titulo: r.titulo, categoria: r.categoria, municipio: r.municipio, uf: r.uf, criadaEm: r.criada_em })
+  const alertas = registrosR.filter((r) => r.tipo_registro !== 'positivo').map(paraRegistro)
+  const positivos = registrosR.filter((r) => r.tipo_registro === 'positivo').map(paraRegistro)
   return {
     fotos: fotosR.map((r) => ({ id: r.id, picoId: r.pico_id, capturadaEm: r.capturada_em, thumbPath: r.thumb_path, storagePath: r.storage_path })),
-    alertas: alertasR.map((r) => ({ id: r.id, titulo: r.titulo, categoria: r.categoria, municipio: r.municipio, uf: r.uf, criadaEm: r.criada_em })),
+    alertas,
+    positivos,
     mutiroes: mutiroesR.map((r) => ({ id: r.id, titulo: r.titulo, tipoAcao: r.tipo_acao, municipio: r.municipio, uf: r.uf, quando: r.quando })),
     totalFotos: fotosR.length,
-    totalAlertas: alertasR.length,
+    totalAlertas: alertas.length,
+    totalPositivos: positivos.length,
     totalMutiroes: mutiroesR.length,
   }
 }

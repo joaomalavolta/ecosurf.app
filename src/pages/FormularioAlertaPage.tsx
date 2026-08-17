@@ -5,23 +5,83 @@ import { dentroDoBrasil } from '../lib/regiao'
 import { useNavigate } from 'react-router-dom'
 import { IconUsers,
   IconArrowLeft, IconArrowRight, IconCheck, IconMapPin,
-  IconCamera, IconUpload, IconBookmark,
+  IconCamera, IconUpload, IconBookmark, IconShieldLock,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
-import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
+import { SeletorCategoria, categoriaPorId, categoriaSensivel } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { CheckboxAceite } from '../components/CheckboxAceite'
 import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/alertas'
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { CorteFoto } from '../components/CorteFotoLazy'
 import { statusPerfil } from '../services/perfil'
-import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
+import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
 
-type Etapa = 1 | 2 | 3 | 4 | 5 | 6
+/**
+ * As etapas do formulário, por família.
+ *
+ * O registro positivo NÃO passa por "Gravidade": uma tartaruga avistada não
+ * tem intensidade para avaliar, e perguntar seria pedir uma resposta sem
+ * sentido só para manter as duas telas iguais. Por isso a contagem é derivada
+ * da lista, e não seis fixo — senão a barra de progresso e o "Etapa 4 de 6"
+ * passariam a mentir na hora em que o passo saísse do caminho.
+ */
+type Passo = 'categoria' | 'foto' | 'local' | 'gravidade' | 'descricao' | 'revisao'
 
-const ETAPA_LABELS = ['Categoria', 'Foto', 'Local', 'Gravidade', 'Descrição', 'Revisão']
+const PASSOS: Record<TipoRegistro, Passo[]> = {
+  alerta: ['categoria', 'foto', 'local', 'gravidade', 'descricao', 'revisao'],
+  positivo: ['categoria', 'foto', 'local', 'descricao', 'revisao'],
+}
+
+const ROTULO_PASSO: Record<Passo, string> = {
+  categoria: 'Categoria',
+  foto: 'Foto',
+  local: 'Local',
+  gravidade: 'Gravidade',
+  descricao: 'Descrição',
+  revisao: 'Revisão',
+}
+
+/** O que muda de palavra entre as duas famílias. */
+const COPY: Record<TipoRegistro, {
+  header: string
+  tituloCategoria: string
+  ajudaCategoria: string
+  tituloDescricao: string
+  placeholderDescricao: string
+  aviso: string
+  headerSucesso: string
+  tituloSucesso: string
+  corpoSucesso: string
+  corAcento: string
+}> = {
+  alerta: {
+    header: 'Registrar Alerta',
+    tituloCategoria: 'Tipo de ocorrência',
+    ajudaCategoria: 'Escolha a categoria que melhor descreve o que você observou.',
+    tituloDescricao: 'O que está acontecendo? *',
+    placeholderDescricao: 'Descreva o que observou: tipo de resíduo, volume, cheiro, proximidade da água, risco para pessoas ou animais...',
+    aviso: '🦺 Registre apenas se for seguro. Não toque em resíduos perigosos e não se aproxime de animais silvestres.',
+    headerSucesso: 'Seu registro agora faz parte do mapa colaborativo.',
+    tituloSucesso: 'Registro publicado com sucesso!',
+    corpoSucesso: 'Ele agora faz parte do mapa colaborativo do Ecosurf.app.',
+    corAcento: '#E84855',
+  },
+  positivo: {
+    header: 'Registro Positivo',
+    tituloCategoria: 'O que você encontrou de bom?',
+    ajudaCategoria: 'Fauna, desova, filhotes, vegetação preservada ou coleta seletiva — o mapa também precisa mostrar o que vai bem.',
+    tituloDescricao: 'O que você observou? *',
+    placeholderDescricao: 'Descreva o que viu: espécie (se souber), quantos indivíduos, comportamento, estado da vegetação ou como funciona o ponto de coleta...',
+    aviso: '🐢 Observe de longe. Não toque, não alimente e não use flash — principalmente com ninhos e filhotes.',
+    headerSucesso: 'Sua observação agora faz parte do mapa colaborativo.',
+    tituloSucesso: 'Registro positivo publicado!',
+    corpoSucesso: 'Ele entra no mapa ao lado dos alertas — porque o litoral também é feito do que está dando certo.',
+    corAcento: '#2E9B6B',
+  },
+}
 
 function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   return new Promise((res) => {
@@ -34,16 +94,22 @@ function obterCoords(): Promise<{ lat?: number; lng?: number }> {
   })
 }
 
-export function FormularioAlertaPage() {
+export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro }) {
   const navigate = useNavigate()
-  const [etapa, setEtapa] = useState<Etapa>(1)
+  const [etapa, setEtapa] = useState(1)
   const [enviando, setEnviando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [alertaCriadoId, setAlertaCriadoId] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
 
+  const passos = PASSOS[tipo]
+  const total = passos.length
+  const passo = passos[etapa - 1]
+  const copy = COPY[tipo]
+  const ehPositivo = tipo === 'positivo'
+
   // Dados do formulário
-  const [categoria, setCategoria] = useState<CategoriaAlerta | undefined>()
+  const [categoria, setCategoria] = useState<CategoriaRegistro | undefined>()
   const [comunidadeId, setComunidadeId] = useState<string | null>(
     () => new URLSearchParams(window.location.search).get('comunidade'),
   )
@@ -64,23 +130,27 @@ export function FormularioAlertaPage() {
   useEffect(() => {
     statusPerfil().then(async (s) => {
       if (!s.sessao) {
-        toast('Faça login para registrar um alerta ambiental.')
+        toast(ehPositivo
+          ? 'Faça login para publicar um registro positivo.'
+          : 'Faça login para registrar um alerta ambiental.')
         navigate('/perfil', { replace: true })
         return
       }
       setCarregando(false)
     })
-  }, [navigate])
+  }, [navigate, ehPositivo])
 
-  // Auto GPS na etapa 3
+  // Auto GPS quando a etapa do local abre — por posição na lista, não por
+  // número: no registro positivo o "Local" é a mesma etapa 3, mas amarrar ao
+  // índice quebraria na primeira vez que a ordem mudasse.
   useEffect(() => {
-    if (etapa === 3 && !lat) {
+    if (passo === 'local' && !lat) {
       obterCoords().then((pos) => {
         if (pos.lat) setLat(pos.lat)
         if (pos.lng) setLng(pos.lng)
       })
     }
-  }, [etapa, lat])
+  }, [passo, lat])
 
   // Cada foto escolhida entra numa fila de corte 4:3. Padronizar na origem é
   // o que permite exibir tudo com o quadro cheio, sem cortar o assunto nem
@@ -107,13 +177,13 @@ export function FormularioAlertaPage() {
   }
 
   function podeAvancar(): boolean {
-    switch (etapa) {
-      case 1: return !!categoria
-      case 2: return true // fotos são opcionais
-      case 3: return !!municipio && !!uf
-      case 4: return !!gravidade
-      case 5: return descricao.trim().length > 3
-      case 6: return aceite
+    switch (passo) {
+      case 'categoria': return !!categoria
+      case 'foto': return true // fotos são opcionais
+      case 'local': return !!municipio && !!uf
+      case 'gravidade': return !!gravidade
+      case 'descricao': return descricao.trim().length > 3
+      case 'revisao': return aceite
       default: return false
     }
   }
@@ -125,7 +195,8 @@ export function FormularioAlertaPage() {
       toast('Esse ponto está fora do Brasil. Toque no mapa de novo, mais perto do local.')
       return
     }
-    if (!categoria || !gravidade || !lat || !lng) return
+    if (!categoria || !lat || !lng) return
+    if (!ehPositivo && !gravidade) return
     setEnviando(true)
     try {
       const catInfo = categoriaPorId(categoria)
@@ -136,7 +207,10 @@ export function FormularioAlertaPage() {
       const dados: DadosAlerta = {
         titulo: `${catInfo.label} — ${localLimpo || municipioLimpo}`,
         categoria,
-        gravidade,
+        tipoRegistro: tipo,
+        // Sem gravidade no positivo: a coluna aceita NULL e é isso que ela quer
+        // dizer aqui — "não se aplica", não "média".
+        gravidade: ehPositivo ? undefined : gravidade,
         descricao: descricao.trim(),
         localNome: localLimpo || undefined,
         municipio: municipioLimpo,
@@ -161,6 +235,7 @@ export function FormularioAlertaPage() {
   async function salvarComoRascunho() {
     try {
       await salvarRascunho('alerta', {
+        tipoRegistro: tipo,
         categoria, localNome, municipio, uf, lat, lng, gravidade, descricao, recorrente,
       })
       toast('Rascunho salvo com sucesso!')
@@ -172,36 +247,61 @@ export function FormularioAlertaPage() {
   if (sucesso) {
     return (
       <div className="page">
-        <Header title="Registro publicado" sub="Seu registro agora faz parte do mapa colaborativo." />
+        <Header title={ehPositivo ? 'Registro positivo publicado' : 'Registro publicado'} sub={copy.headerSucesso} />
         <div className="page-pad stack" style={{ textAlign: 'center', paddingTop: 40 }}>
           <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(31,227,200,0.15)', color: 'var(--turq)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
             <IconCheck size={36} stroke={2} />
           </div>
-          <h2 style={{ fontSize: 20, marginTop: 16 }}>Registro publicado com sucesso!</h2>
+          <h2 style={{ fontSize: 20, marginTop: 16 }}>{copy.tituloSucesso}</h2>
           <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
-            Ele agora faz parte do mapa colaborativo do Ecosurf.app.
-            <br /><br />
-            Caso a situação exija providência oficial, procure diretamente os órgãos públicos competentes.
+            {copy.corpoSucesso}
+            {!ehPositivo && (
+              <>
+                <br /><br />
+                Caso a situação exija providência oficial, procure diretamente os órgãos públicos competentes.
+              </>
+            )}
           </p>
-          <button
-            className="btn full"
-            style={{ marginTop: 24, background: '#2E9B6B', color: '#fff', fontWeight: 700 }}
-            onClick={() => {
-              const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos'].includes(categoria ?? '')
-              const onde = (localNome || municipio).trim()
-              const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
-              const qs = new URLSearchParams({ titulo })
-              if (alertaCriadoId) qs.set('alerta', alertaCriadoId)
-              if (municipio) qs.set('municipio', municipio)
-              if (uf) qs.set('uf', uf)
-              if (localNome) qs.set('local', localNome)
-              if (lat != null && lng != null) { qs.set('lat', String(lat)); qs.set('lng', String(lng)) }
-              navigate(`/nova-acao/mutirao?${qs.toString()}`)
-            }}
-          >
-            <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
-          </button>
-          <button className="btn acento full" style={{ marginTop: 8 }} onClick={() => navigate('/mapa')}>
+
+          {/* Confirmação de que a proteção agiu. Sem isto, quem marcou o ninho
+              com cuidado fica sem saber se o app respeitou o cuidado. */}
+          {categoria && categoriaSensivel(categoria) && (
+            <div style={{
+              marginTop: 16, padding: '10px 12px', borderRadius: 10, textAlign: 'left',
+              background: '#0E9AA715', border: '1px solid #0E9AA740',
+              fontSize: 12, lineHeight: 1.45, display: 'flex', gap: 8,
+            }}>
+              <IconShieldLock size={17} stroke={2} color="#0E9AA7" style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>
+                O mapa público mostra este ponto de forma aproximada. A coordenada
+                exata fica guardada e visível só para você e para a moderação.
+              </span>
+            </div>
+          )}
+
+          {/* Mutirão só faz sentido para problema: não se convoca gente para
+              limpar uma tartaruga. */}
+          {!ehPositivo && (
+            <button
+              className="btn full"
+              style={{ marginTop: 24, background: '#2E9B6B', color: '#fff', fontWeight: 700 }}
+              onClick={() => {
+                const deLimpeza = ['lixo-praia', 'lixo-rio', 'entulho', 'microplasticos'].includes(categoria ?? '')
+                const onde = (localNome || municipio).trim()
+                const titulo = `${deLimpeza ? 'Mutirão de limpeza' : 'Mutirão'}${onde ? ` — ${onde}` : ''}`
+                const qs = new URLSearchParams({ titulo })
+                if (alertaCriadoId) qs.set('alerta', alertaCriadoId)
+                if (municipio) qs.set('municipio', municipio)
+                if (uf) qs.set('uf', uf)
+                if (localNome) qs.set('local', localNome)
+                if (lat != null && lng != null) { qs.set('lat', String(lat)); qs.set('lng', String(lng)) }
+                navigate(`/nova-acao/mutirao?${qs.toString()}`)
+              }}
+            >
+              <IconUsers size={17} stroke={2} /> Criar mutirão e convidar a comunidade
+            </button>
+          )}
+          <button className="btn acento full" style={{ marginTop: ehPositivo ? 24 : 8 }} onClick={() => navigate('/mapa')}>
             Ver no mapa
           </button>
           <button className="btn outline full" style={{ marginTop: 8 }} onClick={() => navigate('/acoes')}>
@@ -223,27 +323,44 @@ export function FormularioAlertaPage() {
 
   return (
     <div className="page">
-      <Header title="Registrar Alerta" sub={`Etapa ${etapa} de 6 — ${ETAPA_LABELS[etapa - 1]}`} />
+      <Header title={copy.header} sub={`Etapa ${etapa} de ${total} — ${ROTULO_PASSO[passo]}`} />
 
       {/* Progress bar */}
       <div style={{ height: 4, background: 'var(--cinza)' }}>
-        <div style={{ height: '100%', width: `${(etapa / 6) * 100}%`, background: 'var(--turq)', borderRadius: 2, transition: 'width .3s ease' }} />
+        <div style={{ height: '100%', width: `${(etapa / total) * 100}%`, background: 'var(--turq)', borderRadius: 2, transition: 'width .3s ease' }} />
       </div>
 
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 100 }}>
         <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} />
 
-        {/* Etapa 1: Categoria */}
-        {etapa === 1 && (
+        {passo === 'categoria' && (
           <>
-            <h2 style={{ fontSize: 18 }}>Tipo de ocorrência</h2>
-            <p className="muted" style={{ fontSize: 13 }}>Escolha a categoria que melhor descreve o que você observou.</p>
-            <SeletorCategoria selecionada={categoria} onSelecionar={setCategoria} />
+            <h2 style={{ fontSize: 18 }}>{copy.tituloCategoria}</h2>
+            <p className="muted" style={{ fontSize: 13 }}>{copy.ajudaCategoria}</p>
+            <SeletorCategoria tipo={tipo} selecionada={categoria} onSelecionar={setCategoria} />
+
+            {/* O aviso aparece assim que a categoria sensível é escolhida —
+                antes de a pessoa marcar o ponto, que é quando a informação
+                ainda muda a decisão dela. */}
+            {categoria && categoriaSensivel(categoria) && (
+              <div style={{
+                padding: '10px 12px', borderRadius: 10,
+                background: '#0E9AA715', border: '1px solid #0E9AA740',
+                fontSize: 12, color: 'var(--text)', lineHeight: 1.45,
+                display: 'flex', gap: 8,
+              }}>
+                <IconShieldLock size={17} stroke={2} color="#0E9AA7" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>
+                  <b>Localização protegida.</b> Ninhos e filhotes atraem quem quer
+                  perturbar. O mapa público vai mostrar uma área aproximada; a
+                  coordenada exata fica guardada e só você e a moderação enxergam.
+                </span>
+              </div>
+            )}
           </>
         )}
 
-        {/* Etapa 2: Foto */}
-        {etapa === 2 && (
+        {passo === 'foto' && (
           <>
             <h2 style={{ fontSize: 18 }}>Foto ou evidência</h2>
             <p className="muted" style={{ fontSize: 13 }}>Adicione até 3 fotos. Isso ajuda na validação do registro.</p>
@@ -253,7 +370,7 @@ export function FormularioAlertaPage() {
               background: '#F59E0B15', border: '1px solid #F59E0B40',
               fontSize: 11.5, color: 'var(--text)', lineHeight: 1.4,
             }}>
-              🦺 Registre apenas se for seguro. Não toque em resíduos perigosos e não se aproxime de animais silvestres.
+              {copy.aviso}
             </div>
 
             {previewUrls.length > 0 && (
@@ -294,10 +411,17 @@ export function FormularioAlertaPage() {
           </>
         )}
 
-        {/* Etapa 3: Localização */}
-        {etapa === 3 && (
+        {passo === 'local' && (
           <>
             <h2 style={{ fontSize: 18 }}>Localização</h2>
+
+            {categoria && categoriaSensivel(categoria) && (
+              <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.45, margin: 0 }}>
+                Marque o ponto <b>exato</b> mesmo assim: ele é guardado com
+                precisão para a moderação e para pesquisa. Quem é aproximado é
+                só o que aparece no mapa público.
+              </p>
+            )}
 
             {/* Mini-mapa com pin arrastável */}
             <MapaPicker
@@ -354,8 +478,7 @@ export function FormularioAlertaPage() {
           </>
         )}
 
-        {/* Etapa 4: Gravidade */}
-        {etapa === 4 && (
+        {passo === 'gravidade' && (
           <>
             <h2 style={{ fontSize: 18 }}>Gravidade percebida</h2>
             <p className="muted" style={{ fontSize: 13 }}>Como você avalia a intensidade do problema?</p>
@@ -363,30 +486,35 @@ export function FormularioAlertaPage() {
           </>
         )}
 
-        {/* Etapa 5: Descrição */}
-        {etapa === 5 && (
+        {passo === 'descricao' && (
           <>
             <h2 style={{ fontSize: 18 }}>Descrição</h2>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>O que está acontecendo? *</label>
+              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>{copy.tituloDescricao}</label>
               <textarea
                 className="input"
-                placeholder="Descreva o que observou: tipo de resíduo, volume, cheiro, proximidade da água, risco para pessoas ou animais..."
+                placeholder={copy.placeholderDescricao}
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 style={{ minHeight: 100, resize: 'vertical' }}
               />
             </div>
 
+            {/* "Recorrente" tem os dois sentidos, e os dois são úteis: um
+                problema que volta pede cobrança; uma fauna que volta é o
+                indício de que o lugar virou território dela. */}
             <label style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--line)', cursor: 'pointer' }}>
               <input type="checkbox" checked={recorrente} onChange={(e) => setRecorrente(e.target.checked)} style={{ accentColor: 'var(--turq)' }} />
-              <span style={{ fontSize: 13 }}>O problema parece recorrente neste local</span>
+              <span style={{ fontSize: 13 }}>
+                {ehPositivo
+                  ? 'Costuma acontecer neste local (não foi uma vez só)'
+                  : 'O problema parece recorrente neste local'}
+              </span>
             </label>
           </>
         )}
 
-        {/* Etapa 6: Revisão */}
-        {etapa === 6 && (
+        {passo === 'revisao' && (
           <>
             <h2 style={{ fontSize: 18 }}>Revisão e publicação</h2>
 
@@ -394,8 +522,13 @@ export function FormularioAlertaPage() {
               <div><span className="muted" style={{ fontSize: 12 }}>Categoria:</span> <b>{categoria ? categoriaPorId(categoria).label : '—'}</b></div>
               <div><span className="muted" style={{ fontSize: 12 }}>Fotos:</span> {fotos.length} imagem(ns)</div>
               <div><span className="muted" style={{ fontSize: 12 }}>Local:</span> {localNome || '—'} — {municipio}/{uf}</div>
-              <div><span className="muted" style={{ fontSize: 12 }}>Gravidade:</span> <b>{gravidade ?? '—'}</b></div>
+              {!ehPositivo && <div><span className="muted" style={{ fontSize: 12 }}>Gravidade:</span> <b>{gravidade ?? '—'}</b></div>}
               <div><span className="muted" style={{ fontSize: 12 }}>Recorrente:</span> {recorrente ? 'Sim' : 'Não'}</div>
+              {categoria && categoriaSensivel(categoria) && (
+                <div style={{ fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, color: '#0E9AA7', fontWeight: 600 }}>
+                  <IconShieldLock size={15} stroke={2} /> Local aproximado no mapa público
+                </div>
+              )}
               {descricao && <div style={{ fontSize: 13, marginTop: 4, padding: '8px 10px', background: 'var(--cinza)', borderRadius: 8 }}>{descricao.slice(0, 200)}{descricao.length > 200 ? '...' : ''}</div>}
             </div>
 
@@ -418,12 +551,12 @@ export function FormularioAlertaPage() {
         zIndex: 40,
       }}>
         {etapa > 1 && (
-          <button className="btn outline" style={{ flex: 0 }} onClick={() => setEtapa((e) => Math.max(1, e - 1) as Etapa)}>
+          <button className="btn outline" style={{ flex: 0 }} onClick={() => setEtapa((e) => Math.max(1, e - 1))}>
             <IconArrowLeft size={18} />
           </button>
         )}
 
-        {etapa < 6 && (
+        {etapa < total && (
           <button className="btn outline" onClick={salvarComoRascunho} style={{ flex: 0, fontSize: 13 }}>
             <IconBookmark size={16} /> Rascunho
           </button>
@@ -431,13 +564,13 @@ export function FormularioAlertaPage() {
 
         <div style={{ flex: 1 }} />
 
-        {etapa < 6 ? (
-          <button className="btn acento" disabled={!podeAvancar()} onClick={() => setEtapa((e) => Math.min(6, e + 1) as Etapa)}>
+        {etapa < total ? (
+          <button className="btn acento" disabled={!podeAvancar()} onClick={() => setEtapa((e) => Math.min(total, e + 1))}>
             Próximo <IconArrowRight size={16} />
           </button>
         ) : (
           <button className="btn acento full" disabled={!aceite || enviando} onClick={publicar}>
-            {enviando ? 'Publicando...' : 'Publicar Registro'}
+            {enviando ? 'Publicando...' : ehPositivo ? 'Publicar Registro Positivo' : 'Publicar Registro'}
           </button>
         )}
       </div>

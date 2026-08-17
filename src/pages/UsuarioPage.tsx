@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IconCheck, IconMessageCircle,
-  IconMapPin, IconCalendar, IconUser, IconPhoto, IconAlertTriangle, IconHeartHandshake,
+  IconMapPin, IconCalendar, IconUser, IconPhoto, IconAlertTriangle, IconHeartHandshake, IconPaw,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { MenuDenunciaBloqueio } from '../components/MenuDenunciaBloqueio'
@@ -110,10 +110,11 @@ export function UsuarioPage() {
   }
 
   // Tem conteúdo, mas está escondido? É diferente de não ter conteúdo.
-  const total = (contribs?.totalFotos ?? 0) + (contribs?.totalAlertas ?? 0) + (contribs?.totalMutiroes ?? 0)
+  const nAcoes = (contribs?.totalAlertas ?? 0) + (contribs?.totalPositivos ?? 0) + (contribs?.totalMutiroes ?? 0)
+  const total = (contribs?.totalFotos ?? 0) + nAcoes
   const temAlgoVisivel =
     (perfil.mostrarFotos && (contribs?.totalFotos ?? 0) > 0) ||
-    (perfil.mostrarAcoes && ((contribs?.totalAlertas ?? 0) + (contribs?.totalMutiroes ?? 0)) > 0) ||
+    (perfil.mostrarAcoes && nAcoes > 0) ||
     (perfil.mostrarMapa && total > 0)
   const escondeuTudo = total > 0 && !temAlgoVisivel
   const temFotos = !!contribs && perfil.mostrarFotos && contribs.fotos.length > 0
@@ -170,11 +171,13 @@ export function UsuarioPage() {
           </div>
         )}
 
-        {/* Métricas de contribuição */}
+        {/* Métricas de contribuição. Quatro em 360 px: `flexWrap` deixa a
+            quarta descer em vez de espremer todas abaixo do legível. */}
         {contribs && (
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Metrica n={contribs.totalFotos} rotulo="fotos" Icone={IconPhoto} />
             <Metrica n={contribs.totalAlertas} rotulo="alertas" Icone={IconAlertTriangle} />
+            <Metrica n={contribs.totalPositivos} rotulo="positivos" Icone={IconPaw} />
             <Metrica n={contribs.totalMutiroes} rotulo="mutirões" Icone={IconHeartHandshake} />
           </div>
         )}

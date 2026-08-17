@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
-import { IconAlertTriangle, IconHeartHandshake, IconBeach } from '@tabler/icons-react'
+import { IconAlertTriangle, IconHeartHandshake, IconBeach, IconPaw } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 
 export function NovaAcaoPage() {
   return (
     <div className="page">
-      <Header title="Nova Ação" sub="Mapeie problemas ambientais e ajude a dar visibilidade ao que está acontecendo no maretório." />
+      <Header title="Nova Ação" sub="Mapeie o litoral: o que precisa de atenção e o que merece ser visto." />
       <div className="page-pad stack" style={{ paddingTop: 20 }}>
         <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5, textAlign: 'center' }}>
           O Ecosurf.app é uma plataforma cidadã de mapeamento colaborativo.
@@ -44,6 +44,39 @@ export function NovaAcaoPage() {
               <div style={{ fontWeight: 700, fontSize: 16 }}>Registrar Alerta Ambiental</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, lineHeight: 1.4 }}>
                 Lixo, esgoto, erosão, óleo, animal encalhado e outros impactos ambientais.
+              </div>
+            </div>
+          </Link>
+
+          {/* Card Registro Positivo — logo abaixo do alerta, de propósito: as
+              duas metades do mapa aparecem juntas na hora de escolher, senão
+              a positiva vira um recurso escondido no fim da lista. */}
+          <Link
+            to="/nova-acao/positivo"
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              borderRadius: 16,
+              border: '2px solid var(--line)',
+              padding: '20px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              background: 'var(--card)',
+              transition: 'border-color .15s, box-shadow .15s',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: 16,
+              background: 'linear-gradient(135deg, #2E9B6B, #15803D)',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto',
+            }}>
+              <IconPaw size={28} stroke={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>Publicar Registro Positivo</div>
+              <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, lineHeight: 1.4 }}>
+                Fauna avistada, área de desova, filhotes, vegetação preservada ou ponto de coleta seletiva.
               </div>
             </div>
           </Link>

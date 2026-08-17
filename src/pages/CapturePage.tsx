@@ -146,7 +146,9 @@ export function CapturePage() {
       .slice(0, 3)
   }, [posCapturada, picosExistentes])
   const [picoFinal, setPicoFinal] = useState<string | null>(null)
-  const [catAlerta, setCatAlerta] = useState<import('../types/domain').CategoriaAlerta | undefined>()
+  // O seletor abre na família 'alerta' (o padrão), então na prática só chegam
+  // categorias de alerta — mas o tipo acompanha o que o componente devolve.
+  const [catAlerta, setCatAlerta] = useState<import('../types/domain').CategoriaRegistro | undefined>()
   const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
   const [aceiteAlerta, setAceiteAlerta] = useState(false)
   const [municipioAlerta, setMunicipioAlerta] = useState('')

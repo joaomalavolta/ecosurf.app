@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { IconSeeding, IconAlertTriangle, IconUsers } from '@tabler/icons-react'
+import { IconSeeding, IconAlertTriangle, IconUsers, IconPaw } from '@tabler/icons-react'
 import type { Alerta, Mutirao } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
 import { categoriaPorId } from './SeletorCategoria'
@@ -20,21 +20,30 @@ const PESO_GRAV: Record<string, number> = { critica: 0, alta: 1, media: 2, baixa
 export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; mutiroes: Mutirao[] }) {
   if (alertas.length === 0 && mutiroes.length === 0) return null
 
-  const alertasOrd = [...alertas]
-    .sort((a, b) => (PESO_GRAV[a.gravidade ?? 'media'] ?? 2) - (PESO_GRAV[b.gravidade ?? 'media'] ?? 2))
+  // Alerta ordena por gravidade; registro positivo não tem gravidade e por
+  // isso entra depois, na ordem em que veio (mais recente primeiro).
+  const registrosOrd = [...alertas]
+    .sort((a, b) => {
+      const pa = categoriaPorId(a.categoria).tipo === 'positivo' ? 9 : (PESO_GRAV[a.gravidade ?? 'media'] ?? 2)
+      const pb = categoriaPorId(b.categoria).tipo === 'positivo' ? 9 : (PESO_GRAV[b.gravidade ?? 'media'] ?? 2)
+      return pa - pb
+    })
     .slice(0, 8)
 
   return (
     <>
       <div className="between" style={{ padding: '6px 16px 0' }}>
-        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Agir local · alertas e mutirões</span>
+        <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Agir local · o que há por perto</span>
       </div>
       <div className="carrossel-regiao">
-      {alertasOrd.map((a) => {
+      {registrosOrd.map((a) => {
         const cat = categoriaPorId(a.categoria)
         const IconeCat = cat.icone
         const img = a.images?.[0]
-        const cor = COR_GRAVIDADE[a.gravidade ?? 'media'] ?? '#8FA6AD'
+        // Positivo usa a cor da categoria; a escala de gravidade pintaria de
+        // laranja "média" uma tartaruga avistada.
+        const ehPositivo = cat.tipo === 'positivo'
+        const cor = ehPositivo ? cat.cor : (COR_GRAVIDADE[a.gravidade ?? 'media'] ?? '#8FA6AD')
         return (
           <Link key={`a-${a.id}`} to={`/alerta/${a.id}`} className="cr-card">
             <div className="cr-foto" style={{ background: 'linear-gradient(135deg, #0D6EA8, #2E9BD6)' }}>
@@ -42,7 +51,9 @@ export function CarrosselRegiao({ alertas, mutiroes }: { alertas: Alerta[]; muti
                 ? <img src={`${SUPABASE_URL}/storage/v1/object/public/fotos/${img}`} alt="" loading="lazy" />
                 : <IconeCat size={30} stroke={1.8} color="rgba(255,255,255,.92)" />}
               <span className="cr-chip" style={{ background: cor }}>
-                <IconAlertTriangle size={10} stroke={2.5} /> {a.gravidade ?? 'média'}
+                {ehPositivo
+                  ? <><IconPaw size={10} stroke={2.5} /> {cat.label}</>
+                  : <><IconAlertTriangle size={10} stroke={2.5} /> {a.gravidade ?? 'média'}</>}
               </span>
             </div>
             <span className="cr-titulo">{a.titulo}</span>

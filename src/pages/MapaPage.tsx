@@ -9,7 +9,7 @@ import { restMinhaConta } from '../services/conta'
 import { useOnboarding } from '../onboarding/OnboardingContext'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 
-type Filtro = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
+type Filtro = 'tudo' | 'picos' | 'alertas' | 'positivos' | 'mutiroes'
 
 export function MapaPage() {
   const [picos, setPicos] = useState<Pico[]>([])
@@ -48,7 +48,7 @@ export function MapaPage() {
   return (
     <div className="page" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {/* Header padrão — mesmo tamanho de todas as páginas */}
-      <Header title="Mapa" sub="Explore praias, alertas e mutirões." />
+      <Header title="Mapa" sub="Explore praias, alertas, registros positivos e mutirões." />
 
       {/* Mapa ocupa todo espaço restante */}
       <div style={{ flex: 1, position: 'relative', minHeight: 0, margin: '12px 12px 0', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.12)' }}>
@@ -57,6 +57,7 @@ export function MapaPage() {
           <Pill on={filtro === 'tudo'} onClick={() => setFiltro('tudo')}>Tudo</Pill>
           <Pill on={filtro === 'picos'} onClick={() => setFiltro('picos')}>Picos</Pill>
           <Pill on={filtro === 'alertas'} onClick={() => setFiltro('alertas')}>Alertas</Pill>
+          <Pill on={filtro === 'positivos'} onClick={() => setFiltro('positivos')}>Positivos</Pill>
           <Pill on={filtro === 'mutiroes'} onClick={() => setFiltro('mutiroes')}>Mutirões</Pill>
         </div>
 

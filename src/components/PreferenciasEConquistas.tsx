@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   IconSettings, IconTextSize, IconWaveSquare,
-  IconCamera, IconRipple, IconMap2, IconTargetArrow, IconAlertTriangle, IconUsers,
+  IconCamera, IconRipple, IconMap2, IconTargetArrow, IconAlertTriangle, IconUsers, IconPaw,
   IconPlayerPlay, IconCurrentLocation, IconChevronLeft,
 } from '@tabler/icons-react'
 import type { Icon } from '@tabler/icons-react'
@@ -100,6 +100,8 @@ interface DadosConquista {
   picos: number
   precisao: number
   alertas: number
+  /** Registros positivos publicados. Ver migration 0063. */
+  positivos?: number
   mutiroes: number
 }
 
@@ -110,6 +112,7 @@ function medalhas(d: DadosConquista): { Icone: Icon; titulo: string; desc: strin
     { Icone: IconMap2, titulo: 'Desbravador', desc: 'Registrou 3 picos diferentes', ok: d.picos >= 3, progresso: Math.min(1, d.picos / 3) },
     { Icone: IconTargetArrow, titulo: 'Testemunha confiável', desc: '80% de fotos "no local"', ok: d.precisao >= 80, progresso: Math.min(1, d.precisao / 80) },
     { Icone: IconAlertTriangle, titulo: 'Sentinela costeira', desc: 'Registrou o primeiro alerta', ok: d.alertas >= 1 },
+    { Icone: IconPaw, titulo: 'Olho de biólogo', desc: 'Publicou o primeiro registro positivo', ok: (d.positivos ?? 0) >= 1 },
     { Icone: IconUsers, titulo: 'Mobilizador', desc: 'Organizou um mutirão', ok: d.mutiroes >= 1 },
   ]
 }

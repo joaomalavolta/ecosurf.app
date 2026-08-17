@@ -17,6 +17,7 @@ type Feature = {
 export interface ResultadoExport {
   fotos: number
   alertas: number
+  positivos: number
   mutiroes: number
   arquivo: string
 }
@@ -54,24 +55,33 @@ export async function exportarMeusDadosGeoJSON(): Promise<ResultadoExport | null
     })
   }
 
-  // ── Alertas: registros ambientais da pessoa (via view pública) ──
+  // ── Registros da pessoa: alertas e positivos (via view pública) ──
+  //
+  // ⚠️ As coordenadas vêm da view, então categoria sensível sai APROXIMADA
+  // também aqui — de propósito. Um GeoJSON é feito para ser aberto no QGIS e
+  // mandado por e-mail; se o ponto exato saísse no arquivo, toda a proteção
+  // do banco viraria uma formalidade. `precisao` acompanha para quem for
+  // analisar saber com o que está lidando.
   let nAlertas = 0
+  let nPositivos = 0
   try {
-    const alertas = await rest<{ id: string; titulo: string; categoria: string; gravidade: string | null; status: string; municipio: string | null; uf: string | null; lat: number | null; lng: number | null; criada_em: string }[]>(
-      `ameacas_publicas?select=id,titulo,categoria,gravidade,status,municipio,uf,lat,lng,criada_em&autor_id=eq.${uid}`,
+    const registros = await rest<{ id: string; titulo: string; categoria: string; tipo_registro: string | null; precisao: string | null; gravidade: string | null; status: string; municipio: string | null; uf: string | null; lat: number | null; lng: number | null; criada_em: string }[]>(
+      `ameacas_publicas?select=id,titulo,categoria,tipo_registro,precisao,gravidade,status,municipio,uf,lat,lng,criada_em&autor_id=eq.${uid}`,
     )
-    for (const a of alertas) {
+    for (const a of registros) {
       if (a.lat == null || a.lng == null) continue
-      nAlertas++
+      const ehPositivo = a.tipo_registro === 'positivo'
+      if (ehPositivo) nPositivos++
+      else nAlertas++
       features.push({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [a.lng, a.lat] },
         properties: {
-          tipo: 'alerta',
+          tipo: ehPositivo ? 'registro-positivo' : 'alerta',
           titulo: a.titulo,
           categoria: a.categoria,
-          gravidade: a.gravidade ?? 'media',
-          status: a.status,
+          ...(ehPositivo ? {} : { gravidade: a.gravidade ?? 'media', status: a.status }),
+          precisao: a.precisao ?? 'exata',
           municipio: a.municipio,
           uf: a.uf,
           criada_em: a.criada_em,
@@ -79,7 +89,7 @@ export async function exportarMeusDadosGeoJSON(): Promise<ResultadoExport | null
         },
       })
     }
-  } catch { /* sem alertas ou sem rede: exporta o que houver */ }
+  } catch { /* sem registros ou sem rede: exporta o que houver */ }
 
   // ── Mutirões organizados pela pessoa ──
   let nMutiroes = 0
@@ -130,5 +140,5 @@ export async function exportarMeusDadosGeoJSON(): Promise<ResultadoExport | null
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 4000)
 
-  return { fotos: nFotos, alertas: nAlertas, mutiroes: nMutiroes, arquivo: nomeArquivo }
+  return { fotos: nFotos, alertas: nAlertas, positivos: nPositivos, mutiroes: nMutiroes, arquivo: nomeArquivo }
 }

@@ -26,7 +26,7 @@ export const MODULOS: {
   { id: 'fotos', rotulo: 'Fotos', Icone: IconPhoto, pode: (p) => p.modera },
   { id: 'registros', rotulo: 'Registros', Icone: IconClipboardList, pode: (p) => p.acessa },
   { id: 'usuarios', rotulo: 'Usuários', Icone: IconUsers, pode: (p) => p.gerenciaUsuarios },
-  { id: 'ameacas', rotulo: 'Alertas', Icone: IconAlertTriangle, pode: (p) => p.modera },
+  { id: 'ameacas', rotulo: 'Registros', Icone: IconAlertTriangle, pode: (p) => p.modera },
   { id: 'picos', rotulo: 'Picos', Icone: IconMapPin, pode: (p) => p.gerenciaPicos },
   { id: 'relatorios', rotulo: 'Relatórios', Icone: IconReportAnalytics, pode: (p) => p.acessa },
   { id: 'logs', rotulo: 'Logs', Icone: IconHistory, pode: (p) => p.veLogs },
