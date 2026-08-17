@@ -6,9 +6,10 @@
  * mapeou?". São os mesmos dados, recortados por autoria — e o recorte muda o
  * sentido: vira o rastro de quem contribuiu, não um mapa de ocorrências.
  *
- * Quatro camadas, na ordem em que importam:
+ * Cinco camadas, na ordem em que importam:
  *  · picos cadastrados — o que a pessoa acrescentou ao mapa do Brasil
  *  · alertas ambientais — o que ela denunciou
+ *  · registros positivos — o que ela encontrou de bom
  *  · mutirões — o que ela convocou
  *  · picos fotografados — onde ela esteve registrando (sem foto, o pico não
  *    entra: é a presença que conta, não a intenção)
@@ -27,13 +28,19 @@ export interface ContribuicoesGeo {
   /** Picos onde publicou foto (sem repetir os que já cadastrou). */
   picosFotografados: Pico[]
   alertas: Alerta[]
+  /**
+   * Registros positivos. Vêm da MESMA consulta dos alertas e são separados
+   * aqui — uma requisição a mais para filtrar por uma coluna que já veio
+   * seria trabalho de rede para nada.
+   */
+  positivos: Alerta[]
   mutiroes: Mutirao[]
   /** Soma dos pontos plotáveis — serve para decidir se vale desenhar o mapa. */
   total: number
 }
 
 const VAZIO: ContribuicoesGeo = {
-  picosCriados: [], picosFotografados: [], alertas: [], mutiroes: [], total: 0,
+  picosCriados: [], picosFotografados: [], alertas: [], positivos: [], mutiroes: [], total: 0,
 }
 
 interface LinhaPico {
@@ -46,6 +53,7 @@ interface LinhaPico {
 
 interface LinhaAlerta {
   id: string; titulo: string; categoria: string; status: string
+  tipo_registro: string | null
   gravidade: string | null; municipio: string | null; uf: string | null
   lat: number | null; lng: number | null; criada_em: string | null
 }
@@ -82,6 +90,7 @@ function paraAlerta(r: LinhaAlerta): Alerta {
     id: r.id,
     titulo: r.titulo,
     categoria: r.categoria as Alerta['categoria'],
+    tipoRegistro: (r.tipo_registro ?? 'alerta') as Alerta['tipoRegistro'],
     status: r.status as Alerta['status'],
     gravidade: (r.gravidade ?? 'media') as Alerta['gravidade'],
     municipio: r.municipio ?? '',
@@ -111,7 +120,7 @@ function paraMutirao(r: LinhaMutirao): Mutirao {
 }
 
 const COLS_PICO = 'id,nome,praia,municipio,uf,regiao_surf_id,lat,lng,orientacao_praia_deg,fundo,descricao,criado_por'
-const COLS_ALERTA = 'id,titulo,categoria,status,gravidade,municipio,uf,lat,lng,criada_em'
+const COLS_ALERTA = 'id,titulo,categoria,tipo_registro,status,gravidade,municipio,uf,lat,lng,criada_em'
 const COLS_MUTIRAO = 'id,titulo,tipo_acao,status,municipio,uf,horario,quando,lat,lng,organizador,inscritos,vagas'
 
 /**
@@ -159,15 +168,20 @@ async function buscar(coluna: 'autor_id' | 'comunidade_id', valor: string): Prom
     picosFotografados = linhas.map(paraPico)
   }
 
-  const alertas = alertasR.map(paraAlerta)
+  // As duas famílias chegam juntas e se separam aqui.
+  const todos = alertasR.map(paraAlerta)
+  const positivos = todos.filter((a) => a.tipoRegistro === 'positivo')
+  const alertas = todos.filter((a) => a.tipoRegistro !== 'positivo')
   const mutiroes = mutiroesR.map(paraMutirao)
 
   return {
     picosCriados,
     picosFotografados,
     alertas,
+    positivos,
     mutiroes,
-    total: picosCriados.length + picosFotografados.length + alertas.length + mutiroes.length,
+    total: picosCriados.length + picosFotografados.length +
+      alertas.length + positivos.length + mutiroes.length,
   }
 }
 

@@ -404,8 +404,18 @@ html, body {
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.35);
+  /* Cinco camadas não cabem em 360 px de largura. E como a barra é centrada
+     por translateX(-50%), o que não cabe some IGUALMENTE dos dois lados — a
+     primeira e a última camada ficariam inalcançáveis. Com largura limitada e
+     rolagem, ela continua centrada quando cabe e desliza quando não cabe. */
+  max-width: calc(100% - 24px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.map-filter-bar::-webkit-scrollbar { display: none; }
 .map-filter-bar .pill {
+  flex: 0 0 auto;
   padding: 7px 12px;
   font-size: 12px;
   background: transparent;
@@ -416,6 +426,19 @@ html, body {
   background: var(--azul-abissal);
   border-color: transparent;
   color: #fff;
+}
+
+/* Números do "Impacto da comunidade": 2×2 no celular estreito, linha única
+   quando há largura. Com quatro números em linha a 360 px, cada rótulo de
+   duas linhas virava quatro e o card dobrava de altura. */
+.impacto-nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 8px;
+  align-items: flex-start;
+}
+@media (min-width: 400px) {
+  .impacto-nums { grid-template-columns: repeat(4, 1fr); gap: 8px; }
 }
 
 /* dados de surf/mar em mono tabular — leitura de instrumento */

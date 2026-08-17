@@ -80,7 +80,9 @@ export interface Indicadores {
   fotos: number
   fotosPendentes: number
   fotosRemovidas: number
+  /** Só alertas — os registros positivos são contados à parte. */
   ameacas: number
+  positivos: number
   mutiroes: number
   bloqueados: number
   logs: number
@@ -98,6 +100,7 @@ export async function indicadores(): Promise<Indicadores> {
     fotosPendentes: d.fotosPendentes ?? 0,
     fotosRemovidas: d.fotosRemovidas ?? 0,
     ameacas: d.ameacas ?? 0,
+    positivos: d.positivos ?? 0,
     mutiroes: d.mutiroes ?? 0,
     bloqueados: d.bloqueados ?? 0,
     logs: d.logs ?? 0,
@@ -241,7 +244,7 @@ export async function listarAmeacasAdmin() {
   const c = await sb()
   const { data, error } = await c.rpc('admin_listar_ameacas')
   if (error) throw new Error(error.message)
-  return (data ?? []) as { id: string; titulo: string; categoria: string; status: string; gravidade: string | null; municipio: string | null; uf: string | null; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
+  return (data ?? []) as { id: string; titulo: string; categoria: string; tipo_registro: string | null; status: string; gravidade: string | null; municipio: string | null; uf: string | null; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
 }
 
 export async function atualizarStatusAmeaca(id: string, status: string) {

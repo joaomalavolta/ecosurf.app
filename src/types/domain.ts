@@ -109,7 +109,7 @@ export interface EventoVento {
   rotulo: string;
 }
 
-/** Registro ambiental colaborativo. */
+/** Categorias de ALERTA — o que está errado no litoral. */
 export type CategoriaAlerta =
   | 'lixo-praia'
   | 'lixo-rio'
@@ -124,6 +124,34 @@ export type CategoriaAlerta =
   | 'ocupacao'
   | 'outro';
 
+/**
+ * Categorias de REGISTRO POSITIVO — o que está indo bem e merece ser visto.
+ *
+ * Duas delas (`area-desova` e `filhotes`) têm a localização protegida: o ponto
+ * exato fica guardado e o mapa público mostra um aproximado. Quem decide isso
+ * é o banco, no gatilho da migration 0063 — não a interface. Aqui a marcação
+ * (`sensivel` em SeletorCategoria) serve só para AVISAR a pessoa antes de ela
+ * publicar, nunca como a barreira.
+ */
+export type CategoriaPositivo =
+  | 'fauna-avistada'
+  | 'area-desova'
+  | 'filhotes'
+  | 'vegetacao-recuperacao'
+  | 'coleta-seletiva';
+
+/** Qualquer categoria, das duas famílias. É o que a coluna `categoria` aceita. */
+export type CategoriaRegistro = CategoriaAlerta | CategoriaPositivo;
+
+/**
+ * As duas metades do mapa.
+ *
+ * Alerta e registro positivo dividem tabela, view, RLS e tela porque têm
+ * exatamente os mesmos campos — o que muda é o sentido. Este discriminador é
+ * a coluna `ameacas.tipo_registro` (migration 0063).
+ */
+export type TipoRegistro = 'alerta' | 'positivo';
+
 export type GravidadeAlerta = 'baixa' | 'media' | 'alta' | 'emergencial';
 
 export type StatusAlerta =
@@ -134,11 +162,21 @@ export type StatusAlerta =
   | 'ocultado'        // "Ocultado por inconsistência"
   | 'removido';       // "Removido por violar regras"
 
+/**
+ * Um ponto no mapa colaborativo — alerta ambiental OU registro positivo.
+ *
+ * O nome ficou de quando só havia uma família. Quem lê o `tipoRegistro` sabe
+ * de qual metade a linha veio; quem não lê recebe 'alerta', que é o default
+ * da coluna e o que todas as ocorrências anteriores à 0063 são.
+ */
 export interface Alerta {
   id: string;
   titulo: string;
-  categoria: CategoriaAlerta;
+  categoria: CategoriaRegistro;
+  /** 'alerta' (problema) ou 'positivo' (biodiversidade/conservação). */
+  tipoRegistro?: TipoRegistro;
   status: StatusAlerta;
+  /** Só faz sentido em alerta: um registro positivo não tem o que escalonar. */
   gravidade: GravidadeAlerta;
   picoId?: string;
   municipio: string;

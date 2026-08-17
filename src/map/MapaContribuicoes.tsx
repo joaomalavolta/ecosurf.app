@@ -22,7 +22,7 @@ import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
 const SRC = 'contribuicoes'
 
 /** Camadas que os botões acima do mapa acendem e apagam. */
-export type FiltroContrib = 'tudo' | 'picos' | 'alertas' | 'mutiroes'
+export type FiltroContrib = 'tudo' | 'picos' | 'alertas' | 'positivos' | 'mutiroes'
 
 function colecao(c: ContribuicoesGeo, filtro: FiltroContrib = 'tudo'): FeatureCollection<Point> {
   const features: FeatureCollection<Point>['features'] = []
@@ -56,6 +56,20 @@ function colecao(c: ContribuicoesGeo, filtro: FiltroContrib = 'tudo'): FeatureCo
       properties: {
         tipo: a.categoria, id: a.id, titulo: a.titulo,
         detalhe: a.status, local: `${a.municipio ?? ''}${a.uf ? `/${a.uf}` : ''}`,
+      },
+    })
+  }
+  // Mesma forma dos alertas — o que muda é a camada em que entram e o ícone,
+  // que sai da categoria. `detalhe` não leva status: um registro positivo não
+  // está "identificado" esperando solução.
+  if (quer('positivos')) for (const p of c.positivos) {
+    if (p.lat == null || p.lng == null) continue
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+      properties: {
+        tipo: p.categoria, id: p.id, titulo: p.titulo,
+        detalhe: 'Registro positivo', local: `${p.municipio ?? ''}${p.uf ? `/${p.uf}` : ''}`,
       },
     })
   }

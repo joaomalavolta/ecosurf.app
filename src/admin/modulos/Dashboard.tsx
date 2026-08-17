@@ -24,6 +24,7 @@ export function Dashboard({ onNavegar }: { onNavegar: (mod: ModId) => void }) {
             <StatCard k="Fotos pendentes" v={ind.fotosPendentes} onClick={() => onNavegar('fotos')} />
             <StatCard k="Fotos removidas" v={ind.fotosRemovidas} onClick={() => onNavegar('fotos')} />
             <StatCard k="Alertas" v={ind.ameacas} onClick={() => onNavegar('ameacas')} />
+            <StatCard k="Registros positivos" v={ind.positivos} onClick={() => onNavegar('ameacas')} />
             <StatCard k="Mutirões" v={ind.mutiroes} onClick={() => onNavegar('mutiroes')} />
             <StatCard k="Bloqueados" v={ind.bloqueados} onClick={() => onNavegar('usuarios')} />
             <StatCard k="Ações registradas" v={ind.logs} onClick={() => onNavegar('logs')} />

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ComponentType } from 'react'
+import { lazy, Suspense, useEffect, type ComponentType, type LazyExoticComponent } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { UploadStatusBar } from './components/UploadStatusBar'
@@ -13,8 +13,13 @@ import { useEhDesktop } from './hooks/useEhDesktop'
 // sob demanda — mantém o Radar leve no 3G e tira o SDK do Supabase (só usado
 // fora da home) do caminho crítico, num chunk compartilhado carregado quando
 // alguém de fato navega para uma tela que precisa dele.
-function rota<M>(carregar: () => Promise<M>, nome: keyof M) {
-  return lazy(() => carregar().then((m) => ({ default: m[nome] as ComponentType })))
+// O `as ComponentType` no meio apagava as props: toda rota preguiçosa passava
+// a aceitar zero props, e passar uma virava erro de compilação mesmo quando o
+// componente a declarava. A asserção de fora devolve a assinatura original.
+function rota<M, K extends keyof M>(carregar: () => Promise<M>, nome: K) {
+  return lazy(() =>
+    carregar().then((m) => ({ default: m[nome] as ComponentType })),
+  ) as M[K] extends ComponentType<infer P> ? LazyExoticComponent<ComponentType<P>> : never
 }
 
 const MapaPage = rota(() => import('./pages/MapaPage'), 'MapaPage')
@@ -100,6 +105,10 @@ export default function App() {
             <Route path="/termos" element={<TermosPage />} />
             <Route path="/nova-acao" element={<NovaAcaoPage />} />
             <Route path="/nova-acao/alerta" element={<FormularioAlertaPage />} />
+            {/* Mesmo formulário, outra família: os campos são os mesmos e a
+                tabela é a mesma. O que muda é o passo de gravidade (que sai) e
+                as palavras. Duas páginas divergiriam no primeiro ajuste. */}
+            <Route path="/nova-acao/positivo" element={<FormularioAlertaPage tipo="positivo" />} />
             <Route path="/explorar" element={<ExplorarPage />} />
             <Route path="/nova-acao/mutirao" element={<FormularioMutiraoPage />} />
             <Route path="/nova-acao/pico" element={<FormularioPicoPage />} />

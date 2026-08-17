@@ -37,6 +37,7 @@ export function PerfilPage() {
   const [comunidades, setComunidades] = useState<{ comunidade: import('../services/comunidades').Comunidade; papel: import('../services/comunidades').PapelComunidade }[]>([])
   const [verConquistas, setVerConquistas] = useState(false)
   const [nAlertas, setNAlertas] = useState(0)
+  const [nPositivos, setNPositivos] = useState(0)
   const [nMutiroes, setNMutiroes] = useState(0)
   const [meuId, setMeuId] = useState<string | null>(null)
   // Conforto de leitura, não privacidade — a privacidade é o card logo abaixo.
@@ -81,7 +82,10 @@ export function PerfilPage() {
                     console.warn(`[perfil] não deu para contar ${oQue}:`, e)
                   }
                 }
-                void conta(`ameacas_publicas?autor_id=eq.${uid}&select=id`, setNAlertas, 'alertas')
+                // `tipo_registro=eq.alerta` desde a 0063: sem o recorte, cada
+                // tartaruga avistada entraria na contagem de alertas.
+                void conta(`ameacas_publicas?autor_id=eq.${uid}&tipo_registro=eq.alerta&select=id`, setNAlertas, 'alertas')
+                void conta(`ameacas_publicas?autor_id=eq.${uid}&tipo_registro=eq.positivo&select=id`, setNPositivos, 'registros positivos')
                 void conta(`mutiroes_publicos?autor_id=eq.${uid}&select=id`, setNMutiroes, 'mutirões')
               })
             })
@@ -353,6 +357,7 @@ export function PerfilPage() {
                 picos: new Set(minhasFotos.map(f => f.pico_id)).size,
                 precisao: minhasFotos.length === 0 ? 0 : Math.round((minhasFotos.filter(f => f.procedencia === 'no-local').length / minhasFotos.length) * 100),
                 alertas: nAlertas,
+                positivos: nPositivos,
                 mutiroes: nMutiroes,
               }} />
             )}
@@ -373,7 +378,7 @@ export function PerfilPage() {
                       const { exportarMeusDadosGeoJSON } = await import('../services/exportarGeojson')
                       const r = await exportarMeusDadosGeoJSON()
                       if (!r) { toast('Entre na sua conta para exportar seus dados.'); return }
-                      toast(`Exportado: ${r.fotos} fotos, ${r.alertas} alertas e ${r.mutiroes} mutirões.\nArquivo: ${r.arquivo}\n\nO GeoJSON abre em QGIS, geojson.io e Google Earth. Os dados são seus.`)
+                      toast(`Exportado: ${r.fotos} fotos, ${r.alertas} alertas, ${r.positivos} registros positivos e ${r.mutiroes} mutirões.\nArquivo: ${r.arquivo}\n\nO GeoJSON abre em QGIS, geojson.io e Google Earth. Os dados são seus.`)
                     } catch {
                       toast('Não foi possível exportar agora. Verifique a conexão e tente de novo.')
                     }

@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
-import { IconAlertTriangle, IconUsers, IconCalendarEvent } from '@tabler/icons-react'
+import { IconAlertTriangle, IconUsers, IconCalendarEvent, IconPaw } from '@tabler/icons-react'
 import { categoriaPorId } from './SeletorCategoria'
 import type { ItemEcoFeed } from '../lib/mesclarFeed'
-import type { CategoriaAlerta } from '../types/domain'
 
 const COR_GRAVIDADE: Record<string, string> = {
   emergencial: '#D64045', alta: '#E8734A', media: '#E8A05C', baixa: '#3E8C6B',
@@ -15,9 +14,14 @@ const COR_GRAVIDADE: Record<string, string> = {
  */
 export function EcoFeedCard({ item }: { item: ItemEcoFeed }) {
   const ehAlerta = item.tipo === 'alerta'
-  const cat = ehAlerta && item.categoria ? categoriaPorId(item.categoria as CategoriaAlerta) : null
+  const cat = ehAlerta && item.categoria ? categoriaPorId(item.categoria) : null
+  // A família sai da própria categoria — não precisa de campo novo no item do
+  // feed, porque o id da categoria já a determina.
+  const ehPositivo = cat?.tipo === 'positivo'
   const Icone = ehAlerta ? (cat?.icone ?? IconAlertTriangle) : IconUsers
-  const cor = ehAlerta ? (COR_GRAVIDADE[item.gravidade ?? 'media'] ?? '#E8A05C') : '#2E9B6B'
+  const cor = ehPositivo
+    ? cat!.cor
+    : ehAlerta ? (COR_GRAVIDADE[item.gravidade ?? 'media'] ?? '#E8A05C') : '#2E9B6B'
 
   return (
     <Link
@@ -53,7 +57,9 @@ export function EcoFeedCard({ item }: { item: ItemEcoFeed }) {
                 background: `color-mix(in srgb, ${cor} 60%, rgba(4,20,27,.5))`,
               }}
             >
-              {ehAlerta ? <><IconAlertTriangle size={11} stroke={2.5} /> Alerta</> : <><IconUsers size={11} stroke={2.5} /> Mutirão</>}
+              {ehPositivo
+                ? <><IconPaw size={11} stroke={2.5} /> {cat!.label}</>
+                : ehAlerta ? <><IconAlertTriangle size={11} stroke={2.5} /> Alerta</> : <><IconUsers size={11} stroke={2.5} /> Mutirão</>}
             </span>
           </div>
           <h3 className="disp" style={{ fontSize: 21, lineHeight: 1.1, margin: 0, textShadow: '0 1px 8px rgba(0,0,0,.4)' }}>{item.titulo}</h3>
@@ -63,7 +69,10 @@ export function EcoFeedCard({ item }: { item: ItemEcoFeed }) {
         {/* BASE: gravidade/quando + crédito */}
         <div className="feed-hero-grad">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {ehAlerta ? (
+            {/* Nada de selo de gravidade no positivo: "média" ao pé de uma
+                tartaruga avistada não quer dizer nada. O selo do topo já
+                trouxe a categoria. */}
+            {ehAlerta && !ehPositivo ? (
               <span className="badge" style={{ fontSize: 10.5, fontWeight: 700, background: cor, color: '#fff', textTransform: 'capitalize' }}>
                 <IconAlertTriangle size={11} stroke={2.5} /> {item.gravidade ?? 'média'}
               </span>

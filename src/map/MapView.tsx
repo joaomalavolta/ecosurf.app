@@ -8,7 +8,7 @@ import type { FeatureCollection, Point } from 'geojson'
 import type { Alerta, Mutirao, Pico } from '../types/domain'
 // Os pinos moram em pins.ts desde que o mapa de contribuições (perfil e
 // comunidade) passou a desenhá-los também — ver o cabeçalho de lá.
-import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, carregarIcones, temGlyphs, GLYPHS } from './pins'
+import { ICONE_MAPA_SVG, EXPRESSAO_ICONE, TIPOS_POSITIVO, carregarIcones, temGlyphs, GLYPHS } from './pins'
 import {
   BRASIL, CHAVE_POSICAO, localDaCidade, lerPosicao, gravarPosicao, type Local,
 } from '../lib/regiao'
@@ -107,10 +107,20 @@ const TIPOS_PICO = ['pico', 'pico-ativo']
 const TIPOS_ALERTA = ['lixo-praia', 'lixo-rio', 'esgoto', 'erosao', 'oleo', 'animal', 'entulho', 'microplasticos', 'espuma', 'queimada', 'ocupacao', 'outro', 'lixo', 'poluicao', 'privatizacao', 'obra']
 const TIPOS_MUTIRAO = ['mutirao']
 
+/**
+ * O filtro é por `tipo` da feature, que é a categoria — não há uma propriedade
+ * `tipo_registro` no GeoJSON porque a categoria já determina a família.
+ *
+ * `alertas` inclui mutirões desde antes: no Radar, o lado "eco" sempre foi
+ * denúncia + mobilização. `eco` é esse mesmo lado agora que ele tem duas
+ * famílias de registro; `positivos` isola a nova.
+ */
 function filtroLayer(filtro?: string): maplibregl.ExpressionSpecification | null {
   switch (filtro) {
     case 'picos': return ['in', ['get', 'tipo'], ['literal', TIPOS_PICO]]
     case 'alertas': return ['in', ['get', 'tipo'], ['literal', [...TIPOS_ALERTA, ...TIPOS_MUTIRAO]]]
+    case 'positivos': return ['in', ['get', 'tipo'], ['literal', TIPOS_POSITIVO]]
+    case 'eco': return ['in', ['get', 'tipo'], ['literal', [...TIPOS_ALERTA, ...TIPOS_POSITIVO, ...TIPOS_MUTIRAO]]]
     case 'mutiroes': return ['in', ['get', 'tipo'], ['literal', TIPOS_MUTIRAO]]
     default: return null
   }
@@ -156,6 +166,18 @@ const CONVITES: Record<string, { titulo: string; corpo: string; botao: string; p
     corpo: 'Viu lixo, esgoto ou erosão nesta região? Registrar é o primeiro passo para cobrar.',
     botao: 'Registrar um alerta',
     para: '/nova-acao/alerta',
+  },
+  positivos: {
+    titulo: 'Nenhum registro positivo por aqui',
+    corpo: 'Fauna, desova, mata em pé, coleta seletiva: o que está dando certo nesta região também merece o mapa.',
+    botao: 'Publicar um registro positivo',
+    para: '/nova-acao/positivo',
+  },
+  eco: {
+    titulo: 'Nada mapeado por aqui ainda',
+    corpo: 'Nem problema, nem boa notícia: esta parte do litoral está em branco. Um registro seu começa o mapa.',
+    botao: 'Registrar alguma coisa',
+    para: '/nova-acao',
   },
   mutiroes: {
     titulo: 'Nenhum mutirão por aqui',
@@ -205,7 +227,7 @@ export function MapView({
   scrubberAncora?: 'topo' | 'rodape' | 'rodape-esq'
   /** Voo comandado de fora (ex.: menu territorial escolheu uma cidade). */
   destino?: { lng: number; lat: number; zoom?: number } | null
-  filtro?: 'tudo' | 'picos' | 'alertas' | 'mutiroes'
+  filtro?: 'tudo' | 'picos' | 'alertas' | 'positivos' | 'eco' | 'mutiroes'
   onSelectPico?: (p: Pico) => void
   className?: string
   style?: React.CSSProperties

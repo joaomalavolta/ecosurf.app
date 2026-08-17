@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers, IconLayoutGrid, IconChevronRight } from '@tabler/icons-react'
+import { IconMap2, IconMapPin, IconCamera, IconAlertTriangle, IconUsers, IconLayoutGrid, IconChevronRight, IconPaw } from '@tabler/icons-react'
+import { categoriaPorId } from './SeletorCategoria'
 import type { ContribuicoesGeo } from '../services/contribuicoesGeo'
 import type { FiltroContrib } from '../map/MapaContribuicoes'
 
@@ -109,10 +110,11 @@ export function CardMapaContribuicoes({
     picosCriados: brutos.picosCriados,
     picosFotografados: mostrarFotos ? brutos.picosFotografados : [],
     alertas: mostrarAcoes ? brutos.alertas : [],
+    positivos: mostrarAcoes ? brutos.positivos : [],
     mutiroes: mostrarAcoes ? brutos.mutiroes : [],
     total: brutos.picosCriados.length +
       (mostrarFotos ? brutos.picosFotografados.length : 0) +
-      (mostrarAcoes ? brutos.alertas.length + brutos.mutiroes.length : 0),
+      (mostrarAcoes ? brutos.alertas.length + brutos.positivos.length + brutos.mutiroes.length : 0),
   }
 
   // Sem pontos (ou ainda carregando): nada na tela. Ver o cabeçalho.
@@ -125,6 +127,7 @@ export function CardMapaContribuicoes({
     { chave: 'tudo' as const, rotulo: 'Tudo', n: dados.total, Icone: IconLayoutGrid },
     { chave: 'picos' as const, rotulo: 'Picos', n: nTodosPicos, Icone: IconMapPin },
     { chave: 'alertas' as const, rotulo: 'Alertas', n: dados.alertas.length, Icone: IconAlertTriangle },
+    { chave: 'positivos' as const, rotulo: 'Positivos', n: dados.positivos.length, Icone: IconPaw },
     { chave: 'mutiroes' as const, rotulo: 'Mutirões', n: dados.mutiroes.length, Icone: IconUsers },
   ]).filter((a) => a.n > 0)
 
@@ -139,6 +142,19 @@ export function CardMapaContribuicoes({
       lng: a.lng as number, lat: a.lat as number, href: `/alerta/${a.id}`,
       Icone: IconAlertTriangle, cor: '#E84855',
     })) : []),
+    // Cada positivo usa o ícone e a cor da PRÓPRIA categoria (uma pata verde,
+    // um ovo dourado), enquanto o alerta usa um triângulo vermelho fixo. A
+    // diferença é proposital: a lista de positivos é curta e variada, e o
+    // ícone da categoria já diz o que é sem precisar do texto.
+    ...(filtro === 'tudo' || filtro === 'positivos' ? dados.positivos.map((p) => {
+      const cat = categoriaPorId(p.categoria)
+      return {
+        id: p.id, titulo: p.titulo || cat.label,
+        sub: [dia(p.criadaEm), lugar(p.municipio, p.uf)].filter(Boolean).join(' · '),
+        lng: p.lng as number, lat: p.lat as number, href: `/alerta/${p.id}`,
+        Icone: cat.icone, cor: cat.cor,
+      }
+    }) : []),
     ...(filtro === 'tudo' || filtro === 'mutiroes' ? dados.mutiroes.map((m) => ({
       id: m.id, titulo: m.titulo,
       sub: [dia(m.quando), lugar(m.municipio, m.uf)].filter(Boolean).join(' · '),
@@ -266,6 +282,7 @@ export function CardMapaContribuicoes({
         <Contagem n={nPicos} rotulo={plural(nPicos, 'pico cadastrado', 'picos cadastrados')} Icone={IconMapPin} />
         <Contagem n={nFotografados} rotulo={plural(nFotografados, 'pico registrado', 'picos registrados')} Icone={IconCamera} />
         <Contagem n={dados.alertas.length} rotulo={plural(dados.alertas.length, 'alerta', 'alertas')} Icone={IconAlertTriangle} />
+        <Contagem n={dados.positivos.length} rotulo={plural(dados.positivos.length, 'registro positivo', 'registros positivos')} Icone={IconPaw} />
         <Contagem n={dados.mutiroes.length} rotulo={plural(dados.mutiroes.length, 'mutirão', 'mutirões')} Icone={IconUsers} />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import type { CategoriaAlerta, GravidadeAlerta, Rascunho } from '../types/domain'
+import type { CategoriaRegistro, GravidadeAlerta, Rascunho, TipoRegistro } from '../types/domain'
 import { TEM_BACKEND } from './supabase/config'
 import { sb } from './supabase/client'
 
@@ -16,14 +16,20 @@ async function authed() {
   return { sb: sb(), user: u, token: data.session!.access_token }
 }
 
-/* ─── Alerta Ambiental ─── */
+/* ─── Alerta ambiental e registro positivo ─── */
 
 export interface DadosAlerta {
   /** Comunidade que assina a publicação (admin/autor). */
   comunidadeId?: string | null
   titulo: string
-  categoria: CategoriaAlerta
-  gravidade: GravidadeAlerta
+  categoria: CategoriaRegistro
+  /**
+   * Qual metade do mapa. Ausente = 'alerta', que é o default da coluna e o
+   * que todo registro anterior à migration 0063 é.
+   */
+  tipoRegistro?: TipoRegistro
+  /** Só em alerta. Registro positivo grava NULL — não há o que escalonar. */
+  gravidade?: GravidadeAlerta
   descricao?: string
   localNome?: string
   municipio: string
@@ -55,10 +61,15 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
   const body = {
     titulo: dados.titulo,
     categoria: dados.categoria,
+    tipo_registro: dados.tipoRegistro ?? 'alerta',
     status: 'identificado',
-    gravidade: dados.gravidade,
+    gravidade: dados.gravidade ?? null,
     geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
-    // Transparência total: sem coordenada embaralhada — o público vê o local exato.
+    // Transparência total: sem coordenada embaralhada — o público vê o local
+    // exato. A exceção são as categorias sensíveis (desova, filhotes), e ela
+    // NÃO é decidida aqui: o gatilho `protege_local_sensivel` (migration 0063)
+    // troca os dois campos por um ponto aproximado antes de gravar. Mandar o
+    // exato daqui é o certo — é assim que o ponto verdadeiro chega ao cofre.
     geom_aprox: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
     municipio: dados.municipio,
     uf: dados.uf.toUpperCase().slice(0, 2),
@@ -95,7 +106,8 @@ export async function carregarAlertaParaEdicao(id: string): Promise<DadosAlerta 
   return {
     id: data.id,
     titulo: data.titulo ?? '',
-    categoria: data.categoria as CategoriaAlerta,
+    categoria: data.categoria as CategoriaRegistro,
+    tipoRegistro: (data.tipo_registro ?? 'alerta') as TipoRegistro,
     gravidade: data.gravidade as GravidadeAlerta,
     descricao: data.descricao ?? undefined,
     localNome: data.local_nome ?? undefined,
@@ -127,7 +139,7 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
   const body: Record<string, unknown> = {
     titulo: dados.titulo,
     categoria: dados.categoria,
-    gravidade: dados.gravidade,
+    gravidade: dados.gravidade ?? null,
     municipio: dados.municipio,
     uf: dados.uf.toUpperCase().slice(0, 2),
     local_nome: dados.localNome ?? null,
@@ -138,7 +150,16 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
 
   if (dados.lat && dados.lng) {
     body.geom = `SRID=4326;POINT(${dados.lng} ${dados.lat})`
-    body.geom_aprox = `SRID=4326;POINT(${dados.lng + (Math.random() - 0.5) * 0.01} ${dados.lat + (Math.random() - 0.5) * 0.01})`
+    // Os dois campos com o MESMO ponto, como na publicação.
+    //
+    // Aqui havia um ruído aleatório de ±0,005° em `geom_aprox`. Enquanto a view
+    // pública servia `geom`, ninguém via; desde a 0063 ela serve
+    // `coalesce(geom_aprox, geom)` — e o pino andaria uns 500 m para um lado
+    // qualquer a cada vez que o autor corrigisse a descrição.
+    //
+    // Quem embaralha de verdade é o gatilho da 0063, e só nas categorias
+    // sensíveis, com o deslocamento sempre igual para o mesmo ponto.
+    body.geom_aprox = body.geom
   }
 
   const { error } = await sb.from('ameacas').update(body).eq('id', id).eq('denunciante_id', user.id)

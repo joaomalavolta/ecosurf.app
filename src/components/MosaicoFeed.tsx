@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { IconPlayerPlayFilled, IconAlertTriangle, IconUsers } from '@tabler/icons-react'
 import { categoriaPorId } from './SeletorCategoria'
-import type { Foto, Pico, CategoriaAlerta } from '../types/domain'
+import type { Foto, Pico } from '../types/domain'
 import type { TileMosaico, ItemEcoFeed } from '../lib/mesclarFeed'
 
 const COR_GRAVIDADE: Record<string, string> = {
@@ -87,9 +87,12 @@ function TileFoto({ foto: f, pico }: { foto: Foto; pico?: Pico }) {
 /** Tile de ocorrência ambiental: selo colorido no canto distingue da onda. */
 function TileEco({ item }: { item: ItemEcoFeed }) {
   const ehAlerta = item.tipo === 'alerta'
-  const cat = ehAlerta && item.categoria ? categoriaPorId(item.categoria as CategoriaAlerta) : null
+  const cat = ehAlerta && item.categoria ? categoriaPorId(item.categoria) : null
+  const ehPositivo = cat?.tipo === 'positivo'
   const Icone = ehAlerta ? (cat?.icone ?? IconAlertTriangle) : IconUsers
-  const cor = ehAlerta ? (COR_GRAVIDADE[item.gravidade ?? 'media'] ?? '#E8A05C') : '#2E9B6B'
+  const cor = ehPositivo
+    ? cat!.cor
+    : ehAlerta ? (COR_GRAVIDADE[item.gravidade ?? 'media'] ?? '#E8A05C') : '#2E9B6B'
   return (
     <Link
       to={ehAlerta ? `/alerta/${item.id}` : `/mutirao/${item.id}`}

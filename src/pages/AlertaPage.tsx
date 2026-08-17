@@ -3,21 +3,22 @@ import { toast } from '../lib/toast'
 import { CorteFoto } from '../components/CorteFotoLazy'
 import { CreditoComunidade } from '../components/CreditoComunidade'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload } from '@tabler/icons-react'
+import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload, IconShieldLock } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
-import { SeletorCategoria, categoriaPorId } from '../components/SeletorCategoria'
+import { SeletorCategoria, categoriaPorId, categoriaSensivel } from '../components/SeletorCategoria'
 import { CampoGravidade } from '../components/CampoGravidade'
 import { SUPABASE_URL } from '../services/supabase/config'
 import { atualizarAlerta } from '../services/alertas'
-import type { CategoriaAlerta, GravidadeAlerta } from '../types/domain'
+import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 
 interface AlertaDetalhe {
   id: string
   titulo: string
   categoria: string
+  tipo_registro: TipoRegistro | null
   status: string
   municipio: string
   uf: string
@@ -56,7 +57,7 @@ export function AlertaPage() {
   // Edit states
   const [isEditing, setIsEditing] = useState(false)
   const [salvando, setSalvando] = useState(false)
-  const [editCategoria, setEditCategoria] = useState<CategoriaAlerta | undefined>()
+  const [editCategoria, setEditCategoria] = useState<CategoriaRegistro | undefined>()
   const [editGravidade, setEditGravidade] = useState<GravidadeAlerta | undefined>()
   const [editDescricao, setEditDescricao] = useState('')
   const [editLat, setEditLat] = useState<number | undefined>()
@@ -101,7 +102,7 @@ export function AlertaPage() {
           if (data && data.length > 0) {
             const a = data[0] as unknown as AlertaDetalhe
             setAlerta(a)
-            setEditCategoria(a.categoria as CategoriaAlerta)
+            setEditCategoria(a.categoria as CategoriaRegistro)
             setEditGravidade(a.gravidade as GravidadeAlerta)
             setEditDescricao(a.descricao ?? '')
             setEditLat(a.lat ?? undefined)
@@ -138,9 +139,16 @@ export function AlertaPage() {
     )
   }
 
-  const cat = categoriaPorId(isEditing ? editCategoria! : (alerta.categoria as any))
+  const cat = categoriaPorId(isEditing ? editCategoria! : alerta.categoria)
   const CategoriaIcon = cat?.icone ?? IconAlertTriangle
   const corCategoria = cat?.cor ?? 'var(--muted)'
+  // A família vem da coluna; se ela faltar (linha anterior à 0063), a própria
+  // categoria decide — e as categorias antigas são todas de alerta.
+  const tipoRegistro: TipoRegistro = alerta.tipo_registro ?? cat.tipo
+  const ehPositivo = tipoRegistro === 'positivo'
+  // Local protegido: o que a view devolveu É o aproximado, para todo mundo —
+  // inclusive para o autor, porque `ameacas.geom` não guarda mais o exato.
+  const localProtegido = categoriaSensivel(alerta.categoria)
   // Render variables that are safe now that !alerta is checked
   // Prefere a data em que o impacto foi OBSERVADO (fluxo fora-do-local);
   // na ausência dela, cai na data de registro no sistema.
@@ -158,10 +166,16 @@ export function AlertaPage() {
 
   async function compartilhar() {
     const url = window.location.href
-    const coordsTexto = alerta!.lat && alerta!.lng
+    // Local protegido não vai no texto compartilhado nem como "aproximado":
+    // a proteção existe justamente para o ponto não circular por aí, e um
+    // link do Google Maps é o formato mais fácil de circular que existe.
+    const coordsTexto = alerta!.lat && alerta!.lng && !localProtegido
       ? `\n📍 Coordenadas: ${alerta!.lat.toFixed(5)}, ${alerta!.lng.toFixed(5)}\n🗺️ Google Maps: https://www.google.com/maps?q=${alerta!.lat},${alerta!.lng}`
       : ''
-    const texto = `⚠️ Registro Ambiental: ${alerta!.titulo}\n📋 ${alerta!.categoria} · ${STATUS_LABELS[alerta!.status] ?? alerta!.status}\n📍 ${localTexto}${coordsTexto}\n📅 ${dataFormatada}\n\nVeja o registro completo: ${url}`
+    const cabecalho = ehPositivo
+      ? `🌱 Registro Positivo: ${alerta!.titulo}\n📋 ${cat.label}`
+      : `⚠️ Registro Ambiental: ${alerta!.titulo}\n📋 ${cat.label} · ${STATUS_LABELS[alerta!.status] ?? alerta!.status}`
+    const texto = `${cabecalho}\n📍 ${localTexto}${coordsTexto}\n📅 ${dataFormatada}\n\nVeja o registro completo: ${url}`
 
     if (navigator.share) {
       try {
@@ -228,13 +242,17 @@ export function AlertaPage() {
   }
 
   async function salvarEdicao() {
-    if (!editCategoria || !editGravidade || !editLat || !editLng || !id) return
+    if (!editCategoria || !editLat || !editLng || !id) return
+    if (!ehPositivo && !editGravidade) return
     setSalvando(true)
     try {
       await atualizarAlerta(id, {
-        titulo: `${editCategoria} — ${alerta!.local_nome || alerta!.municipio}`,
+        // `categoriaPorId(...).label`, não o id cru: salvar com o id gerava
+        // títulos como "lixo-praia — Itanhaém" no feed e no compartilhamento.
+        titulo: `${categoriaPorId(editCategoria).label} — ${alerta!.local_nome || alerta!.municipio}`,
         categoria: editCategoria,
-        gravidade: editGravidade,
+        tipoRegistro,
+        gravidade: ehPositivo ? undefined : editGravidade,
         descricao: editDescricao,
         localNome: alerta!.local_nome ?? undefined,
         municipio: alerta!.municipio,
@@ -259,7 +277,7 @@ export function AlertaPage() {
 
   function cancelarEdicao() {
     setIsEditing(false)
-    setEditCategoria(alerta!.categoria as CategoriaAlerta)
+    setEditCategoria(alerta!.categoria as CategoriaRegistro)
     setEditGravidade(alerta!.gravidade as GravidadeAlerta)
     setEditDescricao(alerta!.descricao ?? '')
     setEditLat(alerta!.lat ?? undefined)
@@ -271,7 +289,10 @@ export function AlertaPage() {
 
   return (
     <div className="page">
-      <Header title={isEditing ? "Editar Registro" : "Registro Ambiental"} sub={isEditing ? "Modifique os dados abaixo" : alerta.titulo} />
+      <Header
+        title={isEditing ? 'Editar Registro' : ehPositivo ? 'Registro Positivo' : 'Registro Ambiental'}
+        sub={isEditing ? 'Modifique os dados abaixo' : alerta.titulo}
+      />
       <div className="page-pad stack" style={{ paddingTop: 16, paddingBottom: 80 }}>
         {/* Badge categoria + compartilhar */}
         {!isEditing ? (
@@ -288,8 +309,11 @@ export function AlertaPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{alerta.titulo}</div>
+                {/* O rótulo da categoria, não o id: "Área de desova", não
+                    "area-desova". E o status só no alerta — um registro
+                    positivo não está "identificado" à espera de resolução. */}
                 <div className="muted" style={{ fontSize: 12 }}>
-                  {alerta.categoria} · {STATUS_LABELS[alerta.status] ?? alerta.status}
+                  {cat.label}{ehPositivo ? '' : ` · ${STATUS_LABELS[alerta.status] ?? alerta.status}`}
                 </div>
               </div>
             </div>
@@ -304,7 +328,10 @@ export function AlertaPage() {
         ) : (
           <div>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>Categoria</h3>
-            <SeletorCategoria selecionada={editCategoria} onSelecionar={setEditCategoria} />
+            {/* Só a família do próprio registro: trocar um alerta de esgoto
+                por "Filhotes avistados" não é corrigir a categoria, é outro
+                registro — e levaria junto o histórico e os mutirões ligados. */}
+            <SeletorCategoria tipo={tipoRegistro} selecionada={editCategoria} onSelecionar={setEditCategoria} />
           </div>
         )}
 
@@ -406,29 +433,42 @@ export function AlertaPage() {
               <IconMapPin size={16} stroke={2} color="var(--turq)" />
               <span style={{ fontSize: 13, fontWeight: 600 }}>{localTexto}</span>
             </div>
-            {alerta.lat && alerta.lng && (
+            {alerta.lat && alerta.lng && !localProtegido && (
               <div style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 24 }}>
                 Coordenadas: {alerta.lat.toFixed(5)}, {alerta.lng.toFixed(5)}
+              </div>
+            )}
+            {/* Cinco casas decimais aqui seriam mentira: o número que temos é
+                o centro de uma célula de ~1 km. Melhor dizer o que ele é. */}
+            {localProtegido && (
+              <div style={{ fontSize: 11.5, color: '#0E9AA7', marginLeft: 24, display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600 }}>
+                <IconShieldLock size={14} stroke={2} /> Localização aproximada para proteger o local
               </div>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <IconCalendar size={16} stroke={2} color="var(--turq)" />
               <span style={{ fontSize: 13 }}>{dataEhDoOcorrido ? 'Observado em' : 'Registrado em'} {dataFormatada}</span>
             </div>
-            {alerta.gravidade && (
+            {alerta.gravidade && !ehPositivo && (
               <div style={{ fontSize: 13 }}>
                 <b>Gravidade:</b> {alerta.gravidade}
               </div>
             )}
             {alerta.recorrente && (
-              <div style={{ fontSize: 13, color: 'var(--perigo)', marginTop: 4 }}>
-                ⚠ Problema recorrente neste local
-              </div>
+              ehPositivo ? (
+                <div style={{ fontSize: 13, color: '#2E9B6B', marginTop: 4 }}>
+                  ↻ Acontece com frequência neste local
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: 'var(--perigo)', marginTop: 4 }}>
+                  ⚠ Problema recorrente neste local
+                </div>
+              )
             )}
           </div>
         )}
 
-        {isEditing && (
+        {isEditing && !ehPositivo && (
           <div>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>Gravidade</h3>
             <CampoGravidade
@@ -451,23 +491,28 @@ export function AlertaPage() {
                 label={alerta.local_nome ?? alerta.titulo}
                 height={200}
               />
-              <a
-                href={`https://www.google.com/maps?q=${alerta.lat},${alerta.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  marginTop: 8,
-                  fontSize: 12,
-                  color: 'var(--turq)',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                <IconMapPin size={14} /> Abrir no Google Maps
-              </a>
+              {/* Sem link para o Google Maps quando o local é protegido: o
+                  ponto que temos aqui é aproximado, e mandar alguém navegar
+                  até ele é convidar a procurar o ninho no entorno. */}
+              {!localProtegido && (
+                <a
+                  href={`https://www.google.com/maps?q=${alerta.lat},${alerta.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 8,
+                    fontSize: 12,
+                    color: 'var(--turq)',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  <IconMapPin size={14} /> Abrir no Google Maps
+                </a>
+              )}
             </div>
           )
         ) : (
@@ -484,6 +529,18 @@ export function AlertaPage() {
                 setEditLng(newLng)
               }}
             />
+            {/* O pino aqui está no centro da célula aproximada, não onde a
+                pessoa marcou. Sem este aviso, ela reposicionaria "de volta ao
+                lugar certo" achando que o app tinha errado — e é justamente
+                arrastando que ela grava um ponto exato novo. */}
+            {localProtegido && (
+              <p className="muted" style={{ fontSize: 11.5, lineHeight: 1.45, marginTop: 8 }}>
+                Este pino mostra a área aproximada, não o ponto que você marcou.
+                Arraste só se o local estiver de fato errado — o ponto novo vira
+                a coordenada exata guardada. Ajustes menores que ~1 km não mudam
+                nada, e é isso que impede alguém de descobrir o ponto real.
+              </p>
+            )}
           </div>
         )}
 
@@ -542,7 +599,9 @@ export function AlertaPage() {
           </div>
         )}
 
-        {!isEditing && (
+        {/* Mutirão só a partir de alerta: não se convoca gente para limpar
+            uma área de desova. */}
+        {!isEditing && !ehPositivo && (
           <button
             className="btn full"
             style={{ marginTop: 12, background: '#2E9B6B', color: '#fff', fontWeight: 700 }}

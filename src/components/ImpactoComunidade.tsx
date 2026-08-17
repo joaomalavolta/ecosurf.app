@@ -16,17 +16,30 @@ function Num({ v, rotulo, cor }: { v: number; rotulo: string; cor?: string }) {
   )
 }
 
-export function ImpactoComunidade({ alertas, mutiroes }: { alertas: Alerta[]; mutiroes: Mutirao[] }) {
+export function ImpactoComunidade({
+  alertas,
+  positivos = [],
+  mutiroes,
+}: {
+  alertas: Alerta[]
+  /** Registros positivos — contados à parte para não inflar "alertas". */
+  positivos?: Alerta[]
+  mutiroes: Mutirao[]
+}) {
   const viraramAcao = new Set(mutiroes.filter((m) => m.alertaId).map((m) => m.alertaId)).size
-  if (alertas.length === 0 && mutiroes.length === 0) return null
+  if (alertas.length === 0 && positivos.length === 0 && mutiroes.length === 0) return null
 
   return (
     <div className="card pad" aria-label="Impacto da comunidade">
       <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IconSeeding size={12} stroke={2} /> Impacto da comunidade</span>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'flex-start' }}>
-        <Num v={alertas.length} rotulo={'registros\nambientais'} />
+      {/* Quatro números não cabem lado a lado em 360 px sem quebrar o rótulo
+          de duas linhas em quatro. A grade 2×2 acomoda; acima de 400 px volta
+          para a linha única de sempre. */}
+      <div className="impacto-nums" style={{ marginTop: 10 }}>
+        <Num v={alertas.length} rotulo={'alertas\nambientais'} />
+        <Num v={positivos.length} rotulo={'registros\npositivos'} cor="#2E9B6B" />
         <Num v={mutiroes.length} rotulo={'mutirões\norganizados'} />
-        <Num v={viraramAcao} rotulo={'ocorrências\nviraram ação'} cor="#2E9B6B" />
+        <Num v={viraramAcao} rotulo={'alertas\nviraram ação'} cor="#2E9B6B" />
       </div>
     </div>
   )

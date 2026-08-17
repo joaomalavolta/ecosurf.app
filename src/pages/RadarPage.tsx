@@ -320,7 +320,11 @@ export function RadarPage() {
               atividade={feed.map((f) => ({ picoId: f.picoId, em: f.capturadaEm }))}
               scrubberAncora="topo"
               cidadePerfil={cidadePerfil}
-              filtro={filtroMapa === 'eco' ? 'alertas' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
+              /* 'eco' = o lado ambiental inteiro: alertas, registros positivos
+                 e mutirões. Antes mapeava para 'alertas', que desde a 0063
+                 deixaria os positivos de fora justamente do filtro que existe
+                 para mostrá-los. */
+              filtro={filtroMapa === 'eco' ? 'eco' : filtroMapa === 'surf' ? 'picos' : 'tudo'}
               onSelectPico={handleSelectPico}
             />
           </Suspense>

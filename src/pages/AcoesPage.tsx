@@ -8,6 +8,7 @@ import {
   IconPlus,
   IconBookmark,
   IconTrash,
+  IconPaw,
   type IconProps,
 } from '@tabler/icons-react'
 import { Header } from '../components/Header'
@@ -101,14 +102,18 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export function AcoesPage() {
-  const [alertas, setAlertas] = useState<Alerta[]>([])
+  const [registros, setRegistros] = useState<Alerta[]>([])
   const [mutiroes, setMutiroes] = useState<Mutirao[]>([])
   const [rascunhos, setRascunhos] = useState<Rascunho[]>([])
-  const [tab, setTab] = useState<'tudo' | 'alertas' | 'mutiroes'>('tudo')
+  const [tab, setTab] = useState<'tudo' | 'alertas' | 'positivos' | 'mutiroes'>('tudo')
+
+  // As duas famílias vêm da mesma consulta (mesma tabela) e se separam aqui.
+  const alertas = useMemo(() => registros.filter((r) => r.tipoRegistro !== 'positivo'), [registros])
+  const positivos = useMemo(() => registros.filter((r) => r.tipoRegistro === 'positivo'), [registros])
 
   useEffect(() => {
     let vivo = true
-    carregarAmeacas().then((a) => vivo && setAlertas(a))
+    carregarAmeacas().then((a) => vivo && setRegistros(a))
     carregarMutiroes().then((m) => vivo && setMutiroes(m))
     listarRascunhos().then((r) => vivo && setRascunhos(r))
     return () => {
@@ -146,11 +151,12 @@ export function AcoesPage() {
 
         {/* Tabs de filtro */}
         <div className="g-impacto" style={{ marginBottom: 10 }}>
-          <ImpactoComunidade alertas={alertas} mutiroes={mutiroes} />
+          <ImpactoComunidade alertas={alertas} positivos={positivos} mutiroes={mutiroes} />
         </div>
         <div className="pills full g-pills" style={{ marginBottom: 10 }}>
           <Pill on={tab === 'tudo'} onClick={() => setTab('tudo')}>Tudo</Pill>
           <Pill on={tab === 'alertas'} onClick={() => setTab('alertas')}><IconAlertTriangle size={14} stroke={2} /> Alertas</Pill>
+          <Pill on={tab === 'positivos'} onClick={() => setTab('positivos')}><IconPaw size={14} stroke={2} /> Positivos</Pill>
           <Pill on={tab === 'mutiroes'} onClick={() => setTab('mutiroes')}><IconHeartHandshake size={14} stroke={2} /> Mutirões</Pill>
         </div>
 
@@ -170,6 +176,37 @@ export function AcoesPage() {
                 autorNome={a.autorNome}
                 autorFoto={a.autorFoto}
                 autorId={a.autorId}
+              />
+            )
+          })}
+        </Secao>
+        )}</div>
+
+        {/* Seção própria, não um "tipo" a mais na lista de alertas: misturar
+            "Esgoto aparente" com "Filhotes avistados" na mesma coluna faria o
+            bom e o ruim disputarem a mesma leitura. O texto aqui traz a
+            categoria em vez do status — registro positivo não tem status. */}
+        <div className="g-lista1">{(tab === 'tudo' || tab === 'positivos') && (
+        <Secao titulo={<><IconPaw size={19} stroke={2} color="#2E9B6B" /> Registros positivos</>}>
+          {positivos.length === 0 && (
+            <p className="muted">
+              Nada por aqui ainda. Fauna, desova, mata em pé ou coleta seletiva: o
+              mapa também é feito do que está dando certo.
+            </p>
+          )}
+          {positivos.map((p) => {
+            const cat = categoriaPorId(p.categoria)
+            return (
+              <Linha
+                key={p.id}
+                Icon={cat.icone}
+                cor={cat.cor}
+                titulo={p.titulo}
+                texto={`${p.municipio}/${p.uf} · ${cat.label}`}
+                to={`/alerta/${p.id}`}
+                autorNome={p.autorNome}
+                autorFoto={p.autorFoto}
+                autorId={p.autorId}
               />
             )
           })}

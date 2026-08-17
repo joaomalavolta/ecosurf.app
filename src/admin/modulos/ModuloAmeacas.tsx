@@ -5,10 +5,13 @@ import {
 import * as admin from '../../services/admin'
 import { type Permissoes } from '../../services/admin'
 import { ConfirmDialog, Estado } from '../ui'
+import { CATEGORIAS, categoriaPorId } from '../../components/SeletorCategoria'
 import { Titulo, type Ameaca } from '../shared'
 
 const AMEACA_STATUS = ['publicado', 'em-revisao', 'validado', 'sinalizado', 'ocultado', 'removido', 'identificado', 'em-observacao', 'recorrente', 'resolvido']
-const AMEACA_CATEGORIAS = ['lixo-praia', 'lixo-rio', 'esgoto', 'erosao', 'oleo', 'animal', 'entulho', 'microplasticos', 'espuma', 'queimada', 'ocupacao', 'outro']
+// Sai do catálogo em vez de repetir a lista: era exatamente essa cópia que
+// deixaria a moderação sem as categorias novas depois da 0063.
+const AMEACA_CATEGORIAS = CATEGORIAS.map((c) => c.id)
 const AMEACA_GRAVIDADE = ['baixa', 'media', 'alta', 'critica']
 
 export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
@@ -73,8 +76,8 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
   return (
     <section className="admin-content">
       <Titulo
-        nome="Alertas Ambientais"
-        desc="Registros ambientais colaborativos. Edite, altere status, exclua ou exporte."
+        nome="Registros do mapa"
+        desc="Alertas ambientais e registros positivos. Edite, altere status, exclua ou exporte."
         acao={
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn outline" style={{ minHeight: 40 }} onClick={carregar}><IconRefresh size={16} /> Atualizar</button>
@@ -82,16 +85,18 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
           </div>
         }
       />
-      {erro && <Estado>Erro ao carregar alertas.</Estado>}
+      {erro && <Estado>Erro ao carregar registros.</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
-      {itens && itens.length === 0 && <Estado>Nenhum alerta registrado.</Estado>}
+      {itens && itens.length === 0 && <Estado>Nenhum registro publicado.</Estado>}
       {itens && itens.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Título</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Título</th><th>Tipo</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {itens.map((a) => {
                 const isEditing = editando === a.id
+                const cat = categoriaPorId(a.categoria)
+                const ehPositivo = ((a as { tipo_registro?: string | null }).tipo_registro ?? cat.tipo) === 'positivo'
                 return (
                   <Fragment key={a.id}>
                   <tr>
@@ -101,20 +106,32 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
                         : a.titulo
                       }
                     </td>
+                    {/* Coluna própria: sem ela, a moderação teria de decorar
+                        quais categorias são positivas para ler a tabela. */}
                     <td>
-                      {isEditing
-                        ? <select className="sel" value={editForm.categoria} onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value })}>
-                            {AMEACA_CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-                          </select>
-                        : a.categoria
-                      }
+                      <span style={{
+                        fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                        padding: '2px 8px', borderRadius: 999,
+                        background: ehPositivo ? '#2E9B6B22' : '#E8485522',
+                        color: ehPositivo ? '#2E9B6B' : '#E84855',
+                      }}>
+                        {ehPositivo ? 'positivo' : 'alerta'}
+                      </span>
                     </td>
                     <td>
                       {isEditing
+                        ? <select className="sel" value={editForm.categoria} onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value })}>
+                            {AMEACA_CATEGORIAS.map((c) => <option key={c} value={c}>{categoriaPorId(c).label}</option>)}
+                          </select>
+                        : cat.label
+                      }
+                    </td>
+                    <td>
+                      {isEditing && !ehPositivo
                         ? <select className="sel" value={editForm.gravidade} onChange={(e) => setEditForm({ ...editForm, gravidade: e.target.value })}>
                             {AMEACA_GRAVIDADE.map((g) => <option key={g} value={g}>{g}</option>)}
                           </select>
-                        : (a as any).gravidade ?? '—'
+                        : ehPositivo ? '—' : (a as any).gravidade ?? '—'
                       }
                     </td>
                     <td>
@@ -157,7 +174,7 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
                   </tr>
                   {isEditing && (
                     <tr>
-                      <td colSpan={6} style={{ background: 'var(--cinza, rgba(0,0,0,.03))' }}>
+                      <td colSpan={7} style={{ background: 'var(--cinza, rgba(0,0,0,.03))' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 4px' }}>
                           <label style={{ fontSize: 12, fontWeight: 600 }}>
                             Nome do local
