@@ -38,8 +38,12 @@ export async function flushAlertas(): Promise<void> {
         const { publicarAlerta } = await import('../services/alertas')
         await publicarAlerta({
           titulo: a.titulo,
-          categoria: a.categoria as import('../types/domain').CategoriaAlerta,
-          gravidade: a.gravidade as import('../types/domain').GravidadeAlerta,
+          categoria: a.categoria as import('../types/domain').CategoriaRegistro,
+          // Sem isto, um ninho registrado sem sinal na praia voltaria da fila
+          // como ALERTA — no card vermelho, na contagem de problemas do painel
+          // e na notificação "Novo alerta ambiental".
+          tipoRegistro: a.tipoRegistro ?? 'alerta',
+          gravidade: a.gravidade as import('../types/domain').GravidadeAlerta | undefined,
           localNome: a.localNome,
           municipio: a.municipio,
           uf: a.uf,

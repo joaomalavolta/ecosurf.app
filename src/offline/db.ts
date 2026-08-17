@@ -26,12 +26,24 @@ export interface UploadPendente {
   criadoEm: number
 }
 
-/** Alerta ambiental aguardando rede — a denúncia nunca se perde. */
+/**
+ * Registro do mapa aguardando rede — a denúncia nunca se perde.
+ *
+ * Guarda as duas famílias. `tipoRegistro` é opcional porque a fila pode ter
+ * itens gravados antes da migration 0063, no IndexedDB de quem não abriu o
+ * app desde então: ausente = 'alerta', que é o que eles são. Campo novo sem
+ * índice não pede versão nova do banco local.
+ *
+ * `gravidade` virou opcional pelo mesmo motivo que na tabela: um registro
+ * positivo não tem intensidade para avaliar. Se ficasse obrigatório aqui, o
+ * ninho registrado sem sinal voltaria da fila como "gravidade média".
+ */
 export interface AlertaPendente {
   id: string
   titulo: string
   categoria: string
-  gravidade: string
+  tipoRegistro?: 'alerta' | 'positivo'
+  gravidade?: string
   localNome?: string
   municipio: string
   uf: string
