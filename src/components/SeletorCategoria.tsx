@@ -34,6 +34,15 @@ import {
 export interface CategoriaInfo {
   id: CategoriaRegistro
   label: string
+  /**
+   * Forma curta, só para a grade de 3 colunas do seletor.
+   *
+   * "Vegetação preservada ou em recuperação" tem 38 caracteres; num chip de
+   * ~110 px a 11,5 px isso vira cinco linhas e o card estica. O nome inteiro
+   * é o que aparece em todo o resto — detalhe, título do registro, moderação,
+   * carrossel —, onde há largura para ele.
+   */
+  curto?: string
   icone: typeof IconTrash
   cor: string
   /** A qual metade do mapa esta categoria pertence. */
@@ -72,7 +81,7 @@ export const CATEGORIAS_POSITIVAS: CategoriaInfo[] = [
   { id: 'fauna-avistada', label: 'Fauna avistada', icone: IconPaw, cor: '#2E9B6B', tipo: 'positivo' },
   { id: 'area-desova', label: 'Área de desova', icone: IconEgg, cor: '#E0A82E', tipo: 'positivo', sensivel: true },
   { id: 'filhotes', label: 'Filhotes avistados', icone: IconEggs, cor: '#7AA93C', tipo: 'positivo', sensivel: true },
-  { id: 'vegetacao-recuperacao', label: 'Vegetação preservada', icone: IconTree, cor: '#15803D', tipo: 'positivo' },
+  { id: 'vegetacao-recuperacao', label: 'Vegetação preservada ou em recuperação', curto: 'Vegetação preservada', icone: IconTree, cor: '#15803D', tipo: 'positivo' },
   { id: 'coleta-seletiva', label: 'Ponto de coleta seletiva', icone: IconRecycle, cor: '#0E9AA7', tipo: 'positivo' },
 ]
 
@@ -153,7 +162,7 @@ export function SeletorCategoria({
               <cat.icone size={22} stroke={2} />
             </div>
             <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text)', textAlign: 'center', lineHeight: 1.2 }}>
-              {cat.label}
+              {cat.curto ?? cat.label}
             </span>
           </button>
         )
