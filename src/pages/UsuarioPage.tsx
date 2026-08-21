@@ -9,10 +9,12 @@ import { CardMapaContribuicoes } from '../components/CardMapaContribuicoes'
 import { BotaoVerFotos } from '../components/BotaoVerFotos'
 import { fotosVisiveis, gravarFotosVisiveis } from '../lib/verFotos'
 import { Photo } from '../components/Photo'
+import { VisualizadorMidia } from '../components/VisualizadorMidia'
 import { restPerfilPublico, restContribuicoesUsuario, type ContribsUsuario } from '../services/supabase/rest'
 import { carregarPicos } from '../services/picos'
 import { temBackend } from '../services/api'
 import type { PerfilPublico, Pico } from '../types/domain'
+import { linkFoto } from '../lib/linkFoto'
 
 
 function Metrica({ n, rotulo, Icone }: { n: number; rotulo: string; Icone: typeof IconPhoto }) {
@@ -38,6 +40,8 @@ export function UsuarioPage() {
   const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
   // Preferência de quem OLHA, não de quem é olhado — ver lib/verFotos.ts.
   const [verFotos, setVerFotos] = useState(fotosVisiveis)
+  /** Avatar em tela cheia — "quem é essa pessoa?" a 72 px não se responde. */
+  const [verAvatar, setVerAvatar] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -126,7 +130,17 @@ export function UsuarioPage() {
         {/* Avatar + nome */}
         <div className="card pad" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {perfil.fotoUrl ? (
-            <img src={perfil.fotoUrl} alt="" style={{ width: 72, height: 72, borderRadius: 22, objectFit: 'cover' }} />
+            /* Botão e não <img> solta: a 72 px o avatar mal diz quem é a
+               pessoa, que é justamente o que se quer saber ao abrir um perfil.
+               Tocar abre no mesmo visor das fotos do pico. */
+            <button
+              type="button"
+              onClick={() => setVerAvatar(true)}
+              aria-label={`Ampliar a foto de ${perfil.nome ?? 'usuário'}`}
+              style={{ padding: 0, border: 0, background: 'none', cursor: 'zoom-in', borderRadius: 22, flexShrink: 0 }}
+            >
+              <img src={perfil.fotoUrl} alt="" style={{ width: 72, height: 72, borderRadius: 22, objectFit: 'cover', display: 'block' }} />
+            </button>
           ) : (
             <div style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--azul-medio)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 'bold' }}>
               {perfil.nome ? perfil.nome.charAt(0).toUpperCase() : <IconUser size={28} />}
@@ -221,7 +235,8 @@ export function UsuarioPage() {
             </div>
             {verFotos && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
               {contribs.fotos.map((f) => (
-                <Link key={f.id} to={`/pico/${f.picoId}?foto=${f.id}`} style={{ aspectRatio: '1', borderRadius: 12, overflow: 'hidden', display: 'block' }}>
+                /* Grade de fotos: o toque é na foto, não num card. */
+                <Link key={f.id} to={linkFoto(f.picoId, f.id, true)} style={{ aspectRatio: '1', borderRadius: 12, overflow: 'hidden', display: 'block' }}>
                   <Photo seed={f.id} url={thumbs.get(f.thumbPath ?? f.storagePath ?? '')} alt={`Foto em ${nomePico(f.picoId)}`} style={{ width: '100%', height: '100%' }} />
                 </Link>
               ))}
@@ -232,6 +247,19 @@ export function UsuarioPage() {
         {/* Alertas e mutirões saíram daqui: agora estão na lista do card do
             mapa, onde tocar leva o mapa até o ponto. Mantê-los nos dois
             lugares seria a mesma coisa duas vezes na mesma rolagem. */}
+
+        {verAvatar && perfil.fotoUrl && (
+          <VisualizadorMidia
+            itens={[{
+              id: 'avatar',
+              url: perfil.fotoUrl,
+              titulo: perfil.nome ?? 'Usuário Ecosurf',
+              sub: perfil.cidade ?? undefined,
+              Icone: IconUser,
+            }]}
+            onFechar={() => setVerAvatar(false)}
+          />
+        )}
 
         {/* Nada a mostrar. Duas razões diferentes, e confundir seria feio:
             quem escondeu não está "sem contribuições". */}

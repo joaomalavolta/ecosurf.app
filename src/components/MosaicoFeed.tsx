@@ -3,6 +3,7 @@ import { IconPlayerPlayFilled, IconAlertTriangle, IconUsers } from '@tabler/icon
 import { categoriaPorId } from './SeletorCategoria'
 import type { Foto, Pico } from '../types/domain'
 import type { TileMosaico, ItemEcoFeed } from '../lib/mesclarFeed'
+import { linkFoto } from '../lib/linkFoto'
 
 const COR_GRAVIDADE: Record<string, string> = {
   emergencial: '#D64045', alta: '#E8734A', media: '#E8A05C', baixa: '#3E8C6B',
@@ -40,7 +41,8 @@ export function MosaicoFeed({
 function TileFoto({ foto: f, pico }: { foto: Foto; pico?: Pico }) {
   return (
     <Link
-      to={`/pico/${f.picoId}?foto=${f.id}`}
+      /* O tile É a foto, então tocar significa "quero vê-la". */
+      to={linkFoto(f.picoId, f.id, true)}
       style={{
         position: 'relative', aspectRatio: '1 / 1', overflow: 'hidden',
         borderRadius: 6, display: 'block', background: gradienteDe(f.picoId),

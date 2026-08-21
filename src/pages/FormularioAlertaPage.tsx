@@ -16,6 +16,7 @@ import { publicarAlerta, salvarRascunho, type DadosAlerta } from '../services/al
 import { SeletorComunidade } from '../components/SeletorComunidade'
 import { CorteFoto } from '../components/CorteFotoLazy'
 import { arquivoDe } from '../lib/imagem'
+import { formatarArea, lerArea, AREA_MAX_M2 } from '../lib/area'
 import { statusPerfil } from '../services/perfil'
 import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 import { SUPABASE_URL } from '../services/supabase/config'
@@ -125,7 +126,17 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
   const [gravidade, setGravidade] = useState<GravidadeAlerta | undefined>()
   const [descricao, setDescricao] = useState('')
   const [recorrente, setRecorrente] = useState(false)
+  /** Texto cru do campo de área — só a vegetação pergunta. */
+  const [area, setArea] = useState('')
   const [aceite, setAceite] = useState(false)
+
+  /**
+   * Só a vegetação pergunta o tamanho: é a única categoria em que a área é
+   * parte do fato. Um canteiro de restinga e um hectare de mata ciliar são
+   * coisas diferentes, e sem o número entram no mapa como o mesmo ponto.
+   */
+  const pedeArea = categoria === 'vegetacao-recuperacao'
+  const areaLida = lerArea(area)
 
   // Auth check e Carregamento para edição
   useEffect(() => {
@@ -201,6 +212,12 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
     }
     if (!categoria || !lat || !lng) return
     if (!ehPositivo && !gravidade) return
+    // O CHECK do banco recusa acima de 10 km². Melhor dizer aqui do que
+    // deixar o INSERT voltar 23514 no fim do formulário inteiro.
+    if (pedeArea && areaLida != null && areaLida > AREA_MAX_M2) {
+      toast('Essa área passa de 10 km². Confira o número antes de publicar.')
+      return
+    }
     setEnviando(true)
     try {
       const catInfo = categoriaPorId(categoria)
@@ -222,6 +239,7 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
         lat,
         lng,
         recorrente,
+        areaM2: pedeArea ? lerArea(area) : null,
         checkboxAceite: aceite,
         comunidadeId,
         images: fotos.length > 0 ? fotos : undefined,
@@ -240,7 +258,7 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
     try {
       await salvarRascunho('alerta', {
         tipoRegistro: tipo,
-        categoria, localNome, municipio, uf, lat, lng, gravidade, descricao, recorrente,
+        categoria, localNome, municipio, uf, lat, lng, gravidade, descricao, recorrente, area,
       })
       toast('Rascunho salvo com sucesso!')
     } catch (e) {
@@ -504,6 +522,34 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
               />
             </div>
 
+            {pedeArea && (
+              <div>
+                {/* "opcional" no rótulo, não só na dica: quem lê a dica já
+                    decidiu se ia digitar. Sem área o registro publica igual. */}
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                  Área aproximada (m²){' '}
+                  <span className="muted" style={{ fontWeight: 400 }}>· opcional</span>
+                </label>
+                <input
+                  className="input"
+                  inputMode="decimal"
+                  placeholder="Deixe em branco se não souber"
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                />
+                <p className="muted" style={{ fontSize: 11.5, marginTop: 5, lineHeight: 1.45 }}>
+                  Um palpite serve — "mais ou menos meio campo de futebol" é
+                  3.500 m². {areaLida != null && <b>{formatarArea(areaLida)}</b>}
+                  {area.trim() && areaLida == null && (
+                    <span style={{ color: 'var(--coral)' }}> Não consegui ler esse número; o registro vai sem área.</span>
+                  )}
+                  {areaLida != null && areaLida > AREA_MAX_M2 && (
+                    <span style={{ color: 'var(--coral)' }}> — acima do limite de 10 km²; confira o número.</span>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* "Recorrente" tem os dois sentidos, e os dois são úteis: um
                 problema que volta pede cobrança; uma fauna que volta é o
                 indício de que o lugar virou território dela. */}
@@ -528,6 +574,9 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
               <div><span className="muted" style={{ fontSize: 12 }}>Local:</span> {localNome || '—'} — {municipio}/{uf}</div>
               {!ehPositivo && <div><span className="muted" style={{ fontSize: 12 }}>Gravidade:</span> <b>{gravidade ?? '—'}</b></div>}
               <div><span className="muted" style={{ fontSize: 12 }}>Recorrente:</span> {recorrente ? 'Sim' : 'Não'}</div>
+              {pedeArea && areaLida != null && (
+                <div><span className="muted" style={{ fontSize: 12 }}>Área:</span> <b>{formatarArea(areaLida)}</b></div>
+              )}
               {categoria && categoriaSensivel(categoria) && (
                 <div style={{ fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, color: '#0E9AA7', fontWeight: 600 }}>
                   <IconShieldLock size={15} stroke={2} /> Local aproximado no mapa público

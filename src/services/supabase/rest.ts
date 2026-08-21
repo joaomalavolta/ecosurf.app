@@ -147,6 +147,7 @@ interface AmeacaRow {
   comunidade_nome: string | null
   comunidade_avatar: string | null
   criada_em: string | null
+  area_m2: number | null
 }
 
 export async function restAmeacas(): Promise<Ameaca[]> {
@@ -175,6 +176,7 @@ export async function restAmeacas(): Promise<Ameaca[]> {
     autorNome: r.autor_nome ?? undefined,
     autorFoto: r.autor_foto ?? undefined,
     criadaEm: r.criada_em ?? undefined,
+    areaM2: r.area_m2 ?? undefined,
     images: (r as { images?: string[] | null }).images ?? undefined,
   }))
 }

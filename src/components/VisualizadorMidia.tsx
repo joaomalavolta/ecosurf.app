@@ -4,34 +4,74 @@ import { Photo } from './Photo'
 import type { Foto } from '../types/domain'
 
 /**
+ * Uma peça de mídia no visor, sem saber de onde veio.
+ *
+ * O visor nasceu preso ao tipo `Foto`: exigia `capturadaEm`, `picoId`,
+ * `procedencia`. Isso o deixava inútil para as outras coisas que também
+ * precisam ampliar ao toque — a foto de um alerta, o avatar de alguém —, e a
+ * saída fácil seria escrever um segundo lightbox. Dois lightboxes divergem no
+ * primeiro ajuste: um ganha swipe, o outro não; um fecha no Esc, o outro fica.
+ *
+ * Então o visor passa a receber uma forma neutra, e quem chama converte.
+ */
+export interface ItemVisor {
+  id: string
+  url?: string
+  /** Se houver, vira <video> com controles. */
+  videoUrl?: string
+  /** Linha de cima do cabeçalho: pico, pessoa, título do registro. */
+  titulo?: string
+  /** Linha de baixo: data e hora, local. */
+  sub?: string
+  /** Texto abaixo da mídia. */
+  legenda?: string
+  /** Ícone antes do título. Sem ele, o cabeçalho só traz o texto. */
+  Icone?: typeof IconMapPin
+  /** Semente do gradiente de reserva quando não há `url`. */
+  seed?: string
+}
+
+/** Converte uma `Foto` do domínio no que o visor entende. */
+export function fotoParaVisor(f: Foto, picoNome?: string): ItemVisor {
+  return {
+    id: f.id,
+    url: f.url,
+    videoUrl: f.ehVideo ? f.videoUrl : undefined,
+    titulo: picoNome ?? 'Pico',
+    sub: dataHoraExtenso(f.capturadaEm),
+    legenda: f.observacao,
+    Icone: IconMapPin,
+    seed: f.id,
+  }
+}
+
+/**
  * Visualizador em tela cheia (lightbox) com navegação e contexto.
  *
  * A timeline mostra o registro num quadro 4:3 fixo — bom para leitura de
  * condição, apertado para apreciar. Aqui o registro ocupa a tela toda e o
  * usuário navega entre os registros do dia sem sair. Um cabeçalho fixo mostra
- * SEMPRE pico, dia e hora — sem isso, ao deslizar entre fotos a pessoa perde a
+ * SEMPRE de onde é aquilo — sem isso, ao deslizar entre fotos a pessoa perde a
  * referência de "de onde é isso mesmo?".
  *
  * Fechar: toque no fundo, no X, ou Esc. Navegar: setas na tela ou ←/→.
  */
 export function VisualizadorMidia({
-  fotos,
-  indiceInicial,
-  picoNome,
+  itens,
+  indiceInicial = 0,
   onFechar,
 }: {
-  fotos: Foto[]
-  indiceInicial: number
-  picoNome?: string
+  itens: ItemVisor[]
+  indiceInicial?: number
   onFechar: () => void
 }) {
   const [i, setI] = useState(indiceInicial)
-  const f = fotos[i]
+  const f = itens[i]
   const temAnterior = i > 0
-  const temProxima = i < fotos.length - 1
+  const temProxima = i < itens.length - 1
 
   const irAnterior = () => setI((v) => Math.max(0, v - 1))
-  const irProxima = () => setI((v) => Math.min(fotos.length - 1, v + 1))
+  const irProxima = () => setI((v) => Math.min(itens.length - 1, v + 1))
 
   // Swipe: num app 100% mobile, deslizar o dedo entre registros é o gesto
   // esperado (galeria, stories). As setas ficam como afford visual e para
@@ -51,7 +91,7 @@ export function VisualizadorMidia({
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onFechar()
       else if (e.key === 'ArrowLeft') setI((v) => Math.max(0, v - 1))
-      else if (e.key === 'ArrowRight') setI((v) => Math.min(fotos.length - 1, v + 1))
+      else if (e.key === 'ArrowRight') setI((v) => Math.min(itens.length - 1, v + 1))
     }
     window.addEventListener('keydown', aoTeclar)
     const overflowAntes = document.body.style.overflow
@@ -60,7 +100,7 @@ export function VisualizadorMidia({
       window.removeEventListener('keydown', aoTeclar)
       document.body.style.overflow = overflowAntes
     }
-  }, [onFechar, fotos.length])
+  }, [onFechar, itens.length])
 
   if (!f) return null
 
@@ -82,23 +122,25 @@ export function VisualizadorMidia({
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700 }}>
-            <IconMapPin size={15} stroke={2} style={{ color: '#1ECBC3', flexShrink: 0 }} />
+            {f.Icone && <f.Icone size={15} stroke={2} style={{ color: '#1ECBC3', flexShrink: 0 }} />}
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {picoNome ?? 'Pico'}
+              {f.titulo ?? ''}
             </span>
-            {f.ehVideo && (
+            {f.videoUrl && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0, background: 'rgba(255,255,255,.16)', borderRadius: 99, padding: '2px 7px', fontSize: 10, fontWeight: 700 }}>
                 <IconPlayerPlayFilled size={9} /> vídeo
               </span>
             )}
           </div>
-          <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-            {dataHoraExtenso(f.capturadaEm)}
-          </div>
+          {f.sub && (
+            <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
+              {f.sub}
+            </div>
+          )}
         </div>
-        {fotos.length > 1 && (
+        {itens.length > 1 && (
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,.55)', flexShrink: 0 }}>
-            {i + 1} / {fotos.length}
+            {i + 1} / {itens.length}
           </span>
         )}
         <button
@@ -117,15 +159,15 @@ export function VisualizadorMidia({
         onTouchEnd={aoSoltar}
         style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 12px' }}
       >
-        {f.ehVideo && f.videoUrl ? (
+        {f.videoUrl ? (
           <video key={f.id} src={f.videoUrl} poster={f.url} controls loop playsInline autoPlay
             style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12, display: 'block' }} />
         ) : f.url ? (
-          <img key={f.id} src={f.url} alt={f.observacao ?? 'Registro do pico'}
+          <img key={f.id} src={f.url} alt={f.legenda ?? f.titulo ?? 'Mídia'}
             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 12, display: 'block' }} />
         ) : (
           <div style={{ width: 'min(88vw, 520px)', aspectRatio: '4 / 3' }}>
-            <Photo seed={f.id} alt={f.observacao ?? 'Registro do pico'} style={{ width: '100%', height: '100%', borderRadius: 12 }} />
+            <Photo seed={f.seed ?? f.id} alt={f.legenda ?? f.titulo ?? 'Mídia'} style={{ width: '100%', height: '100%', borderRadius: 12 }} />
           </div>
         )}
 
@@ -141,10 +183,10 @@ export function VisualizadorMidia({
         )}
       </div>
 
-      {f.observacao && (
+      {f.legenda && (
         <div onClick={(e) => e.stopPropagation()}
           style={{ padding: '12px 16px', color: 'rgba(255,255,255,.85)', fontSize: 13, textAlign: 'center', lineHeight: 1.4, flexShrink: 0 }}>
-          {f.observacao}
+          {f.legenda}
         </div>
       )}
     </div>

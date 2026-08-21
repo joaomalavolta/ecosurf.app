@@ -7,6 +7,7 @@
  */
 import { restMinhasFotos, rest } from './supabase/rest'
 import { carregarPicos } from './picos'
+import { linkFoto } from '../lib/linkFoto'
 
 type Feature = {
   type: 'Feature'
@@ -50,7 +51,8 @@ export async function exportarMeusDadosGeoJSON(): Promise<ResultadoExport | null
         uf: pico?.uf,
         capturada_em: f.capturada_em,
         procedencia: f.procedencia ?? 'nao-verificado',
-        url: `https://www.ecosurf.app/pico/${f.pico_id}?foto=${f.id}`,
+        // A feature É esta foto, então o link abre nela em tela cheia.
+        url: `https://www.ecosurf.app${linkFoto(f.pico_id, f.id, true)}`,
       },
     })
   }

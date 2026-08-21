@@ -206,6 +206,11 @@ export interface Alerta {
   descricao?: string;
   images?: string[];
   recorrente?: boolean;
+  /**
+   * Área em metros quadrados. Hoje só a vegetação pergunta, mas o campo é
+   * genérico. Ausente = não informado, que é diferente de zero.
+   */
+  areaM2?: number;
   checkboxAceite?: boolean;
   /** Autor (perfil público) */
   autorId?: string;

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import type { Foto, Pico } from '../types/domain'
+import { linkFoto } from '../lib/linkFoto'
 
 /**
  * Story bubbles no topo do Radar — estilo Instagram.
@@ -55,7 +56,8 @@ export function StoryBubbles({ fotos, picos }: { fotos: Foto[]; picos: Pico[] })
       {stories.map((s) => (
         <Link
           key={s.key}
-          to={`/pico/${s.foto.picoId}?foto=${s.foto.id}`}
+          /* A bolha é a foto — tocar nela é pedir para vê-la. */
+          to={linkFoto(s.foto.picoId, s.foto.id, true)}
           className="story-bubble"
           role="listitem"
         >

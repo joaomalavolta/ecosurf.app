@@ -23,6 +23,7 @@ import { temBackend } from '../services/api'
 import { MapViewLazy as MapView } from '../map/MapViewLazy'
 import { restMinhaConta } from '../services/conta'
 import type { Alerta, Forecast, Mutirao, Pico, Foto } from '../types/domain'
+import { linkFoto } from '../lib/linkFoto'
 
 type Filtro = 'favoritos' | 'melhores' | 'todos' | 'seguindo'
 type FiltroMapa = 'ecosurf' | 'eco' | 'surf'
@@ -381,7 +382,7 @@ export function RadarPage() {
           melhoresOndas.map(f => {
             const pico = picoMap.get(f.picoId)
             return (
-              <Link to={`/pico/${f.picoId}?foto=${f.id}`} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
+              <Link to={linkFoto(f.picoId, f.id)} key={`onda-${f.id}`} className="card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', padding: 0, overflow: 'hidden' }}>
                 <img src={f.thumbUrl ?? f.url} alt="Onda" loading="lazy" style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
                 <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>

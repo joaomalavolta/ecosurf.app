@@ -15,11 +15,14 @@ import { rotuloFase } from '../lib/tide'
 import { tideProvider } from '../services/tide/provider'
 import { rotularCondicao } from '../lib/surf'
 import type { Alerta, FeedDia, Forecast, Foto, Pico, PontoMare } from '../types/domain'
+import { deveAbrirVisor } from '../lib/linkFoto'
 
 export function PicoPage() {
   const { picoId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const initialFotoId = searchParams.get('foto') ?? undefined
+  /** Tela cheia só quando o toque foi na foto em si — ver lib/linkFoto.ts. */
+  const abrirVisor = deveAbrirVisor(searchParams)
   const [pico, setPico] = useState<Pico | null | undefined>(undefined) // undefined = carregando
   const [fav, setFav] = useState(false)
 
@@ -224,7 +227,7 @@ export function PicoPage() {
             <span className="muted">{(feed?.fotos.length ?? 0) + fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id)).length} fotos</span>
           </div>
           {/* eventos de vento ficam vazios até derivarem do forecast real (não simular) */}
-          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosHistorico.filter(h => !(feed?.fotos ?? []).some(ff => ff.id === h.id)), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} initialFotoId={initialFotoId} diasComFoto={diasComFoto} onDiaChange={aoMudarDia} />
+          <TideScrubTimeline picoId={pico.id} picoNome={pico.nome} fotos={[...(feed?.fotos ?? []), ...fotosHistorico.filter(h => !(feed?.fotos ?? []).some(ff => ff.id === h.id)), ...fotosOtimistas.filter(o => !(feed?.fotos ?? []).some(ff => ff.id === o.id))]} curva={curva} curvasMultiDia={curvasMultiDia} eventos={[]} initialFotoId={initialFotoId} abrirVisor={abrirVisor} diasComFoto={diasComFoto} onDiaChange={aoMudarDia} />
         </div>
 
         <div className="card pad">

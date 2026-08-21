@@ -15,6 +15,7 @@ import { Header } from '../components/Header'
 import { ImpactoComunidade } from '../components/ImpactoComunidade'
 import { categoriaPorId } from '../components/SeletorCategoria'
 import { acaoEncerrada } from '../lib/agenda'
+import { formatarArea } from '../lib/area'
 import { carregarAmeacas, carregarMutiroes } from '../services/picos'
 import { listarRascunhos, excluirRascunho } from '../services/alertas'
 import type { Alerta, Mutirao, Rascunho } from '../types/domain'
@@ -199,13 +200,16 @@ export function AcoesPage() {
           )}
           {positivos.map((p) => {
             const cat = categoriaPorId(p.categoria)
+            // A área entra na linha só quando existe: "2,5 ha" ao lado de
+            // "Vegetação" é a diferença entre um canteiro e uma mata.
+            const area = formatarArea(p.areaM2)
             return (
               <Linha
                 key={p.id}
                 Icon={cat.icone}
                 cor={cat.cor}
                 titulo={p.titulo}
-                texto={`${p.municipio}/${p.uf} · ${cat.label}`}
+                texto={[`${p.municipio}/${p.uf}`, cat.label, area].filter(Boolean).join(' · ')}
                 to={`/alerta/${p.id}`}
                 autorNome={p.autorNome}
                 autorFoto={p.autorFoto}
