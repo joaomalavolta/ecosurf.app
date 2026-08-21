@@ -86,7 +86,10 @@ function fmtHora(h: number): string {
 }
 
 /** Compartilhar pico via Web Share API ou fallback WhatsApp. */
-export async function compartilharPico(picoId: string, picoNome: string, condicao?: string) {
+// `condicao` aceita null porque `rotularCondicao` devolve null quando não dá
+// para julgar (orientação da praia desconhecida). Nesse caso o texto sai sem
+// promessa de condição, em vez de sair com uma inventada.
+export async function compartilharPico(picoId: string, picoNome: string, condicao?: string | null) {
   const url = `${window.location.origin}/pico/${picoId}`
   const texto = condicao
     ? `🏄 ${picoNome} — ${condicao}\nVeja o mar ao vivo no Ecosurf:`

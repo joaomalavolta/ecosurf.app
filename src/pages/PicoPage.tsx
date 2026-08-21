@@ -203,9 +203,16 @@ export function PicoPage() {
   return (
     <div className="page">
       <Header title={pico.nome} sub={`${pico.praia} · ${pico.municipio}/${pico.uf}`}>
+        {/* Sem julgamento de condição, a manchete vira a medida: "1,1 m · 10 s"
+            diz menos que "Clássico", mas diz a verdade. O `·` solto que
+            sobraria de um rótulo nulo é o motivo de montar a lista antes. */}
         {fc && (
           <div className="tag" style={{ marginTop: 10, background: 'rgba(255,255,255,.18)', color: '#fff' }}>
-            {rotularCondicao(fc.ondaM, fc.vento.tipo)} · {rotuloFase(fc.mare.fase)}
+            {[
+              rotularCondicao(fc.ondaM, fc.vento.tipo)
+                ?? `${fc.ondaM.toFixed(1).replace('.', ',')} m · ${Math.round(fc.periodoS)} s`,
+              rotuloFase(fc.mare.fase),
+            ].join(' · ')}
           </div>
         )}
       </Header>

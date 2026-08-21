@@ -29,8 +29,17 @@ export interface Pico {
   regiaoSurfId: string;
   lat: number;
   lng: number;
-  /** Direção (graus) para onde a praia "olha" (em direção ao mar aberto). Base p/ terral×maral. */
-  orientacaoPraiaDeg: number;
+  /**
+   * Direção (graus) para onde a praia "olha" (em direção ao mar aberto).
+   * Base p/ terral×maral.
+   *
+   * Ausente = ninguém sabe ainda, e nesse caso o app NÃO diz terral nem maral.
+   * Até a 0071 esta coluna era NOT NULL com default, o que fazia "não medido"
+   * e "medido, dá sul" serem indistinguíveis — ver a migration.
+   */
+  orientacaoPraiaDeg?: number | null;
+  /** De onde veio a orientação: da linha de costa do OSM, ou da mão de alguém. */
+  orientacaoFonte?: 'osm' | 'manual' | null;
   fundo: 'areia' | 'pedra' | 'misto';
   descricao?: string;
 }
@@ -40,7 +49,12 @@ export type TipoVento = 'terral' | 'maral' | 'lateral' | 'calmo';
 export interface Vento {
   velocidadeKmh: number;
   direcaoDeg: number; // de ONDE o vento vem
-  tipo: TipoVento;
+  /**
+   * Ausente quando a orientação da praia é desconhecida: terral e maral são
+   * relativos ao lado do mar, e sem ele a classificação seria um chute. A
+   * velocidade e a direção continuam valendo — essas são medidas.
+   */
+  tipo?: TipoVento;
 }
 
 export type FaseMare = 'enchente' | 'vazante' | 'cheia' | 'seca';

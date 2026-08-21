@@ -18,7 +18,18 @@ export function ForecastStrip({ f }: { f: Forecast }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 12 }}>
       <Mini k="Onda" v={`${f.ondaM.toFixed(1)}m`} sub={pontoCardeal(f.direcaoOndaDeg)} />
       <Mini k="Período" v={`${Math.round(f.periodoS)}s`} />
-      <Mini k="Vento" v={rotuloVento(f.vento.tipo)} sub={`${pontoCardeal(f.vento.direcaoDeg)} ${Math.round(f.vento.velocidadeKmh)}km/h`} />
+      {/* Sem orientação da praia não há terral nem maral, mas a medida do
+          vento continua sendo medida: ela sobe para o lugar de destaque em
+          vez de deixar a coluna vazia. */}
+      <Mini
+        k="Vento"
+        v={f.vento.tipo
+          ? rotuloVento(f.vento.tipo)
+          : `${Math.round(f.vento.velocidadeKmh)} km/h`}
+        sub={f.vento.tipo
+          ? `${pontoCardeal(f.vento.direcaoDeg)} ${Math.round(f.vento.velocidadeKmh)}km/h`
+          : `de ${pontoCardeal(f.vento.direcaoDeg)}`}
+      />
       <Mini k="Maré" v={`${f.mare.alturaM.toFixed(1)}m`} sub={rotuloFase(f.mare.fase).replace('maré ', '')} />
     </div>
   )
