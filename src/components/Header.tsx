@@ -30,11 +30,19 @@ export function Header({
   title,
   sub,
   brand,
+  acaoEsquerda,
   children,
 }: {
   title?: string
   sub?: string
   brand?: boolean
+  /**
+   * Botão no canto esquerdo, espelhando o menu de conta da direita.
+   *
+   * Ocupa a mesma vaga do "voltar", e os dois nunca coexistem: o voltar só
+   * aparece quando NÃO há marca, e quem usa esta vaga são telas de marca.
+   */
+  acaoEsquerda?: ReactNode
   children?: ReactNode
 }) {
   const navigate = useNavigate()
@@ -70,6 +78,15 @@ export function Header({
         <span className="so-desktop"><TemaRapido /></span>
         <AccountMenu />
       </div>
+      {acaoEsquerda && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(env(safe-area-inset-top, 0px) + 18px)',
+          left: 14, zIndex: 2, display: 'flex', gap: 8, alignItems: 'center',
+        }}>
+          {acaoEsquerda}
+        </div>
+      )}
       {showBack && (
         <button
           onClick={() => navigate(-1)}

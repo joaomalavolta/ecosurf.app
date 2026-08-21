@@ -204,114 +204,140 @@ export function RadarPage() {
   return (
     <div className="radar-map-first">
       {/* ─── HEADER RADAR — padrão com onda ─── */}
-      <Header brand sub="Surfar Global e Agir Local" />
+      {/* O menu de território mora aqui, à esquerda da marca, espelhando o
+          menu de conta da direita. Antes ele flutuava sobre o mapa, onde
+          disputava espaço com os controles e sumia quando o mapa saía da
+          rolagem. */}
+      <Header
+        brand
+        sub="Surfar Global e Agir Local"
+        acaoEsquerda={
+          <button
+            aria-label="Navegar por estado e cidade"
+            aria-expanded={menuTerritorio}
+            onClick={() => { setMenuTerritorio(true); setUfMenu(null) }}
+            /* Mesma forma do botão de conta, à direita: os dois ladeiam a
+               marca e são vistos juntos, então um redondo e um quadrado
+               arredondado leem como descuido. */
+            style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: 'rgba(255,255,255,.16)',
+              backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+              border: '1px solid rgba(0,0,0,.08)',
+              color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <IconMenu2 size={20} stroke={2} />
+          </button>
+        }
+      />
+
+      {menuTerritorio && (
+        <div
+          onClick={() => setMenuTerritorio(false)}
+          style={{
+            // `fixed`, não `absolute`: o botão vive no header, que é sticky.
+            // Presa ao mapa, a gaveta sumia da tela assim que a página
+            // rolava — abrir o menu não mostraria nada.
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(4,20,27,.45)', display: 'flex',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: 'min(240px, 76%)', height: '100%', overflowY: 'auto',
+              background: 'rgba(24,28,32,.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              borderRight: '1px solid rgba(255,255,255,.14)',
+              // O recuo do topo entra NO shorthand, não numa `paddingTop`
+              // depois dele: `padding` reseta os quatro lados, então a
+              // propriedade separada seria apagada pela linha seguinte.
+              // Ocupando a tela toda, o painel encosta na barra de status —
+              // antes a moldura do mapa o protegia dela.
+              padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 10px calc(env(safe-area-inset-bottom, 0px) + 12px)',
+            }}
+          >
+            <div className="between" style={{ padding: '0 6px 8px' }}>
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>
+                <IconMapPin size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> {ufMenu ?? 'Litoral por região'}
+              </span>
+              {ufMenu && (
+                <button onClick={() => setUfMenu(null)} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.7)', fontSize: 12, cursor: 'pointer' }}>← UFs</button>
+              )}
+            </div>
+            {!ufMenu && [...new Set(picosTodos.map((p) => p.uf))].sort().map((u) => (
+              <button key={u} className="menu-terr-item" onClick={() => setUfMenu(u)}>
+                {u} <span style={{ opacity: .55, fontSize: 11 }}>{picosTodos.filter((p) => p.uf === u).length} picos</span>
+              </button>
+            ))}
+            {ufMenu && [...new Set(picosTodos.filter((p) => p.uf === ufMenu).map((p) => p.municipio))].sort().map((c) => (
+              <button
+                key={c}
+                className="menu-terr-item"
+                onClick={() => {
+                  const ps = picosTodos.filter((p) => p.uf === ufMenu && p.municipio === c)
+                  if (ps.length > 0) {
+                    const lng = ps.reduce((sm, p) => sm + p.lng, 0) / ps.length
+                    const lat = ps.reduce((sm, p) => sm + p.lat, 0) / ps.length
+                    setDestinoMapa({ lng, lat, zoom: 12 })
+                  }
+                  setMenuTerritorio(false)
+                }}
+              >
+                {c}
+              </button>
+            ))}
+            <Link
+              to={ufMenu ? `/explorar?uf=${encodeURIComponent(ufMenu)}` : '/explorar'}
+              style={{ display: 'block', textAlign: 'center', color: '#7FDCD4', fontSize: 12, padding: '12px 6px 6px', textDecoration: 'none' }}
+            >
+              <IconCompass size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Abrir Explorar completo →
+            </Link>
+
+            {/* Ações da comunidade — o território acima, o que fazer com
+                ele aqui. No Perfil isso ficava enterrado. */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 10, paddingTop: 10 }}>
+              <Link
+                to="/comunidades/nova"
+                onClick={() => setMenuTerritorio(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 8px', borderRadius: 10,
+                  color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                  background: 'rgba(30,203,195,.14)',
+                  border: '1px solid rgba(30,203,195,.3)',
+                }}
+              >
+                <IconUsersGroup size={16} stroke={2} style={{ color: '#7FE7E1', flexShrink: 0 }} />
+                Criar comunidade
+              </Link>
+              <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 10.5, lineHeight: 1.4, margin: '8px 4px 2px' }}>
+                Reúna pessoas em torno de uma praia, projeto ou causa.
+              </p>
+              <button
+                onClick={() => { setMenuTerritorio(false); setVerPrefs(true) }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                  padding: '10px 8px', borderRadius: 10, marginTop: 8,
+                  color: '#fff', fontSize: 13, fontWeight: 600,
+                  background: 'none', border: '1px solid rgba(255,255,255,.14)',
+                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                }}
+              >
+                <IconSettings size={16} stroke={2} style={{ flexShrink: 0, opacity: .85 }} />
+                Preferências do app
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── MAPA (hero) ─── */}
       <div className="radar-col-mapa">
       <div className={`radar-map-container ${mapaExpandido ? 'expanded' : ''}`}>
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <Suspense fallback={<div style={{ background: 'var(--map-bg)', width: '100%', height: '100%' }} />}>
-            <button
-              aria-label="Navegar por estado e cidade"
-              onClick={() => { setMenuTerritorio(true); setUfMenu(null) }}
-              style={{
-                position: 'absolute', top: 10, left: 10, zIndex: 4,
-                width: 38, height: 38, borderRadius: 12, border: '1px solid rgba(255,255,255,.16)',
-                background: 'rgba(28,32,36,.52)', backdropFilter: 'blur(9px)', WebkitBackdropFilter: 'blur(9px)',
-                color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <IconMenu2 size={19} stroke={2} />
-            </button>
-
-            {menuTerritorio && (
-              <div
-                onClick={() => setMenuTerritorio(false)}
-                style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'rgba(4,20,27,.45)', display: 'flex' }}
-              >
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    width: 'min(240px, 76%)', height: '100%', overflowY: 'auto',
-                    background: 'rgba(24,28,32,.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                    borderRight: '1px solid rgba(255,255,255,.14)', padding: '12px 10px',
-                  }}
-                >
-                  <div className="between" style={{ padding: '0 6px 8px' }}>
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>
-                      <IconMapPin size={14} stroke={2} style={{ verticalAlign: '-2px' }} /> {ufMenu ?? 'Litoral por região'}
-                    </span>
-                    {ufMenu && (
-                      <button onClick={() => setUfMenu(null)} style={{ background: 'none', border: 0, color: 'rgba(255,255,255,.7)', fontSize: 12, cursor: 'pointer' }}>← UFs</button>
-                    )}
-                  </div>
-                  {!ufMenu && [...new Set(picosTodos.map((p) => p.uf))].sort().map((u) => (
-                    <button key={u} className="menu-terr-item" onClick={() => setUfMenu(u)}>
-                      {u} <span style={{ opacity: .55, fontSize: 11 }}>{picosTodos.filter((p) => p.uf === u).length} picos</span>
-                    </button>
-                  ))}
-                  {ufMenu && [...new Set(picosTodos.filter((p) => p.uf === ufMenu).map((p) => p.municipio))].sort().map((c) => (
-                    <button
-                      key={c}
-                      className="menu-terr-item"
-                      onClick={() => {
-                        const ps = picosTodos.filter((p) => p.uf === ufMenu && p.municipio === c)
-                        if (ps.length > 0) {
-                          const lng = ps.reduce((sm, p) => sm + p.lng, 0) / ps.length
-                          const lat = ps.reduce((sm, p) => sm + p.lat, 0) / ps.length
-                          setDestinoMapa({ lng, lat, zoom: 12 })
-                        }
-                        setMenuTerritorio(false)
-                      }}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                  <Link
-                    to={ufMenu ? `/explorar?uf=${encodeURIComponent(ufMenu)}` : '/explorar'}
-                    style={{ display: 'block', textAlign: 'center', color: '#7FDCD4', fontSize: 12, padding: '12px 6px 6px', textDecoration: 'none' }}
-                  >
-                    <IconCompass size={13} stroke={2} style={{ verticalAlign: '-2px' }} /> Abrir Explorar completo →
-                  </Link>
-
-                  {/* Ações da comunidade — o território acima, o que fazer com
-                      ele aqui. No Perfil isso ficava enterrado. */}
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 10, paddingTop: 10 }}>
-                    <Link
-                      to="/comunidades/nova"
-                      onClick={() => setMenuTerritorio(false)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '10px 8px', borderRadius: 10,
-                        color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                        background: 'rgba(30,203,195,.14)',
-                        border: '1px solid rgba(30,203,195,.3)',
-                      }}
-                    >
-                      <IconUsersGroup size={16} stroke={2} style={{ color: '#7FE7E1', flexShrink: 0 }} />
-                      Criar comunidade
-                    </Link>
-                    <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 10.5, lineHeight: 1.4, margin: '8px 4px 2px' }}>
-                      Reúna pessoas em torno de uma praia, projeto ou causa.
-                    </p>
-                    <button
-                      onClick={() => { setMenuTerritorio(false); setVerPrefs(true) }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                        padding: '10px 8px', borderRadius: 10, marginTop: 8,
-                        color: '#fff', fontSize: 13, fontWeight: 600,
-                        background: 'none', border: '1px solid rgba(255,255,255,.14)',
-                        cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
-                      }}
-                    >
-                      <IconSettings size={16} stroke={2} style={{ flexShrink: 0, opacity: .85 }} />
-                      Preferências do app
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <MapView
               picos={picosTodos}
               alertas={alertas}
