@@ -24,10 +24,38 @@ export function formatarArea(m2: number | null | undefined): string | null {
  * Aceita vírgula: num teclado brasileiro é ela que sai, e rejeitar "1850,5"
  * como inválido seria culpar o usuário pelo formato do próprio idioma.
  * Devolve `null` para vazio — que é "não informado", diferente de zero.
+ *
+ * ── O ponto é ambíguo, e por isso decide por último ───────────────────────
+ *
+ * Em "1.850" o ponto separa milhar; em "1850.5" ele é decimal. Tratar todo
+ * ponto como milhar parecia inofensivo até a volta da edição: o banco devolve
+ * 1850.5, `String()` escreve com ponto, e a releitura virava 18505 — uma área
+ * dez vezes maior a cada salvamento.
+ *
+ * A regra: havendo os dois sinais, o ÚLTIMO é o decimal (vale para "1.850,5"
+ * e para "1,850.5"). Havendo só pontos, é milhar apenas quando os grupos são
+ * de três dígitos — o formato que ninguém escreve por acaso.
  */
 export function lerArea(texto: string): number | null {
-  const limpo = texto.trim().replace(/\./g, '').replace(',', '.')
-  if (!limpo) return null
+  const t = texto.trim()
+  if (!t) return null
+
+  const temVirgula = t.includes(',')
+  const temPonto = t.includes('.')
+
+  let limpo: string
+  if (temVirgula && temPonto) {
+    const decimal = t.lastIndexOf(',') > t.lastIndexOf('.') ? ',' : '.'
+    const milhar = decimal === ',' ? '.' : ','
+    limpo = t.split(milhar).join('').replace(decimal, '.')
+  } else if (temVirgula) {
+    limpo = t.replace(',', '.')
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(t)) {
+    limpo = t.split('.').join('')
+  } else {
+    limpo = t
+  }
+
   const n = Number(limpo)
   return Number.isFinite(n) && n > 0 ? n : null
 }

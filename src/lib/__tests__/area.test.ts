@@ -31,6 +31,26 @@ describe('lerArea', () => {
   it('aceita o ponto de milhar', () => {
     expect(lerArea('1.850')).toBe(1850)
     expect(lerArea('10.000')).toBe(10000)
+    expect(lerArea('1.850.000')).toBe(1850000)
+  })
+
+  it('ponto decimal não vira milhar — a volta da edição depende disso', () => {
+    // O banco devolve 1850.5; String() escreve com ponto. Se isto virasse
+    // 18505, cada salvamento multiplicaria a área por dez.
+    expect(lerArea('1850.5')).toBe(1850.5)
+    expect(lerArea('0.5')).toBe(0.5)
+    expect(lerArea('12.75')).toBe(12.75)
+  })
+
+  it('com os dois sinais, o último manda', () => {
+    expect(lerArea('1.850,5')).toBe(1850.5)   // pt-BR
+    expect(lerArea('1,850.5')).toBe(1850.5)   // en-US, colado de algum lugar
+  })
+
+  it('a ida e a volta pelo banco preservam o número', () => {
+    for (const n of [850, 1850.5, 25000, 0.5, 1234567]) {
+      expect(lerArea(String(n))).toBe(n)
+    }
   })
 
   it('vazio é "não informado", não zero', () => {
