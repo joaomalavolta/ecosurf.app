@@ -17,6 +17,7 @@ import { carregarPerfilAtual, type PerfilAtual } from '../services/perfil'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { lerPreferencia, gravarPreferencia } from '../services/preferencias-conta'
 import { codificar } from '../lib/imagem'
+import { VisualizadorMidia } from '../components/VisualizadorMidia'
 
 function Stat({ k, v, icon: Icon }: { k: string; v: string | number; icon: React.ElementType }) {
   return (
@@ -46,6 +47,8 @@ export function PerfilPage() {
   const [loading, setLoading] = useState(true)
   const [minhasFotos, setMinhasFotos] = useState<Array<{id: string, pico_id: string, capturada_em: string, storage_path: string | null, procedencia?: string | null, tipo?: string | null}>>([])
   const [fotosUrls, setFotosUrls] = useState<Record<string, string>>({})
+  /** Avatar em tela cheia — o mesmo gesto do perfil de outra pessoa. */
+  const [verAvatar, setVerAvatar] = useState(false)
 
   useEffect(() => {
     let vivo = true
@@ -237,7 +240,14 @@ export function PerfilPage() {
                   if (f) uploadAvatar(f)
                 }} />
                 {perfil.avatarUrl ? (
-                  <img src={perfil.avatarUrl} alt="Avatar" style={{ width: 64, height: 64, borderRadius: 22, objectFit: 'cover' }} />
+                  <button
+                    type="button"
+                    onClick={() => setVerAvatar(true)}
+                    aria-label="Ampliar minha foto"
+                    style={{ padding: 0, border: 0, background: 'none', cursor: 'zoom-in', borderRadius: 22, flexShrink: 0 }}
+                  >
+                    <img src={perfil.avatarUrl} alt="Avatar" style={{ width: 64, height: 64, borderRadius: 22, objectFit: 'cover', display: 'block' }} />
+                  </button>
                 ) : (
                   <div style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--azul-medio)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 'bold' }}>
                     {perfil.nome ? perfil.nome.charAt(0).toUpperCase() : '?'}
@@ -348,6 +358,18 @@ export function PerfilPage() {
                 </label>
               </div>
             </div>
+
+            {verAvatar && perfil.avatarUrl && (
+              <VisualizadorMidia
+                itens={[{
+                  id: 'meu-avatar',
+                  url: perfil.avatarUrl,
+                  titulo: perfil.nome || 'Minha foto',
+                  Icone: IconPhoto,
+                }]}
+                onFechar={() => setVerAvatar(false)}
+              />
+            )}
 
             {verPrefs && <PainelPreferencias onFechar={() => setVerPrefs(false)} />}
 

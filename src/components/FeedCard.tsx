@@ -5,6 +5,7 @@ import { compartilharPico } from './TideScrubTimeline'
 import type { Foto, Forecast, Pico } from '../types/domain'
 import { rotularCondicao } from '../lib/surf'
 import { autoplayVideosAtivo } from '../lib/preferencias'
+import { linkFoto } from '../lib/linkFoto'
 
 /**
  * Card feed-first: a foto é protagonista, o pico é metadata.
@@ -71,7 +72,9 @@ export function FeedCard({
 
   return (
     <Link
-      to={`/pico/${fotos[0].picoId}?foto=${fotosComUrl[activeIdx]?.id ?? fotos[0]?.id}`}
+      /* Sem abrir o visor: o card inteiro é o alvo do toque, e quem mira no
+         nome do pico ou no local não pediu foto em tela cheia. */
+      to={linkFoto(fotos[0].picoId, fotosComUrl[activeIdx]?.id ?? fotos[0]?.id)}
       className="card"
       style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
     >

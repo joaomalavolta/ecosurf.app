@@ -37,6 +37,8 @@ export interface DadosAlerta {
   lat: number
   lng: number
   recorrente?: boolean
+  /** Área em m² — só a vegetação pergunta hoje. Ausente = não informado. */
+  areaM2?: number | null
   checkboxAceite: boolean
   images?: File[]
   keptImages?: string[]
@@ -103,6 +105,7 @@ export async function publicarAlerta(dados: DadosAlerta): Promise<string> {
     descricao: dados.descricao ?? null,
     images: imagePaths.length > 0 ? imagePaths : null,
     recorrente: dados.recorrente ?? false,
+    area_m2: dados.areaM2 ?? null,
     checkbox_aceite: dados.checkboxAceite,
     comunidade_id: dados.comunidadeId ?? null,
     ocorrido_em: dados.ocorridoEm ?? null,
@@ -139,6 +142,7 @@ export async function carregarAlertaParaEdicao(id: string): Promise<DadosAlerta 
     lat: data.geom ? 0 : -23.96, // placeholder (a geometria seria parseada se necessário)
     lng: data.geom ? 0 : -46.33,
     recorrente: data.recorrente ?? false,
+    areaM2: data.area_m2 ?? undefined,
     checkboxAceite: data.checkbox_aceite ?? true,
     imagesUrl: data.images ?? undefined,
   }
@@ -181,6 +185,7 @@ export async function atualizarAlerta(id: string, dados: DadosAlerta): Promise<v
     local_nome: dados.localNome ?? null,
     descricao: dados.descricao ?? null,
     recorrente: dados.recorrente ?? false,
+    area_m2: dados.areaM2 ?? null,
     images: imagePaths.length > 0 ? imagePaths : null,
   }
 

@@ -3,7 +3,7 @@ import { toast } from '../lib/toast'
 import { CorteFoto } from '../components/CorteFotoLazy'
 import { CreditoComunidade } from '../components/CreditoComunidade'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload, IconShieldLock } from '@tabler/icons-react'
+import { IconCrop, IconUser, IconSeeding, IconUsers, IconMapPin, IconAlertTriangle, IconArrowLeft, IconShare, IconCalendar, IconRefresh, IconCamera, IconUpload, IconShieldLock, IconVector } from '@tabler/icons-react'
 import { Header } from '../components/Header'
 import { VoltarFlutuante } from '../components/VoltarFlutuante'
 import { MapaLocalLazy as MapaLocal } from '../components/MapasLazy'
@@ -13,6 +13,8 @@ import { CampoGravidade } from '../components/CampoGravidade'
 import { SUPABASE_URL } from '../services/supabase/config'
 import { atualizarAlerta } from '../services/alertas'
 import { arquivoDe } from '../lib/imagem'
+import { formatarArea, lerArea, AREA_MAX_M2 } from '../lib/area'
+import { VisualizadorMidia } from '../components/VisualizadorMidia'
 import type { CategoriaRegistro, GravidadeAlerta, TipoRegistro } from '../types/domain'
 
 interface AlertaDetalhe {
@@ -28,6 +30,7 @@ interface AlertaDetalhe {
   gravidade: string | null
   recorrente: boolean
   images: string[] | null
+  area_m2: number | null
   criada_em: string
   ocorrido_em: string | null
   autor_id: string | null
@@ -61,6 +64,8 @@ export function AlertaPage() {
   const [editCategoria, setEditCategoria] = useState<CategoriaRegistro | undefined>()
   const [editGravidade, setEditGravidade] = useState<GravidadeAlerta | undefined>()
   const [editDescricao, setEditDescricao] = useState('')
+  /** Texto cru do campo de área — só a vegetação pergunta. */
+  const [editArea, setEditArea] = useState('')
   const [editLat, setEditLat] = useState<number | undefined>()
   const [editLng, setEditLng] = useState<number | undefined>()
   const [editFotos, setEditFotos] = useState<File[]>([])
@@ -68,6 +73,8 @@ export function AlertaPage() {
   const [reajustando, setReajustando] = useState<{ path: string; file: File } | null>(null)
   const [keptImages, setKeptImages] = useState<string[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  /** Índice da foto ampliada; null = visor fechado. */
+  const [ampliada, setAmpliada] = useState<number | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -106,6 +113,7 @@ export function AlertaPage() {
             setEditCategoria(a.categoria as CategoriaRegistro)
             setEditGravidade(a.gravidade as GravidadeAlerta)
             setEditDescricao(a.descricao ?? '')
+            setEditArea(a.area_m2 != null ? String(a.area_m2) : '')
             setEditLat(a.lat ?? undefined)
             setEditLng(a.lng ?? undefined)
             setKeptImages(a.images ?? [])
@@ -164,6 +172,13 @@ export function AlertaPage() {
   const dataEhDoOcorrido = !!alerta.ocorrido_em &&
     new Date(alerta.ocorrido_em).toDateString() !== new Date(alerta.criada_em).toDateString()
   const localTexto = `${alerta.local_nome ? `${alerta.local_nome} — ` : ''}${alerta.municipio}/${alerta.uf}`
+  /**
+   * Só a vegetação pergunta o tamanho — mesma regra do formulário de criação.
+   * Repare que a pergunta segue a categoria EM EDIÇÃO: quem trocar vegetação
+   * por outra coisa deixa de ver o campo, e a área sai junto no salvamento.
+   */
+  const pedeArea = (isEditing ? editCategoria : alerta.categoria) === 'vegetacao-recuperacao'
+  const areaEditada = lerArea(editArea)
 
   async function compartilhar() {
     const url = window.location.href
@@ -245,6 +260,11 @@ export function AlertaPage() {
   async function salvarEdicao() {
     if (!editCategoria || !editLat || !editLng || !id) return
     if (!ehPositivo && !editGravidade) return
+    // Barra aqui o que o CHECK do banco barraria com um erro ilegível.
+    if (pedeArea && areaEditada != null && areaEditada > AREA_MAX_M2) {
+      toast('Área grande demais. O limite é 10.000.000 m² (10 km²).')
+      return
+    }
     setSalvando(true)
     try {
       await atualizarAlerta(id, {
@@ -261,6 +281,9 @@ export function AlertaPage() {
         lat: editLat,
         lng: editLng,
         recorrente: alerta!.recorrente,
+        // Sem isto a edição apagaria a área: `atualizarAlerta` sempre grava a
+        // coluna, e o que não é passado vira NULL.
+        areaM2: pedeArea ? areaEditada : null,
         checkboxAceite: true,
         images: editFotos,
         keptImages: keptImages,
@@ -281,6 +304,7 @@ export function AlertaPage() {
     setEditCategoria(alerta!.categoria as CategoriaRegistro)
     setEditGravidade(alerta!.gravidade as GravidadeAlerta)
     setEditDescricao(alerta!.descricao ?? '')
+    setEditArea(alerta!.area_m2 != null ? String(alerta!.area_m2) : '')
     setEditLat(alerta!.lat ?? undefined)
     setEditLng(alerta!.lng ?? undefined)
     setKeptImages(alerta!.images ?? [])
@@ -341,11 +365,18 @@ export function AlertaPage() {
           alerta.images && alerta.images.length > 0 && (
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
               {alerta.images.map((path, i) => (
-                /* Moldura 4:3 uniforme com o quadro sempre cheio. O corte no
-                   envio garante que nada essencial se perca; fotos antigas
-                   podem ser reenquadradas pelo dono em "Editar". */
-                <div
+                /* Moldura 4:3 uniforme com o quadro sempre cheio: o corte no
+                   envio garante que nada essencial se perca, e fotos antigas
+                   podem ser reenquadradas pelo dono em "Editar".
+
+                   Botão, e não <div>: o quadro 4:3 mostra a condição mas corta
+                   o assunto. Tocar abre em tela cheia, com swipe entre as fotos
+                   do registro — o mesmo visor da timeline do pico. */
+                <button
                   key={i}
+                  type="button"
+                  onClick={() => setAmpliada(i)}
+                  aria-label={`Ampliar foto ${i + 1} de ${alerta.images!.length}`}
                   style={{
                     width: alerta.images!.length === 1 ? '100%' : 280,
                     aspectRatio: '4 / 3',
@@ -353,6 +384,10 @@ export function AlertaPage() {
                     overflow: 'hidden',
                     flexShrink: 0,
                     background: '#0a1929',
+                    padding: 0,
+                    border: 0,
+                    cursor: 'zoom-in',
+                    display: 'block',
                   }}
                 >
                   <img
@@ -360,7 +395,7 @@ export function AlertaPage() {
                     alt={`Foto ${i + 1}`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   />
-                </div>
+                </button>
               ))}
             </div>
           )
@@ -455,6 +490,14 @@ export function AlertaPage() {
                 <b>Gravidade:</b> {alerta.gravidade}
               </div>
             )}
+            {formatarArea(alerta.area_m2) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <IconVector size={16} stroke={2} color="var(--turq)" />
+                <span style={{ fontSize: 13 }}>
+                  <b>Área:</b> {formatarArea(alerta.area_m2)}
+                </span>
+              </div>
+            )}
             {alerta.recorrente && (
               ehPositivo ? (
                 <div style={{ fontSize: 13, color: '#2E9B6B', marginTop: 4 }}>
@@ -476,6 +519,30 @@ export function AlertaPage() {
               valor={editGravidade}
               onChange={setEditGravidade}
             />
+          </div>
+        )}
+
+        {isEditing && pedeArea && (
+          <div>
+            <h3 style={{ fontSize: 14, marginBottom: 6 }}>Área aproximada (m²)</h3>
+            <input
+              className="input"
+              style={{ width: '100%' }}
+              inputMode="decimal"
+              placeholder="Ex.: 1850"
+              value={editArea}
+              onChange={(e) => setEditArea(e.target.value)}
+            />
+            <p className="muted" style={{ fontSize: 11.5, marginTop: 5, lineHeight: 1.45 }}>
+              Opcional, e um palpite serve — "mais ou menos meio campo de
+              futebol" é 3.500 m². {areaEditada != null && <b>{formatarArea(areaEditada)}</b>}
+              {editArea.trim() && areaEditada == null && (
+                <span style={{ color: 'var(--coral)' }}> Não entendi esse número.</span>
+              )}
+              {areaEditada != null && areaEditada > AREA_MAX_M2 && (
+                <span style={{ color: 'var(--coral)' }}> — acima do limite de 10 km²; confira o número.</span>
+              )}
+            </p>
           </div>
         )}
 
@@ -667,6 +734,21 @@ export function AlertaPage() {
           )}
         </div>
       </div>
+
+      {ampliada !== null && alerta.images && (
+        <VisualizadorMidia
+          itens={alerta.images.map((path, i) => ({
+            id: path,
+            url: `${SUPABASE_URL}/storage/v1/object/public/fotos/${path}`,
+            titulo: alerta.titulo,
+            sub: localTexto,
+            legenda: i === 0 ? (alerta.descricao ?? undefined) : undefined,
+            Icone: IconMapPin,
+          }))}
+          indiceInicial={ampliada}
+          onFechar={() => setAmpliada(null)}
+        />
+      )}
 
       {filaCorte.length > 0 && (
         <CorteFoto

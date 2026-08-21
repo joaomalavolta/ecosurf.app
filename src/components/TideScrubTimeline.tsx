@@ -8,7 +8,7 @@ import { rotuloVento } from '../lib/surf'
 import { denunciarFoto } from '../services/moderacao'
 import { soComFotosAtivo, setSoComFotos as gravarSoComFotos, autoplayVideosAtivo } from '../lib/preferencias'
 import { Photo } from './Photo'
-import { VisualizadorMidia } from './VisualizadorMidia'
+import { VisualizadorMidia, fotoParaVisor } from './VisualizadorMidia'
 import { ProvenanceBadge } from './ProvenanceBadge'
 
 const VB_W = 100
@@ -115,6 +115,7 @@ export function TideScrubTimeline({
   curvasMultiDia,
   eventos,
   initialFotoId,
+  abrirVisor,
   diasComFoto,
   onDiaChange,
 }: {
@@ -125,6 +126,12 @@ export function TideScrubTimeline({
   curvasMultiDia?: Record<string, PontoMare[]>
   eventos: EventoVento[]
   initialFotoId?: string
+  /**
+   * Abrir a foto de `initialFotoId` em tela cheia ao chegar. Só quando a
+   * pessoa tocou NA FOTO (mosaico, grade do perfil, story): quem tocou num
+   * card de report quer o pico, e a foto só precisa estar selecionada.
+   */
+  abrirVisor?: boolean
   /** Dias (yyyy-mm-dd) com foto no período — pontinhos e calendário. */
   diasComFoto?: Set<string>
   /** Avisa quando o usuário navega para outro dia (para carga sob demanda). */
@@ -276,8 +283,9 @@ export function TideScrubTimeline({
 
   const [ativo, setAtivo] = useState(initAtivo)
   const [ampliada, setAmpliada] = useState(false)
-  // Chegou via ?foto= (toque no mosaico): a pessoa tocou querendo VER a foto,
-  // então abrimos o visualizador direto nela — uma vez, sem reabrir se fechar.
+  // Chegou via ?foto=: seleciona a foto e rola até ela. A tela cheia só abre
+  // com `abrirVisor` — ou seja, quando o toque foi na foto em si. Uma vez só,
+  // sem reabrir se a pessoa fechar.
   const jaAbriuInicial = useRef(false)
   const cardRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -286,13 +294,13 @@ export function TideScrubTimeline({
       if (idx !== -1) {
         jaAbriuInicial.current = true
         setAtivo(idx)
-        setAmpliada(true)
-        // Rola a timeline até a vista: se o visualizador for fechado, a foto
+        if (abrirVisor) setAmpliada(true)
+        // Rola a timeline até a vista: com ou sem visualizador, a foto
         // referenciada fica visível em vez de perdida no meio da página.
         setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
       }
     }
-  }, [initialFotoId, ordenadas])
+  }, [initialFotoId, abrirVisor, ordenadas])
   const autoplayVideos = autoplayVideosAtivo()
   const [dir, setDir] = useState(0)
   const [scrubHora, setScrubHora] = useState<number | null>(null)
@@ -936,9 +944,8 @@ export function TideScrubTimeline({
 
     {ampliada && f && (
       <VisualizadorMidia
-        fotos={ordenadas}
+        itens={ordenadas.map((x) => fotoParaVisor(x, picoNome))}
         indiceInicial={safeAtivo}
-        picoNome={picoNome}
         onFechar={() => setAmpliada(false)}
       />
     )}
