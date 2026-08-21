@@ -17,7 +17,7 @@ const reg = (over: Partial<Alerta>): Alerta => ({
   id: `r${++n}`,
   titulo: 'x',
   categoria: 'lixo-praia',
-  status: 'publicado',
+  status: 'identificado',
   gravidade: 'media',
   municipio: 'Itanhaém',
   uf: 'SP',

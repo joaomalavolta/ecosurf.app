@@ -244,13 +244,40 @@ export async function listarAmeacasAdmin() {
   const c = await sb()
   const { data, error } = await c.rpc('admin_listar_ameacas')
   if (error) throw new Error(error.message)
-  return (data ?? []) as { id: string; titulo: string; categoria: string; tipo_registro: string | null; status: string; gravidade: string | null; municipio: string | null; uf: string | null; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
+  return (data ?? []) as { id: string; titulo: string; categoria: string; tipo_registro: string | null; status: string; moderacao: string | null; gravidade: string | null; municipio: string | null; uf: string | null; descricao: string | null; local_nome: string | null; recorrente: boolean }[]
 }
 
+/**
+ * Ciclo de vida da ocorrência.
+ *
+ * O `.error` não era olhado. Como o seletor oferecia seis valores que o CHECK
+ * recusa, o UPDATE voltava 23514, ninguém via, e o log era gravado dizendo que
+ * mudou — registrando uma alteração que não aconteceu. Agora erra alto, e o
+ * log só é escrito depois que o banco confirma.
+ */
 export async function atualizarStatusAmeaca(id: string, status: string) {
   const c = await sb()
-  await c.from('ameacas').update({ status }).eq('id', id)
+  const { error } = await c.from('ameacas').update({ status }).eq('id', id)
+  if (error) throw new Error(error.message)
   await log(c, 'alerta:status', 'alerta', id, undefined, { status })
+}
+
+/**
+ * Visibilidade pública — o botão que a moderação achava que tinha.
+ *
+ * Escreve na coluna `moderacao`, não em `status`: esconder uma ocorrência não
+ * pode apagar que ela era recorrente. Quem tira do mapa, do feed e do
+ * carrossel é a RLS (migration 0069).
+ */
+export async function definirModeracaoAmeaca(
+  id: string,
+  moderacao: import('../types/domain').ModeracaoRegistro,
+  motivo?: string,
+) {
+  const c = await sb()
+  const { error } = await c.from('ameacas').update({ moderacao }).eq('id', id)
+  if (error) throw new Error(error.message)
+  await log(c, 'alerta:moderacao', 'alerta', id, undefined, { moderacao }, motivo)
 }
 
 export async function excluirAmeaca(id: string, motivo: string) {
@@ -262,7 +289,10 @@ export async function excluirAmeaca(id: string, motivo: string) {
 /** Edita campos de um alerta ambiental. */
 export async function editarAmeaca(id: string, campos: { titulo?: string; categoria?: string; gravidade?: string; municipio?: string; uf?: string; descricao?: string; local_nome?: string }) {
   const c = await sb()
-  await c.from('ameacas').update(campos).eq('id', id)
+  // Mesmo silêncio de `atualizarStatusAmeaca`: a edição podia falhar (RLS,
+  // CHECK, rede) e a tabela seguia mostrando o valor novo.
+  const { error } = await c.from('ameacas').update(campos).eq('id', id)
+  if (error) throw new Error(error.message)
   await log(c, 'alerta:editar', 'alerta', id, undefined, campos)
 }
 

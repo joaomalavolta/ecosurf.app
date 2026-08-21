@@ -90,11 +90,14 @@ function Secao({ titulo, children }: { titulo: ReactNode; children: ReactNode })
   )
 }
 
+/**
+ * Os quatro status que o banco aceita — os únicos que podem chegar aqui.
+ *
+ * As quatro entradas extras ('publicado', 'em-revisao', 'validado',
+ * 'sinalizado') eram de um vocabulário que o `ameacas_status_check` nunca
+ * aceitou: nenhuma linha jamais teve esses valores. Ver migration 0069.
+ */
 const STATUS_LABELS: Record<string, string> = {
-  publicado: 'Publicado pela comunidade',
-  'em-revisao': 'Em revisão',
-  validado: 'Validado',
-  sinalizado: 'Sinalizado',
   identificado: 'Publicado',
   'em-observacao': 'Em observação',
   recorrente: 'Recorrente',

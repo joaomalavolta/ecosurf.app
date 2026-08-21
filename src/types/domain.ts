@@ -154,13 +154,30 @@ export type TipoRegistro = 'alerta' | 'positivo';
 
 export type GravidadeAlerta = 'baixa' | 'media' | 'alta' | 'emergencial';
 
+/**
+ * Ciclo de vida da ocorrência — os quatro valores que o CHECK do banco aceita.
+ *
+ * Este tipo listava outra coisa: 'publicado' | 'em-revisao' | 'validado' |
+ * 'sinalizado' | 'ocultado' | 'removido'. Nenhum deles passa no
+ * `ameacas_status_check`, e nenhum dos quatro reais estava aqui — ou seja, o
+ * tipo descrevia um vocabulário que o banco nunca aceitou. Passava batido
+ * porque toda leitura converte com `as`.
+ *
+ * Visibilidade é outro eixo, em `ModeracaoRegistro` — ver migration 0069.
+ */
 export type StatusAlerta =
-  | 'publicado'       // "Publicado pela comunidade"
-  | 'em-revisao'      // "Em revisão pela moderação"
-  | 'validado'        // "Validado visualmente"
-  | 'sinalizado'      // "Sinalizado pela comunidade"
-  | 'ocultado'        // "Ocultado por inconsistência"
-  | 'removido';       // "Removido por violar regras"
+  | 'identificado'    // registrado, ainda sem acompanhamento
+  | 'em-observacao'   // alguém está acompanhando
+  | 'recorrente'      // volta a acontecer no mesmo lugar
+  | 'resolvido';      // fim de ciclo
+
+/**
+ * O que a moderação decidiu sobre a visibilidade pública do registro.
+ *
+ * Perpendicular ao `status`: uma ocorrência pode ser `recorrente` E estar
+ * `oculto`. Quem filtra é a RLS (migration 0069), não a interface.
+ */
+export type ModeracaoRegistro = 'visivel' | 'oculto' | 'removido';
 
 /**
  * Um ponto no mapa colaborativo — alerta ambiental OU registro positivo.

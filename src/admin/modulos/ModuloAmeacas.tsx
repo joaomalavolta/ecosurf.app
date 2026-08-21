@@ -6,13 +6,33 @@ import * as admin from '../../services/admin'
 import { type Permissoes } from '../../services/admin'
 import { ConfirmDialog, Estado } from '../ui'
 import { CATEGORIAS, categoriaPorId } from '../../components/SeletorCategoria'
+import type { ModeracaoRegistro } from '../../types/domain'
 import { Titulo, type Ameaca } from '../shared'
 
-const AMEACA_STATUS = ['publicado', 'em-revisao', 'validado', 'sinalizado', 'ocultado', 'removido', 'identificado', 'em-observacao', 'recorrente', 'resolvido']
+/**
+ * O CICLO DE VIDA da ocorrência — e só ele.
+ *
+ * Esta lista tinha dez valores; o `ameacas_status_check` aceita quatro. Os seis
+ * extras ('publicado', 'em-revisao', 'validado', 'sinalizado', 'ocultado',
+ * 'removido') faziam o UPDATE voltar 23514, e como o erro era engolido a tabela
+ * mostrava o valor novo até a próxima recarga. Visibilidade agora tem controle
+ * próprio, na coluna `moderacao` — ver migration 0069.
+ */
+const AMEACA_STATUS = ['identificado', 'em-observacao', 'recorrente', 'resolvido']
+
+const MODERACAO: { valor: ModeracaoRegistro; rotulo: string; cor: string }[] = [
+  { valor: 'visivel', rotulo: 'No ar', cor: '#2E9B6B' },
+  { valor: 'oculto', rotulo: 'Oculto', cor: '#C17817' },
+  { valor: 'removido', rotulo: 'Removido', cor: '#E84855' },
+]
 // Sai do catálogo em vez de repetir a lista: era exatamente essa cópia que
 // deixaria a moderação sem as categorias novas depois da 0063.
 const AMEACA_CATEGORIAS = CATEGORIAS.map((c) => c.id)
 const AMEACA_GRAVIDADE = ['baixa', 'media', 'alta', 'critica']
+
+/** Linha antiga (antes da 0069) não traz a coluna; ausente = está no ar. */
+const moderacaoDe = (a: Ameaca): ModeracaoRegistro =>
+  (((a as { moderacao?: string | null }).moderacao ?? 'visivel') as ModeracaoRegistro)
 
 export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
   const [itens, setItens] = useState<Ameaca[] | null>(null)
@@ -28,9 +48,34 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
   }, [])
   useEffect(() => carregar(), [carregar])
 
+  /**
+   * A tela pintava a linha ANTES do await e nunca olhava o resultado. Agora
+   * pinta otimista (a resposta é boa) mas DESFAZ se o banco recusar — e diz
+   * por quê, em vez de deixar um valor fantasma até a próxima recarga.
+   */
   async function mudarStatus(a: Ameaca, status: string) {
+    const antes = a.status
     setItens((xs) => xs?.map((x) => (x.id === a.id ? { ...x, status } : x)) ?? null)
-    await admin.atualizarStatusAmeaca(a.id, status)
+    try {
+      await admin.atualizarStatusAmeaca(a.id, status)
+      setErro('')
+    } catch (e) {
+      setItens((xs) => xs?.map((x) => (x.id === a.id ? { ...x, status: antes } : x)) ?? null)
+      setErro(`Não deu para mudar o status: ${(e as Error)?.message ?? e}`)
+    }
+  }
+
+  /** Tira do ar (ou devolve). Escreve em `moderacao`, não em `status`. */
+  async function mudarModeracao(a: Ameaca, moderacao: ModeracaoRegistro) {
+    const antes = (a as { moderacao?: string }).moderacao ?? 'visivel'
+    setItens((xs) => xs?.map((x) => (x.id === a.id ? { ...x, moderacao } : x)) ?? null)
+    try {
+      await admin.definirModeracaoAmeaca(a.id, moderacao)
+      setErro('')
+    } catch (e) {
+      setItens((xs) => xs?.map((x) => (x.id === a.id ? { ...x, moderacao: antes } : x)) ?? null)
+      setErro(`Não deu para mudar a visibilidade: ${(e as Error)?.message ?? e}`)
+    }
   }
 
   function iniciarEdicao(a: Ameaca) {
@@ -85,21 +130,27 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
           </div>
         }
       />
-      {erro && <Estado>Erro ao carregar registros.</Estado>}
+      {/* Dizia sempre "Erro ao carregar" mesmo quando o erro vinha de um
+          UPDATE. Agora mostra a mensagem real — é ela que revela um CHECK
+          recusando o valor. */}
+      {erro && <Estado>{erro}</Estado>}
       {!itens && !erro && <Estado>Carregando…</Estado>}
       {itens && itens.length === 0 && <Estado>Nenhum registro publicado.</Estado>}
       {itens && itens.length > 0 && (
         <div style={{ overflowX: 'auto' }}>
           <table className="adt">
-            <thead><tr><th>Título</th><th>Tipo</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Título</th><th>Tipo</th><th>Categoria</th><th>Gravidade</th><th>Local</th><th>Status</th><th>Visibilidade</th><th>Ações</th></tr></thead>
             <tbody>
               {itens.map((a) => {
                 const isEditing = editando === a.id
                 const cat = categoriaPorId(a.categoria)
                 const ehPositivo = ((a as { tipo_registro?: string | null }).tipo_registro ?? cat.tipo) === 'positivo'
+                const fora = moderacaoDe(a) !== 'visivel'
                 return (
                   <Fragment key={a.id}>
-                  <tr>
+                  {/* Linha fora do ar recua: sem isso a moderação teria de ler
+                      o seletor de cada linha para saber o que está publicado. */}
+                  <tr style={fora ? { opacity: 0.55 } : undefined}>
                     <td>
                       {isEditing
                         ? <input className="input" value={editForm.titulo} onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })} style={{ minWidth: 140, padding: '4px 8px', fontSize: 13 }} />
@@ -148,6 +199,18 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
                         {AMEACA_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </td>
+                    {/* O eixo que faltava. Escreve em `moderacao`, então
+                        esconder não apaga o ciclo de vida ao lado. */}
+                    <td>
+                      <select
+                        className="sel"
+                        value={moderacaoDe(a)}
+                        onChange={(e) => mudarModeracao(a, e.target.value as ModeracaoRegistro)}
+                        style={{ color: MODERACAO.find((m) => m.valor === moderacaoDe(a))?.cor, fontWeight: 600 }}
+                      >
+                        {MODERACAO.map((m) => <option key={m.valor} value={m.valor}>{m.rotulo}</option>)}
+                      </select>
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
                         {isEditing ? (
@@ -174,7 +237,7 @@ export function ModuloAmeacas({ perm: _perm }: { perm: Permissoes }) {
                   </tr>
                   {isEditing && (
                     <tr>
-                      <td colSpan={7} style={{ background: 'var(--cinza, rgba(0,0,0,.03))' }}>
+                      <td colSpan={8} style={{ background: 'var(--cinza, rgba(0,0,0,.03))' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '8px 4px' }}>
                           <label style={{ fontSize: 12, fontWeight: 600 }}>
                             Nome do local
