@@ -79,7 +79,10 @@ function paraPico(r: LinhaPico): Pico {
     regiaoSurfId: r.regiao_surf_id ?? '',
     lat: r.lat as number,
     lng: r.lng as number,
-    orientacaoPraiaDeg: r.orientacao_praia_deg ?? 180,
+    // Sem `?? 180`: esse default era o bug. Ele passa no type-check (number
+    // serve onde cabe number | null) e volta a afirmar que toda praia olha
+    // para o sul. Nulo aqui é a resposta certa — "não sei".
+    orientacaoPraiaDeg: r.orientacao_praia_deg,
     fundo: (r.fundo ?? 'areia') as Pico['fundo'],
     descricao: r.descricao ?? undefined,
   }

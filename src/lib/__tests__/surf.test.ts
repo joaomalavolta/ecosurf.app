@@ -43,6 +43,38 @@ describe('classificarVento', () => {
     expect(classificarVento(330, PRAIA_LESTE, 15)).toBe('terral')   // exatamente 60°
     expect(classificarVento(30, PRAIA_LESTE, 15)).toBe('maral')     // exatamente 120°
   })
+
+  it('sem a orientação da praia, não classifica — e não chuta', () => {
+    // Era esse chute que deixava o rótulo impreciso: o app assumia 180° para
+    // todo pico do Brasil, e portanto que o terral vem sempre do norte.
+    expect(classificarVento(270, null, 15)).toBeUndefined()
+    expect(classificarVento(270, undefined, 15)).toBeUndefined()
+  })
+
+  it('calmaria sobrevive sem orientação: 4 km/h é calmaria em qualquer praia', () => {
+    expect(classificarVento(270, null, 4)).toBe('calmo')
+  })
+
+  it('a MESMA brisa muda de nome conforme a praia — por isso o chute doía', () => {
+    // Oeste (270°) em Itanhaém, que olha para ~150°: terral.
+    expect(classificarVento(270, 150, 15)).toBe('terral')
+    // A mesma brisa numa praia que olha para o leste: também terral.
+    expect(classificarVento(270, 90, 15)).toBe('terral')
+    // Mas numa praia que olha para o norte, é maral.
+    expect(classificarVento(270, 0, 15)).toBe('lateral')
+    expect(classificarVento(0, 0, 15)).toBe('maral')
+  })
+
+  it('o erro concreto de Tramandaí: 180 presumido contra os ~130 reais', () => {
+    // Vento de NE, que o app chamava de terral com o 180 fixo...
+    expect(classificarVento(45, 180, 15)).toBe('terral')
+    // ...é lateral na orientação real da praia gaúcha.
+    expect(classificarVento(45, 130, 15)).toBe('lateral')
+    // E o oeste, que o app rebaixava a lateral...
+    expect(classificarVento(270, 180, 15)).toBe('lateral')
+    // ...é o terral de verdade ali.
+    expect(classificarVento(270, 130, 15)).toBe('terral')
+  })
 })
 
 describe('pontoCardeal', () => {
@@ -81,6 +113,17 @@ describe('rotularCondicao', () => {
     expect(rotularCondicao(1.0, 'lateral')).toBe('Boa')
     expect(rotularCondicao(0.5, 'calmo')).toBe('Surfável')
   })
+
+  it('sem o tipo de vento, não julga: "Clássico" seria sorteio', () => {
+    expect(rotularCondicao(1.5, undefined)).toBeNull()
+    expect(rotularCondicao(0.8)).toBeNull()
+    expect(rotularCondicao(0.5)).toBeNull()
+  })
+
+  it('mas Flat sobrevive: é só tamanho, o vento não muda 30 cm de onda', () => {
+    expect(rotularCondicao(0.3)).toBe('Flat')
+    expect(rotularCondicao(0.39, undefined)).toBe('Flat')
+  })
 })
 
 describe('nota', () => {
@@ -95,6 +138,14 @@ describe('nota', () => {
     expect(nota(1, 9, 'lateral')).toBe(3)    // +1 período
     expect(nota(1, 9, 'terral')).toBe(4)     // +1 terral
     expect(nota(1, 9, 'maral')).toBe(2)      // +1 período, -1 maral
+  })
+
+  it('sem tipo de vento, ordena por tamanho e período — menos, mas verdadeiro', () => {
+    // O ajuste de vento não se aplica; a nota é a mesma do vento lateral,
+    // que também não soma nem desconta.
+    expect(nota(1, 9)).toBe(nota(1, 9, 'lateral'))
+    expect(nota(1, 8)).toBe(2)
+    expect(nota(1, 9)).toBe(3)
   })
 })
 

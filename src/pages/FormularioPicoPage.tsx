@@ -9,6 +9,7 @@ import { Header } from '../components/Header'
 import { MapaPickerLazy as MapaPicker } from '../components/MapasLazy'
 import { statusPerfil } from '../services/perfil'
 import { podeEditarPico } from '../services/picoPermissao'
+import { BussolaOrientacao } from '../components/BussolaOrientacao'
 
 const FUNDOS = [
   { id: 'areia', label: 'Areia' },
@@ -57,6 +58,13 @@ export function FormularioPicoPage() {
   const [lat, setLat] = useState<number | undefined>()
   const [lng, setLng] = useState<number | undefined>()
   const [fundo, setFundo] = useState('areia')
+  /** Para onde a praia olha. Null = ninguém sabe, e é um estado válido. */
+  const [orientacao, setOrientacao] = useState<number | null>(null)
+  /** Como o valor atual chegou aqui — vai junto para o banco (0071). */
+  const [orientacaoFonte, setOrientacaoFonte] = useState<'osm' | 'manual' | null>(null)
+  /** O que a linha de costa sugeriu, guardado para o botão "usar". */
+  const [sugestaoOSM, setSugestaoOSM] = useState<number | null>(null)
+  const [calculandoOrientacao, setCalculandoOrientacao] = useState(false)
   const [descricao, setDescricao] = useState('')
   const [picos, setPicos] = useState<Pico[]>([])
 
@@ -83,6 +91,8 @@ export function FormularioPicoPage() {
       setNome(p.nome); setMunicipio(p.municipio); setUf(p.uf)
       setLat(p.lat); setLng(p.lng)
       setFundo(p.fundo); setDescricao(p.descricao ?? '')
+      setOrientacao(p.orientacaoPraiaDeg ?? null)
+      setOrientacaoFonte(p.orientacaoFonte ?? null)
     }).catch(() => { if (vivo) toast('Não foi possível carregar o pico.') })
     return () => { vivo = false }
   }, [editandoId, navigate])
@@ -101,6 +111,41 @@ export function FormularioPicoPage() {
   useEffect(() => {
     carregarPicos().then(setPicos).catch(() => { /* sem lista: o banco ainda barra duplicata */ })
   }, [])
+
+  /**
+   * Deduzir a orientação da praia a partir da linha de costa do OSM.
+   *
+   * Roda quando o ponto muda, com meio segundo de espera — arrastar o pino no
+   * mapa dispara vários updates, e cada um seria uma consulta ao Overpass, que
+   * é um serviço mantido por doação.
+   *
+   * Nunca sobrescreve o que a pessoa apontou na bússola: quem está no lugar
+   * sabe mais do que a geometria. O cálculo fica guardado como sugestão, com
+   * um botão para adotar.
+   */
+  useEffect(() => {
+    if (lat == null || lng == null) return
+    if (orientacaoFonte === 'manual') return
+    let vivo = true
+    const t = setTimeout(() => {
+      setCalculandoOrientacao(true)
+      import('../services/orientacaoPraia')
+        .then(({ orientacaoPorOSM }) => orientacaoPorOSM(lat, lng))
+        .then((o) => {
+          if (!vivo) return
+          setSugestaoOSM(o?.deg ?? null)
+          // Sem orientação ainda? Adota. Já tendo vindo do OSM, atualiza —
+          // o ponto mudou, então o cálculo antigo era de outro lugar.
+          if (o && (orientacaoFonte === null || orientacaoFonte === 'osm')) {
+            setOrientacao(o.deg)
+            setOrientacaoFonte('osm')
+          }
+        })
+        .catch(() => { /* sem rede ou costa ambígua: fica com a bússola */ })
+        .finally(() => { if (vivo) setCalculandoOrientacao(false) })
+    }, 500)
+    return () => { vivo = false; clearTimeout(t) }
+  }, [lat, lng, orientacaoFonte])
 
   // Picos a até 300 m do ponto escolhido. Esta é a SEGUNDA porta de criação de
   // pico (a primeira é a câmera) — sem este aviso, ela recriaria as duplicatas
@@ -140,6 +185,8 @@ export function FormularioPicoPage() {
         uf: uf.toUpperCase(),
         fundo,
         descricao,
+        orientacaoPraiaDeg: orientacao,
+        orientacaoFonte: orientacao != null ? (orientacaoFonte ?? 'manual') : null,
       }
       if (modoEdicao) {
         const { restAtualizarPico } = await import('../services/supabase/rest')
@@ -314,6 +361,41 @@ export function FormularioPicoPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Orientação da praia. Vem depois do fundo porque depende do ponto
+              no mapa, que a pessoa já escolheu — e porque o cálculo pela linha
+              de costa costuma ter respondido a esta altura. */}
+          <div style={{ marginTop: 16 }}>
+            <label className="form-label">
+              Para que lado fica o mar aberto{' '}
+              <span className="muted" style={{ fontWeight: 400 }}>· opcional</span>
+            </label>
+            {calculandoOrientacao && (
+              <p className="muted" style={{ fontSize: 11.5, margin: '0 0 8px' }}>
+                Vendo a linha de costa aqui perto…
+              </p>
+            )}
+            {!calculandoOrientacao && orientacaoFonte === 'osm' && (
+              <p className="muted" style={{ fontSize: 11.5, margin: '0 0 8px', lineHeight: 1.45 }}>
+                Deduzido da linha de costa do OpenStreetMap. Se não bater com o
+                que você vê da areia, arraste — quem está no lugar tem razão.
+              </p>
+            )}
+            {!calculandoOrientacao && orientacaoFonte !== 'osm' && sugestaoOSM == null && orientacao == null && (
+              <p className="muted" style={{ fontSize: 11.5, margin: '0 0 8px', lineHeight: 1.45 }}>
+                Não deu para deduzir daqui — costa muito recortada, foz de rio
+                ou sem conexão. Se você conhece o pico, aponte.
+              </p>
+            )}
+            <BussolaOrientacao
+              valor={orientacao}
+              calculado={sugestaoOSM}
+              onChange={(deg) => {
+                setOrientacao(deg)
+                setOrientacaoFonte(deg == null ? null : 'manual')
+              }}
+            />
           </div>
 
           <div style={{ marginTop: 12 }}>

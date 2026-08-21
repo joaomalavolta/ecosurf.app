@@ -104,7 +104,8 @@ interface PicoRow {
   regiao_surf_id: string | null
   lat: number
   lng: number
-  orientacao_praia_deg: number
+  orientacao_praia_deg: number | null
+  orientacao_fonte: string | null
   fundo: string
   descricao: string | null
 }
@@ -122,6 +123,7 @@ export async function restPicos(): Promise<Pico[]> {
     lat: r.lat,
     lng: r.lng,
     orientacaoPraiaDeg: r.orientacao_praia_deg,
+    orientacaoFonte: (r.orientacao_fonte as Pico['orientacaoFonte']) ?? undefined,
     fundo: r.fundo as Pico['fundo'],
     descricao: r.descricao ?? undefined,
   }))
@@ -449,6 +451,9 @@ export async function restInserirPico(dados: {
   praia?: string
   fundo?: string
   descricao?: string
+  /** Ausente = ninguém sabe ainda; o app se cala sobre terral até saber. */
+  orientacaoPraiaDeg?: number | null
+  orientacaoFonte?: 'osm' | 'manual' | null
 }): Promise<string> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb } = await import('./client')
@@ -466,7 +471,12 @@ export async function restInserirPico(dados: {
     geom: `SRID=4326;POINT(${dados.lng} ${dados.lat})`,
     municipio: titleCase(dados.municipio),
     uf: dados.uf.toUpperCase().slice(0, 2),
-    orientacao_praia_deg: 180,
+    // Sem 180 fixo: era ele que fazia o app dizer que TODA praia do Brasil
+    // olha para o sul, e portanto que o terral sempre vem do norte. O pico
+    // nasce sem orientação; quem preenche é o cálculo pela linha de costa
+    // (services/orientacaoPraia.ts) ou a bússola do formulário.
+    orientacao_praia_deg: dados.orientacaoPraiaDeg ?? null,
+    orientacao_fonte: dados.orientacaoPraiaDeg != null ? (dados.orientacaoFonte ?? 'manual') : null,
     // `fundo` e `descricao` vinham fixos: o formulário perguntava a descrição
     // e o texto era descartado no caminho. O fundo era gravado como 'areia' e
     // corrigido por um UPDATE logo depois — duas idas ao servidor para um
@@ -514,6 +524,8 @@ export async function restAtualizarPico(id: string, dados: {
   uf: string
   fundo?: string
   descricao?: string
+  orientacaoPraiaDeg?: number | null
+  orientacaoFonte?: 'osm' | 'manual' | null
 }): Promise<void> {
   if (!TEM_BACKEND) throw new Error('Backend não disponível')
   const { sb } = await import('./client')
@@ -524,6 +536,10 @@ export async function restAtualizarPico(id: string, dados: {
     uf: dados.uf.toUpperCase().slice(0, 2),
     fundo: dados.fundo ?? 'areia',
     descricao: dados.descricao?.trim() || null,
+    // Os dois SEMPRE juntos: o CHECK `picos_orientacao_com_fonte` (0071)
+    // recusa grau sem procedência e procedência sem grau.
+    orientacao_praia_deg: dados.orientacaoPraiaDeg ?? null,
+    orientacao_fonte: dados.orientacaoPraiaDeg != null ? (dados.orientacaoFonte ?? 'manual') : null,
   }).eq('id', id)
   // Erro do PostgREST é objeto simples, não Error: `throw error` faria
   // `e instanceof Error` dar false e a tela cairia numa mensagem genérica.

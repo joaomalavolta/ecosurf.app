@@ -203,7 +203,11 @@ export async function buscarForecastEmLote(picos: Pico[]): Promise<Record<string
 
 export function forecastMock(pico: Pico): Forecast {
   const h = new Date().getHours() + new Date().getMinutes() / 60
-  const direcaoVentoDeg = (pico.orientacaoPraiaDeg + 180) % 360 // terral fictício
+  // Terral fictício quando sabemos para onde a praia olha; sem isso, um norte
+  // qualquer — que `classificarVento` não vai classificar, porque não há como.
+  const direcaoVentoDeg = pico.orientacaoPraiaDeg != null
+    ? (pico.orientacaoPraiaDeg + 180) % 360
+    : 0
   return {
     picoId: pico.id,
     emitidoEm: new Date().toISOString(),
