@@ -58,6 +58,16 @@ describe('lerArea', () => {
     expect(lerArea('   ')).toBeNull()
   })
 
+  it('o campo é OPCIONAL: sem número, o registro publica sem área', () => {
+    // `null` é o que vira `area_m2 = NULL` no insert. A coluna não tem
+    // NOT NULL nem default, então publicar sem área é um caminho normal —
+    // não um erro a ser contornado.
+    expect(lerArea('')).toBeNull()
+    // E o que não dá para ler também não impede: vira "sem área", não um
+    // bloqueio no meio do formulário.
+    expect(lerArea('sei lá')).toBeNull()
+  })
+
   it('o que não é número não vira número', () => {
     expect(lerArea('abc')).toBeNull()
     expect(lerArea('12m²')).toBeNull()

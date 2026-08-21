@@ -524,21 +524,24 @@ export function FormularioAlertaPage({ tipo = 'alerta' }: { tipo?: TipoRegistro 
 
             {pedeArea && (
               <div>
+                {/* "opcional" no rótulo, não só na dica: quem lê a dica já
+                    decidiu se ia digitar. Sem área o registro publica igual. */}
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                  Área aproximada (m²)
+                  Área aproximada (m²){' '}
+                  <span className="muted" style={{ fontWeight: 400 }}>· opcional</span>
                 </label>
                 <input
                   className="input"
                   inputMode="decimal"
-                  placeholder="Ex.: 1850"
+                  placeholder="Deixe em branco se não souber"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
                 />
                 <p className="muted" style={{ fontSize: 11.5, marginTop: 5, lineHeight: 1.45 }}>
-                  Opcional, e um palpite serve — "mais ou menos meio campo de
-                  futebol" é 3.500 m². {areaLida != null && <b>{formatarArea(areaLida)}</b>}
+                  Um palpite serve — "mais ou menos meio campo de futebol" é
+                  3.500 m². {areaLida != null && <b>{formatarArea(areaLida)}</b>}
                   {area.trim() && areaLida == null && (
-                    <span style={{ color: 'var(--coral)' }}> Não entendi esse número.</span>
+                    <span style={{ color: 'var(--coral)' }}> Não consegui ler esse número; o registro vai sem área.</span>
                   )}
                   {areaLida != null && areaLida > AREA_MAX_M2 && (
                     <span style={{ color: 'var(--coral)' }}> — acima do limite de 10 km²; confira o número.</span>

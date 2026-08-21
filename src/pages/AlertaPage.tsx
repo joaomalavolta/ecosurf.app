@@ -524,20 +524,25 @@ export function AlertaPage() {
 
         {isEditing && pedeArea && (
           <div>
-            <h3 style={{ fontSize: 14, marginBottom: 6 }}>Área aproximada (m²)</h3>
+            {/* Mesmo rótulo do formulário de criação: apagar o número é uma
+                edição válida — o registro volta a ser "área não informada". */}
+            <h3 style={{ fontSize: 14, marginBottom: 6 }}>
+              Área aproximada (m²){' '}
+              <span className="muted" style={{ fontWeight: 400, fontSize: 12.5 }}>· opcional</span>
+            </h3>
             <input
               className="input"
               style={{ width: '100%' }}
               inputMode="decimal"
-              placeholder="Ex.: 1850"
+              placeholder="Deixe em branco se não souber"
               value={editArea}
               onChange={(e) => setEditArea(e.target.value)}
             />
             <p className="muted" style={{ fontSize: 11.5, marginTop: 5, lineHeight: 1.45 }}>
-              Opcional, e um palpite serve — "mais ou menos meio campo de
-              futebol" é 3.500 m². {areaEditada != null && <b>{formatarArea(areaEditada)}</b>}
+              Um palpite serve — "mais ou menos meio campo de futebol" é
+              3.500 m². {areaEditada != null && <b>{formatarArea(areaEditada)}</b>}
               {editArea.trim() && areaEditada == null && (
-                <span style={{ color: 'var(--coral)' }}> Não entendi esse número.</span>
+                <span style={{ color: 'var(--coral)' }}> Não consegui ler esse número; o registro fica sem área.</span>
               )}
               {areaEditada != null && areaEditada > AREA_MAX_M2 && (
                 <span style={{ color: 'var(--coral)' }}> — acima do limite de 10 km²; confira o número.</span>
