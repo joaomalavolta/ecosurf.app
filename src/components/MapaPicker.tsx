@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { IconSearch, IconMapPin, IconLoader2 } from '@tabler/icons-react'
 import type { ResultadoGeocode } from '../services/geocoding'
+import { centroInicial, CHAVE_POSICAO } from '../lib/regiao'
 
 /**
  * Mini-mapa clicável para selecionar localização.
@@ -34,9 +35,33 @@ export function MapaPicker({
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Lat/lng padrão (São Paulo/litoral) se GPS não disponível
-  const defaultLat = lat ?? -23.96
-  const defaultLng = lng ?? -46.33
+  /**
+   * Onde o mapa abre quando ninguém escolheu ponto ainda.
+   *
+   * Era Santos, fixo. Quem registra de casa, no fluxo "não estou no local",
+   * caía na Baixada Santista mesmo morando em outro estado — e ainda via um
+   * pin plantado lá, parecendo uma escolha que não fez.
+   *
+   * A cadeia, do palpite mais forte para o mais honesto:
+   *
+   *   1. o ponto que já veio por prop (GPS da captura, edição de registro)
+   *   2. a última posição que a pessoa olhou no mapa — o sinal mais barato
+   *      que existe: não pede permissão nenhuma e já diz a região dela
+   *   3. o GPS, pedido depois e sem travar a tela (ver o efeito adiante)
+   *   4. o Brasil inteiro — assumir que não se sabe é melhor do que apontar
+   *      para uma cidade qualquer com ar de certeza
+   */
+  const inicial = useMemo(() => {
+    let gravada: string | null = null
+    try {
+      gravada = localStorage.getItem(CHAVE_POSICAO)
+    } catch { /* localStorage bloqueado: cai no próximo palpite */ }
+    return centroInicial(lat, lng, gravada)
+    // Só na montagem: o mapa é imperativo e reposiciona pelo efeito de lat/lng.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  /** Já existe um ponto escolhido? Só então o pin tem o que representar. */
+  const temPonto = lat != null && lng != null
 
   // Geocoding via serviço Photon (OSM) — busca tolerante a erros e type-ahead.
   const buscarEndereco = useCallback(async (query: string) => {
@@ -127,27 +152,25 @@ export function MapaPicker({
           },
         ],
       },
-      center: [defaultLng, defaultLat],
-      zoom: 14,
+      center: [inicial.lng, inicial.lat],
+      zoom: inicial.zoom ?? 12,
       attributionControl: false,
     })
 
-    // Marker arrastável
-    const marker = new maplibregl.Marker({
-      color: '#1ECBC3',
-      draggable: true,
-    })
-      .setLngLat([defaultLng, defaultLat])
-      .addTo(map)
+    // Marker arrastável. Ele NASCE só quando existe ponto escolhido: um pin
+    // no centro padrão parece uma marcação feita, e o botão de continuar
+    // segue desabilitado pedindo para marcar o local — a tela se contradiz.
+    const marker = new maplibregl.Marker({ color: '#1ECBC3', draggable: true })
+    if (temPonto) marker.setLngLat([inicial.lng, inicial.lat]).addTo(map)
 
     marker.on('dragend', () => {
       const { lng: newLng, lat: newLat } = marker.getLngLat()
       onChange(newLat, newLng)
     })
 
-    // Click no mapa move o marker
+    // Click no mapa: é aqui que o pin aparece pela primeira vez.
     map.on('click', (e) => {
-      marker.setLngLat(e.lngLat)
+      marker.setLngLat(e.lngLat).addTo(map)
       onChange(e.lngLat.lat, e.lngLat.lng)
     })
 
@@ -162,13 +185,41 @@ export function MapaPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Atualiza marker quando lat/lng mudam externamente (ex: GPS)
+  // Atualiza marker quando lat/lng mudam externamente (ex: GPS, busca)
   useEffect(() => {
-    if (markerRef.current && lat != null && lng != null) {
-      markerRef.current.setLngLat([lng, lat])
-      mapRef.current?.flyTo({ center: [lng, lat], zoom: 14, duration: 800 })
+    if (markerRef.current && mapRef.current && lat != null && lng != null) {
+      // `addTo` é idempotente: se o pin já está no mapa, só reposiciona.
+      markerRef.current.setLngLat([lng, lat]).addTo(mapRef.current)
+      mapRef.current.flyTo({ center: [lng, lat], zoom: 14, duration: 800 })
     }
   }, [lat, lng])
+
+  /**
+   * Sem ponto escolhido, tenta o GPS e leva o mapa até lá.
+   *
+   * Depois da montagem e sem travar nada: a tela já abriu no melhor palpite
+   * síncrono, e isto só melhora a vista se a pessoa permitir. Não mexe no
+   * pin — aproximar a câmera é ajudar a marcar, não marcar por ela.
+   */
+  useEffect(() => {
+    if (temPonto || !navigator.geolocation) return
+    let vivo = true
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!vivo || !mapRef.current) return
+        mapRef.current.flyTo({
+          center: [pos.coords.longitude, pos.coords.latitude],
+          zoom: 14,
+          duration: 900,
+        })
+      },
+      () => { /* recusou ou falhou: fica no palpite que já estava valendo */ },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
+    )
+    return () => { vivo = false }
+    // Só enquanto não há ponto; depois disso a câmera pertence à escolha.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div style={{ position: 'relative' }} ref={containerRef}>

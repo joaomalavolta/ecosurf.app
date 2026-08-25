@@ -192,6 +192,37 @@ export function lerPosicao(bruto: string | null, agora = Date.now()): Local | nu
   return { lng, lat, zoom: Math.min(zoom, 15) }
 }
 
+/**
+ * Onde um mapa de escolha de ponto deve abrir.
+ *
+ * A ordem é a substância: do palpite mais forte para o mais honesto.
+ *
+ *   1. o ponto já escolhido (GPS da captura, edição de um registro)
+ *   2. a última posição que a pessoa olhou — não custa permissão nenhuma e
+ *      já diz a região dela
+ *   3. o Brasil inteiro
+ *
+ * O terceiro caso é o que importa defender: antes havia uma coordenada fixa
+ * de Santos ali. Quem registrava de outro estado abria o mapa na Baixada
+ * Santista, com um pin plantado, como se aquilo fosse um palpite sobre onde
+ * ele está. Mostrar o país inteiro admite que não se sabe — e admitir é mais
+ * útil do que apontar para o lugar errado com ar de certeza.
+ *
+ * O GPS não entra aqui de propósito: ele é assíncrono e pede permissão, então
+ * quem chama tenta depois, sem travar a abertura da tela.
+ */
+export function centroInicial(
+  lat: number | undefined,
+  lng: number | undefined,
+  posicaoGravada: string | null,
+  agora = Date.now(),
+): Local {
+  if (lat != null && lng != null) return { lat, lng, zoom: 14 }
+  const guardada = lerPosicao(posicaoGravada, agora)
+  if (guardada) return guardada
+  return BRASIL
+}
+
 /** Serializa para gravar. */
 export function gravarPosicao(local: Local, agora = Date.now()): string {
   return JSON.stringify({
