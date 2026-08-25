@@ -1281,7 +1281,7 @@ export function CapturePage() {
           <SeletorComunidade valor={comunidadeId} onChange={setComunidadeId} escuro />
 
           <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
-            <SeletorCategoria tipo={familia} selecionada={catAlerta} onSelecionar={setCatAlerta} />
+            <SeletorCategoria tipo={familia} selecionada={catAlerta} onSelecionar={setCatAlerta} escuro />
           </div>
 
           {/* O aviso aparece assim que a categoria sensível é escolhida, antes
