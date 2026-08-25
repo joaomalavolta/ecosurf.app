@@ -52,6 +52,24 @@ type TipoCaptura = 'report' | 'alerta' | 'lixo' | 'positivo'
  * Sem esta constante o valor viveria copiado em cinco lugares, e o quinto
  * campo nasceria com o número velho — que foi exatamente o que aconteceu.
  */
+/**
+ * O bairro que o Nominatim devolve para um ponto — e por que ele é só uma
+ * oferta.
+ *
+ * `address.suburb` é a subdivisão ADMINISTRATIVA onde a pessoa está, não a
+ * praia nem o canto que o campo "Nome do local" pede. Quando o app escrevia
+ * isso no campo sozinho, o valor viajava junto: o título virava
+ * "Óleo — Morro do Paranambuco" e o `local_nome` guardava o bairro no lugar
+ * do lugar.
+ *
+ * Às vezes, porém, ele acerta — em muita praia o bairro TEM o nome da praia.
+ * Por isso ele volta, agora como um toque a mais em vez de um apagar a menos:
+ * aparece embaixo do campo e só entra se a pessoa quiser.
+ */
+export function bairroDoGeocode(address: Record<string, string> | undefined): string {
+  return address?.suburb || address?.neighbourhood || address?.village || ''
+}
+
 const CAMPO_ESCURO: React.CSSProperties = {
   width: '100%',
   background: 'rgba(255,255,255,.1)',
@@ -167,6 +185,11 @@ export function CapturePage() {
     ambiguo: boolean
   } | null>(null)
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
+  /**
+   * Bairro devolvido pelo geocoding, guardado como SUGESTÃO — nunca escrito
+   * no campo por conta própria. Ver o comentário em `bairroDoGeocode`.
+   */
+  const [bairroSugerido, setBairroSugerido] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
   const [novaOndaNome, setNovaOndaNome] = useState('')
   
@@ -514,6 +537,7 @@ export function CapturePage() {
           if (cidade) setMunicipioAlerta(cidade)
           const uf = SIGLA_UF[geo.address?.state ?? ''] ?? ''
           if (uf) setUfAlerta(uf)
+          setBairroSugerido(bairroDoGeocode(geo.address))
         } catch { /* ignorar */ }
       }
     }
@@ -579,17 +603,10 @@ export function CapturePage() {
       if (cidade) setMunicipioAlerta(cidade)
       const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
       if (uf) setUfAlerta(uf)
-      // O "nome do local" NÃO é chutado a partir do bairro.
-      //
-      // `address.suburb` é a subdivisão administrativa onde a pessoa está —
-      // "Morro do Paranambuco" —, e não a praia, o canto ou o ponto de
-      // referência que o campo pede. Como era gravado como VALOR (e não como
-      // sugestão), ele viajava junto: virava o título do registro
-      // ("Óleo — Morro do Paranambuco") e o `local_nome` no banco. Quem não
-      // apagasse à mão publicava o bairro no lugar do lugar.
-      //
-      // Cidade e UF continuam vindo daqui: nesse nível o Nominatim acerta, e
-      // são campos administrativos mesmo.
+      // O bairro fica como sugestão tocável, nunca escrito sozinho no campo
+      // — ver `bairroDoGeocode`. Cidade e UF, sim: nesse nível o Nominatim
+      // acerta, e são campos administrativos mesmo.
+      setBairroSugerido(bairroDoGeocode(g.address))
     } catch { /* rede: segue com a coordenada, sem cidade nem UF */ }
   }
 
@@ -1328,6 +1345,28 @@ export function CapturePage() {
               placeholder="Escreva o local"
               style={CAMPO_ESCURO}
             />
+
+            {/* O bairro do GPS, oferecido em vez de imposto. Some assim que a
+                pessoa escreve — a sugestão serve ao campo vazio; depois disso
+                seria só um botão para apagar o que ela acabou de digitar. */}
+            {bairroSugerido && !novaPraiaNome.trim() && (
+              <button
+                type="button"
+                onClick={() => setNovaPraiaNome(bairroSugerido)}
+                style={{
+                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.42)',
+                  borderRadius: 999, padding: '7px 13px', color: '#fff',
+                  fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer',
+                  maxWidth: '100%',
+                }}
+              >
+                <IconCurrentLocation size={13} stroke={2} style={{ flexShrink: 0, opacity: .8 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Usar "{bairroSugerido}"
+                </span>
+              </button>
+            )}
             {posCapturada.lat && posCapturada.lng ? (
               <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11.5, marginTop: 6 }}>
                 <IconCurrentLocation size={12} stroke={2} style={{ verticalAlign: '-2px' }} /> Ponto marcado pelo GPS da captura{municipioAlerta ? ` · ${municipioAlerta}${ufAlerta ? `/${ufAlerta}` : ''}` : ''}
