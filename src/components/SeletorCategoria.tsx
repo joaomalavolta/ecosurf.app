@@ -112,12 +112,53 @@ export function categoriaSensivel(id: CategoriaRegistro | string): boolean {
   return categoriaPorId(id).sensivel === true
 }
 
+/**
+ * Preto ou branco sobre uma cor — o que enxergar melhor.
+ *
+ * O ladrilho do ícone era sempre `#fff` sobre `cat.cor`. Funciona para as
+ * cores escuras da paleta e falha nas claras: o amarelo `#E0A82E` dava 2.14
+ * de contraste, abaixo dos 3.0 que a WCAG 1.4.11 pede para objeto gráfico.
+ * Escolhendo a tinta por cor, o pior caso da paleta inteira vai a 4.49.
+ *
+ * O limiar NÃO é um chute — é o ponto onde os dois contrastes se igualam.
+ * Com `L` a luminância da cor e `Ld` a da tinta escura:
+ *
+ *     1,05 / (L + 0,05)  =  (L + 0,05) / (Ld + 0,05)
+ *     L = √(1,05 · (Ld + 0,05)) − 0,05  ≈  0,1957
+ *
+ * Eu tinha escrito 0,30 de cabeça, e um teste que comparava a escolha com a
+ * alternativa derrubou: numa das cores o valor chutado pegava 3,39 quando o
+ * branco daria 5,39. Vale como lembrete de que "parece razoável" e "é o
+ * ótimo" são coisas diferentes.
+ */
+const LIMIAR_TINTA = 0.1957
+
+export function tintaSobre(cor: string): string {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(cor.substr(i, 2), 16) / 255)
+  const canal = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  const luz = 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b)
+  return luz > LIMIAR_TINTA ? '#0B1620' : '#FFFFFF'
+}
+
 export function SeletorCategoria({
   selecionada,
+  escuro = false,
   onSelecionar,
   tipo = 'alerta',
 }: {
   selecionada?: CategoriaRegistro
+  /**
+   * Sobre fundo escuro (overlay da câmera) — mesma convenção do
+   * `SeletorComunidade`.
+   *
+   * A tela da câmera é escura SEMPRE, independente do tema do app. Sem esta
+   * variante o seletor usava `var(--card)` e `var(--text)`, que seguem o
+   * tema: com o app no claro, o card NÃO selecionado ficava branco com texto
+   * escuro (legível), mas o SELECIONADO usava `cat.cor` a 8% — translúcido,
+   * deixando o overlay escuro passar por baixo — e mantinha o texto escuro do
+   * tema claro. Dava 1.26 de contraste: só a categoria escolhida sumia.
+   */
+  escuro?: boolean
   onSelecionar: (cat: CategoriaRegistro) => void
   /** Qual família mostrar. O formulário escolhe antes de chegar aqui. */
   tipo?: TipoRegistro
@@ -139,8 +180,14 @@ export function SeletorCategoria({
               gap: 6,
               padding: '14px 8px',
               borderRadius: 14,
-              border: ativa ? `2px solid ${cat.cor}` : '2px solid var(--line)',
-              background: ativa ? `${cat.cor}15` : 'var(--card)',
+              border: ativa
+                ? `2px solid ${cat.cor}`
+                : escuro ? '2px solid rgba(255,255,255,.22)' : '2px solid var(--line)',
+              // No escuro o realce precisa ser mais forte: 8% de cor sobre um
+              // fundo já escuro é indistinguível do card vizinho.
+              background: ativa
+                ? `${cat.cor}${escuro ? '38' : '15'}`
+                : escuro ? 'rgba(255,255,255,.06)' : 'var(--card)',
               cursor: 'pointer',
               fontFamily: 'inherit',
               transition: 'all .15s',
@@ -151,8 +198,10 @@ export function SeletorCategoria({
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: ativa ? cat.cor : 'var(--cinza)',
-                color: ativa ? '#fff' : cat.cor,
+                background: ativa ? cat.cor : escuro ? 'rgba(255,255,255,.92)' : 'var(--cinza)',
+                // A tinta do ícone sai da cor, não de um '#fff' fixo — ver
+                // `tintaSobre`. É o que salva as categorias claras da paleta.
+                color: ativa ? tintaSobre(cat.cor) : cat.cor,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -161,7 +210,7 @@ export function SeletorCategoria({
             >
               <cat.icone size={22} stroke={2} />
             </div>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text)', textAlign: 'center', lineHeight: 1.2 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: escuro ? 'rgba(255,255,255,.92)' : 'var(--text)', textAlign: 'center', lineHeight: 1.2 }}>
               {cat.curto ?? cat.label}
             </span>
           </button>
