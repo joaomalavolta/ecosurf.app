@@ -41,6 +41,27 @@ import { formatarArea, lerArea, AREA_MAX_M2 } from '../lib/area'
  * atalho para um alerta já classificado), lá é a família do registro.
  */
 type TipoCaptura = 'report' | 'alerta' | 'lixo' | 'positivo'
+/**
+ * Campo de texto sobre a tela escura da câmera.
+ *
+ * Estes campos não usam a classe `.input` — estão sobre um fundo próprio, e
+ * não sobre o tema do app. Por isso a borda precisava ser corrigida aqui
+ * também: a `.2` de branco dava 1.89 de contraste contra o cartão, e a WCAG
+ * 1.4.11 pede 3.0 para componente de interface. Medida em .42: 3.73.
+ *
+ * Sem esta constante o valor viveria copiado em cinco lugares, e o quinto
+ * campo nasceria com o número velho — que foi exatamente o que aconteceu.
+ */
+const CAMPO_ESCURO: React.CSSProperties = {
+  width: '100%',
+  background: 'rgba(255,255,255,.1)',
+  border: '1px solid rgba(255,255,255,.42)',
+  borderRadius: 10,
+  padding: '10px 12px',
+  color: '#fff',
+  fontSize: 14,
+}
+
 const SIGLA_UF: Record<string, string> = {
   'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
   'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
@@ -289,14 +310,10 @@ export function CapturePage() {
       }
     }
 
-    if (pos.lat && pos.lng) {
-      try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
-        const geo = await geoRes.json()
-        const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
-        if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
-      } catch { /* ignorar */ }
-    }
+    // Aqui havia um reverse geocode do Nominatim que existia SÓ para chutar o
+    // "nome do local" a partir do bairro. Saiu junto com o chute — ver o
+    // comentário em `definirLocalAlerta`. De quebra, a câmera abre sem
+    // esperar uma ida à rede que não decidia mais nada.
     setDetectandoGps(false)
     abrirCamera()
   }
@@ -493,8 +510,6 @@ export function CapturePage() {
         try {
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
           const geo = await geoRes.json()
-          const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
-          if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
           const cidade = geo.address?.city || geo.address?.town || geo.address?.municipality || ''
           if (cidade) setMunicipioAlerta(cidade)
           const uf = SIGLA_UF[geo.address?.state ?? ''] ?? ''
@@ -564,9 +579,18 @@ export function CapturePage() {
       if (cidade) setMunicipioAlerta(cidade)
       const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
       if (uf) setUfAlerta(uf)
-      const praia = g.address?.suburb || g.address?.neighbourhood || ''
-      if (praia && !novaPraiaNome) setNovaPraiaNome(praia)
-    } catch { /* rede: segue com a coordenada, sem o nome do lugar */ }
+      // O "nome do local" NÃO é chutado a partir do bairro.
+      //
+      // `address.suburb` é a subdivisão administrativa onde a pessoa está —
+      // "Morro do Paranambuco" —, e não a praia, o canto ou o ponto de
+      // referência que o campo pede. Como era gravado como VALOR (e não como
+      // sugestão), ele viajava junto: virava o título do registro
+      // ("Óleo — Morro do Paranambuco") e o `local_nome` no banco. Quem não
+      // apagasse à mão publicava o bairro no lugar do lugar.
+      //
+      // Cidade e UF continuam vindo daqui: nesse nível o Nominatim acerta, e
+      // são campos administrativos mesmo.
+    } catch { /* rede: segue com a coordenada, sem cidade nem UF */ }
   }
 
   async function publicarAlertaDaCamera() {
@@ -1281,7 +1305,7 @@ export function CapturePage() {
                 onChange={(e) => setAreaAlerta(e.target.value)}
                 inputMode="decimal"
                 placeholder="Deixe em branco se não souber"
-                style={{ width: '100%', background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14 }}
+                style={CAMPO_ESCURO}
               />
               <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '6px 2px 0', lineHeight: 1.45 }}>
                 Um palpite serve — "mais ou menos meio campo de futebol" é
@@ -1301,8 +1325,8 @@ export function CapturePage() {
             <input
               value={novaPraiaNome}
               onChange={(e) => setNovaPraiaNome(e.target.value)}
-              placeholder="Ex.: Rio Itanhaém, Baixio"
-              style={{ width: '100%', background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14 }}
+              placeholder="Escreva o local"
+              style={CAMPO_ESCURO}
             />
             {posCapturada.lat && posCapturada.lng ? (
               <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11.5, marginTop: 6 }}>
@@ -1521,7 +1545,7 @@ export function CapturePage() {
                 placeholder="Ex: Praia das Pitangueiras"
                 value={novaPraiaNome}
                 onChange={(e) => setNovaPraiaNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 
@@ -1534,7 +1558,7 @@ export function CapturePage() {
                 placeholder="Ex: Canto do Maluf"
                 value={novoPicoNome}
                 onChange={(e) => setNovoPicoNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 
@@ -1547,7 +1571,7 @@ export function CapturePage() {
                 placeholder="Ex: Direitas do canal"
                 value={novaOndaNome}
                 onChange={(e) => setNovaOndaNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 
