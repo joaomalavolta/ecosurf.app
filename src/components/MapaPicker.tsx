@@ -31,6 +31,14 @@ export function MapaPicker({
   const [busca, setBusca] = useState('')
   const [buscando, setBuscando] = useState(false)
   const [resultados, setResultados] = useState<ResultadoGeocode[]>([])
+  /**
+   * O que a última busca respondeu.
+   *
+   * Sem isto a tela só sabia mostrar resultados: busca sem achados e busca
+   * que FALHOU eram a mesma caixa parada, e quem digitava concluía que a
+   * busca não funciona — sem saber se o problema era o termo ou o serviço.
+   */
+  const [estadoBusca, setEstadoBusca] = useState<'ocioso' | 'vazio' | 'rede' | 'servico'>('ocioso')
   const [mostrarResultados, setMostrarResultados] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -74,11 +82,20 @@ export function MapaPicker({
       const { buscarLugar } = await import('../services/geocoding')
       // Viés para o ponto atual do pin, quando houver: resultados perto de onde
       // o usuário já está sobem na lista.
-      const data = await buscarLugar(query, (lat && lng) ? { lat, lng } : undefined)
-      setResultados(data)
-      setMostrarResultados(data.length > 0)
+      const r = await buscarLugar(query, (lat && lng) ? { lat, lng } : undefined)
+      if (!r.ok) {
+        setResultados([])
+        setEstadoBusca(r.motivo)
+      } else {
+        setResultados(r.resultados)
+        setEstadoBusca(r.resultados.length > 0 ? 'ocioso' : 'vazio')
+      }
+      // A caixa abre mesmo sem resultado: é ela que carrega a explicação.
+      setMostrarResultados(true)
     } catch {
       setResultados([])
+      setEstadoBusca('rede')
+      setMostrarResultados(true)
     } finally {
       setBuscando(false)
     }
@@ -90,6 +107,7 @@ export function MapaPicker({
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (val.trim().length < 3) {
       setResultados([])
+      setEstadoBusca('ocioso')
       setMostrarResultados(false)
       return
     }
@@ -260,6 +278,23 @@ export function MapaPicker({
         </div>
 
         {/* Dropdown de resultados */}
+        {/* A caixa também abre VAZIA, para explicar por quê. Um dropdown que
+            simplesmente não aparece deixa a pessoa sem saber se o termo não
+            existe, se o serviço caiu ou se o app está quebrado. */}
+        {mostrarResultados && resultados.length === 0 && estadoBusca !== 'ocioso' && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+            background: 'var(--bg)', border: '1px solid var(--turq)', borderTop: 'none',
+            borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
+            padding: '12px 14px', boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+            fontSize: 12.5, lineHeight: 1.45, color: 'var(--muted)',
+          }}>
+            {estadoBusca === 'vazio' && <>Nada encontrado no Brasil para <b style={{ color: 'var(--text)' }}>{busca.trim()}</b>. Tente o nome da praia ou da cidade — ou marque direto no mapa.</>}
+            {estadoBusca === 'rede' && <>Sem conexão para buscar agora. Você pode marcar o ponto direto no mapa.</>}
+            {estadoBusca === 'servico' && <>A busca de endereços está indisponível no momento. Marque o ponto direto no mapa — o registro funciona igual.</>}
+          </div>
+        )}
+
         {mostrarResultados && resultados.length > 0 && (
           <div style={{
             position: 'absolute',
