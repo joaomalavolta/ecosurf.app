@@ -30,6 +30,7 @@ import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
 import { BotaoVoltarOverlay } from '../components/BotaoVoltarOverlay'
 import { arquivoDe } from '../lib/imagem'
+import { formatarArea, lerArea, AREA_MAX_M2 } from '../lib/area'
 
 /**
  * O que a câmera está registrando.
@@ -169,6 +170,17 @@ export function CapturePage() {
   const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
   /** Categoria cujo ponto exato o banco vai guardar em vez de publicar. */
   const catProtegida = !!catAlerta && categoriaSensivel(catAlerta)
+  /**
+   * Mesma regra do formulário longo: só a vegetação pergunta o tamanho.
+   *
+   * O campo faltava AQUI, e a câmera é o caminho curto — quem registra uma
+   * restinga replantada fotografa e publica, sem passar pelo formulário de
+   * seis etapas. O registro nascia sem área e sem jeito de informar.
+   */
+  const pedeArea = catAlerta === 'vegetacao-recuperacao'
+  /** Texto cru do campo de área — só a vegetação pergunta. */
+  const [areaAlerta, setAreaAlerta] = useState('')
+  const areaLida = lerArea(areaAlerta)
   const [aceiteAlerta, setAceiteAlerta] = useState(false)
   const [municipioAlerta, setMunicipioAlerta] = useState('')
   const [ufAlerta, setUfAlerta] = useState('')
@@ -574,6 +586,7 @@ export function CapturePage() {
       lat: posCapturada.lat,
       lng: posCapturada.lng,
       comunidadeId,
+      areaM2: pedeArea ? areaLida : null,
       // No fluxo "não estou no local", a data escolhida é quando o impacto foi
       // observado (pode ser outro dia). Senão, undefined → servidor usa criada_em.
       ocorridoEm: (noLocal === false && dataRegistro) ? capturadaEmISO() : undefined,
@@ -1252,6 +1265,34 @@ export function CapturePage() {
           {!ehPositivo && (
             <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
               <CampoGravidade valor={gravAlerta} onChange={setGravAlerta} />
+            </div>
+          )}
+
+          {/* Área da vegetação: a vaga simétrica à da gravidade. Um canteiro
+              de restinga e um hectare de mata ciliar entram no mapa como o
+              mesmo ponto sem este número. */}
+          {pedeArea && (
+            <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+              <label style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, display: 'block', marginBottom: 6 }}>
+                Área aproximada (m²) <span style={{ opacity: .7 }}>· opcional</span>
+              </label>
+              <input
+                value={areaAlerta}
+                onChange={(e) => setAreaAlerta(e.target.value)}
+                inputMode="decimal"
+                placeholder="Deixe em branco se não souber"
+                style={{ width: '100%', background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14 }}
+              />
+              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '6px 2px 0', lineHeight: 1.45 }}>
+                Um palpite serve — "mais ou menos meio campo de futebol" é
+                3.500 m². {areaLida != null && <b style={{ color: 'rgba(255,255,255,.85)' }}>{formatarArea(areaLida)}</b>}
+                {areaAlerta.trim() && areaLida == null && (
+                  <span style={{ color: '#FF9E9E' }}> Não consegui ler esse número; o registro vai sem área.</span>
+                )}
+                {areaLida != null && areaLida > AREA_MAX_M2 && (
+                  <span style={{ color: '#FF9E9E' }}> — acima do limite de 10 km²; confira o número.</span>
+                )}
+              </p>
             </div>
           )}
 

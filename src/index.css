@@ -22,6 +22,11 @@
   --primary:#0D6EA8; --on-primary:#FFFFFF;
   --map-bg:#DCEFF1;
   --input-bg:#FFFFFF;
+  /* Borda de CAMPO, separada de --line de propósito. --line desenha
+     divisórias, que são decorativas e podem ser discretas; um campo de
+     formulário é componente de interface e a WCAG 1.4.11 pede 3:1 contra o
+     que está atrás. Medido: 3.24 sobre a página, 3.41 sobre o card. */
+  --input-line:#748F9D;
   --nav-bg:rgba(255,255,255,.92); --nav-line:#DCE8EE; --nav-inactive:#7C93A0; --nav-active:#0D6EA8;
   --metric-bg:#F8FCFD;
   --chip-bg:#EEF6F8; --chip-fg:#062B45; --chip-on-bg:#062B45; --chip-on-fg:#FFFFFF;
@@ -66,7 +71,12 @@ a { text-decoration: none; }
 
   --primary:#5BB8E8; --on-primary:#04181F;
   --map-bg:#06202B;
-  --input-bg:rgba(255,255,255,.04);
+  --input-bg:rgba(255,255,255,.07);
+  /* Era rgba(255,255,255,.12) via --line: 1.43 contra a página, menos da
+     metade do mínimo. O campo virava um retângulo quase invisível, e ao ser
+     tocado o placeholder saía e não sobrava nada para enxergar.
+     Medido em .42: 3.97 sobre a página, 3.37 sobre o card. */
+  --input-line:rgba(255,255,255,.42);
   --nav-bg:rgba(7,28,37,.82); --nav-line:rgba(255,255,255,.12); --nav-inactive:#9CBAC5; --nav-active:#5BB8E8;
   --metric-bg:rgba(255,255,255,.05);
   --chip-bg:rgba(255,255,255,.06); --chip-fg:#EAF8F9; --chip-on-bg:#5BB8E8; --chip-on-fg:#04181F;
@@ -469,15 +479,34 @@ html, body {
 .insight i, .insight svg { color: var(--turq); font-size: 15px; }
 
 /* inputs */
+/* Definição ÚNICA do campo.
+   Havia duas regras `.input` neste arquivo, e a de baixo vencia sem que a de
+   cima parecesse morta: esta pedia `background: var(--input-bg)` e a outra
+   sobrescrevia com `var(--card)`. Resultado: `--input-bg` existia nos dois
+   temas, era lido aqui, e não pintava nada. Quem ajustasse a variável não
+   veria efeito nenhum e não teria como saber por quê. */
 .input {
   width: 100%;
-  border: 1.5px solid var(--line);
-  border-radius: var(--raio-sm);
+  border: 1.5px solid var(--input-line);
+  border-radius: 12px;
   padding: 13px 14px;
-  font-size: 15px; font-family: inherit;
-  background: var(--input-bg); color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--input-bg);
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
+  box-sizing: border-box;
 }
 .input::placeholder { color: var(--muted); }
+/* O foco não pode ser só a cor da borda: quem clica perde o placeholder, e
+   num campo vazio de borda discreta não sobra nada para ver. O anel dá a
+   confirmação visual do toque. */
+.input:focus {
+  outline: none;
+  border-color: var(--turq);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--turq) 32%, transparent);
+}
+textarea.input { line-height: 1.5; }
 select.input { appearance: none; -webkit-appearance: none; }
 select.input option { color: #0b1620; }
 
@@ -840,24 +869,8 @@ table.adt tr:last-child td { border-bottom: 0; }
 }
 
 /* ─── Form inputs (módulo Nova Ação) ─── */
-.input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  transition: border-color .15s;
-  box-sizing: border-box;
-}
-.input:focus {
-  outline: none;
-  border-color: var(--turq);
-  box-shadow: 0 0 0 3px rgba(46,155,214,.15);
-}
-textarea.input { line-height: 1.5; }
+/* `.input` e `.input:focus` foram consolidados na definição única lá em
+   cima — esta duplicata era quem anulava `--input-bg`. */
 select.input { appearance: auto; cursor: pointer; }
 
 .form-label {
