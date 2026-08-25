@@ -87,6 +87,38 @@ const CAMPO_ESCURO: React.CSSProperties = {
   colorScheme: 'dark',
 }
 
+/**
+ * Campo de data/hora — o mesmo visual, com duas defesas contra o vazamento.
+ *
+ * `input[type=date]` e `input[type=time]` não são caixas de texto comuns: o
+ * iOS desenha um controle NATIVO com largura intrínseca própria, calculada a
+ * partir do formato da data no idioma do aparelho. Essa largura funciona como
+ * um mínimo, e `width: 100%` não encolhe abaixo dela — o campo passa por cima
+ * da borda do cartão que deveria contê-lo.
+ *
+ *   `appearance: none` tira o cromo nativo, e com ele a largura intrínseca;
+ *   `min-width: 0` desarma o mínimo automático, que é o que segura o encolher.
+ *
+ * A terceira defesa não está aqui e sim no cartão: `grid-template-columns:
+ * minmax(0, 1fr)`. Item de grid também nasce com `min-width: auto`, e o
+ * `minmax(0, …)` é o que autoriza ele a ficar menor que o próprio conteúdo.
+ * Vale para qualquer motor, independente do que o controle nativo queira.
+ *
+ * As três juntas porque o Chromium NÃO reproduz o vazamento — ele encolhe o
+ * controle sem reclamar, mesmo num cartão de 150 px. Sem poder verificar no
+ * motor onde o bug acontece, cinto e suspensório é o certo.
+ */
+const CAMPO_DATA: React.CSSProperties = {
+  ...CAMPO_ESCURO,
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  minWidth: 0,
+  maxWidth: '100%',
+  display: 'block',
+  // Sem o cromo nativo o iOS deixa de centralizar o valor sozinho.
+  textAlign: 'left',
+}
+
 const SIGLA_UF: Record<string, string> = {
   'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
   'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
@@ -1008,23 +1040,31 @@ export function CapturePage() {
               fresta de poucos pixels — visível, tocável, ilegível.
               Empilhados, cada um tem a largura do cartão e o problema não
               existe em nenhuma tela. */}
-          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 22 }}>
-            <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 10 }}>
+          <div style={{
+            background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)',
+            borderRadius: 14, padding: 12, marginBottom: 22,
+            // `minmax(0, 1fr)` é a defesa que não depende do motor: sem o
+            // zero explícito, o item de grid herda `min-width: auto` e se
+            // recusa a ficar menor que o conteúdo — que é exatamente como o
+            // controle nativo de data escapava do cartão.
+            display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10,
+          }}>
+            <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block' }}>
               Quando aconteceu?
             </label>
 
-            <label style={{ display: 'block', marginBottom: 10 }}>
+            <label style={{ display: 'block', minWidth: 0 }}>
               <span style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, display: 'block', marginBottom: 5 }}>Data</span>
               <input
                 type="date"
                 value={dataRegistro}
                 max={hojeISO()}
                 onChange={(e) => setDataRegistro(e.target.value)}
-                style={CAMPO_ESCURO}
+                style={CAMPO_DATA}
               />
             </label>
 
-            <label style={{ display: 'block' }}>
+            <label style={{ display: 'block', minWidth: 0 }}>
               <span style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, display: 'block', marginBottom: 5 }}>
                 Hora <span style={{ opacity: .7 }}>· opcional</span>
               </span>
@@ -1032,11 +1072,11 @@ export function CapturePage() {
                 type="time"
                 value={horaRegistro}
                 onChange={(e) => setHoraRegistro(e.target.value)}
-                style={CAMPO_ESCURO}
+                style={CAMPO_DATA}
               />
             </label>
 
-            <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '8px 2px 0', lineHeight: 1.45 }}>
+            <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '0 2px', lineHeight: 1.45 }}>
               Sem a hora, usamos o meio-dia como referência do dia.
             </p>
           </div>
