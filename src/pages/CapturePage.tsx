@@ -30,6 +30,7 @@ import { CampoGravidade } from '../components/CampoGravidade'
 import { statusPerfil } from '../services/perfil'
 import { BotaoVoltarOverlay } from '../components/BotaoVoltarOverlay'
 import { arquivoDe } from '../lib/imagem'
+import { formatarArea, lerArea, AREA_MAX_M2 } from '../lib/area'
 
 /**
  * O que a câmera está registrando.
@@ -40,6 +41,45 @@ import { arquivoDe } from '../lib/imagem'
  * atalho para um alerta já classificado), lá é a família do registro.
  */
 type TipoCaptura = 'report' | 'alerta' | 'lixo' | 'positivo'
+/**
+ * Campo de texto sobre a tela escura da câmera.
+ *
+ * Estes campos não usam a classe `.input` — estão sobre um fundo próprio, e
+ * não sobre o tema do app. Por isso a borda precisava ser corrigida aqui
+ * também: a `.2` de branco dava 1.89 de contraste contra o cartão, e a WCAG
+ * 1.4.11 pede 3.0 para componente de interface. Medida em .42: 3.73.
+ *
+ * Sem esta constante o valor viveria copiado em cinco lugares, e o quinto
+ * campo nasceria com o número velho — que foi exatamente o que aconteceu.
+ */
+/**
+ * O bairro que o Nominatim devolve para um ponto — e por que ele é só uma
+ * oferta.
+ *
+ * `address.suburb` é a subdivisão ADMINISTRATIVA onde a pessoa está, não a
+ * praia nem o canto que o campo "Nome do local" pede. Quando o app escrevia
+ * isso no campo sozinho, o valor viajava junto: o título virava
+ * "Óleo — Morro do Paranambuco" e o `local_nome` guardava o bairro no lugar
+ * do lugar.
+ *
+ * Às vezes, porém, ele acerta — em muita praia o bairro TEM o nome da praia.
+ * Por isso ele volta, agora como um toque a mais em vez de um apagar a menos:
+ * aparece embaixo do campo e só entra se a pessoa quiser.
+ */
+export function bairroDoGeocode(address: Record<string, string> | undefined): string {
+  return address?.suburb || address?.neighbourhood || address?.village || ''
+}
+
+const CAMPO_ESCURO: React.CSSProperties = {
+  width: '100%',
+  background: 'rgba(255,255,255,.1)',
+  border: '1px solid rgba(255,255,255,.42)',
+  borderRadius: 10,
+  padding: '10px 12px',
+  color: '#fff',
+  fontSize: 14,
+}
+
 const SIGLA_UF: Record<string, string> = {
   'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
   'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
@@ -145,6 +185,11 @@ export function CapturePage() {
     ambiguo: boolean
   } | null>(null)
   const [novaPraiaNome, setNovaPraiaNome] = useState('')
+  /**
+   * Bairro devolvido pelo geocoding, guardado como SUGESTÃO — nunca escrito
+   * no campo por conta própria. Ver o comentário em `bairroDoGeocode`.
+   */
+  const [bairroSugerido, setBairroSugerido] = useState('')
   const [novoPicoNome, setNovoPicoNome] = useState('')
   const [novaOndaNome, setNovaOndaNome] = useState('')
   
@@ -169,6 +214,17 @@ export function CapturePage() {
   const [gravAlerta, setGravAlerta] = useState<import('../types/domain').GravidadeAlerta | undefined>()
   /** Categoria cujo ponto exato o banco vai guardar em vez de publicar. */
   const catProtegida = !!catAlerta && categoriaSensivel(catAlerta)
+  /**
+   * Mesma regra do formulário longo: só a vegetação pergunta o tamanho.
+   *
+   * O campo faltava AQUI, e a câmera é o caminho curto — quem registra uma
+   * restinga replantada fotografa e publica, sem passar pelo formulário de
+   * seis etapas. O registro nascia sem área e sem jeito de informar.
+   */
+  const pedeArea = catAlerta === 'vegetacao-recuperacao'
+  /** Texto cru do campo de área — só a vegetação pergunta. */
+  const [areaAlerta, setAreaAlerta] = useState('')
+  const areaLida = lerArea(areaAlerta)
   const [aceiteAlerta, setAceiteAlerta] = useState(false)
   const [municipioAlerta, setMunicipioAlerta] = useState('')
   const [ufAlerta, setUfAlerta] = useState('')
@@ -277,14 +333,10 @@ export function CapturePage() {
       }
     }
 
-    if (pos.lat && pos.lng) {
-      try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
-        const geo = await geoRes.json()
-        const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
-        if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
-      } catch { /* ignorar */ }
-    }
+    // Aqui havia um reverse geocode do Nominatim que existia SÓ para chutar o
+    // "nome do local" a partir do bairro. Saiu junto com o chute — ver o
+    // comentário em `definirLocalAlerta`. De quebra, a câmera abre sem
+    // esperar uma ida à rede que não decidia mais nada.
     setDetectandoGps(false)
     abrirCamera()
   }
@@ -481,12 +533,11 @@ export function CapturePage() {
         try {
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?email=ecosurf%40ecosurf.org.br&lat=${pos.lat}&lon=${pos.lng}&format=json&zoom=14`)
           const geo = await geoRes.json()
-          const praiaSugerida = geo.address?.suburb || geo.address?.village || geo.address?.neighbourhood || geo.address?.city || ''
-          if (praiaSugerida) setNovaPraiaNome(praiaSugerida)
           const cidade = geo.address?.city || geo.address?.town || geo.address?.municipality || ''
           if (cidade) setMunicipioAlerta(cidade)
           const uf = SIGLA_UF[geo.address?.state ?? ''] ?? ''
           if (uf) setUfAlerta(uf)
+          setBairroSugerido(bairroDoGeocode(geo.address))
         } catch { /* ignorar */ }
       }
     }
@@ -552,9 +603,11 @@ export function CapturePage() {
       if (cidade) setMunicipioAlerta(cidade)
       const uf = SIGLA_UF[g.address?.state ?? ''] ?? ''
       if (uf) setUfAlerta(uf)
-      const praia = g.address?.suburb || g.address?.neighbourhood || ''
-      if (praia && !novaPraiaNome) setNovaPraiaNome(praia)
-    } catch { /* rede: segue com a coordenada, sem o nome do lugar */ }
+      // O bairro fica como sugestão tocável, nunca escrito sozinho no campo
+      // — ver `bairroDoGeocode`. Cidade e UF, sim: nesse nível o Nominatim
+      // acerta, e são campos administrativos mesmo.
+      setBairroSugerido(bairroDoGeocode(g.address))
+    } catch { /* rede: segue com a coordenada, sem cidade nem UF */ }
   }
 
   async function publicarAlertaDaCamera() {
@@ -574,6 +627,7 @@ export function CapturePage() {
       lat: posCapturada.lat,
       lng: posCapturada.lng,
       comunidadeId,
+      areaM2: pedeArea ? areaLida : null,
       // No fluxo "não estou no local", a data escolhida é quando o impacto foi
       // observado (pode ser outro dia). Senão, undefined → servidor usa criada_em.
       ocorridoEm: (noLocal === false && dataRegistro) ? capturadaEmISO() : undefined,
@@ -1255,14 +1309,64 @@ export function CapturePage() {
             </div>
           )}
 
+          {/* Área da vegetação: a vaga simétrica à da gravidade. Um canteiro
+              de restinga e um hectare de mata ciliar entram no mapa como o
+              mesmo ponto sem este número. */}
+          {pedeArea && (
+            <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
+              <label style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, display: 'block', marginBottom: 6 }}>
+                Área aproximada (m²) <span style={{ opacity: .7 }}>· opcional</span>
+              </label>
+              <input
+                value={areaAlerta}
+                onChange={(e) => setAreaAlerta(e.target.value)}
+                inputMode="decimal"
+                placeholder="Deixe em branco se não souber"
+                style={CAMPO_ESCURO}
+              />
+              <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '6px 2px 0', lineHeight: 1.45 }}>
+                Um palpite serve — "mais ou menos meio campo de futebol" é
+                3.500 m². {areaLida != null && <b style={{ color: 'rgba(255,255,255,.85)' }}>{formatarArea(areaLida)}</b>}
+                {areaAlerta.trim() && areaLida == null && (
+                  <span style={{ color: '#FF9E9E' }}> Não consegui ler esse número; o registro vai sem área.</span>
+                )}
+                {areaLida != null && areaLida > AREA_MAX_M2 && (
+                  <span style={{ color: '#FF9E9E' }}> — acima do limite de 10 km²; confira o número.</span>
+                )}
+              </p>
+            </div>
+          )}
+
           <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 14 }}>
             <label style={{ color: 'rgba(255,255,255,.7)', fontSize: 12, display: 'block', marginBottom: 6 }}>Nome do local</label>
             <input
               value={novaPraiaNome}
               onChange={(e) => setNovaPraiaNome(e.target.value)}
-              placeholder="Ex.: Rio Itanhaém, Baixio"
-              style={{ width: '100%', background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14 }}
+              placeholder="Escreva o local"
+              style={CAMPO_ESCURO}
             />
+
+            {/* O bairro do GPS, oferecido em vez de imposto. Some assim que a
+                pessoa escreve — a sugestão serve ao campo vazio; depois disso
+                seria só um botão para apagar o que ela acabou de digitar. */}
+            {bairroSugerido && !novaPraiaNome.trim() && (
+              <button
+                type="button"
+                onClick={() => setNovaPraiaNome(bairroSugerido)}
+                style={{
+                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.42)',
+                  borderRadius: 999, padding: '7px 13px', color: '#fff',
+                  fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer',
+                  maxWidth: '100%',
+                }}
+              >
+                <IconCurrentLocation size={13} stroke={2} style={{ flexShrink: 0, opacity: .8 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Usar "{bairroSugerido}"
+                </span>
+              </button>
+            )}
             {posCapturada.lat && posCapturada.lng ? (
               <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11.5, marginTop: 6 }}>
                 <IconCurrentLocation size={12} stroke={2} style={{ verticalAlign: '-2px' }} /> Ponto marcado pelo GPS da captura{municipioAlerta ? ` · ${municipioAlerta}${ufAlerta ? `/${ufAlerta}` : ''}` : ''}
@@ -1480,7 +1584,7 @@ export function CapturePage() {
                 placeholder="Ex: Praia das Pitangueiras"
                 value={novaPraiaNome}
                 onChange={(e) => setNovaPraiaNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 
@@ -1493,7 +1597,7 @@ export function CapturePage() {
                 placeholder="Ex: Canto do Maluf"
                 value={novoPicoNome}
                 onChange={(e) => setNovoPicoNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 
@@ -1506,7 +1610,7 @@ export function CapturePage() {
                 placeholder="Ex: Direitas do canal"
                 value={novaOndaNome}
                 onChange={(e) => setNovaOndaNome(e.target.value)}
-                style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.2)', color: '#fff' }}
+                style={CAMPO_ESCURO}
               />
             </div>
 

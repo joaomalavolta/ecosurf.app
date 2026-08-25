@@ -50,6 +50,10 @@ export interface AlertaPendente {
   lat: number
   lng: number
   ocorridoEm?: string
+  /** Área em m² — só a vegetação pergunta. Ver migration 0070. */
+  areaM2?: number | null
+  /** Comunidade que assina o registro. */
+  comunidadeId?: string | null
   blob?: Blob
   status: 'na-fila' | 'bloqueado'
   erro?: string

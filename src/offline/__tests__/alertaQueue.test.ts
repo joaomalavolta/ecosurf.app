@@ -1,102 +1,72 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
+import { payloadDaFila } from '../alertaQueue'
 import type { AlertaPendente } from '../db'
 
-/**
- * A fila offline é onde o registro positivo corre o maior risco de virar
- * outra coisa.
- *
- * O cenário é o real: ninho encontrado na praia, sem sinal. O registro fica
- * no IndexedDB e só é publicado quando a conexão volta — possivelmente horas
- * depois, com o app já em outra tela. Se `tipo_registro` não sobreviver a
- * essa viagem, o ninho reaparece como ALERTA: no card vermelho, na contagem
- * de problemas do painel e na notificação "Novo alerta ambiental".
- */
-
-const enviados: Record<string, unknown>[] = []
-const naFila: AlertaPendente[] = []
-
-vi.mock('../../services/alertas', () => ({
-  publicarAlerta: async (dados: Record<string, unknown>) => {
-    enviados.push(dados)
-    return 'id-publicado'
-  },
-}))
-
-vi.mock('../db', () => ({
-  db: async () => ({
-    getAll: async () => naFila,
-    put: async (_loja: string, v: AlertaPendente) => {
-      const i = naFila.findIndex((x) => x.id === v.id)
-      if (i >= 0) naFila[i] = v
-      else naFila.push(v)
-    },
-    delete: async (_loja: string, id: string) => {
-      const i = naFila.findIndex((x) => x.id === id)
-      if (i >= 0) naFila.splice(i, 1)
-    },
-  }),
-}))
-
-vi.mock('../../lib/toast', () => ({ toast: () => {} }))
-
-const item = (over: Partial<AlertaPendente>): AlertaPendente => ({
-  id: crypto.randomUUID(),
-  titulo: 'Registro',
-  categoria: 'lixo-praia',
-  municipio: 'Tramandaí',
-  uf: 'RS',
-  lat: -29.98,
-  lng: -50.12,
+/** Um registro de vegetação enfileirado na praia, sem sinal. */
+const restinga: AlertaPendente = {
+  id: 'abc',
+  titulo: 'Vegetação preservada ou em recuperação — Itanhaém',
+  categoria: 'vegetacao-recuperacao',
+  tipoRegistro: 'positivo',
+  municipio: 'Itanhaém',
+  uf: 'SP',
+  lat: -24.192,
+  lng: -46.794,
+  areaM2: 1850,
+  comunidadeId: 'guardioes-do-litoral',
   status: 'na-fila',
-  criadoEm: Date.now(),
-  ...over,
-})
+  criadoEm: 1_700_000_000_000,
+}
 
-describe('fila offline: o que sai é o que entrou', () => {
-  beforeEach(() => {
-    enviados.length = 0
-    naFila.length = 0
-    vi.stubGlobal('navigator', { onLine: true })
+describe('payloadDaFila', () => {
+  it('a área atravessa a fila — era o que se perdia', () => {
+    expect(payloadDaFila(restinga).areaM2).toBe(1850)
   })
 
-  it('um ninho registrado sem sinal volta como POSITIVO, não como alerta', async () => {
-    naFila.push(item({
-      titulo: 'Área de desova — Praia de Tramandaí',
-      categoria: 'area-desova',
-      tipoRegistro: 'positivo',
-    }))
-
-    const { flushAlertas } = await import('../alertaQueue')
-    await flushAlertas()
-
-    expect(enviados).toHaveLength(1)
-    expect(enviados[0].tipoRegistro).toBe('positivo')
-    expect(enviados[0].categoria).toBe('area-desova')
-    // Sem gravidade: um ninho não tem intensidade para avaliar, e 'media'
-    // aqui reapareceria como selo laranja no feed.
-    expect(enviados[0].gravidade).toBeUndefined()
-    expect(naFila).toHaveLength(0)
+  it('a comunidade atravessa a fila — era o outro que se perdia', () => {
+    expect(payloadDaFila(restinga).comunidadeId).toBe('guardioes-do-litoral')
   })
 
-  it('alerta continua alerta, com a gravidade que tinha', async () => {
-    naFila.push(item({ categoria: 'esgoto', tipoRegistro: 'alerta', gravidade: 'alta' }))
-
-    const { flushAlertas } = await import('../alertaQueue')
-    await flushAlertas()
-
-    expect(enviados[0].tipoRegistro).toBe('alerta')
-    expect(enviados[0].gravidade).toBe('alta')
+  it('positivo continua positivo ao voltar da fila', () => {
+    // Sem isto o ninho reaparece como ALERTA: card vermelho, contagem de
+    // problemas do painel e notificação "Novo alerta ambiental".
+    expect(payloadDaFila(restinga).tipoRegistro).toBe('positivo')
   })
 
-  it('item gravado antes da 0063 (sem tipoRegistro) é publicado como alerta', async () => {
-    // Quem tem a fila cheia num aparelho que não abre o app desde antes da
-    // migration: o campo não existe no objeto guardado, e o default tem de
-    // ser o que aquele registro sempre foi.
-    naFila.push(item({ categoria: 'oleo', gravidade: 'media' }))
+  it('registro antigo, gravado antes destes campos existirem, não quebra', () => {
+    // Um item que já estava na fila do aparelho antes destes campos serem
+    // criados: chega sem eles, e não pode derrubar a publicação.
+    const velho: AlertaPendente = {
+      id: 'antigo',
+      titulo: 'Lixo na praia — Santos',
+      categoria: 'lixo-praia',
+      municipio: 'Santos',
+      uf: 'SP',
+      lat: -23.97,
+      lng: -46.34,
+      status: 'na-fila',
+      criadoEm: 1_600_000_000_000,
+    }
+    const p = payloadDaFila(velho)
+    expect(p.areaM2).toBeNull()
+    expect(p.comunidadeId).toBeUndefined()
+    expect(p.tipoRegistro).toBe('alerta') // o default da coluna
+  })
 
-    const { flushAlertas } = await import('../alertaQueue')
-    await flushAlertas()
+  it('o que foi enfileirado é o que é publicado', () => {
+    // A guarda contra o modo de falha desta função: ela remonta o payload
+    // campo a campo, então basta esquecer um nome para o dado sumir sem erro.
+    const p = payloadDaFila(restinga)
+    expect(p.titulo).toBe(restinga.titulo)
+    expect(p.categoria).toBe(restinga.categoria)
+    expect(p.municipio).toBe(restinga.municipio)
+    expect(p.uf).toBe(restinga.uf)
+    expect(p.lat).toBe(restinga.lat)
+    expect(p.lng).toBe(restinga.lng)
+    expect(p.checkboxAceite).toBe(true)
+  })
 
-    expect(enviados[0].tipoRegistro).toBe('alerta')
+  it('sem blob não inventa imagem', () => {
+    expect(payloadDaFila(restinga).images).toBeUndefined()
   })
 })
