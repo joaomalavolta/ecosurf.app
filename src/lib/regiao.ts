@@ -48,10 +48,13 @@ export const BRASIL: Local = { lng: -52.5, lat: -14.5, zoom: 3.2 }
  * ⚠️ Não confundir com "está no litoral": alerta em rio, no interior, é
  * legítimo e passa.
  */
+export const CAIXA_BRASIL = { oesteLng: -74, sulLat: -34, lesteLng: -34, norteLat: 6 } as const
+
 export function dentroDoBrasil(lng: number, lat: number): boolean {
+  const { oesteLng, sulLat, lesteLng, norteLat } = CAIXA_BRASIL
   return (
     Number.isFinite(lng) && Number.isFinite(lat) &&
-    lng >= -74 && lng <= -34 && lat >= -34 && lat <= 6
+    lng >= oesteLng && lng <= lesteLng && lat >= sulLat && lat <= norteLat
   )
 }
 

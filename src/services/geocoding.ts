@@ -16,7 +16,7 @@
  * lon como string), então a troca é transparente para os componentes.
  */
 
-import { dentroDoBrasil } from '../lib/regiao'
+import { dentroDoBrasil, CAIXA_BRASIL } from '../lib/regiao'
 
 export interface ResultadoGeocode {
   display_name: string
@@ -60,27 +60,60 @@ function rotular(p: PhotonFeature['properties']): string {
  * Busca lugares por texto, com viés para o Brasil e para o litoral quando um
  * ponto de referência é fornecido (melhora a relevância perto do usuário).
  */
+/**
+ * O que aconteceu com a busca — mais do que "deu ou não deu resultado".
+ *
+ * Antes esta função devolvia `[]` para tudo: sucesso sem achados, serviço
+ * fora do ar, rede caída, JSON quebrado. A tela não tinha como distinguir e
+ * não dizia nada — quem digitava via a caixa parada e concluía, com razão,
+ * que a busca não funciona.
+ */
+export type RespostaBusca =
+  | { ok: true; resultados: ResultadoGeocode[] }
+  | { ok: false; motivo: 'rede' | 'servico' }
+
 export async function buscarLugar(
   query: string,
   vies?: { lat: number; lng: number },
-): Promise<ResultadoGeocode[]> {
-  if (query.trim().length < 3) return []
+): Promise<RespostaBusca> {
+  if (query.trim().length < 3) return { ok: true, resultados: [] }
 
-  const params = new URLSearchParams({
-    q: query,
-    lang: 'pt',
-    limit: '6',
-  })
+  const params = new URLSearchParams({ q: query, limit: '6' })
+
+  // `lang` NÃO é enviado, e a ausência é a correção.
+  //
+  // O código pedia `lang=pt`. A instância pública do Photon é indexada só em
+  // `en, de, fr, it`; idioma fora dessa lista volta 400, o `catch` engolia, e
+  // a busca devolvia lista vazia SEMPRE. Não era intermitência nem serviço
+  // fora do ar: nunca funcionou.
+  //
+  // Sem o parâmetro, o Photon responde com o nome LOCAL do lugar — que para
+  // o Brasil já é português, e é o que a pessoa espera ler de qualquer forma.
+
+  // Viés territorial: sem ele, "Boa Vista" traz resultado de meio mundo e o
+  // filtro de país depois descarta tudo, devolvendo uma lista vazia que
+  // parece defeito. O `bbox` faz o próprio Photon preferir o Brasil.
+  const { oesteLng, sulLat, lesteLng, norteLat } = CAIXA_BRASIL
+  params.set('bbox', `${oesteLng},${sulLat},${lesteLng},${norteLat}`)
+
+  // Perto do ponto atual primeiro, quando existe um.
   if (vies) {
     params.set('lat', String(vies.lat))
     params.set('lon', String(vies.lng))
   }
 
+  let data: { features?: PhotonFeature[] }
   try {
     const res = await fetch(`${BASE_URL}?${params.toString()}`)
-    if (!res.ok) throw new Error(`geocode ${res.status}`)
-    const data = (await res.json()) as { features?: PhotonFeature[] }
-    return (data.features ?? [])
+    if (!res.ok) return { ok: false, motivo: 'servico' }
+    data = (await res.json()) as { features?: PhotonFeature[] }
+  } catch {
+    return { ok: false, motivo: 'rede' }
+  }
+
+  return {
+    ok: true,
+    resultados: (data.features ?? [])
       // Resultado sem país declarado passava — e ponto em mar aberto costuma
       // vir exatamente assim. Foi por aí que um mutirão de Tramandaí pôde ir
       // parar no Atlântico argentino (migration 0060). Agora, na dúvida sobre
@@ -96,8 +129,6 @@ export async function buscarLugar(
         display_name: rotular(f.properties),
         lat: String(f.geometry.coordinates[1]),
         lon: String(f.geometry.coordinates[0]),
-      }))
-  } catch {
-    return []
+      })),
   }
 }
