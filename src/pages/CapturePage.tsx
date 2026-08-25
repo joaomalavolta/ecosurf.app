@@ -78,6 +78,13 @@ const CAMPO_ESCURO: React.CSSProperties = {
   padding: '10px 12px',
   color: '#fff',
   fontSize: 14,
+  fontFamily: 'inherit',
+  // Sem isto, `width: 100%` mais padding estoura o cartão que envolve o campo.
+  boxSizing: 'border-box',
+  // Diz ao navegador que o controle NATIVO (calendário, relógio, seta do
+  // seletor) também é escuro. Sem isso o iOS desenha o miolo do date/time
+  // claro dentro de um campo escuro.
+  colorScheme: 'dark',
 }
 
 const SIGLA_UF: Record<string, string> = {
@@ -96,12 +103,6 @@ type Etapa = 'tipo' | 'localizacao' | 'onde-quando' | 'camera' | 'confirmar-pico
 function hojeISO(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-const campoDataEstilo: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 10,
-  background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.18)',
-  color: '#fff', fontSize: 14, fontFamily: 'inherit',
 }
 
 function obterCoords(): Promise<{ lat?: number; lng?: number; precisaoM?: number }> {
@@ -999,25 +1000,46 @@ export function CapturePage() {
             Arraste o pino, toque no mapa ou busque o endereço acima.
           </p>
 
-          {/* QUANDO — data obrigatória, hora opcional */}
-          <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
-            Quando aconteceu?
-          </label>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
-            <div style={{ flex: 1 }}>
-              <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>Data</span>
-              <input type="date" value={dataRegistro} max={hojeISO()}
-                onChange={(e) => setDataRegistro(e.target.value)} style={campoDataEstilo} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, display: 'block', marginBottom: 4 }}>Hora (opcional)</span>
-              <input type="time" value={horaRegistro}
-                onChange={(e) => setHoraRegistro(e.target.value)} style={campoDataEstilo} />
-            </div>
+          {/* QUANDO — data obrigatória, hora opcional.
+              Os dois campos ficavam lado a lado com `flex: 1`. Parece
+              simétrico e não é: `input[type=date]` tem largura intrínseca
+              grande ("25 de ago. de 2026") e, sem `min-width: 0`, o item flex
+              se recusa a encolher. A data tomava a linha e a hora virava uma
+              fresta de poucos pixels — visível, tocável, ilegível.
+              Empilhados, cada um tem a largura do cartão e o problema não
+              existe em nenhuma tela. */}
+          <div style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 14, padding: 12, marginBottom: 22 }}>
+            <label style={{ color: 'rgba(255,255,255,.75)', fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 10 }}>
+              Quando aconteceu?
+            </label>
+
+            <label style={{ display: 'block', marginBottom: 10 }}>
+              <span style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, display: 'block', marginBottom: 5 }}>Data</span>
+              <input
+                type="date"
+                value={dataRegistro}
+                max={hojeISO()}
+                onChange={(e) => setDataRegistro(e.target.value)}
+                style={CAMPO_ESCURO}
+              />
+            </label>
+
+            <label style={{ display: 'block' }}>
+              <span style={{ color: 'rgba(255,255,255,.6)', fontSize: 11.5, display: 'block', marginBottom: 5 }}>
+                Hora <span style={{ opacity: .7 }}>· opcional</span>
+              </span>
+              <input
+                type="time"
+                value={horaRegistro}
+                onChange={(e) => setHoraRegistro(e.target.value)}
+                style={CAMPO_ESCURO}
+              />
+            </label>
+
+            <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 11, margin: '8px 2px 0', lineHeight: 1.45 }}>
+              Sem a hora, usamos o meio-dia como referência do dia.
+            </p>
           </div>
-          <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 11, margin: '2px 2px 22px', lineHeight: 1.4 }}>
-            Sem a hora, usamos o meio-dia como referência do dia.
-          </p>
 
           <button
             className="btn full"

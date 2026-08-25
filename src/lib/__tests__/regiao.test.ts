@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   BRASIL, normalizarNome, partirCidade, localDaCidade, caixaDe,
-  centroDosPontos, lerPosicao, gravarPosicao, dentroDoBrasil,
+  centroDosPontos, lerPosicao, gravarPosicao, dentroDoBrasil, centroInicial,
 } from '../regiao'
 
 describe('dentroDoBrasil', () => {
@@ -210,5 +210,37 @@ describe('lerPosicao', () => {
 describe('BRASIL', () => {
   it('é o enquadramento do país, não de uma praia', () => {
     expect(BRASIL.zoom).toBeLessThan(5)
+  })
+})
+
+describe('centroInicial', () => {
+  const agora = Date.parse('2026-08-25T12:00:00Z')
+  const recente = gravarPosicao({ lng: -50.13, lat: -29.99, zoom: 12 }, agora)
+
+  it('o ponto já escolhido manda em tudo', () => {
+    expect(centroInicial(-24.19, -46.79, recente, agora))
+      .toEqual({ lat: -24.19, lng: -46.79, zoom: 14 })
+  })
+
+  it('sem ponto, usa a última posição vista — de graça, sem permissão', () => {
+    const c = centroInicial(undefined, undefined, recente, agora)
+    expect(c.lat).toBeCloseTo(-29.99, 2)
+    expect(c.lng).toBeCloseTo(-50.13, 2)
+  })
+
+  it('sem nada, mostra o Brasil — e não uma cidade escolhida a esmo', () => {
+    // Aqui havia uma coordenada fixa de Santos. Quem registrava de outro
+    // estado abria o mapa na Baixada Santista como se fosse um palpite.
+    expect(centroInicial(undefined, undefined, null, agora)).toEqual(BRASIL)
+  })
+
+  it('posição velha demais não conta como palpite', () => {
+    const antiga = gravarPosicao({ lng: -50.13, lat: -29.99, zoom: 12 }, agora - 40 * 24 * 3600 * 1000)
+    expect(centroInicial(undefined, undefined, antiga, agora)).toEqual(BRASIL)
+  })
+
+  it('lixo no localStorage cai no Brasil, sem quebrar', () => {
+    expect(centroInicial(undefined, undefined, 'não é json', agora)).toEqual(BRASIL)
+    expect(centroInicial(undefined, undefined, '{"lat":999}', agora)).toEqual(BRASIL)
   })
 })
