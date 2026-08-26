@@ -82,13 +82,19 @@ export async function buscarLugar(
 
   // `lang` NÃO é enviado, e a ausência é a correção.
   //
-  // O código pedia `lang=pt`. A instância pública do Photon é indexada só em
-  // `en, de, fr, it`; idioma fora dessa lista volta 400, o `catch` engolia, e
-  // a busca devolvia lista vazia SEMPRE. Não era intermitência nem serviço
-  // fora do ar: nunca funcionou.
+  // O código pedia `lang=pt`. A instância pública do Photon aceita só
+  // `default, de, en, fr`; idioma fora dessa lista volta 400, o `catch`
+  // engolia, e a busca devolvia lista vazia SEMPRE. Não era intermitência nem
+  // serviço fora do ar: nunca funcionou.
   //
-  // Sem o parâmetro, o Photon responde com o nome LOCAL do lugar — que para
-  // o Brasil já é português, e é o que a pessoa espera ler de qualquer forma.
+  // Conferido contra o serviço real: com `lang=pt` o corpo do 400 é, literal,
+  //   {"lang":[{"message":"Language is not supported. Supported are:
+  //     default, de, en, fr","value":"pt"}]}
+  //
+  // Sem o parâmetro, 200 — e o Photon responde com o nome LOCAL do lugar, que
+  // para o Brasil já é português e é o que a pessoa espera ler de qualquer
+  // forma. Volta acentuado (Itanhaém, Tramandaí) mesmo com a consulta digitada
+  // sem acento.
 
   // Viés territorial: sem ele, "Boa Vista" traz resultado de meio mundo e o
   // filtro de país depois descarta tudo, devolvendo uma lista vazia que

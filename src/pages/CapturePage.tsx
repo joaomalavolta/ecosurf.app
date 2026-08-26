@@ -104,9 +104,28 @@ const CAMPO_ESCURO: React.CSSProperties = {
  * `minmax(0, …)` é o que autoriza ele a ficar menor que o próprio conteúdo.
  * Vale para qualquer motor, independente do que o controle nativo queira.
  *
- * As três juntas porque o Chromium NÃO reproduz o vazamento — ele encolhe o
- * controle sem reclamar, mesmo num cartão de 150 px. Sem poder verificar no
- * motor onde o bug acontece, cinto e suspensório é o certo.
+ * As três juntas porque nenhum motor ao nosso alcance reproduz o vazamento.
+ * O Chromium encolhe o controle sem reclamar, mesmo num cartão de 150 px — e
+ * o WebKit do Playwright, que parece a resposta óbvia, TAMBÉM não serve.
+ *
+ * ── Por que o WebKit do Playwright não decide isto ───────────────────────────
+ *
+ * O WebKit que o Playwright distribui em Linux é o port GTK/WPE, e ali o
+ * `input[type=date]` é um campo numérico curto (`25/08/2026`), sem cromo de
+ * calendário. Medido: min-content de 136,7 px, contra 160 px do Chromium — e
+ * imóvel em pt-BR, en-US e de-DE. O controle do iOS é outro widget: rótulo por
+ * extenso no formato do aparelho (`25 de ago. de 2026`), e é DELE que vem a
+ * largura intrínseca grande descrita acima.
+ *
+ * Conferido nesta tela, nos dois motores, a 320/375/390 px de viewport, com as
+ * três defesas e removendo cada uma: 24 medições, vazamento zero em todas. Ou
+ * seja, o teste não confirma a correção — ele mostra que o cenário do bug não
+ * existe nesses motores. O que ele confirma é que as três defesas não custam
+ * nada: nenhuma regressão em nenhuma combinação.
+ *
+ * Quem for verificar de verdade precisa de Safari em iOS real ou do Simulator
+ * do Xcode. Até lá, cinto e suspensório é o certo — e este parágrafo existe
+ * para que ninguém repita o caminho do WebKit achando que fechou a questão.
  */
 const CAMPO_DATA: React.CSSProperties = {
   ...CAMPO_ESCURO,
